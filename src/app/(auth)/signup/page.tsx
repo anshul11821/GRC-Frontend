@@ -26,6 +26,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const rules = passwordRules(password);
   const passOk = rules.every((r) => r.ok);
   const passwordsMatch = password.length > 0 && password === confirmPassword;
@@ -77,7 +78,7 @@ export default function SignUpPage() {
     if (!passOk || !passwordsMatch) return;
     run(async () => {
       const captchaToken = await getCaptchaToken("signup");
-      await authApi.signupStart({ email, password, captchaToken });
+      await authApi.signupStart({ email, password, captchaToken, accessCode: accessCode.trim() });
       setStep("verify");
     });
   };
@@ -147,7 +148,11 @@ export default function SignUpPage() {
                 <span className="mt-1.5 block text-[11.5px] text-rose-600">Passwords don&apos;t match</span>
               )}
             </Field>
-            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch} className="w-full">
+            <Field label="Access code">
+              <TextInput icon="lock" type="text" autoComplete="off" required value={accessCode} onChange={(e) => setAccessCode(e.target.value)} placeholder="Invite-only — enter your access code" />
+              <span className="mt-1.5 block text-[11.5px] text-slate-400">grcmentor is invite-only during early access. Don&apos;t have a code? Ask whoever invited you.</span>
+            </Field>
+            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch || !accessCode.trim()} className="w-full">
               {busy ? "Sending code…" : "Continue"}
             </PrimaryBtn>
           </form>

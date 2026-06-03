@@ -34,6 +34,7 @@ export interface SignupStartRequest {
   email: string;
   password: string;
   captchaToken: string;
+  accessCode?: string;
 }
 export interface SignupStartResponse {
   message: string;
