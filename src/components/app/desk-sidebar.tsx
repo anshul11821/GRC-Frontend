@@ -30,7 +30,7 @@ function taskState(t: LearningTask): TaskState {
 
 const taskComplete = (t: LearningTask) => taskState(t) === "complete";
 
-const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "current" ? "bg-indigo-500" : "bg-slate-300");
+const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "current" ? "bg-amber-500" : "bg-slate-300");
 
 function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTask; state: TaskState; activeId?: string; activeTaskCode?: string }) {
   const meta = TASK_META[task.code];
@@ -73,7 +73,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
                 <DVerb verbId={s.verb} />
                 <span className={`text-[11.5px] tracking-tight truncate flex-1 ${active ? "text-indigo-700 font-medium" : ss === "locked" ? "text-slate-400" : "text-slate-600"}`}>{s.title}</span>
                 {ss === "locked" && <Icon name="lock" size={10} className="text-slate-300 shrink-0" />}
-                {ss === "current" && !active && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shrink-0" />}
+                {ss === "current" && !active && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />}
               </>
             );
             return ss === "locked" ? (
