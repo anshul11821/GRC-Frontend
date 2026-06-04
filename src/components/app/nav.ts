@@ -21,7 +21,7 @@ export const DASH_NAV: NavItem[] = [
   { id: "reports", label: "Reports", icon: "chart", href: "/app/reports" },
   { id: "badges", label: "Badges", icon: "star", href: "/app/badges" },
   { id: "certificate", label: "Certificate", icon: "ribbon", href: "/app/certificate" },
-  { id: "jobs", label: "Matching Jobs", icon: "briefcase", href: "/app/jobs", badge: 3, soon: true },
+  { id: "jobs", label: "Matching Jobs", icon: "briefcase", href: "/app/jobs" },
 ];
 
 export function initialsOf(first?: string | null, last?: string | null, email?: string): string {
