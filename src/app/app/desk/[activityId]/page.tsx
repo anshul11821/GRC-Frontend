@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -72,6 +72,7 @@ export default function ActivityWorkspace() {
   const [error, setError] = useState<string | null>(null);
 
   const [history, setHistory] = useState<SubmissionDetail[]>([]);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +122,11 @@ export default function ActivityWorkspace() {
       setError(e instanceof Error ? e.message : "Submission failed.");
     } finally { setBusy(false); }
   };
+
+  // After a submit returns a result, scroll the grade/feedback into view (it renders below the form).
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [result]);
 
   if (loading) {
     return <div className="h-full flex items-center justify-center text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>;
@@ -173,29 +179,6 @@ export default function ActivityWorkspace() {
         {verb && <p className="text-[13px] text-slate-500 mt-1.5 tracking-tight">{verb.when}</p>}
       </div>
 
-      {passed && (
-        <div className="mb-5 rounded-2xl ring-1 ring-emerald-200/70 bg-emerald-50/60 px-5 py-4 flex items-center gap-4 flex-wrap">
-          <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-            <Icon name="check" size={18} strokeWidth={3} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[14px] font-semibold tracking-tight text-slate-900">Step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}</div>
-            <div className="text-[12.5px] text-slate-600 tracking-tight">
-              {nextStepId ? "Nice work — your next step is unlocked." : "Nice work — you've finished the steps available here."}
-            </div>
-          </div>
-          {nextStepId ? (
-            <Link href={`/app/desk/${nextStepId}`} className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline">
-              Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
-            </Link>
-          ) : (
-            <Link href="/app/desk" className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-50">
-              Back to Working Desk <Icon name="arrowRight" size={15} />
-            </Link>
-          )}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* workspace */}
         <div className="xl:col-span-2 space-y-5">
@@ -244,17 +227,27 @@ export default function ActivityWorkspace() {
             {error && <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
             <div className="mt-5 flex items-center gap-2">
-              <button onClick={submit} disabled={busy || !hasContent} className="h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2">
-                <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
-              </button>
-              <button onClick={saveDraft} disabled={busy} className="h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
-                Save draft
-              </button>
-              {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
+              {passed ? (
+                <span className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 ring-1 ring-emerald-200/70 text-emerald-700 text-[13px] font-medium tracking-tight">
+                  <Icon name="check" size={14} strokeWidth={3} /> Submitted — step complete
+                </span>
+              ) : (
+                <>
+                  <button onClick={submit} disabled={busy || !hasContent} className="h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2">
+                    <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
+                  </button>
+                  <button onClick={saveDraft} disabled={busy} className="h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
+                    Save draft
+                  </button>
+                  {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
+                </>
+              )}
             </div>
           </Card>
 
-          {/* layer 1 result + review */}
+          {/* graded results — scrolled into view after submit; Next step is at the bottom of this block */}
+          {(layer1 || review || passed) && (
+          <div ref={resultRef} className="space-y-5 scroll-mt-6">
           {layer1 && (
             <Card>
               <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">
@@ -282,6 +275,27 @@ export default function ActivityWorkspace() {
               <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">Layer 2 — Mentor grade</h2>
               <ReviewPanel review={review} />
             </Card>
+          )}
+
+          {passed && (
+            <div className="rounded-2xl ring-1 ring-emerald-200/70 bg-emerald-50/60 px-5 py-4 flex items-center gap-4 flex-wrap">
+              <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><Icon name="check" size={18} strokeWidth={3} /></div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14px] font-semibold tracking-tight text-slate-900">Step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}</div>
+                <div className="text-[12.5px] text-slate-600 tracking-tight">{nextStepId ? "Nice work — your next step is unlocked." : "Nice work — you've finished the steps available here."}</div>
+              </div>
+              {nextStepId ? (
+                <Link href={`/app/desk/${nextStepId}`} className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline">
+                  Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
+                </Link>
+              ) : (
+                <Link href="/app/desk" className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-50">
+                  Back to Working Desk <Icon name="arrowRight" size={15} />
+                </Link>
+              )}
+            </div>
+          )}
+          </div>
           )}
 
           {history.length > 0 && (
