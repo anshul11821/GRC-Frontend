@@ -13,6 +13,8 @@ import { ApiError } from "@/lib/api";
 import { SchemaForm } from "@/components/app/schema-form";
 import { VERB_FORMS, GENERIC_FORM } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
+import { ReferenceMaterial } from "@/components/app/reference-material";
+import { ACTIVITY_CONTENT } from "@/lib/activity-content";
 
 function ReviewPanel({ review }: { review: Review }) {
   const pass = review.decision === "pass";
@@ -137,6 +139,7 @@ export default function ActivityWorkspace() {
 
   const verb = VERBS[activity.verb.id];
   const tone = verb ? VERB_TONES[verb.color] ?? VERB_TONES.indigo : VERB_TONES.indigo;
+  const content = ACTIVITY_CONTENT[`${activity.taskCode}/${activity.code}`];
   const layer1 = result?.layer1;
   const review = result?.review ?? activity.latestReview;
   const passed = review?.decision === "pass" || activity.status === "complete";
@@ -196,6 +199,41 @@ export default function ActivityWorkspace() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* workspace */}
         <div className="xl:col-span-2 space-y-5">
+          {/* objective */}
+          {content?.objective && (
+            <Card>
+              <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Objective</h2>
+              <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{content.objective}</p>
+            </Card>
+          )}
+
+          {/* what to do */}
+          {content?.whatToDo && content.whatToDo.length > 0 && (
+            <Card>
+              <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-3">What to do</h2>
+              <ol className="space-y-2.5">
+                {content.whatToDo.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-900 text-white text-[10.5px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">{i + 1}</span>
+                    <span className="text-[13px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          )}
+
+          {/* reference material — required reading (opens in a drawer) */}
+          {content?.references && content.references.length > 0 && (
+            <Card>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Reference material</h2>
+                <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-amber-700 bg-amber-50 ring-1 ring-amber-100 rounded-full px-2 h-5"><Icon name="info" size={11} /> Required reading</span>
+              </div>
+              <p className="text-[12px] text-slate-500 tracking-tight mb-3">You need these to do this step correctly — the facts and rules are inside. Click to open.</p>
+              <ReferenceMaterial references={content.references} />
+            </Card>
+          )}
+
           <Card>
             <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-1">Your deliverable</h2>
             <p className="text-[12px] text-slate-500 mb-3">

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
+import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { FloatingMentor } from "./floating-mentor";
@@ -152,7 +153,7 @@ function DashTopBar() {
   return (
     <div className="relative z-30 h-[68px] shrink-0 flex items-center justify-between px-6 border-b border-slate-200/70 bg-white/40 backdrop-blur-xl print:hidden">
       <div className="flex items-center gap-3">
-        <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white text-[12px] font-mono font-semibold">G</span>
+        <BrandMark size={36} />
         <div>
           <div className="text-[13.5px] font-semibold tracking-tight text-slate-900">GRC 101</div>
           <div className="text-[11px] text-slate-500">Foundations</div>

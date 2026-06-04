@@ -58,12 +58,12 @@ export default function TaskOverview() {
         </div>
       </div>
 
-      {/* description */}
-      {meta?.description && (
+      {/* objective */}
+      {(meta?.objective || meta?.description) && (
         <Card>
-          <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Task description</h2>
-          <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{meta.description}</p>
-          {meta.deliverable && (
+          <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Objective</h2>
+          <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{meta?.objective ?? meta?.description}</p>
+          {meta?.deliverable && (
             <div className="mt-4 rounded-xl bg-indigo-50/40 ring-1 ring-indigo-100 p-3.5">
               <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-indigo-600 mb-1">Final deliverable</div>
               <p className="text-[12.5px] text-slate-700 tracking-tight" style={{ textWrap: "pretty" }}>{meta.deliverable}</p>
@@ -71,6 +71,7 @@ export default function TaskOverview() {
           )}
         </Card>
       )}
+
 
       {/* meta grid */}
       {meta && (

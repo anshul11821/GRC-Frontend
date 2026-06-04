@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "./icon";
 import { BAR_TONES } from "@/lib/tones";
 
+/** The grcmentor "G" logomark (the official brand image). */
+export function BrandMark({ size = 36, className = "" }: { size?: number; className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/brand-g.webp" width={size} height={size} alt="grcmentor" className={className} />;
+}
+
 /** The grcmentor wordmark. */
 export function Logo({ light = false }: { light?: boolean }) {
   return (

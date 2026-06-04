@@ -1,5 +1,41 @@
 // Per-task catalogue (GRC101_Tasks_Activities.docx) — fixed reference for the Working Desk tree + task overview.
-export interface TaskMeta { name: string; methodCategory: string; standardId: string; standardLabel: string; standardTone: string; description: string; deliverable: string; badge: string; mentorRole: string; persona: string; duration: string; nistCrossRef: string; }
+import { TASK_CONTENT } from "./task-content";
+
+/** A piece of reference material a task hands you. Opens in a right-side drawer.
+ *  References carry the case facts/rules you NEED to produce a correct deliverable —
+ *  so the task can't be done well without reading them (logically required, not UI-enforced). */
+export interface TaskReference {
+  id: string;
+  title: string;
+  /** Short kind label, e.g. "Source document", "Classification scheme", "Standard extract". */
+  kind: string;
+  /** One line shown on the card. */
+  summary: string;
+  /** Full content shown in the drawer. Plain text; lines starting with "## " are headings,
+   *  "- " are bullets, "| " rows render as a simple table, blank lines separate paragraphs. */
+  body: string;
+}
+
+export interface TaskMeta {
+  name: string;
+  methodCategory: string;
+  standardId: string;
+  standardLabel: string;
+  standardTone: string;
+  description: string;
+  deliverable: string;
+  badge: string;
+  mentorRole: string;
+  persona: string;
+  duration: string;
+  nistCrossRef: string;
+  /** Clear, second-person statement of the goal ("You will …"). */
+  objective?: string;
+  /** Ordered list of what to actually do. */
+  whatToDo?: string[];
+  /** Required reading — the facts/rules/standards needed to complete the task. */
+  references?: TaskReference[];
+}
 
 export const TASK_META: Record<string, TaskMeta> = {
   "AA-001": {
@@ -8,7 +44,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee identifies, documents, and classifies all information assets within one assigned business unit of a LOW-criticality organisation. This task builds the foundational habit of understanding what data exists, where it lives, and how sensitive it is — a prerequisite for all subsequent GRC work.",
+    "description": "You will identify, document, and classify the information assets owned by one team inside CloudTech (a LOW-criticality organisation). This builds the foundational habit of understanding what data exists, where it lives, and how sensitive it is — a prerequisite for all later GRC work.",
     "deliverable": "Information Asset Register — a signed-off spreadsheet listing all identified assets with classification, owner, location, and residual gaps.",
     "badge": "Process Mapping Specialist",
     "mentorRole": "Policy & Governance Analyst",
@@ -22,7 +58,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "cisv8",
     "standardLabel": "CIS Controls v8",
     "standardTone": "emerald",
-    "description": "The mentee performs a structured gap analysis of the organisation's current security controls against the 56 IG1 Safeguards of CIS Controls v8. The output gives management a clear picture of where basic cyber-hygiene is missing before moving to more complex frameworks.",
+    "description": "You perform a structured gap analysis of the organisation's current security controls against the 56 IG1 Safeguards of CIS Controls v8. The output gives management a clear picture of where basic cyber-hygiene is missing before moving to more complex frameworks.",
     "deliverable": "CIS Controls v8 IG1 Gap Analysis Report — scored assessment per Control group, gap list with remediation priorities, and an executive summary.",
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
@@ -36,7 +72,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "gdpr",
     "standardLabel": "GDPR",
     "standardTone": "rose",
-    "description": "The mentee maps personal data flows across one operational process (e.g., student enrolment or user-account registration), determines the lawful basis for processing, and completes a RoPA entry and DPIA screening form — the two most fundamental GDPR compliance artefacts at an intern level.",
+    "description": "You map personal data flows across one operational process (e.g., student enrolment or user-account registration), determines the lawful basis for processing, and completes a RoPA entry and DPIA screening form — the two most fundamental GDPR compliance artefacts at an intern level.",
     "deliverable": "Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram.",
     "badge": "Compliance Readiness",
     "mentorRole": "Policy & Governance Analyst",
@@ -50,7 +86,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee conducts a structured risk identification exercise across two business units, populates a basic risk register with likelihood and impact scores, and presents findings to the unit manager. This is the cornerstone task for any GRC intern — understanding how to think about risk systematically.",
+    "description": "You conduct a structured risk identification exercise across two business units, populates a basic risk register with likelihood and impact scores, and presents findings to the unit manager. This is the cornerstone task for any GRC intern — understanding how to think about risk systematically.",
     "deliverable": "Basic Risk Register — spreadsheet with all identified risks scored on a 5×5 matrix, ISO 27001 control domain mapping, risk treatment options, and a one-page management summary.",
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Cyber Risk Manager",
@@ -64,7 +100,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee drafts one foundational information security policy (Acceptable Use Policy or Remote Working Policy) from scratch using an approved template, goes through a structured review cycle, and publishes the final version through the organisation's document control process.",
+    "description": "You draft one foundational information security policy (Acceptable Use Policy or Remote Working Policy) from scratch using an approved template, goes through a structured review cycle, and publishes the final version through the organisation's document control process.",
     "deliverable": "Approved Information Security Policy (AUP or Remote Working Policy) — final version with ISO 27001 control references, management signature, and Policy Register entry.",
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
@@ -78,7 +114,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "nistcsf",
     "standardLabel": "NIST CSF 2.0",
     "standardTone": "violet",
-    "description": "The mentee conducts a lightweight GRC maturity assessment for one department using the NIST CSF 2.0 Tier model, produces a current-state maturity profile, and identifies the top priority improvement areas — providing management with a structured starting point for their GRC journey.",
+    "description": "You conduct a lightweight GRC maturity assessment for one department using the NIST CSF 2.0 Tier model, produces a current-state maturity profile, and identifies the top priority improvement areas — providing management with a structured starting point for their GRC journey.",
     "deliverable": "GRC Maturity Assessment Report — CSF Tier scoring per Function, spider diagram (current vs. target state), top-three gap narrative, and a prioritised improvement roadmap.",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
@@ -92,7 +128,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee builds a Regulatory Obligations Register by identifying all applicable legal, regulatory, and contractual information-security requirements for the organisation — the foundational compliance-management artefact that all subsequent GRC work references.",
+    "description": "You build a Regulatory Obligations Register by identifying all applicable legal, regulatory, and contractual information-security requirements for the organisation — the foundational compliance-management artefact that all subsequent GRC work references.",
     "deliverable": "Regulatory Obligations Register — a signed-off spreadsheet listing all applicable requirements with control mapping, compliance status, owner, and gap flags.",
     "badge": "Compliance Readiness",
     "mentorRole": "Compliance Manager",
@@ -106,7 +142,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee maps ISO 27001:2022 Annex A controls to five critical business processes of the organisation, building a control matrix that shows which controls apply to which process — a core skill for any intern supporting compliance assessments.",
+    "description": "You map ISO 27001:2022 Annex A controls to five critical business processes of the organisation, building a control matrix that shows which controls apply to which process — a core skill for any intern supporting compliance assessments.",
     "deliverable": "ISO 27001 Control Matrix (Process-to-Control Mapping) — a spreadsheet mapping 5 business processes × 93 Annex A controls with applicability, implementation status, control owner, and gap summary.",
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
@@ -120,7 +156,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "soc2",
     "standardLabel": "SOC 2",
     "standardTone": "amber",
-    "description": "The mentee reviews the organisation's SOC 2 report (or a sample Type II report), maps the Common Criteria control points to existing internal controls, and produces a SOC 2 Control Awareness Summary — building foundational audit-literacy for a GRC intern.",
+    "description": "You review the organisation's SOC 2 report (or a sample Type II report), maps the Common Criteria control points to existing internal controls, and produces a SOC 2 Control Awareness Summary — building foundational audit-literacy for a GRC intern.",
     "deliverable": "SOC 2 Control Awareness Summary — traffic-light dashboard per Common Criteria cluster, control-gap list, and a two-page IT-team briefing document.",
     "badge": "Control Framework Understanding",
     "mentorRole": "Information Security Auditor",
@@ -134,7 +170,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee designs and writes an Incident Reporting Procedure that tells all staff how to recognise and report a suspected security incident — the first-response artefact that enables every other incident-management activity to function.",
+    "description": "You design and writes an Incident Reporting Procedure that tells all staff how to recognise and report a suspected security incident — the first-response artefact that enables every other incident-management activity to function.",
     "deliverable": "Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft.",
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
@@ -148,7 +184,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee designs a 30-minute onboarding security awareness module covering three core topics (phishing recognition, password hygiene, and data handling) and a five-question knowledge check — a foundational deliverable for any GRC intern in a people-facing environment.",
+    "description": "You design a 30-minute onboarding security awareness module covering three core topics (phishing recognition, password hygiene, and data handling) and a five-question knowledge check — a foundational deliverable for any GRC intern in a people-facing environment.",
     "deliverable": "Security Awareness Training Module — 10–12 slide deck, five-question knowledge check, one-page Facilitator Guide, and a training attendance register template.",
     "badge": "Documentation Excellence",
     "mentorRole": "Security Awareness & Training Specialist",
@@ -162,7 +198,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "gdpr",
     "standardLabel": "GDPR",
     "standardTone": "rose",
-    "description": "The mentee develops a Data Retention Schedule for one category of personal data (e.g., employee records or client contact records), specifying how long each data element must be kept, the legal basis for retention, and the disposal method — a direct GDPR storage-limitation compliance artefact.",
+    "description": "You develop a Data Retention Schedule for one category of personal data (e.g., employee records or client contact records), specifying how long each data element must be kept, the legal basis for retention, and the disposal method — a direct GDPR storage-limitation compliance artefact.",
     "deliverable": "Data Retention Schedule (for one data category) — approved spreadsheet with retention triggers, periods, legal basis, disposal method, and responsible owner; plus a Data Disposal Instruction document.",
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
@@ -176,7 +212,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee develops a draft 12-month GRC improvement roadmap for one LOW-criticality organisation based on the gap analysis findings from earlier tasks — translating compliance gaps into an actionable, phased plan that management can adopt.",
+    "description": "You develop a draft 12-month GRC improvement roadmap for one LOW-criticality organisation based on the gap analysis findings from earlier tasks — translating compliance gaps into an actionable, phased plan that management can adopt.",
     "deliverable": "12-Month GRC Improvement Roadmap — phased action plan (Gantt chart), per-action detail spreadsheet, and a one-page Management Briefing.",
     "badge": "Foundation Discovery",
     "mentorRole": "Cybersecurity Program Manager",
@@ -190,7 +226,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee maps all stakeholders for a specific GRC compliance initiative (e.g., ISO 27001 gap closure or privacy programme launch), producing a Stakeholder Register and Influence-Interest Matrix — core project-governance artefacts for any GRC intern supporting a compliance project.",
+    "description": "You map all stakeholders for a specific GRC compliance initiative (e.g., ISO 27001 gap closure or privacy programme launch), producing a Stakeholder Register and Influence-Interest Matrix — core project-governance artefacts for any GRC intern supporting a compliance project.",
     "deliverable": "Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative.",
     "badge": "Foundation Discovery",
     "mentorRole": "Policy & Governance Analyst",
@@ -204,7 +240,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "cisv8",
     "standardLabel": "CIS Controls v8",
     "standardTone": "emerald",
-    "description": "Following the gap analysis (AA-002), the mentee coordinates the implementation of five specific CIS IG1 Safeguards, tracking evidence of completion for each — providing hands-on experience of turning a compliance gap into an implemented control.",
+    "description": "Following the gap analysis (AA-002), you coordinate the implementation of five specific CIS IG1 Safeguards, tracking evidence of completion for each — providing hands-on experience of turning a compliance gap into an implemented control.",
     "deliverable": "Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report.",
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
@@ -218,7 +254,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee establishes a version-controlled document management system for GRC policies and procedures — setting up folder structures, naming conventions, version numbering, and document lifecycle rules so that the organisation's GRC documentation is consistently managed going forward.",
+    "description": "You establish a version-controlled document management system for GRC policies and procedures — setting up folder structures, naming conventions, version numbering, and document lifecycle rules so that the organisation's GRC documentation is consistently managed going forward.",
     "deliverable": "Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note.",
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
@@ -232,7 +268,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee performs a structured user-access review for one system or application — validating that active accounts belong to current employees, that access rights match job roles, and that no dormant or orphaned accounts exist. This is the most common first-level audit test for any GRC intern.",
+    "description": "You perform a structured user-access review for one system or application — validating that active accounts belong to current employees, that access rights match job roles, and that no dormant or orphaned accounts exist. This is the most common first-level audit test for any GRC intern.",
     "deliverable": "Access Control Testing Report — findings table (account status, issue type, recommendation), executive summary with remediation priority, and a signed remediation acknowledgement from the IT Manager.",
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
@@ -246,7 +282,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee conducts a desk-based compliance spot-check against three policies (e.g., Acceptable Use Policy, Remote Working Policy, Clean Desk Policy), using evidence-sampling to determine whether staff are following the policies in practice.",
+    "description": "You conduct a desk-based compliance spot-check against three policies (e.g., Acceptable Use Policy, Remote Working Policy, Clean Desk Policy), using evidence-sampling to determine whether staff are following the policies in practice.",
     "deliverable": "Policy Compliance Spot-Check Report — control testing workpapers (one per policy), compliance rate summary, findings table, and remediation recommendations.",
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
@@ -260,7 +296,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee defines a set of five GRC KPIs for one organisation, builds a monthly tracking spreadsheet, and produces the first monthly GRC Metrics Report — establishing the measurement habit that underpins all continuous improvement in a GRC programme.",
+    "description": "You define a set of five GRC KPIs for one organisation, builds a monthly tracking spreadsheet, and produces the first monthly GRC Metrics Report — establishing the measurement habit that underpins all continuous improvement in a GRC programme.",
     "deliverable": "GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page).",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
@@ -274,7 +310,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee facilitates the first monthly risk-register review meeting, updates risk scores based on new information, records treatment progress, and produces an updated register — learning the discipline of treating risk management as a live process rather than a one-time exercise.",
+    "description": "You facilitate the first monthly risk-register review meeting, updates risk scores based on new information, records treatment progress, and produces an updated register — learning the discipline of treating risk management as a live process rather than a one-time exercise.",
     "deliverable": "Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes.",
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Cyber Risk Manager",
@@ -288,7 +324,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee delivers the security awareness module developed in DD-002 to a live audience of 10–20 staff, facilitates the knowledge check, collects training completion records, and reports results — gaining experience in communicating GRC concepts to a non-technical audience.",
+    "description": "You deliver the security awareness module developed in DD-002 to a live audience of 10–20 staff, facilitates the knowledge check, collects training completion records, and reports results — gaining experience in communicating GRC concepts to a non-technical audience.",
     "deliverable": "Training Completion Report — attendance list, knowledge-check score summary, pass rate, qualitative observations, and recommendations for any staff requiring remedial guidance.",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Security Awareness & Training Specialist",
@@ -302,7 +338,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee compiles and writes a one-page executive compliance status report for the organisation's management team, synthesising findings from all completed tasks into a format that non-GRC managers can act on — building the critical skill of translating technical findings into business language.",
+    "description": "You compile and writes a one-page executive compliance status report for the organisation's management team, synthesising findings from all completed tasks into a format that non-GRC managers can act on — building the critical skill of translating technical findings into business language.",
     "deliverable": "Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook.",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
@@ -316,7 +352,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee conducts structured interviews with three internal stakeholders (IT Manager, HR Manager, and a business-unit lead) to discover their GRC-related concerns, knowledge gaps, and expectations — building empathy, communication skills, and a stakeholder-informed view of GRC needs.",
+    "description": "You conduct structured interviews with three internal stakeholders (IT Manager, HR Manager, and a business-unit lead) to discover their GRC-related concerns, knowledge gaps, and expectations — building empathy, communication skills, and a stakeholder-informed view of GRC needs.",
     "deliverable": "Stakeholder Needs Discovery Report — cross-interview theme analysis, key quotes, stakeholder-specific recommendations, and implications for GRC programme design.",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Policy & Governance Analyst",
@@ -330,7 +366,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee participates in a facilitated tabletop incident simulation as an observer and note-taker, documenting all decisions, escalations, and gaps identified during the exercise — providing foundational exposure to incident response without being placed in a decision-making role prematurely.",
+    "description": "You participate in a facilitated tabletop incident simulation as an observer and note-taker, documenting all decisions, escalations, and gaps identified during the exercise — providing foundational exposure to incident response without being placed in a decision-making role prematurely.",
     "deliverable": "Post-Exercise Lessons Learned Report — timeline of the exercise, structured observations, top-three improvement recommendations with proposed procedure amendments.",
     "badge": "Audit Preparation Support",
     "mentorRole": "Incident Response & Crisis Manager",
@@ -344,7 +380,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee conducts a Business Impact Analysis for one department, identifying its critical functions, dependencies, and the maximum tolerable downtime — a foundational resilience artefact and the starting point for any business continuity plan.",
+    "description": "You conduct a Business Impact Analysis for one department, identifying its critical functions, dependencies, and the maximum tolerable downtime — a foundational resilience artefact and the starting point for any business continuity plan.",
     "deliverable": "BIA Report (for one department) — critical functions list, impact scores, RTO/RPO table, single points of failure analysis, and recommended continuity measures.",
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Business Continuity & Resilience Analyst",
@@ -358,7 +394,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee develops an ICT Disaster Recovery Checklist for one system or service, covering backup verification, failover steps, and restoration testing — a basic but essential operational artefact that ensures recovery procedures actually work.",
+    "description": "You develop an ICT Disaster Recovery Checklist for one system or service, covering backup verification, failover steps, and restoration testing — a basic but essential operational artefact that ensures recovery procedures actually work.",
     "deliverable": "ICT DR Checklist (for one system) — step-by-step pre-incident, incident, restoration, and return-to-normal sections, with RTO/RPO success criteria and sign-off blocks.",
     "badge": "Control Framework Understanding",
     "mentorRole": "Business Continuity & Resilience Analyst",
@@ -372,7 +408,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee creates a Supplier Register by inventorying all third-party vendors that access, process, or store organisational information, then applies a basic five-criterion risk rating to each — producing the organisation's first formal third-party risk inventory.",
+    "description": "You create a Supplier Register by inventorying all third-party vendors that access, process, or store organisational information, then applies a basic five-criterion risk rating to each — producing the organisation's first formal third-party risk inventory.",
     "deliverable": "Supplier Register — full vendor inventory with risk ratings, data-access type, contract status, and DPA gap flags; plus a High-Risk Vendor Summary.",
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Vendor / Third-Party Risk Analyst",
@@ -386,7 +422,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee sends a security due-diligence questionnaire to one Medium-risk vendor (identified in TPRM-001), reviews the response, identifies gaps, and prepares a Due-Diligence Assessment Report — gaining experience with the most common vendor risk workflow.",
+    "description": "You send a security due-diligence questionnaire to one Medium-risk vendor (identified in TPRM-001), reviews the response, identifies gaps, and prepares a Due-Diligence Assessment Report — gaining experience with the most common vendor risk workflow.",
     "deliverable": "Vendor Due-Diligence Assessment Report — completed questionnaire (with assessment annotations), Due-Diligence Score, gap list, risk rating confirmation, and recommended mitigations.",
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Vendor / Third-Party Risk Analyst",
@@ -400,7 +436,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "gdpr",
     "standardLabel": "GDPR",
     "standardTone": "rose",
-    "description": "The mentee reviews the organisation's public-facing privacy notice against the mandatory content requirements of GDPR Articles 13 and 14, identifies gaps, and drafts a revised privacy notice for Legal/DPO review — building foundational legal-coordination skills without requiring legal expertise.",
+    "description": "You review the organisation's public-facing privacy notice against the mandatory content requirements of GDPR Articles 13 and 14, identifies gaps, and drafts a revised privacy notice for Legal/DPO review — building foundational legal-coordination skills without requiring legal expertise.",
     "deliverable": "Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off).",
     "badge": "Compliance Readiness",
     "mentorRole": "Policy & Governance Analyst",
@@ -414,7 +450,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee develops a Project Charter for a real GRC compliance initiative (e.g., the gap-closure programme from AA-002), gaining hands-on experience with project-initiation discipline — a critical skill for GRC interns supporting programme delivery.",
+    "description": "You develop a Project Charter for a real GRC compliance initiative (e.g., the gap-closure programme from AA-002), gaining hands-on experience with project-initiation discipline — a critical skill for GRC interns supporting programme delivery.",
     "deliverable": "Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes.",
     "badge": "Foundation Discovery",
     "mentorRole": "Cybersecurity Program Manager",
@@ -428,7 +464,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee prepares and organises an audit evidence pack for a specific ISO 27001 clause (e.g., Clause 9.1 or Annex A 5.1) as if preparing for an external certification audit — learning systematic evidence organisation, labelling, and quality-checking.",
+    "description": "You prepare and organises an audit evidence pack for a specific ISO 27001 clause (e.g., Clause 9.1 or Annex A 5.1) as if preparing for an external certification audit — learning systematic evidence organisation, labelling, and quality-checking.",
     "deliverable": "Audit Evidence Pack — labelled evidence files, Evidence Index (spreadsheet), and a completed self-review Audit Evidence Checklist.",
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
@@ -442,7 +478,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee performs a structured quality review of three GRC documents (policies or procedures) against a defined quality standard, identifying deficiencies and raising formal Correction Requests — learning the critical discipline of applying consistent quality standards to GRC documentation.",
+    "description": "You perform a structured quality review of three GRC documents (policies or procedures) against a defined quality standard, identifying deficiencies and raising formal Correction Requests — learning the critical discipline of applying consistent quality standards to GRC documentation.",
     "deliverable": "Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report.",
     "badge": "Documentation Excellence",
     "mentorRole": "Compliance Manager",
@@ -456,7 +492,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee documents a repeatable control testing methodology for three controls (selected from the Control Matrix, CRM-002), specifying the exact test procedure, evidence requirements, and pass/fail criteria — ensuring that future spot-checks (TV-002) are consistent and defensible.",
+    "description": "You document a repeatable control testing methodology for three controls (selected from the Control Matrix, CRM-002), specifying the exact test procedure, evidence requirements, and pass/fail criteria — ensuring that future spot-checks (TV-002) are consistent and defensible.",
     "deliverable": "Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library.",
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
@@ -470,7 +506,7 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "The mentee develops a GRC Onboarding Pack for new staff joiners — a curated set of documents that tells a new employee everything they need to know about the organisation's security and privacy obligations in their first week — creating a reusable knowledge asset for the organisation.",
+    "description": "You develop a GRC Onboarding Pack for new staff joiners — a curated set of documents that tells a new employee everything they need to know about the organisation's security and privacy obligations in their first week — creating a reusable knowledge asset for the organisation.",
     "deliverable": "GRC Onboarding Pack — New Joiner GRC Reference Guide (4 pages), New Joiner GRC Checklist (Day 1/7/30), and Day-1 Security Briefing Slide Deck (5 slides); all handed over to HR.",
     "badge": "Documentation Excellence",
     "mentorRole": "Security Awareness & Training Specialist",
@@ -484,8 +520,8 @@ export const TASK_META: Record<string, TaskMeta> = {
     "standardId": "iso27001",
     "standardLabel": "ISO/IEC 27001:2022",
     "standardTone": "indigo",
-    "description": "At the end of the GRC 101 rotation, the mentee documents a structured retrospective of the full programme — capturing what they learned, what worked, what didn't, and what they would recommend to the next GRC 101 cohort — institutionalising continuous improvement in the mentorship programme itself.",
-    "deliverable": "Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations.",
+    "description": "At the end of the GRC 101 rotation, you document a structured retrospective of the full programme — capturing what they learned, what worked, what didn't, and what they would recommend to the next GRC 101 cohort — institutionalising continuous improvement in the mentorship programme itself.",
+    "deliverable": "Lessons Learned Report (2–3 pages) + Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations.",
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Collaborative Coach",
@@ -495,3 +531,9 @@ export const TASK_META: Record<string, TaskMeta> = {
 };
 
 export const METHOD_CATEGORY_ORDER: string[] = ["Assessment and Analysis", "Governance and Risk Management", "Compliance and Regulatory Management", "Design and Development", "Strategic Planning and Architecture", "Implementation and Execution", "Testing and Validation", "Monitoring and Management", "Communication and Advisory", "Response and Recovery", "Business Continuity and Resilience Planning", "Third-Party Risk Management", "Legal and Regulatory Coordination", "Project Execution", "Quality Assurance", "Knowledge Transfer"];
+
+// Rich per-task content (Objective / What to do / Reference material) lives in task-content.ts
+// and is merged in here so the rest of the app keeps reading it off TASK_META.
+for (const [code, content] of Object.entries(TASK_CONTENT)) {
+  if (TASK_META[code]) Object.assign(TASK_META[code], content);
+}
