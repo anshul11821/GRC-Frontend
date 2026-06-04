@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext } from "react";
 import { learningsApi, type Learnings } from "@/lib/learnings";
+import { useCachedQuery } from "@/lib/use-query";
 
 interface DeskLearningsValue {
   learnings: Learnings | null;
@@ -15,28 +16,25 @@ const DeskLearningsContext = createContext<DeskLearningsValue>({
   refresh: async () => {},
 });
 
-/** Fetches the engagement tree once for the whole Working Desk and shares it (sidebar, overview, redirect). */
+/**
+ * Shares the engagement tree across the whole Working Desk (sidebar, overview, redirect),
+ * via the app-wide cache key ("learnings:grc101") — so it's also shared with the Dashboard
+ * and My Learnings pages, making navigation between them instant.
+ */
 export function DeskLearningsProvider({ children }: { children: React.ReactNode }) {
-  const [learnings, setLearnings] = useState<Learnings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, mutate } = useCachedQuery("learnings:grc101", () => learningsApi.get("grc101"));
 
-  const load = useCallback(async (initial = false) => {
+  // After a submit unlocks the next step, pull fresh data and update the shared cache.
+  const refresh = useCallback(async () => {
     try {
-      const l = await learningsApi.get("grc101");
-      setLearnings(l);
+      mutate(await learningsApi.get("grc101"));
     } catch {
       /* keep prior data on transient errors */
-    } finally {
-      if (initial) setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    load(true);
-  }, [load]);
+  }, [mutate]);
 
   return (
-    <DeskLearningsContext.Provider value={{ learnings, loading, refresh: () => load(false) }}>
+    <DeskLearningsContext.Provider value={{ learnings: data ?? null, loading, refresh }}>
       {children}
     </DeskLearningsContext.Provider>
   );

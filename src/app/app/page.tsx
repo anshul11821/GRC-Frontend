@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Card, Bar, Ring } from "@/components/ui/primitives";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { DVerb } from "@/components/ui/dverb";
-import { learningsApi, type Learnings, type LearningTask, type Progress } from "@/lib/learnings";
+import { learningsApi, type Learnings, type LearningTask } from "@/lib/learnings";
 import { catalog, type RubricDimension } from "@/lib/catalog";
+import { useCachedQuery } from "@/lib/use-query";
 import { deskApi, type ActivityFeedItem } from "@/lib/desk";
 import { BADGES } from "@/lib/badges";
 import { SOFT_TONES } from "@/lib/tones";
@@ -59,26 +59,14 @@ function Stat({ icon, tone, value, sub, label }: { icon: IconName; tone: string;
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [progress, setProgress] = useState<Progress | null>(null);
-  const [learnings, setLearnings] = useState<Learnings | null>(null);
-  const [rubric, setRubric] = useState<RubricDimension[]>([]);
-  const [feed, setFeed] = useState<ActivityFeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.allSettled([learningsApi.progress(PROGRAM), learningsApi.get(PROGRAM), catalog.rubric(), deskApi.activityFeed(PROGRAM)]).then(
-      ([p, l, r, f]) => {
-        if (cancelled) return;
-        if (p.status === "fulfilled") setProgress(p.value);
-        if (l.status === "fulfilled") setLearnings(l.value);
-        if (r.status === "fulfilled") setRubric(r.value);
-        if (f.status === "fulfilled") setFeed(f.value);
-        setLoading(false);
-      },
-    );
-    return () => { cancelled = true; };
-  }, []);
+  // Shared, cached fetches — learnings/progress are reused across pages, so repeat visits are instant.
+  const { data: progress, loading: pLoad } = useCachedQuery(`progress:${PROGRAM}`, () => learningsApi.progress(PROGRAM));
+  const { data: learnings, loading: lLoad } = useCachedQuery(`learnings:${PROGRAM}`, () => learningsApi.get(PROGRAM));
+  const { data: rubricData } = useCachedQuery("rubric", () => catalog.rubric());
+  const { data: feedData } = useCachedQuery(`feed:${PROGRAM}`, () => deskApi.activityFeed(PROGRAM));
+  const rubric = rubricData ?? [];
+  const feed = feedData ?? [];
+  const loading = (pLoad || lLoad) && !progress && !learnings;
 
   const first = user?.firstName || "there";
   const { cont, activeProject } = learnings ? deriveContinue(learnings) : { cont: null, activeProject: null };

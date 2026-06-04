@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
@@ -9,6 +9,7 @@ import { Bar } from "@/components/ui/primitives";
 import { catalog, type Program } from "@/lib/catalog";
 import { learningsApi, type Learnings, type LearningOrg, type LearningTask } from "@/lib/learnings";
 import { ApiError } from "@/lib/api";
+import { useCachedQuery } from "@/lib/use-query";
 import { LRN_AVATAR, LRN_CHIP } from "@/lib/tones";
 
 const STATUS_CHIP: Record<string, { label: string; cls: string }> = {
@@ -24,8 +25,14 @@ const chip = (s: string) => STATUS_CHIP[s] ?? STATUS_CHIP["not-started"];
 
 function stepIcon(status?: string): { name: IconName; cls: string; sw: number } {
   if (status === "complete") return { name: "check", cls: "bg-emerald-50 text-emerald-600 ring-emerald-100", sw: 3 };
-  if (status === "in-progress") return { name: "play", cls: "bg-indigo-50 text-indigo-600 ring-indigo-100", sw: 1.8 };
+  if (status === "current" || status === "in-progress") return { name: "play", cls: "bg-indigo-50 text-indigo-600 ring-indigo-100", sw: 1.8 };
+  if (status === "locked") return { name: "lock", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2 };
   return { name: "minus", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2 };
+}
+
+/** A step is openable only when it's complete or the current/in-progress one — not locked or pending. */
+function stepAccessible(status?: string): boolean {
+  return status === "complete" || status === "current" || status === "in-progress";
 }
 
 function LrnTask({ task, defaultOpen }: { task: LearningTask; defaultOpen?: boolean }) {
@@ -66,16 +73,25 @@ function LrnTask({ task, defaultOpen }: { task: LearningTask; defaultOpen?: bool
           <div className="rounded-lg bg-slate-50/70 ring-1 ring-slate-200/50 divide-y divide-slate-200/50">
             {task.steps.map((s) => {
               const si = stepIcon(s.status);
-              return (
-                <Link key={s.id} href={`/app/desk/${s.id}`} className="flex items-center gap-2.5 px-3 py-2 no-underline hover:bg-white/70 transition-colors group">
+              const open = stepAccessible(s.status);
+              const active = s.status === "current" || s.status === "in-progress";
+              const inner = (
+                <>
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center ring-1 shrink-0 ${si.cls}`}>
                     <Icon name={si.name} size={11} strokeWidth={si.sw} fill={si.name === "play" ? "currentColor" : "none"} />
                   </span>
                   <span className="font-mono text-[10.5px] text-slate-400 shrink-0 w-7">{s.code}</span>
                   <DVerb verbId={s.verb} />
-                  <span className={`text-[12px] tracking-tight truncate flex-1 ${s.status === "in-progress" ? "text-slate-700" : "text-slate-600"}`}>{s.title}</span>
-                  <Icon name="arrowRight" size={13} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
-                </Link>
+                  <span className={`text-[12px] tracking-tight truncate flex-1 ${active ? "text-slate-700" : open ? "text-slate-600" : "text-slate-400"}`}>{s.title}</span>
+                  {open
+                    ? <Icon name="arrowRight" size={13} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
+                    : <Icon name="lock" size={12} className="text-slate-300 shrink-0" />}
+                </>
+              );
+              return open ? (
+                <Link key={s.id} href={`/app/desk/${s.id}`} className="flex items-center gap-2.5 px-3 py-2 no-underline hover:bg-white/70 transition-colors group">{inner}</Link>
+              ) : (
+                <div key={s.id} className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed opacity-70" title="Complete the previous step to unlock this one">{inner}</div>
               );
             })}
             {task.total > task.steps.length && (
@@ -190,35 +206,11 @@ function ProgramTabs({ programs, value, onChange }: { programs: Program[]; value
 }
 
 export default function LearningsPage() {
-  const [programs, setPrograms] = useState<Program[]>([]);
   const [programId, setProgramId] = useState("grc101");
-  const [learnings, setLearnings] = useState<Learnings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    catalog.programs().then((p) => setPrograms(p.sort((a, b) => a.order - b.order))).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    learningsApi
-      .get(programId)
-      .then((l) => {
-        if (!cancelled) setLearnings(l);
-      })
-      .catch((e) => {
-        if (!cancelled) setError(e instanceof ApiError ? e.message : "Couldn't load learnings.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [programId]);
+  const { data: programsRaw } = useCachedQuery("programs", () => catalog.programs());
+  const programs: Program[] = useMemo(() => (programsRaw ? [...programsRaw].sort((a, b) => a.order - b.order) : []), [programsRaw]);
+  const { data: learnings, loading, error: loadErr } = useCachedQuery(`learnings:${programId}`, () => learningsApi.get(programId));
+  const error = loadErr ? (loadErr instanceof ApiError ? loadErr.message : "Couldn't load learnings.") : null;
 
   const program = programs.find((p) => p.id === programId);
   const locked = learnings?.status === "locked" || program?.status === "locked";
