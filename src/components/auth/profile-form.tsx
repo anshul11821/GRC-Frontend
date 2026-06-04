@@ -46,7 +46,7 @@ export function ProfileForm() {
       sessionStorage.removeItem("grc_signup_step");
       sessionStorage.removeItem("grc_signup_email");
       await refreshUser();
-      router.replace("/app");
+      router.replace("/checkout");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save your profile. Try again.");
       setBusy(false);
@@ -76,7 +76,7 @@ export function ProfileForm() {
         <Field label="Short bio" className="col-span-2"><TextInput required value={profile.bio} onChange={setP("bio")} placeholder="A sentence about you" /></Field>
         <div className="col-span-2">
           <PrimaryBtn type="submit" disabled={busy} className="w-full">
-            {busy ? "Finishing…" : "Finish & go to dashboard"}
+            {busy ? "Finishing…" : "Finish & continue to enrolment"}
           </PrimaryBtn>
         </div>
       </form>

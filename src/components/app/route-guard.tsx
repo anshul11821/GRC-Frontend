@@ -3,10 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { usePaid } from "@/lib/entitlement";
 
-/** Client-side guard: waits for the auth probe, then bounces unauthenticated users to the home page. */
+/** Client-side guard: waits for the auth probe, then bounces users who are unauthenticated,
+ *  haven't finished their profile, or haven't enrolled (paid) for the course. */
 export function RouteGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const paid = usePaid(user?.email);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,10 +18,12 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
       router.replace("/");
     } else if (!user.isProfileComplete) {
       router.replace("/complete-profile");
+    } else if (!paid) {
+      router.replace("/checkout");
     }
-  }, [loading, user, router]);
+  }, [loading, user, paid, router]);
 
-  if (loading || !user || !user.isProfileComplete) {
+  if (loading || !user || !user.isProfileComplete || !paid) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#FAFAF7]">
         <div className="flex flex-col items-center gap-3 text-slate-400">
