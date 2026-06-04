@@ -1147,4 +1147,1790 @@ Add the methodology sheets + overview to the QA library, with a version and revi
 - How to use it for the three controls now and others later.
 - Keep it short and practical.` }],
   },
+
+  // ═════════════ LearnTech Educational Solutions · Education & Research ═════════════
+  // ───────────── AA-003 · Privacy Data-Flow Mapping & GDPR Applicability ─────────────
+  "AA-003/3.1": {
+    objective: "You will choose one data-heavy LearnTech process to map, with the mentor — ideally one involving children's data, where GDPR risk is highest.",
+    whatToDo: ["Pick a process that processes a lot of personal data.", "Confirm why it's the right one to assess."],
+    references: [{ id: "aa003-3-1", title: "Candidate processes", kind: "Source document", summary: "Which process to pick and why.", body: `## Recommended: student enrolment
+Schools sign up, teachers create student accounts, students (many under 16) use the platform. It involves children's data, behavioural analytics, and a US analytics transfer — the highest-risk, most instructive choice.` }],
+  },
+  "AA-003/3.2": {
+    objective: "You will interview the process owner to trace exactly what personal data flows where.",
+    whatToDo: ["Ask what data is collected, from whom, stored where, shared with whom, kept how long.", "Capture special-category and children's data specifically."],
+    references: [{ id: "aa003-3-2", title: "Data-flow interview guide", kind: "Interview guide", summary: "What to ask.", body: `## Ask
+- What personal data do we collect, and from whom (student? school?)?
+- Where is it stored, and who can access it?
+- Who do we share it with (third parties, other countries)?
+- How long do we keep it?
+- Any health/accessibility data (special category)?
+
+## At LearnTech
+You'll uncover: student DOB/email/progress + behavioural analytics, accessibility flags (special category), and a US analytics tool (Mixpanel).` }],
+  },
+  "AA-003/3.3": {
+    objective: "You will draw the data-flow diagram showing each step, purpose, lawful basis, and any cross-border transfer.",
+    whatToDo: ["Diagram the flow from collection to deletion.", "Mark the lawful basis and the US transfer."],
+    references: [{ id: "aa003-3-3", title: "Data-flow facts", kind: "Source document", summary: "The flow you must draw.", body: `## The flow
+School → student accounts (AWS eu-west-1) → behavioural analytics via Mixpanel (US) → retained "indefinitely" (a gap).
+
+## Mark on the diagram
+- Purpose at each step.
+- Lawful basis (likely contract with the school; consent issues for children).
+- The US transfer (a DPIA trigger).` }],
+  },
+  "AA-003/3.4": {
+    objective: "You will complete the Record of Processing Activities (RoPA) entry to GDPR Article 30.",
+    whatToDo: ["Fill every Article 30 field.", "Be specific about data categories and recipients."],
+    references: [{ id: "aa003-3-4", title: "RoPA (Article 30) fields", kind: "Standard extract", summary: "What the entry must record.", body: `## Article 30 fields
+Purpose · categories of data subjects · categories of personal data · recipients · international transfers · retention period · security measures · lawful basis.
+
+## Rule
+"Children (under 16)" is a data-subject category that matters — record it; it drives the DPIA.` }],
+  },
+  "AA-003/3.5": {
+    objective: "You will run the 9-criterion DPIA screening and decide whether a full DPIA is required.",
+    whatToDo: ["Check the processing against all 9 criteria.", "Record the disposition with the reason."],
+    references: [{ id: "aa003-3-5", title: "DPIA screening (9 criteria)", kind: "Standard extract", summary: "The triggers — count them.", body: `## A DPIA is required if ≥2 apply
+1. Profiling/scoring. 2. Large-scale. 3. Special-category/highly personal. 4. Vulnerable subjects (children). 5. Innovative tech. 6. Matching datasets. 7. Prevents a right. 8. Systematic monitoring. 9. Transfer outside UK/EU without adequacy.
+
+## At LearnTech
+Children + behavioural profiling + US transfer = three triggers → a full DPIA is required.` }],
+  },
+  "AA-003/3.6": {
+    objective: "You will document the findings, the gaps, and the lawful-basis evidence.",
+    whatToDo: ["Write up the screening outcome and gaps (e.g. indefinite retention, US transfer safeguard).", "Record the lawful-basis reasoning."],
+    references: [{ id: "aa003-3-6", title: "What to document", kind: "Template", summary: "The write-up.", body: `## Document
+- DPIA disposition (required) + the triggers.
+- Gaps: indefinite retention; US transfer without a documented safeguard; consent for children's analytics.
+- Lawful basis per purpose, with reasoning.` }],
+  },
+  "AA-003/3.7": {
+    objective: "You will review the RoPA and screening with the mentor.",
+    whatToDo: ["Share with a cover note.", "Address feedback."],
+    references: [{ id: "aa003-3-7", title: "Review checklist", kind: "Checklist", summary: "Before sign-off.", body: `## Confirm
+- RoPA complete to Article 30.
+- DPIA decision justified by the criteria.
+- Children's data + US transfer flagged.
+- Gaps captured.` }],
+  },
+  "AA-003/3.8": {
+    objective: "You will obtain the process owner's sign-off on the RoPA and screening outcome.",
+    whatToDo: ["Walk the owner through the findings.", "Record the sign-off and any agreed actions."],
+    references: [{ id: "aa003-3-8", title: "Sign-off", kind: "Briefing notes", summary: "What to capture.", body: `## Sign-off
+The process owner confirms the RoPA is accurate and accepts the DPIA finding. Record the decision, date, and the agreed next actions (e.g. set a retention period, document the transfer safeguard).` }],
+  },
+
+  // ───────────── CRM-001 · Regulatory Requirements Inventory & Obligations Register ─────────────
+  "CRM-001/7.1": {
+    objective: "You will review the regulatory landscape for LearnTech's jurisdictions and sector, so you know which laws to inventory.",
+    whatToDo: ["Identify the laws that apply to a UK EdTech selling to UK + US schools.", "Note children's-data rules specifically."],
+    references: [{ id: "crm001-7-1", title: "LearnTech regulatory context", kind: "Source document", summary: "What applies and why.", body: `## Triggers
+- UK GDPR + DPA 2018; ICO Children's Code (children's data).
+- EU GDPR (some EU schools).
+- US FERPA + COPPA (US districts, under-13 users).
+- PECR (teacher marketing emails).
+- Contractual DPAs from schools; ISO 27001 (a customer asks).
+
+## Rule
+Children's-data rules (Children's Code, COPPA) are the easy ones to miss — capture them.` }],
+  },
+  "CRM-001/7.2": {
+    objective: "You will interview the Legal/Compliance contact and IT Manager to confirm which obligations actually apply.",
+    whatToDo: ["Use the scoping guide to confirm applicability.", "Capture who owns each area."],
+    references: [{ id: "crm001-7-2", title: "Regulatory scoping interview", kind: "Interview guide", summary: "What to confirm.", body: `## Ask
+- Which jurisdictions do our customers sit in?
+- Do we process data of under-13s? Under-16s?
+- What contractual security/privacy terms do schools impose?
+- Who owns privacy, security, and contracts internally?` }],
+  },
+  "CRM-001/7.3": {
+    objective: "You will list all applicable obligations across legislation, sector rules, contracts, and voluntary standards.",
+    whatToDo: ["List obligations in the four categories.", "Don't merge distinct obligations into one line."],
+    references: [{ id: "crm001-7-3", title: "Obligation categories", kind: "Standard rules", summary: "The four buckets.", body: `## Categories
+1. Legislation (UK GDPR, FERPA, COPPA, PECR).
+2. Sector-specific (ICO Children's Code).
+3. Contractual (school DPAs).
+4. Voluntary standards (ISO 27001, Cyber Essentials).
+
+## Rule
+One obligation per row — "GDPR" isn't one obligation; breach notification, RoPA, and DSAR are separate.` }],
+  },
+  "CRM-001/7.4": {
+    objective: "You will document each obligation in full: source, requirement, owner, status, and review date.",
+    whatToDo: ["Capture all fields per obligation.", "Mark status Met / Partial / Gap with evidence."],
+    references: [{ id: "crm001-7-4", title: "Register fields", kind: "Template", summary: "Per-obligation fields.", body: `## Per obligation
+Source · specific requirement · applicability rationale · owner (role) · status (Met/Partial/Gap) · evidence · next review.
+
+## Rule
+"Met" with no evidence is really a Gap — flag it.` }],
+  },
+  "CRM-001/7.5": {
+    objective: "You will map each obligation to the relevant ISO 27001 clause or control, linking law to control.",
+    whatToDo: ["Map each obligation to the ISO control that delivers it.", "Note obligations with no controlling clause."],
+    references: [{ id: "crm001-7-5", title: "Obligation → ISO mapping", kind: "Standard extract", summary: "How law maps to controls.", body: `## Examples
+- Breach notification (GDPR) → A.5.24–5.26 incident management.
+- RoPA (GDPR) → A.5.34 privacy & PII protection.
+- Access to school data → A.5.18 access rights.
+
+## Why
+Mapping shows which controls evidence which legal duty — the basis of a defensible compliance position.` }],
+  },
+  "CRM-001/7.6": {
+    objective: "You will highlight the gaps — obligations with no owner or no evidence of compliance.",
+    whatToDo: ["Flag every obligation with no owner or no evidence.", "Note the exposure each gap creates."],
+    references: [{ id: "crm001-7-6", title: "Gap rules", kind: "Standard rules", summary: "What's a gap.", body: `## Flag as a gap
+- No named owner.
+- Status Met/Partial but no evidence.
+- A legal duty with no control mapped.
+
+## Likely LearnTech gaps
+COPPA (under-13 consent) and the Children's Code are often unowned in a young EdTech.` }],
+  },
+  "CRM-001/7.7": {
+    objective: "You will review the obligations register with the Compliance Manager mentor.",
+    whatToDo: ["Share with a cover note.", "Address feedback."],
+    references: [{ id: "crm001-7-7", title: "Review checklist", kind: "Checklist", summary: "Before registering.", body: `## Confirm
+- All four categories covered.
+- Children's-data obligations included.
+- Each obligation has an owner + status.
+- Gaps flagged.` }],
+  },
+  "CRM-001/7.8": {
+    objective: "You will register the document in the policy register and schedule a quarterly review.",
+    whatToDo: ["Add it to the register with a version and owner.", "Set the next review date."],
+    references: [{ id: "crm001-7-8", title: "Registering", kind: "Briefing notes", summary: "Keeping it live.", body: `## Register
+An obligations register is only useful if maintained — laws change. Set a quarterly review, name the owner, and version it.` }],
+  },
+
+  // ───────────── DD-001 · Incident Reporting Procedure Development ─────────────
+  "DD-001/1": {
+    objective: "You will review any existing incident-related documentation to understand the current (informal) state.",
+    whatToDo: ["Read helpdesk tickets, email chains, and informal guidance.", "Note how incidents are handled today and the gaps."],
+    references: [{ id: "dd001-1", title: "Current state", kind: "Source document", summary: "How LearnTech handles incidents now.", body: `## Today
+- Staff "mention it in Slack" if they notice something.
+- No definition of an incident → phishing goes unreported.
+- No triage owner; the CTO sometimes sees it days later.
+- No severity, timing, or record.
+- Staff fear blame, so stay quiet.` }],
+  },
+  "DD-001/2": {
+    objective: "You will interview the IT Manager and a front-line staff member to map the real reporting path.",
+    whatToDo: ["Ask how reporting actually happens and where it breaks.", "Capture the cultural barrier (blame)."],
+    references: [{ id: "dd001-2", title: "Interview focus", kind: "Interview guide", summary: "What to ask.", body: `## Ask
+- If you saw something suspicious right now, what would you do?
+- Has anything stopped you reporting before?
+- Who deals with it once reported?
+
+## Why
+The "I didn't want to look stupid" answers reveal why a no-blame statement must be in the procedure.` }],
+  },
+  "DD-001/3": {
+    objective: "You will draft the incident reporting procedure to the template.",
+    whatToDo: ["Cover scope, definitions, how to recognise/report, escalation, confidentiality.", "Make reporting easy and blame-free."],
+    references: [{ id: "dd001-3", title: "Procedure sections", kind: "Template", summary: "What it must contain.", body: `## Sections
+Scope · what is an incident (with examples) · how to report (channel, timing, info) · escalation path · roles · confidentiality / no-blame · review cycle.
+
+## Rule
+Name one clear channel and an "if in doubt, report it" rule.` }],
+  },
+  "DD-001/4": {
+    objective: "You will create a one-page Incident Reporting Quick Reference Card for staff.",
+    whatToDo: ["Distil the procedure to a pocket card.", "Make the channel and 'report it' message unmissable."],
+    references: [{ id: "dd001-4", title: "Quick-reference card", kind: "Template", summary: "What goes on one page.", body: `## On the card
+- 3 examples of what to report (phishing, lost device, odd account activity).
+- The one channel + who to contact.
+- "If in doubt, report it — you won't be blamed."` }],
+  },
+  "DD-001/5": {
+    objective: "You will map each procedure step to ISO 27001 A.6.8 (event reporting).",
+    whatToDo: ["Map the procedure to A.6.8.", "Confirm the channel and timing satisfy the control."],
+    references: [{ id: "dd001-5", title: "ISO A.6.8", kind: "Standard extract", summary: "The control your procedure evidences.", body: `## A.6.8 — Information security event reporting
+"Personnel shall report observed or suspected information security events through appropriate channels in a timely manner."
+
+## Map
+Your named channel + timing is the evidence for A.6.8.` }],
+  },
+  "DD-001/6": {
+    objective: "You will circulate the draft for review to the IT Manager and a sample end-user for readability.",
+    whatToDo: ["Send for review.", "Specifically test that a non-technical user understands it."],
+    references: [{ id: "dd001-6", title: "Readability review", kind: "Checklist", summary: "What to test.", body: `## Test with a real user
+- Can they say, after reading, exactly what to do and who to tell?
+- Any jargon they didn't get?
+- Would they actually use it?` }],
+  },
+  "DD-001/7": {
+    objective: "You will incorporate the feedback and finalise the procedure.",
+    whatToDo: ["Apply changes.", "Confirm it's plain and actionable."],
+    references: [{ id: "dd001-7", title: "Finalising", kind: "Checklist", summary: "Last checks.", body: `## Confirm
+- One clear channel + timing.
+- No-blame statement present.
+- A.6.8 mapped.
+- A non-technical user understood it.` }],
+  },
+  "DD-001/8": {
+    objective: "You will register the procedure and draft a staff communication announcing it.",
+    whatToDo: ["Add it to the policy library.", "Write a one-paragraph staff announcement."],
+    references: [{ id: "dd001-8", title: "Roll-out", kind: "Briefing notes", summary: "Announcing it.", body: `## Announcement
+One short paragraph: we now have a simple way to report security concerns, here's the channel, and you won't be blamed for reporting. A procedure no one knows about doesn't work.` }],
+  },
+
+  // ───────────── SPA-002 · Stakeholder Mapping for a GRC Initiative ─────────────
+  "SPA-002/1": {
+    objective: "You will choose the GRC initiative whose stakeholders you'll map (e.g. ISO 27001 certification).",
+    whatToDo: ["Pick an initiative from the roadmap.", "Confirm its scope so you know who's affected."],
+    references: [{ id: "spa002-1", title: "The initiative", kind: "Source document", summary: "What you're mapping stakeholders for.", body: `## Initiative
+LearnTech's ISO 27001 certification, driven by a major school-district customer. It touches engineering (process change), the customer, and the regulator.` }],
+  },
+  "SPA-002/2": {
+    objective: "You will brainstorm every potential stakeholder, internal and external.",
+    whatToDo: ["List internal (IT, HR, Legal, Finance, Board) and external (customer, regulator, vendors) stakeholders.", "Don't miss the affected-but-quiet groups (end users)."],
+    references: [{ id: "spa002-2", title: "Stakeholder list", kind: "Source document", summary: "Who's involved.", body: `## Stakeholders
+- CEO (sponsor), CTO (delivery), Engineering (must change).
+- The school-district customer (can walk away).
+- ICO / regulator.
+- Teachers/students (affected end users).
+- Finance (budget).` }],
+  },
+  "SPA-002/3": {
+    objective: "You will complete the Stakeholder Register: role, interest, influence, and communication needs for each.",
+    whatToDo: ["Fill the register per stakeholder.", "Rate influence and interest honestly."],
+    references: [{ id: "spa002-3", title: "Register fields", kind: "Template", summary: "Per-stakeholder fields.", body: `## Per stakeholder
+Name/group · role · interest in the initiative · influence (High/Low) · interest (High/Low) · communication needs · preferred channel.` }],
+  },
+  "SPA-002/4": {
+    objective: "You will plot every stakeholder on the Influence–Interest matrix.",
+    whatToDo: ["Place each stakeholder in a quadrant from their ratings.", "Sanity-check placements against reality."],
+    references: [{ id: "spa002-4", title: "The matrix", kind: "Template", summary: "The 2×2 grid.", body: `## Quadrants (Influence × Interest)
+- High/High: CEO, CTO, customer.
+- High/Low: regulator, Finance.
+- Low/High: nobody much here.
+- Low/Low: teachers/students.
+
+## Rule
+Placement must match the register ratings, not convenience.` }],
+  },
+  "SPA-002/5": {
+    objective: "You will determine the engagement strategy for each quadrant.",
+    whatToDo: ["Assign a strategy per quadrant.", "Match effort to the quadrant."],
+    references: [{ id: "spa002-5", title: "Quadrant strategies", kind: "Standard rules", summary: "How to engage each.", body: `## Strategies
+- High/High → Manage Closely (involve in decisions).
+- High/Low → Keep Satisfied (high-level updates).
+- Low/High → Keep Informed.
+- Low/Low → Monitor.
+
+## Rule
+Over-engaging "Monitor" wastes effort; under-engaging "Manage Closely" sinks the initiative.` }],
+  },
+  "SPA-002/6": {
+    objective: "You will draft a Stakeholder Communication Plan: what, how often, which channel.",
+    whatToDo: ["For each group, define message, frequency, and channel.", "Align with the quadrant strategy."],
+    references: [{ id: "spa002-6", title: "Communication plan", kind: "Template", summary: "What it covers.", body: `## Per stakeholder group
+What to communicate · how often · channel · owner.
+
+## Example
+Customer (Manage Closely) → monthly progress + audit-readiness update, by call. Regulator (Keep Satisfied) → only when required.` }],
+  },
+  "SPA-002/7": {
+    objective: "You will review the mapping with the Policy & Governance Analyst mentor.",
+    whatToDo: ["Share with a cover note.", "Address feedback."],
+    references: [{ id: "spa002-7", title: "Review checklist", kind: "Checklist", summary: "Before presenting.", body: `## Confirm
+- No stakeholder missed.
+- Placements match ratings.
+- Strategies match quadrants.
+- The comms plan is realistic.` }],
+  },
+  "SPA-002/8": {
+    objective: "You will present the Influence–Interest matrix to the project sponsor for validation.",
+    whatToDo: ["Walk the sponsor through the matrix and strategies.", "Capture their agreement or corrections."],
+    references: [{ id: "spa002-8", title: "Presenting to the sponsor", kind: "Briefing notes", summary: "What to confirm.", body: `## Confirm with the sponsor
+- Are the High/High players right (they'll be involved in decisions)?
+- Is anyone mis-placed?
+- Record their validation — the sponsor knows the politics you don't.` }],
+  },
+
+  // ───────────── CA-001 · Security Awareness Briefing — Delivery ─────────────
+  "CA-001/1": {
+    objective: "You will schedule a 30-minute all-staff awareness session with HR/Operations.",
+    whatToDo: ["Find a slot that maximises attendance.", "Confirm the room/video setup."],
+    references: [{ id: "ca001-1", title: "Scheduling", kind: "Briefing notes", summary: "Practicalities.", body: `## Schedule
+- Coordinate with HR/Ops for a time most staff can attend.
+- 30 minutes; book the room or video call.
+- Audience: ~40 mostly non-technical staff (teachers, support).` }],
+  },
+  "CA-001/2": {
+    objective: "You will send the invite and a pre-session communication explaining the purpose.",
+    whatToDo: ["Send a calendar invite.", "Add a short note on why it matters (the recent phishing incident)."],
+    references: [{ id: "ca001-2", title: "Pre-session comms", kind: "Template", summary: "What to send.", body: `## Pre-session note
+- Why: two colleagues were recently phished — this protects you and our students.
+- What: a quick 30-minute session, no prep needed.
+- A short knowledge check at the end.` }],
+  },
+  "CA-001/3": {
+    objective: "You will set up the room/call and test all the equipment beforehand.",
+    whatToDo: ["Test AV, slides, and the poll tool.", "Have a backup plan for tech failure."],
+    references: [{ id: "ca001-3", title: "Setup checklist", kind: "Checklist", summary: "Before staff arrive.", body: `## Test
+- Slides display and advance.
+- Audio/screen-share works on the call.
+- The knowledge-check poll tool works.
+- Attendance register ready.` }],
+  },
+  "CA-001/4": {
+    objective: "You will deliver the 30-minute module, adapting the language for a non-technical audience.",
+    whatToDo: ["Deliver the content with real examples.", "Use the recent phishing incident as the hook."],
+    references: [{ id: "ca001-4", title: "Delivery tips", kind: "Briefing notes", summary: "How to land it.", body: `## Deliver
+- Open with the real phishing incident (relatable).
+- No jargon; concrete "what to do" for each topic.
+- Invite questions — engagement beats lecturing.` }],
+  },
+  "CA-001/5": {
+    objective: "You will administer the five-question knowledge check.",
+    whatToDo: ["Run the check (poll or written).", "Make sure everyone present completes it."],
+    references: [{ id: "ca001-5", title: "The knowledge check", kind: "Source document", summary: "The questions + pass rule.", body: `## 5 questions
+1. Suspicious email — what do you do? 2. Why never reuse your work password? 3. What is student personal data? 4. Where do you report an incident? 5. Public Wi-Fi without a VPN — the risk?
+
+## Pass rule
+Target ≥ 80% correct across attendees. Below → recommend a follow-up.` }],
+  },
+  "CA-001/6": {
+    objective: "You will record attendance on the Training Attendance Register.",
+    whatToDo: ["Record who attended and who didn't.", "Note absentees for follow-up."],
+    references: [{ id: "ca001-6", title: "Attendance", kind: "Template", summary: "Why it's evidence.", body: `## Record
+Attendance is the evidence the control operated (CIS 14 / ISO A.6.3). Capture attendees + absentees; absentees need a follow-up session.` }],
+  },
+  "CA-001/7": {
+    objective: "You will score the knowledge-check results and calculate the pass rate.",
+    whatToDo: ["Score the responses.", "Calculate the pass rate against the 80% target."],
+    references: [{ id: "ca001-7", title: "Scoring", kind: "Standard rules", summary: "What to report.", body: `## Calculate
+- % correct across all attendees.
+- The weakest question (the topic to reinforce).
+
+## Rule
+Report the actual rate, not "it went well" — measurement is what makes it evidence.` }],
+  },
+  "CA-001/8": {
+    objective: "You will produce a Training Completion Report with attendance, results, and follow-up recommendations.",
+    whatToDo: ["Summarise attendance and pass rate.", "Recommend follow-up for absentees and the weakest topic."],
+    references: [{ id: "ca001-8", title: "Completion report", kind: "Template", summary: "What to include.", body: `## Report
+- Attendance % (and who missed it).
+- Pass rate vs target.
+- Weakest topic.
+- Follow-up recommendation.
+
+## Why
+This report is the audit evidence that awareness training operated effectively.` }],
+  },
+
+  // ───────────── LRC-001 · Privacy Notice Review & Gap Assessment ─────────────
+  "LRC-001/1": {
+    objective: "You will obtain LearnTech's current published privacy notice.",
+    whatToDo: ["Get the live website version.", "Read it once before assessing."],
+    references: [{ id: "lrc001-1", title: "Current privacy notice", kind: "Source document", summary: "The notice you're assessing — it's thin.", body: `## Current notice (published)
+"LearnTech cares about your privacy. We collect some information to provide our services and may share it with partners. We keep your data secure. For questions, contact us. We may update this policy from time to time."
+
+## First impression
+Almost nothing required by law is actually here — the checklist (next step) will prove it.` }],
+  },
+  "LRC-001/2": {
+    objective: "You will apply the 14-element gap-check (GDPR Articles 13/14) to the current notice.",
+    whatToDo: ["Mark each of the 14 elements present / partial / absent.", "Be strict — vague mentions aren't 'present'."],
+    references: [{ id: "lrc001-2", title: "14 mandatory elements", kind: "Standard extract", summary: "The checklist.", body: `## Must be present
+1. Controller identity & contact. 2. DPO contact. 3. Purposes. 4. Lawful basis. 5. Legitimate interests. 6. Recipients. 7. International transfers + safeguards. 8. Retention. 9. Rights. 10. Withdraw consent. 11. Complain to ICO. 12. Statutory/contractual. 13. Automated decisions/profiling. 14. Source of data.
+
+## Children's rule
+Must be in clear, age-appropriate language (ICO Children's Code).` }],
+  },
+  "LRC-001/3": {
+    objective: "You will note any elements that are present but unclear or written in non-plain language.",
+    whatToDo: ["Flag vague or jargon-y wording.", "Note where children wouldn't understand it."],
+    references: [{ id: "lrc001-3", title: "Clarity check", kind: "Standard rules", summary: "What 'unclear' means.", body: `## Flag
+- "Partners" / "some information" — too vague to be valid.
+- Legal jargon a 12-year-old couldn't follow.
+- Anything that technically appears but doesn't actually inform.` }],
+  },
+  "LRC-001/4": {
+    objective: "You will research one well-drafted privacy notice in the same sector as a model.",
+    whatToDo: ["Study the example the mentor provides.", "Note how it handles children and plain language."],
+    references: [{ id: "lrc001-4", title: "Model notice features", kind: "Source document", summary: "What good looks like.", body: `## A good EdTech notice
+- Names the controller + DPO.
+- Lists each purpose with its lawful basis.
+- Has a child-friendly summary alongside the full notice.
+- States retention, rights, and the ICO complaint route.` }],
+  },
+  "LRC-001/5": {
+    objective: "You will draft an improved privacy notice addressing every identified gap.",
+    whatToDo: ["Write a notice covering all 14 elements.", "Include a child-friendly version."],
+    references: [{ id: "lrc001-5", title: "Notice template", kind: "Template", summary: "Structure to follow.", body: `## Sections
+Who we are + DPO · what we collect + why (purpose + lawful basis) · who we share with · transfers + safeguards · retention · your rights · how to complain · the child-friendly summary.
+
+## Rule
+Every one of the 14 elements must appear.` }],
+  },
+  "LRC-001/6": {
+    objective: "You will ensure the draft uses plain language to a Grade-8 readability target.",
+    whatToDo: ["Check readability against the target.", "Simplify anything too complex, especially for children."],
+    references: [{ id: "lrc001-6", title: "Plain-language target", kind: "Standard rules", summary: "The bar to hit.", body: `## Target
+Flesch-Kincaid Grade 8 or below. For the children's summary, simpler still.
+
+## Why
+The ICO Children's Code requires age-appropriate clarity — a legally-complete but unreadable notice still fails.` }],
+  },
+  "LRC-001/7": {
+    objective: "You will submit the draft to the mentor and the Legal/DPO contact for review.",
+    whatToDo: ["Send for review with the gap list attached.", "Address legal feedback."],
+    references: [{ id: "lrc001-7", title: "Review", kind: "Checklist", summary: "Before sign-off.", body: `## Confirm
+- All 14 elements present.
+- Plain language target met.
+- Child-friendly version included.
+- Legal/DPO comments addressed.` }],
+  },
+  "LRC-001/8": {
+    objective: "You will incorporate the review feedback and produce the final notice for DPO/Legal sign-off.",
+    whatToDo: ["Apply changes and finalise.", "Record the sign-off."],
+    references: [{ id: "lrc001-8", title: "Sign-off", kind: "Briefing notes", summary: "Closing it out.", body: `## Sign-off
+DPO/Legal formally approve the notice before it's published. Record the decision and date — a privacy notice is a legal document, so its approval must be evidenced.` }],
+  },
+
+  // ───────────── KT-001 · GRC Onboarding Pack — New Joiner Reference Guide ─────────────
+  "KT-001/1": {
+    objective: "You will identify the top ten things every LearnTech new joiner must know about security and privacy.",
+    whatToDo: ["List the ten most important, actionable items.", "Base them on real LearnTech facts, not theory."],
+    references: [{ id: "kt001-1", title: "LearnTech essentials", kind: "Source document", summary: "The facts a joiner needs.", body: `## Key facts
+- Policies in Confluence under "GRC"; AUP + Data Protection are mandatory reading.
+- Report incidents via #security and the IT Manager (DD-001).
+- Student data is always Confidential.
+- MFA mandatory; password manager provided.
+- DPO = Head of Legal; GRC questions → Compliance Manager.
+- Top threat: phishing impersonating school customers.` }],
+  },
+  "KT-001/2": {
+    objective: "You will compile a four-page New Joiner GRC Reference Guide.",
+    whatToDo: ["Cover policies, incident reporting, classification, acceptable use, phishing signs, contacts.", "Keep it to four pages."],
+    references: [{ id: "kt001-2", title: "Guide sections", kind: "Template", summary: "What the guide contains.", body: `## Sections
+1. Key policies + where to find them. 2. How to report an incident. 3. Data classification (with examples). 4. Acceptable use. 5. Top phishing signs. 6. Who to contact.
+
+## Rule
+Four pages max — a pack no one finishes protects no one.` }],
+  },
+  "KT-001/3": {
+    objective: "You will create a day-by-day New Joiner GRC Checklist (Days 1, 7, 30).",
+    whatToDo: ["List the GRC actions for the joiner and their manager at each milestone.", "Make each item a concrete action."],
+    references: [{ id: "kt001-3", title: "Checklist content", kind: "Template", summary: "What goes at each day.", body: `## Example
+- Day 1: set up MFA, read the AUP, know how to report an incident.
+- Day 7: complete awareness training, understand data classification.
+- Day 30: confirm access is appropriate to role.
+
+## Rule
+Each item is a verifiable action with an owner (joiner or manager).` }],
+  },
+  "KT-001/4": {
+    objective: "You will develop a five-slide Day-1 Security Briefing for the manager to present.",
+    whatToDo: ["Build five slides covering the must-knows.", "Make it deliverable by a non-specialist manager."],
+    references: [{ id: "kt001-4", title: "Day-1 briefing", kind: "Template", summary: "Five slides.", body: `## Slides
+1. Welcome + why security matters here (students). 2. How to report a problem. 3. Data classification. 4. Phishing signs. 5. Who to ask.
+
+## Rule
+A manager with no security background must be able to present it.` }],
+  },
+  "KT-001/5": {
+    objective: "You will review all materials with the Security Awareness & Training Specialist mentor.",
+    whatToDo: ["Share the pack.", "Address feedback on clarity and accuracy."],
+    references: [{ id: "kt001-5", title: "Review checklist", kind: "Checklist", summary: "Before piloting.", body: `## Confirm
+- Every item is a real, findable LearnTech fact.
+- Four pages max.
+- Actionable, not theoretical.
+- A new joiner could act on it.` }],
+  },
+  "KT-001/6": {
+    objective: "You will pilot the materials with one recent new joiner acting as a feedback reviewer.",
+    whatToDo: ["Have a recent joiner read it and try to act on it.", "Capture what was unclear or missing."],
+    references: [{ id: "kt001-6", title: "Pilot feedback", kind: "Checklist", summary: "What to test.", body: `## Ask the pilot
+- Could you find the policies?
+- Did you know how to report an incident?
+- Anything confusing or missing?
+
+## Why
+A recent joiner spots gaps an expert misses.` }],
+  },
+  "KT-001/7": {
+    objective: "You will incorporate the feedback and produce the final versions.",
+    whatToDo: ["Apply the pilot feedback.", "Finalise the guide, checklist, and slides."],
+    references: [{ id: "kt001-7", title: "Finalising", kind: "Checklist", summary: "Last checks.", body: `## Confirm
+- Pilot's confusions fixed.
+- All three artefacts consistent.
+- Contacts and links correct.` }],
+  },
+  "KT-001/8": {
+    objective: "You will hand the complete pack over to HR for the standard onboarding process.",
+    whatToDo: ["Deliver the pack to HR.", "Explain how to use it for every new joiner."],
+    references: [{ id: "kt001-8", title: "Handover", kind: "Briefing notes", summary: "Embedding it.", body: `## Handover
+Give HR the guide, checklist, and slides, and agree they're issued to every new joiner on day one. A pack that isn't in the standard process gets forgotten.` }],
+  },
+
+  // ═════════════ GlobalConnect Customer Solutions · BPO & KPO (Call Centres) ═════════════
+  // ───────────── AA-002 · CIS Controls v8 IG1 Gap Analysis ─────────────
+  "AA-002/2.1": {
+    objective: "You will work through the CIS IG1 worksheet so you know exactly which 56 safeguards you're assessing GlobalConnect against.",
+    whatToDo: ["Read the IG1 safeguards and group them by Control.", "Note what evidence each safeguard needs."],
+    references: [{ id: "aa002-2-1", title: "CIS IG1 overview", kind: "Standard extract", summary: "What IG1 covers.", body: `## IG1 — essential cyber hygiene (56 safeguards, 18 Controls)
+Key groups: C1 Asset inventory · C2 Software · C4 Secure config · C5 Account mgmt · C6 Access/MFA · C7 Vulnerability mgmt · C8 Audit logs · C11 Data recovery · C14 Awareness.
+
+## Per safeguard
+You'll record Implemented / Partial / Not, with evidence.` }],
+  },
+  "AA-002/2.2": {
+    objective: "You will schedule walkthroughs with IT and ops staff to gather the evidence for each safeguard.",
+    whatToDo: ["Arrange short walkthroughs with the right people.", "Confirm a purpose (which safeguards) per session."],
+    references: [{ id: "aa002-2-2", title: "Who to walk through with", kind: "Briefing notes", summary: "Whom to schedule.", body: `## Schedule
+- IT lead → access, MFA, patching, logging.
+- Ops manager → asset/device handling (BYOD), training.
+- Each session has an agenda (the safeguards it covers).` }],
+  },
+  "AA-002/2.3": {
+    objective: "You will record the current state of each safeguard with supporting evidence.",
+    whatToDo: ["Mark each safeguard Implemented / Partial / Not.", "Cite the evidence (or note its absence)."],
+    references: [{ id: "aa002-2-3", title: "GlobalConnect current state", kind: "Source document", summary: "The facts to score against.", body: `## Walkthrough findings
+- No central asset/software inventory; agents on BYOD.
+- MFA on email, not on the customer CRM.
+- Local admin common on agent machines.
+- No vuln scanning/patch tracking.
+- CRM backups run, never restore-tested.
+- Awareness training only at induction.
+- Logs exist but unreviewed.
+
+## Rule
+Score from this evidence — "Implemented" needs the artefact named.` }],
+  },
+  "AA-002/2.4": {
+    objective: "You will calculate the compliance percentage per CIS Control group.",
+    whatToDo: ["Compute implemented ÷ applicable safeguards per Control.", "Re-check the arithmetic."],
+    references: [{ id: "aa002-2-4", title: "Scoring", kind: "Standard rules", summary: "How to compute.", body: `## Per Control
+Compliance % = implemented ÷ applicable safeguards. Partial counts as half if you state the rule.
+
+## Overall
+Roll up to one figure (e.g. IG1 41%) — the headline management remembers.` }],
+  },
+  "AA-002/2.5": {
+    objective: "You will prioritise the top five gaps by risk exposure.",
+    whatToDo: ["Rank gaps by the risk each creates.", "Weight gaps on systems holding client data higher."],
+    references: [{ id: "aa002-2-5", title: "Prioritisation", kind: "Standard rules", summary: "How to rank.", body: `## Rank by exposure
+A missing safeguard on the CRM (client personal data) outranks one on the marketing site.
+
+## Likely top gaps
+No MFA on the CRM; local admin rights; no patch management; untested backups; BYOD with no controls.` }],
+  },
+  "AA-002/2.6": {
+    objective: "You will draft remediation recommendations for each prioritised gap.",
+    whatToDo: ["For each gap propose a specific fix, owner, and effort.", "Make recommendations concrete."],
+    references: [{ id: "aa002-2-6", title: "Recommendation rules", kind: "Standard rules", summary: "What a good rec looks like.", body: `## Each recommendation
+- The specific action (e.g. "enforce MFA on the CRM").
+- The owner (a role).
+- Rough effort/cost.
+
+## Rule
+"Improve access control" is not a recommendation; "enable MFA on the CRM for all 120 agents" is.` }],
+  },
+  "AA-002/2.7": {
+    objective: "You will validate your findings with the Compliance Manager mentor before reporting.",
+    whatToDo: ["Share findings with a cover note.", "Correct anything the mentor flags."],
+    references: [{ id: "aa002-2-7", title: "Validation checklist", kind: "Checklist", summary: "Before the report.", body: `## Confirm
+- Each safeguard scored with evidence.
+- Percentages correct.
+- Top-five gaps ranked by exposure.
+- Recommendations have owners.` }],
+  },
+  "AA-002/2.8": {
+    objective: "You will compile the Gap Analysis Report and present it to management.",
+    whatToDo: ["Write the report: scores, gaps, recommendations, executive summary.", "Present the headline and the asks."],
+    references: [{ id: "aa002-2-8", title: "Report structure", kind: "Template", summary: "What it contains.", body: `## Report
+- Executive summary (the headline %).
+- Compliance per Control group.
+- Top-five gaps + remediation.
+- Recommended next steps.
+
+## Present
+Lead with the overall figure and the client-data risks.` }],
+  },
+
+  // ───────────── GRM-002 · Information Security Policy Drafting ─────────────
+  "GRM-002/5.1": {
+    objective: "You will review two existing GlobalConnect policies to learn the house style before drafting.",
+    whatToDo: ["Read two policies for tone, structure, and referencing.", "Note the document-control conventions."],
+    references: [{ id: "grm002-5-1", title: "House style", kind: "Source document", summary: "The conventions to match.", body: `## Existing style
+- Numbered statements ("3.1 Staff must…").
+- A control block: owner, version, approval & review dates.
+- Plain, directive language; ISO references in a side column.
+
+## Rule
+Your policy must fit this style or it won't pass review.` }],
+  },
+  "GRM-002/5.2": {
+    objective: "You will select the policy type to draft (AUP or Remote Working) with the mentor.",
+    whatToDo: ["Pick the policy that addresses GlobalConnect's biggest real risk.", "Confirm the scope."],
+    references: [{ id: "grm002-5-2", title: "The real risks to govern", kind: "Source document", summary: "What the policy must address.", body: `## GlobalConnect reality
+- Agents work home + office on a mix of devices (BYOD).
+- They handle clients' customer data on screen.
+- Shared workstations; tailgating happens.
+- Staff use WhatsApp for shift coordination (shadow IT).
+
+## Pick
+A Remote Working or Acceptable Use policy that actually addresses these — not a generic template.` }],
+  },
+  "GRM-002/5.3": {
+    objective: "You will draft the policy body to the template.",
+    whatToDo: ["Write purpose, scope, roles, statements, exceptions, review cycle.", "Make statements address the real risks."],
+    references: [{ id: "grm002-5-3", title: "Policy template", kind: "Template", summary: "The sections.", body: `## Sections
+Purpose · scope · roles & responsibilities · policy statements · exceptions process · review cycle · control block.
+
+## Rule
+Statements must address BYOD, shared screens, and shadow IT — the specific risks, not platitudes.` }],
+  },
+  "GRM-002/5.4": {
+    objective: "You will map each policy statement to a specific ISO 27001 Annex A control.",
+    whatToDo: ["Map every statement to a control.", "Flag any statement with no control (likely redundant)."],
+    references: [{ id: "grm002-5-4", title: "Statement → control mapping", kind: "Standard extract", summary: "The likely controls.", body: `## Likely mappings
+A.5.10 Acceptable use · A.6.7 Remote working · A.8.1 Endpoint devices · A.5.14 Information transfer · A.8.5 Secure authentication.
+
+## Rule
+A statement that maps to no control is either redundant or you've missed the control it implements.` }],
+  },
+  "GRM-002/5.5": {
+    objective: "You will circulate the draft for review to IT, HR, and Legal.",
+    whatToDo: ["Send with the comment sheet.", "Collect and log all feedback."],
+    references: [{ id: "grm002-5-5", title: "Review circulation", kind: "Checklist", summary: "Who reviews and why.", body: `## Reviewers
+- IT Manager (feasibility).
+- HR (people implications, disciplinary link).
+- Legal (enforceability).
+
+## Capture
+Use the comment sheet so every comment is tracked and resolved.` }],
+  },
+  "GRM-002/5.6": {
+    objective: "You will incorporate the review feedback and track the changes.",
+    whatToDo: ["Apply feedback with tracked changes.", "Resolve every comment."],
+    references: [{ id: "grm002-5-6", title: "Incorporating feedback", kind: "Checklist", summary: "How to do it cleanly.", body: `## Rules
+- Track changes so reviewers see what moved.
+- Every comment resolved or explicitly declined with a reason.
+- Re-check the ISO mappings still hold.` }],
+  },
+  "GRM-002/5.7": {
+    objective: "You will submit the policy for management approval.",
+    whatToDo: ["Submit on the approval form.", "Capture the approval and date."],
+    references: [{ id: "grm002-5-7", title: "Approval", kind: "Standard rules", summary: "Why it matters.", body: `## Approval
+A policy has no authority until management approves it. Use the sign-off form; record the approver, decision, and date. The control block is updated to "approved".` }],
+  },
+  "GRM-002/5.8": {
+    objective: "You will register the approved policy and set its next review date.",
+    whatToDo: ["Add it to the Policy Register.", "Set a review date (e.g. annual)."],
+    references: [{ id: "grm002-5-8", title: "Registering", kind: "Briefing notes", summary: "Keeping it controlled.", body: `## Register
+Add the approved policy (version, owner, approval date) to the Policy Register and set the next review. An unregistered policy isn't a controlled document (ISO A.5.1/A.5.37).` }],
+  },
+
+  // ───────────── GRM-003 · GRC Maturity Assessment — Departmental ─────────────
+  "GRM-003/6.1": {
+    objective: "You will familiarise yourself with the NIST CSF 2.0 tier definitions before assessing.",
+    whatToDo: ["Learn the four tiers and six functions.", "Be clear what evidence each tier needs."],
+    references: [{ id: "grm003-6-1", title: "CSF tiers", kind: "Standard extract", summary: "The 1–4 scale.", body: `## Tiers
+1 Partial (ad hoc) · 2 Risk-Informed (aware, not org-wide) · 3 Repeatable (formal, consistent) · 4 Adaptive (continuous improvement).
+
+## Functions
+Govern · Identify · Protect · Detect · Respond · Recover.
+
+## Rule
+A tier score needs evidence, not impression.` }],
+  },
+  "GRM-003/6.2": {
+    objective: "You will adapt the maturity questionnaire to the department's context.",
+    whatToDo: ["Tailor 10–15 questions per CSF function to the department.", "Make questions evidence-seeking, not yes/no."],
+    references: [{ id: "grm003-6-2", title: "Questionnaire design", kind: "Template", summary: "How to write the questions.", body: `## Per function
+Ask for evidence: "How do you decide what to patch first, and where's that documented?" not "Do you patch?"
+
+## Rule
+Tailor to the department's reality — generic questions get generic, unscorable answers.` }],
+  },
+  "GRM-003/6.3": {
+    objective: "You will conduct a 90-minute maturity interview with the department head and IT lead.",
+    whatToDo: ["Run the questionnaire, probing for evidence.", "Capture specifics, not opinions."],
+    references: [{ id: "grm003-6-3", title: "Department current state", kind: "Source document", summary: "What you'll hear (and score).", body: `## Operations dept
+- Govern: no documented risk appetite → Tier 1.
+- Identify: partial asset list, no risk register → Tier 1/2.
+- Protect: MFA on email, induction-only training → Tier 2.
+- Detect: logs unmonitored → Tier 1.
+- Respond: no procedure → Tier 1.
+- Recover: backups untested → Tier 1.` }],
+  },
+  "GRM-003/6.4": {
+    objective: "You will score each CSF function on the 1–4 scale with justification.",
+    whatToDo: ["Assign a tier per function.", "Justify each score with interview evidence."],
+    references: [{ id: "grm003-6-4", title: "Scoring rules", kind: "Standard rules", summary: "How to score defensibly.", body: `## Rule
+Each score cites evidence: "Detect = Tier 1 — logs exist but no one reviews them (confirmed in interview)." A score without justification isn't defensible.` }],
+  },
+  "GRM-003/6.5": {
+    objective: "You will plot current vs target state on the CSF spider diagram.",
+    whatToDo: ["Plot the six function scores.", "Add a realistic target (e.g. Tier 2 minimum)."],
+    references: [{ id: "grm003-6-5", title: "Spider diagram", kind: "Template", summary: "What it shows.", body: `## The diagram
+Six axes (the functions), current score plotted, target overlaid. The gap between the two lines is the visual story for management.` }],
+  },
+  "GRM-003/6.6": {
+    objective: "You will identify the three most critical gaps to reach at least Tier 2.",
+    whatToDo: ["Pick the three functions furthest below Tier 2.", "Name the exposure each creates."],
+    references: [{ id: "grm003-6-6", title: "Gap selection", kind: "Standard rules", summary: "Which gaps to pick.", body: `## Likely top gaps
+Detect (no monitoring), Respond (no procedure), Recover (untested backups) — all Tier 1, all high-exposure for a call centre handling client data.` }],
+  },
+  "GRM-003/6.7": {
+    objective: "You will draft a one-page improvement roadmap for the top three gaps.",
+    whatToDo: ["For each gap, state the action, owner, and target tier.", "Sequence the quick wins first."],
+    references: [{ id: "grm003-6-7", title: "Roadmap rules", kind: "Template", summary: "What each item needs.", body: `## Per item
+Gap · action to close it · owner · target tier · rough timeline.
+
+## Rule
+A roadmap item with no owner or target is a wish, not a plan.` }],
+  },
+  "GRM-003/6.8": {
+    objective: "You will present findings to the department head and refine based on feedback.",
+    whatToDo: ["Present the spider diagram and the top-three gaps.", "Capture agreement and adjust."],
+    references: [{ id: "grm003-6-8", title: "Presenting maturity", kind: "Briefing notes", summary: "How to land it.", body: `## Present
+- The spider diagram (current vs Tier 2).
+- The three gaps and what closing them takes.
+- Frame as a starting point, not a judgement — buy-in matters.` }],
+  },
+
+  // ───────────── DD-002 · Security Awareness Training Content Development ─────────────
+  "DD-002/1": {
+    objective: "You will review existing materials so the new module doesn't duplicate or contradict them.",
+    whatToDo: ["Read the current onboarding/security guidance.", "Note gaps and the real incident history."],
+    references: [{ id: "dd002-1", title: "Why these topics", kind: "Source document", summary: "The incident data behind the content.", body: `## Last 6 months
+- 4 phishing emails clicked (one credential theft).
+- 3 password-reuse cases found.
+- 2 agents emailed client customer lists to personal accounts.
+
+## Audience
+High-turnover, non-technical agents — content must be concrete and scenario-based.` }],
+  },
+  "DD-002/2": {
+    objective: "You will define three learning objectives, one per topic (phishing, passwords, data handling).",
+    whatToDo: ["Write one observable objective per topic.", "Start each with an action verb."],
+    references: [{ id: "dd002-2", title: "Learning objectives", kind: "Template", summary: "How to write them.", body: `## Good objective
+"After this module you will be able to identify three signs of a phishing email." (observable, action verb) — not "understand phishing".` }],
+  },
+  "DD-002/3": {
+    objective: "You will draft the module content outline (10 minutes per topic).",
+    whatToDo: ["Outline each topic to its objective.", "Build in real examples from the incident history."],
+    references: [{ id: "dd002-3", title: "Outline template", kind: "Template", summary: "Structure per topic.", body: `## Per topic (10 min)
+- The risk (with a real GlobalConnect example).
+- What to do / not do.
+- A quick check of understanding.
+
+## Rule
+Tie every topic to a real incident — it changes behaviour, theory doesn't.` }],
+  },
+  "DD-002/4": {
+    objective: "You will develop the slide content (10–12 slides).",
+    whatToDo: ["Build slides to the outline.", "Keep them visual and concrete."],
+    references: [{ id: "dd002-4", title: "Slide rules", kind: "Template", summary: "How to build them.", body: `## Rules
+- 10–12 slides total, not per topic.
+- One idea per slide, minimal text.
+- Show a real phishing email as an example.` }],
+  },
+  "DD-002/5": {
+    objective: "You will write a five-question knowledge check aligned to the objectives.",
+    whatToDo: ["One question per objective + two scenarios.", "One clearly correct answer each."],
+    references: [{ id: "dd002-5", title: "Knowledge check", kind: "Template", summary: "How to align it.", body: `## Rules
+- Each question maps to a stated objective.
+- Multiple choice, plausible distractors, one correct.
+- If a question maps to no objective, fix one of them.` }],
+  },
+  "DD-002/6": {
+    objective: "You will develop a one-page Facilitator Guide for whoever delivers the training.",
+    whatToDo: ["Write delivery notes per slide.", "Make it usable by a non-specialist."],
+    references: [{ id: "dd002-6", title: "Facilitator guide", kind: "Template", summary: "What it contains.", body: `## Per slide
+- The key point to make.
+- The example to use.
+- A prompt question for the room.
+
+## Rule
+A manager with no security background must be able to deliver it from this guide.` }],
+  },
+  "DD-002/7": {
+    objective: "You will pilot the module with two colleagues and collect feedback.",
+    whatToDo: ["Run a pilot.", "Capture what was unclear or too long."],
+    references: [{ id: "dd002-7", title: "Pilot feedback", kind: "Checklist", summary: "What to test.", body: `## Ask the pilots
+- Was anything confusing?
+- Did the examples land?
+- Was the length right (30 min)?
+- Did the knowledge check make sense?` }],
+  },
+  "DD-002/8": {
+    objective: "You will revise and finalise all the materials.",
+    whatToDo: ["Apply pilot feedback.", "Finalise slides, check, and facilitator guide."],
+    references: [{ id: "dd002-8", title: "Finalising", kind: "Checklist", summary: "Last checks.", body: `## Confirm
+- Objectives, content, and check all aligned.
+- Real examples included.
+- Facilitator guide complete.
+- 30-minute runtime.` }],
+  },
+
+  // ───────────── IE-001 · CIS IG1 Remediation — Implementation Tracking ─────────────
+  "IE-001/1": {
+    objective: "You will select five IG1 safeguards to implement, with the Compliance and IT managers.",
+    whatToDo: ["Pick five high-impact, feasible safeguards.", "Confirm what 'done' means for each."],
+    references: [{ id: "ie001-1", title: "Five safeguards", kind: "Source document", summary: "The safeguards + acceptance criteria.", body: `## Selected (from AA-002)
+1. 6.3 MFA on the CRM. 2. 5.3 Disable dormant accounts (>45d). 3. 4.1 Secure laptop baseline. 4. 1.1 Asset inventory. 5. 14.1 Awareness programme.
+
+## Rule
+"Done" = the acceptance criterion met + evidence, not "started".` }],
+  },
+  "IE-001/2": {
+    objective: "You will create an Implementation Task Card for each safeguard.",
+    whatToDo: ["Specify what, who, tools, acceptance criteria, evidence.", "Make each card actionable by IT."],
+    references: [{ id: "ie001-2", title: "Task card fields", kind: "Template", summary: "Per-safeguard card.", body: `## Card
+What must be done · owner (IT) · tools/systems · acceptance criteria · evidence required.
+
+## Example
+6.3 MFA on CRM → owner: IT lead → enforce MFA policy → evidence: policy screenshot + 100% enrolled.` }],
+  },
+  "IE-001/3": {
+    objective: "You will track implementation progress weekly.",
+    whatToDo: ["Update each card's status weekly.", "Flag blockers early."],
+    references: [{ id: "ie001-3", title: "Tracker", kind: "Template", summary: "How to track.", body: `## Tracker
+Per safeguard: status (Not started / In progress / Done) · % complete · blockers · next action. Update weekly so slippage is visible.` }],
+  },
+  "IE-001/4": {
+    objective: "You will collect evidence for each completed safeguard.",
+    whatToDo: ["Gather screenshots, exports, or documents per safeguard.", "File them in the evidence repository."],
+    references: [{ id: "ie001-4", title: "Evidence rules", kind: "Standard rules", summary: "What counts.", body: `## Evidence
+- MFA → policy screenshot + enrolment export.
+- Dormant accounts → the disabled-accounts list.
+- Baseline → the documented config + applied-device list.
+
+## Rule
+No evidence = not done, regardless of what the owner says.` }],
+  },
+  "IE-001/5": {
+    objective: "You will verify each implementation against its acceptance criteria — pass or fail.",
+    whatToDo: ["Independently check evidence vs criteria.", "Record pass/fail honestly."],
+    references: [{ id: "ie001-5", title: "Verification", kind: "Testing rules", summary: "How to verify.", body: `## Verify
+Check the evidence meets the acceptance criterion. "MFA enrolled for 100%" but the export shows 85% = fail. Don't pass on the owner's say-so.` }],
+  },
+  "IE-001/6": {
+    objective: "You will raise a Remediation Issue for any implementation that fails verification.",
+    whatToDo: ["Log a clear issue for each failure.", "Assign it back with a target date."],
+    references: [{ id: "ie001-6", title: "Remediation issue", kind: "Template", summary: "What to log.", body: `## Issue
+The safeguard · what failed (criterion not met) · the gap · owner · target date.
+
+## Rule
+A failure with no logged issue and owner just gets forgotten.` }],
+  },
+  "IE-001/7": {
+    objective: "You will update the CIS Gap Analysis (AA-002) to reflect the newly implemented controls.",
+    whatToDo: ["Re-score the implemented safeguards.", "Recalculate the compliance %."],
+    references: [{ id: "ie001-7", title: "Updating the baseline", kind: "Standard rules", summary: "Show the progress.", body: `## Update
+Move the verified safeguards to Implemented and recompute the % (e.g. IG1 41% → 50%). Only count verified ones — not "in progress".` }],
+  },
+  "IE-001/8": {
+    objective: "You will prepare an Implementation Progress Report for the IT Manager.",
+    whatToDo: ["Summarise what's done, what failed, and the new compliance %.", "Name the next actions."],
+    references: [{ id: "ie001-8", title: "Progress report", kind: "Template", summary: "What it shows.", body: `## Report
+- Safeguards done vs planned.
+- Verification pass/fail.
+- New compliance % (before → after).
+- Open remediation issues + dates.` }],
+  },
+
+  // ───────────── IE-002 · Policy Roll-Out — Document Control Setup ─────────────
+  "IE-002/1": {
+    objective: "You will audit the current state of GlobalConnect's document storage.",
+    whatToDo: ["Find where documents live and how they're named/versioned.", "Document the specific problems."],
+    references: [{ id: "ie002-1", title: "Current storage audit", kind: "Source document", summary: "The mess to fix.", body: `## Found
+- Policies in three places (shared drive, email, a laptop).
+- Multiple "Security Policy" versions; unclear which is current.
+- Files named "policy_final_v2_FINAL.docx".
+- No owners, no review dates; some 4 years old.
+- Everyone can edit everything.` }],
+  },
+  "IE-002/2": {
+    objective: "You will define the Document Control Policy.",
+    whatToDo: ["Set the versioning scheme, naming, location, access, and review frequency.", "Solve each problem from the audit."],
+    references: [{ id: "ie002-2", title: "Document control standard", kind: "Template", summary: "What to define.", body: `## Define
+- Versioning (v1.0 approved, v1.1 minor, v0.x draft).
+- Naming (ISMS-POL-AccUse-v1.0).
+- Single location + access rights.
+- Review frequency (annual).
+
+## Rule
+The policy must explicitly fix each audit problem.` }],
+  },
+  "IE-002/3": {
+    objective: "You will create the Document Register — the master index of all GRC documents.",
+    whatToDo: ["List every policy/procedure with version, status, owner, review date.", "Mark the current version of each."],
+    references: [{ id: "ie002-3", title: "Document register", kind: "Template", summary: "The fields.", body: `## Per document
+Title · version · status (draft/approved) · owner · approval date · review date.
+
+## Why
+The register is the single source of truth for what's current — it's also the ISO evidence that documents are controlled.` }],
+  },
+  "IE-002/4": {
+    objective: "You will implement the folder structure on the shared drive.",
+    whatToDo: ["Build the agreed folder structure.", "Set the access rights (read vs edit)."],
+    references: [{ id: "ie002-4", title: "Folder structure", kind: "Template", summary: "How to set it up.", body: `## Structure
+Logical folders (Policies, Procedures, Evidence, Drafts) with access: most staff read-only, owners edit. Fix the "everyone can edit" problem.` }],
+  },
+  "IE-002/5": {
+    objective: "You will migrate the existing documents into the new structure with correct naming.",
+    whatToDo: ["Move each document, applying the naming convention.", "Archive superseded versions."],
+    references: [{ id: "ie002-5", title: "Migration rules", kind: "Standard rules", summary: "How to migrate cleanly.", body: `## Migrate
+- Rename to the convention.
+- Keep one current version; archive the rest clearly.
+- Update the register as you go.` }],
+  },
+  "IE-002/6": {
+    objective: "You will train the document owners on the version-control process.",
+    whatToDo: ["Run a 15-minute walkthrough.", "Show how to version, name, and review."],
+    references: [{ id: "ie002-6", title: "Owner training", kind: "Briefing notes", summary: "What to cover.", body: `## Walkthrough
+- How to create a new version.
+- The naming convention.
+- Where things live and who can edit.
+- When to review.` }],
+  },
+  "IE-002/7": {
+    objective: "You will publish the Document Control Policy and brief all GRC stakeholders.",
+    whatToDo: ["Publish the approved policy.", "Brief stakeholders on the new way of working."],
+    references: [{ id: "ie002-7", title: "Roll-out", kind: "Briefing notes", summary: "Announcing it.", body: `## Brief
+Tell stakeholders: documents now live in one place, here's how to find the current version, here's how to make changes. A control process no one knows about won't be followed.` }],
+  },
+  "IE-002/8": {
+    objective: "You will set calendar reminders for all policy review dates.",
+    whatToDo: ["Create recurring reminders per document.", "Assign each to its owner."],
+    references: [{ id: "ie002-8", title: "Review reminders", kind: "Briefing notes", summary: "Keeping it alive.", body: `## Reminders
+Set a calendar reminder for each document's review date, owned by its owner. Document control fails when reviews lapse — automate the prompt.` }],
+  },
+
+  // ───────────── MM-001 · GRC KPI Definition & Metrics Tracking ─────────────
+  "MM-001/1": {
+    objective: "You will identify five measurable GRC indicators from GlobalConnect's current status.",
+    whatToDo: ["Pick five KPIs that are measurable and meaningful.", "Avoid vanity metrics."],
+    references: [{ id: "mm001-1", title: "Candidate KPIs", kind: "Source document", summary: "The indicators + targets.", body: `## Five KPIs (month-1 data)
+1. % staff trained — 68% (target ≥95%). 2. % policies reviewed in 12m — 40% (≥90%). 3. Open risk items — 14 (<10). 4. % systems patched — 72% (≥90%). 5. Mean time to close findings — 38d (<30d).
+
+## Rule
+A KPI needs a data source and a target — or it's an opinion.` }],
+  },
+  "MM-001/2": {
+    objective: "You will complete a KPI Definition Card for each KPI.",
+    whatToDo: ["Define formula, source, frequency, owner, target, RAG thresholds.", "Make the formula unambiguous."],
+    references: [{ id: "mm001-2", title: "KPI card", kind: "Template", summary: "The fields.", body: `## Per KPI
+Name · formula · data source · frequency · owner · target · RAG thresholds (Green=target, Amber=within 10%, Red=worse).` }],
+  },
+  "MM-001/3": {
+    objective: "You will build the Monthly GRC Metrics Tracking Spreadsheet with auto-RAG colouring.",
+    whatToDo: ["Build the tracker from the cards.", "Set up the RAG conditional formatting."],
+    references: [{ id: "mm001-3", title: "Tracker build", kind: "Template", summary: "How to structure it.", body: `## Tracker
+A row per KPI, columns per month, auto-RAG against the thresholds. Should update with new data and recolour automatically.` }],
+  },
+  "MM-001/4": {
+    objective: "You will collect the first month's data by requesting inputs from IT and HR.",
+    whatToDo: ["Request each KPI's source data.", "Verify the numbers before using them."],
+    references: [{ id: "mm001-4", title: "Data collection", kind: "Briefing notes", summary: "Who provides what.", body: `## Sources
+- Training % → HR.
+- Patching % → IT.
+- Open risks → the risk register.
+- Findings closure → audit log.
+
+## Rule
+Verify each figure against its source — a wrong number colours the wrong RAG.` }],
+  },
+  "MM-001/5": {
+    objective: "You will populate the tracker and generate the Month 1 report.",
+    whatToDo: ["Enter the data; let the RAG compute.", "Generate the month-1 snapshot."],
+    references: [{ id: "mm001-5", title: "Month 1 report", kind: "Template", summary: "What it shows.", body: `## Report
+The five KPIs, their values, RAG status, and trend (n/a in month 1). Three likely Reds: training, policy review, patching.` }],
+  },
+  "MM-001/6": {
+    objective: "You will draft a three-sentence management commentary interpreting the RAG status.",
+    whatToDo: ["Write three sentences: where we are, the worst gap, the action.", "No jargon."],
+    references: [{ id: "mm001-6", title: "Commentary rules", kind: "Standard rules", summary: "How to interpret RAG.", body: `## Three sentences
+1. Overall position. 2. The most important Red and why it matters. 3. The action being taken.
+
+## Rule
+Numbers without interpretation don't help managers decide.` }],
+  },
+  "MM-001/7": {
+    objective: "You will present the metrics and commentary to the Compliance Manager mentor for review.",
+    whatToDo: ["Walk through the tracker and commentary.", "Address feedback."],
+    references: [{ id: "mm001-7", title: "Review checklist", kind: "Checklist", summary: "Before going live.", body: `## Confirm
+- Each KPI has a source and target.
+- RAG thresholds are objective.
+- Commentary interprets, doesn't just restate.` }],
+  },
+  "MM-001/8": {
+    objective: "You will schedule recurring monthly data-collection invites with each data owner.",
+    whatToDo: ["Set a recurring invite per data owner.", "Make ongoing collection effortless."],
+    references: [{ id: "mm001-8", title: "Sustaining it", kind: "Briefing notes", summary: "Keeping it monthly.", body: `## Schedule
+A recurring monthly reminder to each owner (HR, IT, risk) to submit their figure by a set date. KPIs die when collection is ad hoc — automate the prompt.` }],
+  },
+
+  // ───────────── CA-003 · Stakeholder Interview — GRC Needs Discovery ─────────────
+  "CA-003/1": {
+    objective: "You will prepare a structured Interview Guide for the needs-discovery interviews.",
+    whatToDo: ["Write 8–10 open questions per stakeholder type.", "Make them surface real concerns, not yes/no."],
+    references: [{ id: "ca003-1", title: "Interview guide design", kind: "Template", summary: "How to write the questions.", body: `## Open questions
+"What worries you most about how we handle client data today?" — not "Are we secure?".
+
+## Per stakeholder type
+Tailor to their angle (ops wants practicality; account lead wants to keep the contract).` }],
+  },
+  "CA-003/2": {
+    objective: "You will brief each stakeholder in advance on the purpose and duration.",
+    whatToDo: ["Send a short brief before each interview.", "Set expectations (30 minutes, honest input)."],
+    references: [{ id: "ca003-2", title: "The three interviewees", kind: "Source document", summary: "Who they are.", body: `## Stakeholders
+- Operations Manager — wants practical rules, not paperwork.
+- Client Account Lead — clients demand ISO/SOC 2; fears losing deals.
+- IT Lead — overstretched; fears controls slow agents down.
+
+## Note
+Their priorities conflict — that tension is the real finding.` }],
+  },
+  "CA-003/3": {
+    objective: "You will conduct the three interviews, listening actively and probing for specifics.",
+    whatToDo: ["Run each interview to the guide.", "Probe for concrete examples; take structured notes."],
+    references: [{ id: "ca003-3", title: "Running the interview", kind: "Briefing notes", summary: "How to get signal.", body: `## During
+- Ask, then listen — don't lead.
+- Probe: "Can you give me an example?"
+- Capture their words (quote them) and specific incidents.` }],
+  },
+  "CA-003/4": {
+    objective: "You will write up a Stakeholder Interview Summary within 24 hours of each.",
+    whatToDo: ["Summarise each interview while fresh.", "Capture concerns, examples, and what 'good' looks like to them."],
+    references: [{ id: "ca003-4", title: "Summary structure", kind: "Template", summary: "Per interview.", body: `## Capture
+- The concern (their words).
+- A specific example they gave.
+- What they think good looks like.
+- What they fear about change.
+
+## Rule
+Write within 24 hours — detail fades.` }],
+  },
+  "CA-003/5": {
+    objective: "You will identify the themes across all three interviews.",
+    whatToDo: ["Group recurring concerns and conflicts.", "Surface the tension between control and speed."],
+    references: [{ id: "ca003-5", title: "Theme analysis", kind: "Standard rules", summary: "How to synthesise.", body: `## Themes
+Group across the three: common concerns, knowledge gaps, conflicting priorities.
+
+## The key theme here
+"More control" (account lead) vs "don't slow us down" (IT/ops) — naming this tension is the deliverable's value.` }],
+  },
+  "CA-003/6": {
+    objective: "You will compile a Stakeholder Needs Discovery Report.",
+    whatToDo: ["Summarise the themes, key quotes, and implications for the GRC programme.", "Make it decision-useful."],
+    references: [{ id: "ca003-6", title: "Report structure", kind: "Template", summary: "What it contains.", body: `## Report
+- Themes (not a transcript).
+- Key quotes as evidence.
+- Implications for the GRC programme (what to prioritise given the tension).` }],
+  },
+  "CA-003/7": {
+    objective: "You will review the findings with the Policy & Governance Analyst mentor.",
+    whatToDo: ["Share with a cover note.", "Address feedback."],
+    references: [{ id: "ca003-7", title: "Review checklist", kind: "Checklist", summary: "Before feeding in.", body: `## Confirm
+- Themes (not raw notes) are the output.
+- Quotes support each theme.
+- The control-vs-speed tension is surfaced.` }],
+  },
+  "CA-003/8": {
+    objective: "You will feed the insights into the Stakeholder Register (SPA-002) and GRC Roadmap (SPA-001).",
+    whatToDo: ["Update the register with what you learned.", "Reflect the priorities in the roadmap."],
+    references: [{ id: "ca003-8", title: "Feeding insights forward", kind: "Briefing notes", summary: "Closing the loop.", body: `## Update
+- Register: refine each stakeholder's interest/influence from what they said.
+- Roadmap: re-prioritise based on the real needs (e.g. practical controls that don't kill handle time).` }],
+  },
+
+  // ───────────── BCRP-001 · Business Impact Analysis — Single Department ─────────────
+  "BCRP-001/1": {
+    objective: "You will select the department for the BIA, with the Business Continuity mentor.",
+    whatToDo: ["Pick the department whose downtime hurts most.", "Confirm its scope."],
+    references: [{ id: "bcrp001-1", title: "The department", kind: "Source document", summary: "Which to pick and why.", body: `## Recommended: Customer Operations
+Agents answer calls/chats for three client brands, 24/7, under SLAs with penalties. Its downtime has direct financial impact — the most instructive BIA.` }],
+  },
+  "BCRP-001/2": {
+    objective: "You will conduct a 60-minute BIA interview with the department manager.",
+    whatToDo: ["Use the BIA questionnaire.", "Capture functions, dependencies, and impacts."],
+    references: [{ id: "bcrp001-2", title: "BIA interview facts", kind: "Source document", summary: "What you'll learn.", body: `## Customer Operations
+- Live call/chat → depends on telephony (Genesys) + CRM + internet.
+- SLA reporting → depends on CRM data + reporting tool.
+- Each contract has penalties for downtime > 2 hours.
+- Telephony down: ~£4k/hour + reputational damage.
+- CRM data >1h stale → mis-routing + compliance issues.` }],
+  },
+  "BCRP-001/3": {
+    objective: "You will identify the department's top five critical functions and their dependencies.",
+    whatToDo: ["List the critical functions.", "For each, capture the people/systems/data it needs and the impact if it's down."],
+    references: [{ id: "bcrp001-3", title: "Function/dependency mapping", kind: "Template", summary: "What to capture.", body: `## Per function
+Function · depends on (people/systems/data) · impact if unavailable (financial/operational/reputational).
+
+## Rule
+The dependency chain is what DR/BC plans protect — capture it precisely.` }],
+  },
+  "BCRP-001/4": {
+    objective: "You will define the RTO and RPO for each critical function.",
+    whatToDo: ["Set RTO from when impact becomes unacceptable.", "Set RPO from how stale data can be."],
+    references: [{ id: "bcrp001-4", title: "RTO/RPO rules", kind: "Standard extract", summary: "How to set them.", body: `## Drive from impact
+- Telephony: SLA penalty at 2h → RTO < 2h.
+- CRM: data >1h stale causes harm → RPO ≤ 1h.
+
+## Rule
+RTO/RPO come from business impact, not from what IT finds convenient.` }],
+  },
+  "BCRP-001/5": {
+    objective: "You will identify single points of failure and workarounds for each function.",
+    whatToDo: ["Find where one failure stops a function.", "Note any manual/alternative workaround."],
+    references: [{ id: "bcrp001-5", title: "SPOF analysis", kind: "Standard rules", summary: "What to look for.", body: `## Single points of failure
+- One telephony provider with no failover.
+- One internet line at the main site.
+- One person who knows the SLA reporting process.
+
+## Rule
+A SPOF with no workaround is the highest-priority resilience gap.` }],
+  },
+  "BCRP-001/6": {
+    objective: "You will complete the BIA Summary Table and rank functions by impact.",
+    whatToDo: ["Fill the table with functions, RTO/RPO, SPOFs, impact scores.", "Rank by impact."],
+    references: [{ id: "bcrp001-6", title: "BIA summary table", kind: "Template", summary: "The fields.", body: `## Per function
+Function · RTO · RPO · dependencies · SPOFs · impact score (financial + operational + reputational).
+
+## Rank
+Telephony top (highest financial + SLA impact).` }],
+  },
+  "BCRP-001/7": {
+    objective: "You will draft the BIA Report.",
+    whatToDo: ["Write methodology, findings, RTO/RPO table, SPOFs, recommendations.", "Recommend continuity measures for the top risks."],
+    references: [{ id: "bcrp001-7", title: "BIA report structure", kind: "Template", summary: "What it contains.", body: `## Report
+- Methodology + scope.
+- Critical functions + dependencies.
+- RTO/RPO table.
+- SPOFs.
+- Recommended continuity measures (e.g. telephony failover).` }],
+  },
+  "BCRP-001/8": {
+    objective: "You will review the report with the mentor and present to the department manager.",
+    whatToDo: ["Review with the mentor.", "Present the top risks and recovery objectives to the manager."],
+    references: [{ id: "bcrp001-8", title: "Presenting the BIA", kind: "Briefing notes", summary: "What to land.", body: `## Present
+- The critical functions and their RTO/RPO.
+- The SPOFs (especially telephony).
+- The recommended measures and their cost vs the £4k/hour exposure.` }],
+  },
+
+  // ───────────── TPRM-002 · Vendor Due-Diligence Questionnaire ─────────────
+  "TPRM-002/1": {
+    objective: "You will select one Medium-risk vendor from the supplier register to assess in depth.",
+    whatToDo: ["Pick a Medium-risk vendor worth deeper review.", "Confirm its service and data access."],
+    references: [{ id: "tprm002-1", title: "Vendor selection", kind: "Source document", summary: "The vendor in focus.", body: `## Vendor: DataDial Ltd
+A Medium-risk vendor that processes some client customer data. Worth a deeper questionnaire because of the data access.` }],
+  },
+  "TPRM-002/2": {
+    objective: "You will customise the standard security questionnaire for the vendor's service type.",
+    whatToDo: ["Tailor the 20–25 questions to what this vendor does.", "Focus questions on its actual data access."],
+    references: [{ id: "tprm002-2", title: "Questionnaire areas", kind: "Template", summary: "What to cover.", body: `## Cover
+Encryption · certifications · sub-processors · incident response · data location/transfers · staff screening · access control.
+
+## Rule
+Tailor to the vendor — generic questions get generic answers.` }],
+  },
+  "TPRM-002/3": {
+    objective: "You will send the questionnaire to the vendor with a response deadline.",
+    whatToDo: ["Send to the vendor's security/compliance contact.", "Set a two-week deadline."],
+    references: [{ id: "tprm002-3", title: "Sending it", kind: "Briefing notes", summary: "How to send.", body: `## Send
+- To a named security/compliance contact, not a generic inbox.
+- A clear two-week deadline.
+- Note that vague answers will be followed up.` }],
+  },
+  "TPRM-002/4": {
+    objective: "You will review the returned responses for completeness and credibility.",
+    whatToDo: ["Rate each answer satisfactory/partial/unsatisfactory.", "Spot the weak and unsupported claims."],
+    references: [{ id: "tprm002-4", title: "DataDial responses", kind: "Source document", summary: "The actual answers to judge.", body: `## Selected responses
+- Encrypt at rest? → "Yes." (no detail — weak).
+- ISO 27001 / SOC 2? → "We follow ISO 27001 principles." (NOT certified — red flag).
+- Sub-processors? → blank.
+- Incident plan? → "Yes, tested annually." (credible).
+- Data location? → "AWS, various regions." (vague — possible non-UK transfer).
+- Staff background checks? → "No."` }],
+  },
+  "TPRM-002/5": {
+    objective: "You will request clarification for any vague or unsupported answers.",
+    whatToDo: ["List the answers needing clarification.", "Send specific follow-up questions."],
+    references: [{ id: "tprm002-5", title: "What to chase", kind: "Standard rules", summary: "The gaps to close.", body: `## Chase
+- Encryption: which standard, key management?
+- Certification: are you actually certified, or just "following principles"?
+- Sub-processors: who are they, where?
+- Data location: which regions exactly (UK/EU)?
+
+## Rule
+"Follows principles" ≠ certified — never accept it as satisfactory.` }],
+  },
+  "TPRM-002/6": {
+    objective: "You will map each response to the corresponding ISO control and flag the gaps.",
+    whatToDo: ["Map answers to ISO controls.", "Flag where the control fails."],
+    references: [{ id: "tprm002-6", title: "Response → control mapping", kind: "Standard extract", summary: "Map the gaps.", body: `## Mappings
+- Encryption → A.8.24.
+- Sub-processors → A.5.19/A.5.21 supplier chain.
+- Staff screening → A.6.1.
+- Incident plan → A.5.24–5.26.
+
+## Flag
+"No staff screening" fails A.6.1 — a defensible, control-mapped finding.` }],
+  },
+  "TPRM-002/7": {
+    objective: "You will calculate a Due-Diligence Score (% satisfactory).",
+    whatToDo: ["Rate each answer and compute % satisfactory.", "Decide the residual risk level."],
+    references: [{ id: "tprm002-7", title: "Scoring", kind: "Rating rules", summary: "How to score and decide.", body: `## Score
+% satisfactory of all questions. "Follows principles" / blank / "No" on a key control = Unsatisfactory.
+
+## Decide
+A vendor handling client personal data with a low score needs contractual mitigations (DPA clauses, right to audit) before approval.` }],
+  },
+  "TPRM-002/8": {
+    objective: "You will produce the Due-Diligence Assessment Report with findings and recommended mitigations.",
+    whatToDo: ["Write findings, the score, and the risk decision.", "Recommend contractual/operational mitigations."],
+    references: [{ id: "tprm002-8", title: "Report structure", kind: "Template", summary: "What it contains.", body: `## Report
+- The score + key findings (weak answers, the no-screening gap).
+- Control mappings.
+- Risk rating confirmation.
+- Recommended mitigations (DPA clauses, evidence of certification, region commitment) before approval.` }],
+  },
+
+  // ═════════════ Strategic Advisory Consultants · Legal, Accounting & Consulting ═════════════
+  // ───────────── GRM-001 · Operational Risk Identification & Risk Register ─────────────
+  "GRM-001/4.1": {
+    objective: "You will review the firm's asset register to understand the risk surface before identifying risks.",
+    whatToDo: ["Read the asset register (from AA-001 or provided).", "Note where the sensitive client data lives."],
+    references: [{ id: "grm001-4-1", title: "The risk surface", kind: "Source document", summary: "What's at stake.", body: `## The firm
+A consultancy holding highly sensitive client data (financials, legal docs, M&A info). Reputation is everything — a single leak can lose clients.
+
+## Focus
+The crown jewels: client document stores, email, and any place consultants keep local copies.` }],
+  },
+  "GRM-001/4.2": {
+    objective: "You will run risk-identification workshops with two business-unit managers.",
+    whatToDo: ["Facilitate brainstorming with STRIDE-lite prompts.", "Capture risks in the managers' own words."],
+    references: [{ id: "grm001-4-2", title: "Workshop inputs", kind: "Source document", summary: "Risks raised (with L/I).", body: `## Risks raised
+- Consultants email client docs to personal accounts (L4, I5).
+- Lost unencrypted laptop with client files last year (L3, I5).
+- No NDA tracking — unclear who's covered (L3, I4).
+- Over-reliance on one partner (L2, I4).
+- Finance phishing for fraudulent payments (L4, I4).
+
+## Rule
+Score from these workshop figures — build the register from real input.` }],
+  },
+  "GRM-001/4.3": {
+    objective: "You will document each identified risk with full detail.",
+    whatToDo: ["Record ID, description, threat source, existing controls, likelihood, impact, inherent score.", "Be specific, not generic."],
+    references: [{ id: "grm001-4-3", title: "Risk record fields", kind: "Template", summary: "Per-risk fields.", body: `## Per risk
+Risk ID · description · threat source · existing controls · likelihood (1–5) · impact (1–5) · inherent score (L×I).
+
+## Rule
+"Cyber risk" is not a risk; "consultants email client documents to personal Gmail, risking a confidentiality breach" is.` }],
+  },
+  "GRM-001/4.4": {
+    objective: "You will map each risk to an ISO 27001 Annex A control domain.",
+    whatToDo: ["Map each risk to a control domain.", "This shows which controls would treat it."],
+    references: [{ id: "grm001-4-4", title: "Risk → control domain", kind: "Standard extract", summary: "The domains.", body: `## Domains
+Governance/organisational · people · physical · technological.
+
+## Examples
+- Emailing docs out → technological (A.5.14 transfer, A.8.1 endpoint) + people (A.6.3 awareness).
+- Lost laptop → technological (A.8.24 encryption) + physical.` }],
+  },
+  "GRM-001/4.5": {
+    objective: "You will apply the 5×5 matrix to categorise each risk Critical/High/Medium/Low.",
+    whatToDo: ["Compute L×I and band each risk.", "Sense-check the bands against intuition."],
+    references: [{ id: "grm001-4-5", title: "5×5 matrix", kind: "Standard extract", summary: "The bands.", body: `## Inherent score = L × I (1–25)
+1–4 Low · 5–9 Medium · 10–15 High · 16–25 Critical.
+
+## Here
+Emailing docs (4×5=20) = Critical; finance phishing (4×4=16) = Critical; lost laptop (3×5=15) = High.` }],
+  },
+  "GRM-001/4.6": {
+    objective: "You will recommend a risk treatment option for each risk.",
+    whatToDo: ["Choose accept/mitigate/transfer/avoid for each.", "Justify, and name an owner."],
+    references: [{ id: "grm001-4-6", title: "Treatment options", kind: "Standard rules", summary: "How to choose.", body: `## Options
+Mitigate (add control) · Transfer (insurance/contract) · Avoid (stop the activity) · Accept (Low only, with sign-off).
+
+## Rule
+A Critical/High risk marked "accept" without leadership sign-off is itself a finding. Every risk needs an owner.` }],
+  },
+  "GRM-001/4.7": {
+    objective: "You will review the register with the Cyber Risk Manager mentor before presenting.",
+    whatToDo: ["Share with a cover note.", "Address feedback on scoring and treatments."],
+    references: [{ id: "grm001-4-7", title: "Review checklist", kind: "Checklist", summary: "Before presenting.", body: `## Confirm
+- Risks specific, scored from workshop input.
+- Bands correct (L×I).
+- Each risk has a treatment + owner.
+- No High/Critical "accepted" without sign-off.` }],
+  },
+  "GRM-001/4.8": {
+    objective: "You will present the top five risks and treatment recommendations to management.",
+    whatToDo: ["Present the five most serious risks and their treatments.", "Capture the decisions."],
+    references: [{ id: "grm001-4-8", title: "Presenting risk", kind: "Briefing notes", summary: "What to land.", body: `## Present
+- The five Critical/High risks (emailing docs, finance phishing, lost-laptop).
+- The recommended treatment + cost for each.
+- The decisions you need (e.g. approve DLP, mandate encryption).` }],
+  },
+
+  // ───────────── DD-003 · Data Retention Schedule Development ─────────────
+  "DD-003/1": {
+    objective: "You will identify the target data category for the retention schedule, with the mentor.",
+    whatToDo: ["Pick one data category to schedule.", "Confirm why it's the priority."],
+    references: [{ id: "dd003-1", title: "Target category", kind: "Source document", summary: "Which category and why.", body: `## Recommended: HR & payroll records
+A well-defined category with clear legal retention rules and a real GDPR-vs-tax-law tension — the most instructive to schedule.` }],
+  },
+  "DD-003/2": {
+    objective: "You will research the applicable legal retention requirements for the category.",
+    whatToDo: ["Find the statutory retention periods.", "Note where laws conflict with data minimisation."],
+    references: [{ id: "dd003-2", title: "Legal retention (HR/payroll, UK)", kind: "Standard extract", summary: "The periods you must apply.", body: `## Statutory periods
+- Payroll/tax → HMRC 6 years (current + 5).
+- Statutory maternity/paternity pay → 3 years.
+- Right-to-work checks → 2 years after employment ends.
+- Unsuccessful recruitment → 6–12 months (minimise).
+- General HR file → ~6 years after leaving (claims limitation).
+
+## The tension
+GDPR says don't over-retain; tax law says keep 6 years. Reconcile: keep the legal minimum, then dispose securely.` }],
+  },
+  "DD-003/3": {
+    objective: "You will interview the data and system owners to learn where the data lives.",
+    whatToDo: ["Ask where the data is stored, backed up, and archived.", "Capture every copy (backups count)."],
+    references: [{ id: "dd003-3", title: "Interview focus", kind: "Interview guide", summary: "What to ask.", body: `## Ask
+- Where is this data stored (system, backups, archives)?
+- Who can access it?
+- Is it copied anywhere (exports, spreadsheets)?
+
+## Why
+You can't dispose of data you don't know about — backups and exports are where retention rules quietly fail.` }],
+  },
+  "DD-003/4": {
+    objective: "You will complete the retention schedule row by row for each data element.",
+    whatToDo: ["One row per data element.", "Apply the legal minimum period from your research."],
+    references: [{ id: "dd003-4", title: "Schedule fields", kind: "Template", summary: "Per-element fields.", body: `## Per element
+Data element · retention trigger · retention period (legal minimum) · review point · disposal method.
+
+## Rule
+The period must be the legal minimum you researched — not "keep forever" or a guess.` }],
+  },
+  "DD-003/5": {
+    objective: "You will specify the trigger, period, review point, and disposal method for each element.",
+    whatToDo: ["State the trigger (e.g. end of employment) and the disposal method.", "Make disposal concrete."],
+    references: [{ id: "dd003-5", title: "Triggers & disposal", kind: "Standard rules", summary: "How to specify.", body: `## Triggers
+e.g. "end of employment", "end of tax year".
+
+## Disposal methods
+Secure deletion / anonymisation / archive. Personal data must be securely deleted or anonymised at end of life — not just left in the system.` }],
+  },
+  "DD-003/6": {
+    objective: "You will draft a Data Disposal Instruction aligned to each disposal method.",
+    whatToDo: ["Write how each disposal method is actually performed.", "Make it executable by IT."],
+    references: [{ id: "dd003-6", title: "Disposal instruction", kind: "Template", summary: "What it covers.", body: `## Per method
+- Secure deletion: how (tool, verification).
+- Anonymisation: what's removed so it's truly anonymous.
+- Archive: where, with what access.
+
+## Rule
+"Delete it" isn't an instruction — say how, and how you verify it's gone.` }],
+  },
+  "DD-003/7": {
+    objective: "You will map each schedule entry to the relevant ISO 27001 control.",
+    whatToDo: ["Map entries to A.8.10, A.5.33, etc.", "Confirm the controls cover deletion and record protection."],
+    references: [{ id: "dd003-7", title: "ISO mapping", kind: "Standard extract", summary: "The controls.", body: `## Controls
+- A.8.10 Information deletion.
+- A.5.33 Protection of records.
+- A.5.34 Privacy & PII protection.
+
+## Why
+The schedule is the evidence these controls operate — retention is governed, not ad hoc.` }],
+  },
+  "DD-003/8": {
+    objective: "You will obtain sign-off from the Legal/Compliance contact and data owner.",
+    whatToDo: ["Walk Legal and the owner through the schedule.", "Record the sign-off."],
+    references: [{ id: "dd003-8", title: "Sign-off", kind: "Briefing notes", summary: "Why it's needed.", body: `## Sign-off
+Retention decisions have legal consequences (delete too early = lose evidence; too late = GDPR breach). Legal must approve. Record the decision and date.` }],
+  },
+
+  // ───────────── TV-002 · Policy Compliance Spot-Check ─────────────
+  "TV-002/1": {
+    objective: "You will select three policies to spot-check, with the Compliance Manager.",
+    whatToDo: ["Pick three policies that are testable and matter.", "Confirm what compliance looks like for each."],
+    references: [{ id: "tv002-1", title: "Policies to test", kind: "Source document", summary: "The three + their claims.", body: `## Policies
+1. Security Awareness — "all staff trained annually".
+2. Access Control — "access reviewed quarterly".
+3. Encryption — "all laptops encrypted".
+
+## Rule
+Pick policies where compliance can be evidenced — these three can.` }],
+  },
+  "TV-002/2": {
+    objective: "You will define testable control statements and the evidence that would prove compliance.",
+    whatToDo: ["For each policy, write 2–3 testable statements.", "Name the evidence that proves each."],
+    references: [{ id: "tv002-2", title: "Testable statements", kind: "Template", summary: "How to make a policy testable.", body: `## Example
+Policy: "all laptops encrypted" → testable statement: "100% of managed laptops show encryption enabled" → evidence: endpoint management console export.
+
+## Rule
+A statement you can't gather evidence for isn't testable — rewrite it.` }],
+  },
+  "TV-002/3": {
+    objective: "You will request the evidence samples from IT and HR.",
+    whatToDo: ["Request the specific evidence per statement.", "Set a deadline."],
+    references: [{ id: "tv002-3", title: "Evidence to request", kind: "Briefing notes", summary: "What to ask for.", body: `## Request
+- Training: the completion log.
+- Access: the last access-review record.
+- Encryption: the endpoint encryption report.
+
+## Note
+"No evidence available" is itself a finding — record it.` }],
+  },
+  "TV-002/4": {
+    objective: "You will evaluate each evidence sample against its control statement.",
+    whatToDo: ["Rate each compliant / partial / non-compliant.", "Judge from the evidence, not impression."],
+    references: [{ id: "tv002-4", title: "Evidence samples", kind: "Source document", summary: "The actual evidence.", body: `## Samples
+- Training: 22 of 30 trained → 73% → partial.
+- Access review: last one was 14 months ago → non-compliant.
+- Encryption: 28 of 30 encrypted; 2 personal laptops not → partial.
+
+## Rule
+Findings come from these numbers — "mostly fine" is not a finding.` }],
+  },
+  "TV-002/5": {
+    objective: "You will document the findings in the Control Testing Workpaper.",
+    whatToDo: ["Record each test, the evidence, and the rating.", "Make it audit-quality."],
+    references: [{ id: "tv002-5", title: "Workpaper", kind: "Template", summary: "What to record.", body: `## Per test
+Statement · evidence examined · result (compliant/partial/non-compliant) · note.
+
+## Rule
+A workpaper must let someone re-perform your test and reach the same conclusion.` }],
+  },
+  "TV-002/6": {
+    objective: "You will calculate a compliance rate per policy.",
+    whatToDo: ["Compute the rate per policy from the statement results.", "Re-check the arithmetic."],
+    references: [{ id: "tv002-6", title: "Compliance rate", kind: "Standard rules", summary: "How to compute.", body: `## Rate
+(# compliant statements ÷ total statements) per policy, or weight by importance.
+
+## Rule
+"No evidence" = non-compliant, not "unknown" — absence of evidence is the finding.` }],
+  },
+  "TV-002/7": {
+    objective: "You will draft remediation recommendations for each non-compliant finding.",
+    whatToDo: ["Recommend a specific fix per finding.", "Name an owner and timeframe."],
+    references: [{ id: "tv002-7", title: "Remediation", kind: "Standard rules", summary: "What a good rec looks like.", body: `## Per finding
+- The gap (e.g. "access review 14 months overdue").
+- The fix (run the review; set a quarterly cadence).
+- Owner + date.` }],
+  },
+  "TV-002/8": {
+    objective: "You will compile the Spot-Check Report and review it with the Information Security Auditor mentor.",
+    whatToDo: ["Write the report: scope, findings, rates, remediation.", "Review with the mentor."],
+    references: [{ id: "tv002-8", title: "Report structure", kind: "Template", summary: "What it contains.", body: `## Report
+- Scope + method.
+- Per-policy compliance rate.
+- Findings (with evidence).
+- Remediation recommendations + owners.` }],
+  },
+
+  // ───────────── MM-002 · Risk Register Maintenance — Monthly Cycle ─────────────
+  "MM-002/1": {
+    objective: "You will schedule the monthly Risk Register Review with the risk owners.",
+    whatToDo: ["Book a 60-minute review with the two risk owners.", "Set a clear purpose."],
+    references: [{ id: "mm002-1", title: "Scheduling the review", kind: "Briefing notes", summary: "Who and why.", body: `## Schedule
+A 60-minute monthly review with the risk owners from GRM-001. Purpose: re-score risks, check treatments, capture new risks.` }],
+  },
+  "MM-002/2": {
+    objective: "You will prepare the agenda and circulate the current register for pre-reading.",
+    whatToDo: ["Build the agenda (per-risk review).", "Circulate the register in advance."],
+    references: [{ id: "mm002-2", title: "Agenda + pre-read", kind: "Template", summary: "What to send.", body: `## Agenda
+Per risk: has likelihood/impact changed? Are treatments on track? Any new risks?
+
+## Pre-read
+Send the current register so the meeting reviews, not reads.` }],
+  },
+  "MM-002/3": {
+    objective: "You will facilitate the review meeting.",
+    whatToDo: ["Walk each risk: change in L/I, treatment progress, new risks.", "Keep it moving and decisive."],
+    references: [{ id: "mm002-3", title: "Current register", kind: "Source document", summary: "The starting position.", body: `## Open risks (last month)
+- R1 Client data on personal devices — High (12); MDM rollout 40%.
+- R2 Lost-laptop/unencrypted — High (15); encryption project now COMPLETE → re-score down.
+- R3 No NDA tracking — Medium (9); not started.
+- R4 Finance phishing — High (16); verification process being introduced.
+
+## New
+A consultant clicked a phishing link → raises R4's likelihood.` }],
+  },
+  "MM-002/4": {
+    objective: "You will update risk scores and treatment status in real time during the meeting.",
+    whatToDo: ["Re-score risks as decisions are made.", "Record the reason for each change."],
+    references: [{ id: "mm002-4", title: "Re-scoring rules", kind: "Standard rules", summary: "How to update.", body: `## Re-score
+- A completed mitigation reduces residual risk (R2 encryption done → drop impact/likelihood; record why).
+- A new event raises likelihood (R4 phishing click).
+
+## Rule
+Every score change needs a recorded reason.` }],
+  },
+  "MM-002/5": {
+    objective: "You will add any newly identified risks in the standard format.",
+    whatToDo: ["Give each new risk an ID and full scoring.", "Use the same format as the register."],
+    references: [{ id: "mm002-5", title: "Adding new risks", kind: "Template", summary: "The format.", body: `## New risk
+Risk ID · description · threat source · existing controls · likelihood · impact · inherent score · treatment · owner.
+
+## Rule
+New risks get the same rigour as old ones — no shortcuts.` }],
+  },
+  "MM-002/6": {
+    objective: "You will calculate whether the overall residual risk portfolio improved, worsened, or held.",
+    whatToDo: ["Compare total/average residual risk vs last month.", "State the trend."],
+    references: [{ id: "mm002-6", title: "Portfolio direction", kind: "Standard rules", summary: "How to judge it.", body: `## Compute
+Compare this month's total/average residual score to last month's. R2 dropping (encryption done) improves the portfolio; R4 rising offsets it.
+
+## Output
+A one-line trend (improved / worsened / stable) backed by the numbers.` }],
+  },
+  "MM-002/7": {
+    objective: "You will produce the Updated Risk Register and a one-page Risk Summary for management.",
+    whatToDo: ["Finalise the register.", "Write a one-page summary with the trend and top risks."],
+    references: [{ id: "mm002-7", title: "Summary", kind: "Template", summary: "What management sees.", body: `## One-page summary
+- The trend (improved/worsened).
+- Top risks now.
+- What changed and why (R2 closed, R4 up).
+- Any decision needed.` }],
+  },
+  "MM-002/8": {
+    objective: "You will distribute the updated register to risk owners and file it.",
+    whatToDo: ["Send the updated register to all owners.", "File it in the evidence repository."],
+    references: [{ id: "mm002-8", title: "Distribution", kind: "Briefing notes", summary: "Closing the cycle.", body: `## Distribute + file
+- Send to every risk owner so they know their actions.
+- File the dated register as evidence the risk-management process operates (ISO Clause 6/8).` }],
+  },
+
+  // ───────────── PE-002 · Audit Evidence Preparation & Filing ─────────────
+  "PE-002/1": {
+    objective: "You will select the ISO clause or controls to prepare evidence for, with the auditor mentor.",
+    whatToDo: ["Pick a clause / small control set.", "Confirm scope so the evidence pack is focused."],
+    references: [{ id: "pe002-1", title: "Scope", kind: "Source document", summary: "What to prepare for.", body: `## Recommended: A.8.2 Privileged access
+A control with clear, checkable evidence — and known gaps at this firm — making it a realistic audit-prep exercise.` }],
+  },
+  "PE-002/2": {
+    objective: "You will identify every evidence item an auditor would expect for the selected controls.",
+    whatToDo: ["List the expected evidence using the requirements list.", "Be exhaustive — auditors test completeness."],
+    references: [{ id: "pe002-2", title: "Expected evidence (A.8.2)", kind: "Source document", summary: "What the auditor will ask for.", body: `## An auditor expects
+- The approved privileged-user list.
+- Approval records for each grant.
+- The last quarterly access-review (dated, signed).
+- Evidence leavers' access was removed.
+- The governing policy.
+
+## Known gaps
+Two grants have no approval record; the last review is undated — flag, don't hide.` }],
+  },
+  "PE-002/3": {
+    objective: "You will collect each evidence item from the relevant owners.",
+    whatToDo: ["Gather each item from its system/department owner.", "Note anything that can't be produced."],
+    references: [{ id: "pe002-3", title: "Collection", kind: "Briefing notes", summary: "How to collect.", body: `## Collect
+Request each item from its owner with a deadline. Where an item doesn't exist (e.g. a missing approval record), record the gap — it's a finding, not something to fabricate.` }],
+  },
+  "PE-002/4": {
+    objective: "You will label each evidence item to the labelling convention.",
+    whatToDo: ["Apply the Evidence ID / Control Ref / Date / Version / Source label.", "Make each item traceable."],
+    references: [{ id: "pe002-4", title: "Labelling convention", kind: "Template", summary: "The label fields.", body: `## Label
+Evidence ID · Control reference (A.8.2) · Date · Version · Source.
+
+## Why
+An auditor must trace each item to a control and a source — unlabelled evidence is hard to rely on.` }],
+  },
+  "PE-002/5": {
+    objective: "You will review each item for completeness and accuracy, rejecting weak evidence.",
+    whatToDo: ["Check each item is current, complete, and relevant.", "Reject outdated or context-free items."],
+    references: [{ id: "pe002-5", title: "Quality rules", kind: "Standard rules", summary: "What to reject.", body: `## Reject
+- Out of date (a 14-month-old review doesn't evidence "quarterly").
+- Unsigned/undated where approval is the point.
+- A screenshot with no date or system shown.` }],
+  },
+  "PE-002/6": {
+    objective: "You will compile the evidence into a structured pack with an index.",
+    whatToDo: ["Organise the pack logically.", "Build an evidence index mapping items to controls."],
+    references: [{ id: "pe002-6", title: "Evidence pack", kind: "Template", summary: "How to structure it.", body: `## Pack
+- An index (Evidence ID → control → location).
+- Items organised by control.
+- Gaps noted in the index, not hidden.
+
+## Rule
+A clear index is what makes a pack auditable.` }],
+  },
+  "PE-002/7": {
+    objective: "You will self-review the evidence pack against the Audit Evidence Checklist.",
+    whatToDo: ["Check the pack against the checklist.", "Confirm gaps are honestly recorded."],
+    references: [{ id: "pe002-7", title: "Self-review", kind: "Checklist", summary: "Before the mock audit.", body: `## Confirm
+- Every expected item present or its gap recorded.
+- All items labelled + indexed.
+- No weak evidence left in.
+- Gaps honestly flagged.` }],
+  },
+  "PE-002/8": {
+    objective: "You will present the evidence pack to the mentor for a mock-audit quality check.",
+    whatToDo: ["Walk the mentor through the pack.", "Note where a real auditor would push back."],
+    references: [{ id: "pe002-8", title: "Mock audit", kind: "Briefing notes", summary: "What to expect.", body: `## In the mock audit
+The mentor tests completeness and challenges weak items. An honestly-indexed pack with known gaps beats one that hides them — auditors test completeness, and a hidden gap becomes a finding plus a trust problem.` }],
+  },
+
+  // ───────────── QA-001 · GRC Document Quality Review ─────────────
+  "QA-001/1": {
+    objective: "You will select three GRC documents to quality-review, with the Compliance Manager.",
+    whatToDo: ["Pick three documents that matter.", "Confirm they're current versions."],
+    references: [{ id: "qa001-1", title: "Documents under review", kind: "Source document", summary: "The three + their planted defects.", body: `## Documents
+1. Information Security Policy — no version/approval date; references "ISO 27001:2013" (outdated).
+2. Incident Response Procedure — inconsistent: §2 says report in 1 hour, §5 says 24 hours.
+3. Access Control Policy — jargon-heavy, no plain-language; no review date.
+
+## Rule
+The defects above are real — your checklist must catch each.` }],
+  },
+  "QA-001/2": {
+    objective: "You will apply the Document Quality Review checklist to each document.",
+    whatToDo: ["Run the checklist on every document.", "Note each deficiency precisely."],
+    references: [{ id: "qa001-2", title: "Quality checklist", kind: "Template", summary: "What to check.", body: `## Per document
+- Document control block correct (owner, version, dates)?
+- Internally consistent?
+- Plain-language compliant?
+- ISO references correct + current?
+- Approval signatures present?
+- Review date current?` }],
+  },
+  "QA-001/3": {
+    objective: "You will complete a Correction Request for each deficiency found.",
+    whatToDo: ["Log each deficiency with severity and a recommended fix.", "Be specific about location."],
+    references: [{ id: "qa001-3", title: "Correction request", kind: "Template", summary: "The fields + severity.", body: `## Per deficiency
+Description · document + section · severity (Minor/Major) · recommended correction.
+
+## Severity
+Major = affects correctness/compliance (outdated standard, contradiction, no approval). Minor = cosmetic.
+
+## Rule
+"Improve this" is not actionable — say what, where, and the fix.` }],
+  },
+  "QA-001/4": {
+    objective: "You will compile all Correction Requests into a Quality Review Report.",
+    whatToDo: ["Aggregate the requests by document and severity.", "Summarise the overall quality."],
+    references: [{ id: "qa001-4", title: "Quality report", kind: "Template", summary: "What it contains.", body: `## Report
+- Per document: deficiencies found, by severity.
+- The Major issues highlighted.
+- Overall quality verdict.` }],
+  },
+  "QA-001/5": {
+    objective: "You will discuss each Major deficiency with the document owner.",
+    whatToDo: ["Walk each owner through their Major issues.", "Agree the corrections and a date."],
+    references: [{ id: "qa001-5", title: "Owner discussion", kind: "Briefing notes", summary: "How to handle it.", body: `## Discuss
+- Be factual, not critical — the goal is a better document.
+- Agree the correction and who does it by when.
+- Log the agreement.` }],
+  },
+  "QA-001/6": {
+    objective: "You will track the corrections the owners make.",
+    whatToDo: ["Log each correction's status.", "Chase overdue ones."],
+    references: [{ id: "qa001-6", title: "Correction tracking", kind: "Template", summary: "How to track.", body: `## Tracking log
+Per correction: deficiency · owner · agreed date · status (open/done) · date closed.
+
+## Rule
+A deficiency isn't closed until re-checked (next step).` }],
+  },
+  "QA-001/7": {
+    objective: "You will re-check the corrected documents and confirm closure of each request.",
+    whatToDo: ["Re-review each corrected document.", "Close requests only when the fix is verified."],
+    references: [{ id: "qa001-7", title: "Re-check rules", kind: "Testing rules", summary: "How to verify.", body: `## Re-check
+Confirm the correction actually fixed the deficiency. The "ISO 27001:2013" reference is now "2022"; the §2/§5 contradiction is resolved. Close only on verification.` }],
+  },
+  "QA-001/8": {
+    objective: "You will produce a Quality Review Closure Report confirming all deficiencies are resolved.",
+    whatToDo: ["Confirm every request is closed.", "Write the closure report."],
+    references: [{ id: "qa001-8", title: "Closure report", kind: "Template", summary: "What it confirms.", body: `## Closure report
+- Every deficiency raised and its resolution.
+- Confirmation all are re-checked and closed.
+- Any that couldn't be closed (with reason).` }],
+  },
+
+  // ───────────── KT-002 · Lessons Learned — End-of-Rotation Retrospective ─────────────
+  "KT-002/1": {
+    objective: "You will review all your completed deliverables from the full GRC 101 rotation.",
+    whatToDo: ["Gather every deliverable you produced.", "Re-read them to ground your reflection."],
+    references: [{ id: "kt002-1", title: "Your deliverables", kind: "Source document", summary: "What you produced.", body: `## Across four placements
+- Asset register, CIS gap analysis, GDPR RoPA/DPIA.
+- Risk register, policies, maturity assessment.
+- Incident procedure, BIA & DR checklist, evidence pack.
+- Roadmap, KPIs, management report.
+
+## Rule
+Reflect on specific tasks, not generalities.` }],
+  },
+  "KT-002/2": {
+    objective: "You will complete a personal Lessons Learned Worksheet, honestly.",
+    whatToDo: ["Answer the reflection questions.", "Tie each answer to a specific task."],
+    references: [{ id: "kt002-2", title: "Worksheet questions", kind: "Template", summary: "What to answer.", body: `## Answer
+- What did I learn (tied to specific tasks)?
+- What went well?
+- What was difficult, and why?
+- What would I do differently?
+- What gaps do I still have?
+
+## Rule
+"It was good" helps no one; "I underestimated how much evidence an auditor wants" does.` }],
+  },
+  "KT-002/3": {
+    objective: "You will identify the top three improvements to the GRC 101 programme itself.",
+    whatToDo: ["Name three concrete programme improvements.", "Be specific (a missing template, an unclear task)."],
+    references: [{ id: "kt002-3", title: "Programme improvements", kind: "Standard rules", summary: "What's useful feedback.", body: `## Useful feedback
+- A template that was missing.
+- A task that needed more guidance.
+- An instruction that was unclear.
+
+## Rule
+Specific, actionable improvements — not "make it easier".` }],
+  },
+  "KT-002/4": {
+    objective: "You will interview one peer mentee to gather a second perspective.",
+    whatToDo: ["Ask a peer about their experience and lessons.", "Capture where your views differ."],
+    references: [{ id: "kt002-4", title: "Peer interview", kind: "Interview guide", summary: "What to ask.", body: `## Ask a peer
+- What did you find hardest?
+- What would you change about the programme?
+- What surprised you?
+
+## Why
+A second perspective reveals patterns (and blind spots) yours alone won't.` }],
+  },
+  "KT-002/5": {
+    objective: "You will write a Lessons Learned Report a future mentee could use to prepare.",
+    whatToDo: ["Write 2–3 pages of transferable, specific lessons.", "Make it genuinely useful to a newcomer."],
+    references: [{ id: "kt002-5", title: "Report rules", kind: "Template", summary: "How to write it.", body: `## Report (2–3 pages)
+- Your key lessons (specific, tied to tasks).
+- What you'd tell a new mentee on day one.
+- The hardest parts and how to approach them.
+
+## Rule
+Specific and transferable beats vague and reassuring.` }],
+  },
+  "KT-002/6": {
+    objective: "You will compile a Mentee Portfolio Index of everything you produced.",
+    whatToDo: ["List every deliverable with where it lives.", "Make it a complete reference."],
+    references: [{ id: "kt002-6", title: "Portfolio index", kind: "Template", summary: "What it lists.", body: `## Index
+Every deliverable · the task it belongs to · where it's stored/linked.
+
+## Why
+The index is the evidence of your whole rotation — and the basis of your CV.` }],
+  },
+  "KT-002/7": {
+    objective: "You will present the report and portfolio index to the GRC 101 Programme Manager.",
+    whatToDo: ["Walk through your lessons and portfolio.", "Share the programme improvements."],
+    references: [{ id: "kt002-7", title: "Presenting", kind: "Briefing notes", summary: "What to cover.", body: `## Present
+- Your top lessons.
+- The portfolio (what you can now do).
+- Your three programme improvements.` }],
+  },
+  "KT-002/8": {
+    objective: "You will contribute your top-three improvement recommendations to the programme backlog.",
+    whatToDo: ["Submit the three improvements formally.", "Frame each as an actionable change."],
+    references: [{ id: "kt002-8", title: "Closing the loop", kind: "Briefing notes", summary: "Why it matters.", body: `## Contribute
+Add your three improvements to the programme backlog so the next cohort benefits. A retrospective whose lessons go nowhere is wasted — closing the loop is the point.` }],
+  },
 };
