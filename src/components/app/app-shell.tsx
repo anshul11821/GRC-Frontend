@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { FloatingMentor } from "./floating-mentor";
+import { NotificationBell } from "./notification-bell";
 
 function DashSidebar({
   collapsed,
@@ -160,14 +161,7 @@ function DashTopBar() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="hidden md:flex items-center gap-2 px-3 h-9 rounded-lg bg-white ring-1 ring-slate-200/70 text-slate-500">
-          <Icon name="search" size={15} />
-          <span className="text-[12.5px]">Search tasks…</span>
-        </div>
-        <button className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative" aria-label="Notifications">
-          <Icon name="bell" size={17} />
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-indigo-500 ring-2 ring-white" />
-        </button>
+        <NotificationBell />
         <UserMenu />
       </div>
     </div>

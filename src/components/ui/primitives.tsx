@@ -6,7 +6,7 @@ import { BAR_TONES } from "@/lib/tones";
 /** The grcmentor "G" logomark (the official brand image). */
 export function BrandMark({ size = 36, className = "" }: { size?: number; className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/brand-g.webp" width={size} height={size} alt="grcmentor" className={className} />;
+  return <img src="/grc-mentor-logo.jpeg" width={size} height={size} alt="GRC Mentor" className={`rounded-lg object-cover ${className}`} />;
 }
 
 /** The grcmentor wordmark. */

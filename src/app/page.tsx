@@ -1,23 +1,26 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Logo, SectionHead } from "@/components/ui/primitives";
+import { Stagger, StaggerItem } from "@/components/ui/motion";
 import { Faq, type FaqEntry } from "@/components/landing/faq";
 import { GLOW, SOFT_TONES } from "@/lib/tones";
 
 // ============ CONTENT (ported from the mockup) ============
-const INDUSTRIES: { label: string; icon: IconName; tone: string }[] = [
-  { label: "Technology & IT Services", icon: "cube", tone: "sky" },
-  { label: "Banking & Financial Services", icon: "briefcase", tone: "indigo" },
-  { label: "Healthcare & Life Sciences", icon: "shield", tone: "emerald" },
-  { label: "Business Process Outsourcing", icon: "refresh", tone: "violet" },
-  { label: "Legal & Consulting Services", icon: "book", tone: "amber" },
-  { label: "E-commerce & Retail", icon: "grid", tone: "rose" },
-  { label: "Manufacturing & Industrial", icon: "layers", tone: "sky" },
-  { label: "Government & Public Sector", icon: "flag", tone: "indigo" },
-  { label: "Transportation & Logistics", icon: "send", tone: "emerald" },
-  { label: "Education", icon: "book", tone: "violet" },
-  { label: "Media & Telecommunications", icon: "chat", tone: "amber" },
-  { label: "Energy & Utilities", icon: "bolt", tone: "rose" },
+// Industry photos served straight from the Unsplash CDN (sized + cropped via query params).
+const UNSPLASH = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=640&q=70`;
+const INDUSTRIES: { label: string; icon: IconName; tone: string; image: string }[] = [
+  { label: "Technology & IT Services", icon: "cube", tone: "sky", image: UNSPLASH("photo-1518770660439-4636190af475") },
+  { label: "Banking & Financial Services", icon: "briefcase", tone: "indigo", image: UNSPLASH("photo-1554224155-6726b3ff858f") },
+  { label: "Healthcare & Life Sciences", icon: "shield", tone: "emerald", image: UNSPLASH("photo-1576091160550-2173dba999ef") },
+  { label: "Business Process Outsourcing", icon: "refresh", tone: "violet", image: UNSPLASH("photo-1556761175-5973dc0f32e7") },
+  { label: "Legal & Consulting Services", icon: "book", tone: "amber", image: UNSPLASH("photo-1589829545856-d10d557cf95f") },
+  { label: "E-commerce & Retail", icon: "grid", tone: "rose", image: UNSPLASH("photo-1556742049-0cfed4f6a45d") },
+  { label: "Manufacturing & Industrial", icon: "layers", tone: "sky", image: UNSPLASH("photo-1581091226825-a6a2a5aee158") },
+  { label: "Government & Public Sector", icon: "flag", tone: "indigo", image: UNSPLASH("photo-1529107386315-e1a2ed48a620") },
+  { label: "Transportation & Logistics", icon: "send", tone: "emerald", image: UNSPLASH("photo-1566576912321-d58ddd7a6088") },
+  { label: "Education", icon: "book", tone: "violet", image: UNSPLASH("photo-1523240795612-9a054b0db644") },
+  { label: "Media & Telecommunications", icon: "chat", tone: "amber", image: UNSPLASH("photo-1522071820081-009f0129c71c") },
+  { label: "Energy & Utilities", icon: "bolt", tone: "rose", image: UNSPLASH("photo-1466611653911-95081537e5b7") },
 ];
 
 const PROGRAM: { title: string; icon: IconName; tone: string; body: string }[] = [
@@ -84,12 +87,6 @@ function Nav() {
 }
 
 function Hero() {
-  const stats: [string, string][] = [
-    ["35", "Hands-on tasks"],
-    ["22", "Method verbs"],
-    ["5", "Global standards"],
-    ["8", "Credential badges"],
-  ];
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
@@ -114,14 +111,6 @@ function Hero() {
             Explore tracks
           </a>
         </div>
-        <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
-          {stats.map(([v, l]) => (
-            <div key={l} className="rounded-2xl bg-white ring-1 ring-slate-200/70 px-4 py-4">
-              <div className="text-[28px] font-semibold tracking-[-0.02em] text-indigo-600 leading-none">{v}</div>
-              <div className="text-[12px] text-slate-500 tracking-tight mt-1.5">{l}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -142,15 +131,18 @@ function Industries() {
           {INDUSTRIES.map((i) => {
             const g = GLOW[i.tone];
             return (
-              <div key={i.label} className="group relative h-32 rounded-2xl overflow-hidden ring-1 ring-white/10 cursor-default shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)] transition-transform duration-300 hover:-translate-y-0.5" style={{ background: "linear-gradient(155deg, #1f2a44 0%, #141d33 75%)" }}>
-                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
-                {/* colored halo emanating from behind the icon (top-left), brightening on hover */}
-                <div className="absolute -top-12 -left-12 w-40 h-40 rounded-full blur-2xl transition-opacity duration-300 opacity-55 group-hover:opacity-90" style={{ background: `radial-gradient(circle, ${g}, transparent 70%)` }} />
+              <div key={i.label} className="group relative h-32 rounded-2xl overflow-hidden ring-1 ring-white/10 cursor-default shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)] transition-transform duration-300 hover:-translate-y-0.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={i.image} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                {/* dark gradient keeps the label legible over any photo */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-slate-950/15" />
+                {/* tone tint emanating from the icon corner, brightening on hover */}
+                <div className="absolute inset-0 opacity-35 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-60" style={{ background: `linear-gradient(150deg, ${g}, transparent 60%)` }} />
                 <div className="relative h-full p-4 flex flex-col justify-between">
-                  <span className="w-9 h-9 rounded-lg flex items-center justify-center ring-1 ring-white/20 text-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.4)]" style={{ background: `linear-gradient(150deg, ${g}66, ${g}1f)` }}>
+                  <span className="w-9 h-9 rounded-lg flex items-center justify-center ring-1 ring-white/25 text-white backdrop-blur-sm bg-white/10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.5)]">
                     <Icon name={i.icon} size={18} />
                   </span>
-                  <span className="text-[12.5px] font-semibold text-white tracking-tight leading-tight" style={{ textWrap: "balance" }}>{i.label}</span>
+                  <span className="text-[12.5px] font-semibold text-white tracking-tight leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" style={{ textWrap: "balance" }}>{i.label}</span>
                 </div>
               </div>
             );
@@ -168,17 +160,17 @@ function Program() {
         <SectionHead eyebrow="How it works" icon="sparkle" sub="A mentorship model built around doing the work — not watching lectures.">
           Our <span className="text-indigo-600">Mentorship</span> Program
         </SectionHead>
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {PROGRAM.map((p) => (
-            <div key={p.title} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-18px_rgba(15,23,42,0.12)] hover:ring-indigo-200 transition-all">
+            <StaggerItem key={p.title} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-18px_rgba(15,23,42,0.12)] hover:ring-indigo-200 transition-all">
               <span className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 ${SOFT_TONES[p.tone]}`}>
                 <Icon name={p.icon} size={20} />
               </span>
               <h3 className="mt-4 text-[16px] font-semibold tracking-tight text-slate-900">{p.title}</h3>
               <p className="mt-2 text-[13px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{p.body}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -191,9 +183,9 @@ function Testimonials() {
         <SectionHead eyebrow="Testimonials" icon="chat" sub="Teams and leaders who built their compliance capability with grcmentor.">
           What our <span className="text-indigo-600">members</span> say
         </SectionHead>
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
           {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 flex flex-col">
+            <StaggerItem key={t.name} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 flex flex-col">
               <span className="text-[44px] leading-none text-indigo-300" style={{ fontFamily: "Georgia, serif" }}>&ldquo;</span>
               <p className="-mt-3 text-[14px] text-slate-700 leading-relaxed tracking-tight flex-1" style={{ textWrap: "pretty" }}>{t.quote}</p>
               <div className="mt-5 flex items-center gap-3">
@@ -205,9 +197,9 @@ function Testimonials() {
                   <div className="text-[11.5px] text-slate-500 tracking-tight">{t.role}</div>
                 </div>
               </div>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -220,9 +212,9 @@ function Tracks() {
         <SectionHead eyebrow="Career tracks" icon="rocket" sub="A progression from practitioner to leader — start where you are and grow with mentor-graded work.">
           Choose your <span className="text-indigo-600">track</span>
         </SectionHead>
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
           {TRACKS.map((t) => (
-            <div key={t.code} className="relative rounded-2xl overflow-hidden ring-1 ring-white/10 p-6 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #312e81 0%, #1e1b3a 60%, #0f172a 100%)" }}>
+            <StaggerItem key={t.code} className="relative rounded-2xl overflow-hidden ring-1 ring-white/10 p-6 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #312e81 0%, #1e1b3a 60%, #0f172a 100%)" }}>
               <div className="pointer-events-none absolute -top-8 -right-6 w-40 h-40 rounded-full blur-2xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.5), transparent 70%)" }} />
               <div className="pointer-events-none absolute inset-0 opacity-[0.1]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "26px 26px" }} />
               <div className="relative flex-1">
@@ -233,12 +225,12 @@ function Tracks() {
                 <div className="text-[11.5px] text-indigo-200/90 tracking-tight mt-0.5">{t.years}</div>
                 <p className="mt-3 text-[13px] text-indigo-50/85 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{t.body}</p>
               </div>
-              <Link href="/signup" className="relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
+              <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
                 Know more <Icon name="arrowRight" size={14} />
               </Link>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );

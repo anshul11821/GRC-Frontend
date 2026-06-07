@@ -1,34 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { Card } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
+import { PageSkeleton } from "@/components/ui/skeleton";
 
 /** Working Desk entry — routes to the current task's overview (first in-progress, else first task). */
 export default function DeskHome() {
   const router = useRouter();
   const { learnings, loading } = useDeskLearnings();
-  const [empty, setEmpty] = useState(false);
-
-  useEffect(() => {
-    if (loading) return;
-    if (learnings) {
-      for (const org of learnings.orgs) {
-        if (org.status === "locked") continue;
-        for (const proj of org.projects) {
-          const task = proj.tasks.find((t) => t.status === "in-progress") ?? proj.tasks.find((t) => t.status === "not-started") ?? proj.tasks[0];
-          if (task) { router.replace(`/app/desk/task/${task.code}`); return; }
-        }
+  // Resolve where to send the user: the current task's code, undefined while loading, null when nothing is open.
+  const targetCode = useMemo<string | null | undefined>(() => {
+    if (loading) return undefined;
+    if (!learnings) return null;
+    for (const org of learnings.orgs) {
+      if (org.status === "locked") continue;
+      for (const proj of org.projects) {
+        const task = proj.tasks.find((t) => t.status === "in-progress") ?? proj.tasks.find((t) => t.status === "not-started") ?? proj.tasks[0];
+        if (task) return task.code;
       }
     }
-    setEmpty(true);
-  }, [loading, learnings, router]);
+    return null;
+  }, [loading, learnings]);
 
-  if (!empty) {
-    return <div className="h-full flex items-center justify-center text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>;
+  useEffect(() => {
+    if (targetCode) router.replace(`/app/desk/task/${targetCode}`);
+  }, [targetCode, router]);
+
+  // Still resolving, or navigating to the resolved task → keep the skeleton up.
+  if (targetCode === undefined || targetCode) {
+    return <PageSkeleton cards={4} />;
   }
   return (
     <div className="max-w-[680px] mx-auto px-6 py-10">

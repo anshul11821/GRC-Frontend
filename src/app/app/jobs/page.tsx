@@ -3,6 +3,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { useCachedQuery } from "@/lib/use-query";
 import { learningsApi } from "@/lib/learnings";
@@ -338,9 +339,7 @@ export default function JobsPage() {
       </div>
 
       {loading && !learnings ? (
-        <div className="flex items-center justify-center py-20 text-slate-400">
-          <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
-        </div>
+        <SkeletonCardGrid cards={6} />
       ) : (
         <>
           <JobsSummary jobs={allJobs} />

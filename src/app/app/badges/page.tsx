@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Card, Bar } from "@/components/ui/primitives";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { SOFT_TONES } from "@/lib/tones";
 import { BADGES, type BadgeDef } from "@/lib/badges";
 import { learningsApi, type Learnings } from "@/lib/learnings";
@@ -80,7 +81,7 @@ export default function BadgesPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>
+        <SkeletonCardGrid cards={8} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" />
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

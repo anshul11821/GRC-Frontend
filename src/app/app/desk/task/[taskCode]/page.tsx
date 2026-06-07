@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
 import { TASK_META } from "@/lib/taskmeta";
@@ -42,7 +43,18 @@ export default function TaskOverview() {
   const tone = meta ? VERB_TONES[meta.standardTone] ?? VERB_TONES.indigo : VERB_TONES.indigo;
   const nextStep = task?.steps.find((s) => s.status !== "complete") ?? task?.steps[0];
 
-  if (loading) return <div className="h-full flex items-center justify-center text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>;
+  if (loading) {
+    return (
+      <div className="max-w-[920px] mx-auto px-8 py-7 space-y-5 animate-pulse">
+        <Skeleton className="h-3 w-40" />
+        <Skeleton className="h-7 w-2/3 max-w-md" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <div className="space-y-2.5">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[920px] mx-auto px-8 py-7 space-y-5">

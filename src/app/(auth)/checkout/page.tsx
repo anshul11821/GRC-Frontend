@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { setPaid, usePaid } from "@/lib/entitlement";
 import { CURRENT_PLAN, FOUNDATION_PRICE, FOUNDATION_PRICE_CAPTION } from "@/lib/billing";
 import { Field, TextInput, PrimaryBtn } from "@/components/ui/forms";
+import { SkeletonForm } from "@/components/ui/skeleton";
 import { Icon } from "@/components/ui/icon";
 
 /** Formats raw digits as groups of 4 for the card field. */
@@ -39,11 +40,7 @@ export default function CheckoutPage() {
   }, [loading, user, paid, router]);
 
   if (loading || !user || !user.isProfileComplete || paid) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-400">
-        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
-      </div>
-    );
+    return <SkeletonForm fields={4} />;
   }
 
   const cardOk = card.replace(/\s/g, "").length >= 12 && expiry.length === 5 && cvc.length >= 3 && name.trim().length > 1;

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Card, Bar } from "@/components/ui/primitives";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { catalog, type Program } from "@/lib/catalog";
 import { learningsApi, type Learnings } from "@/lib/learnings";
@@ -264,7 +265,7 @@ export default function ReportsPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>
+        <SkeletonCardGrid cards={6} />
       ) : error ? (
         <Card className="text-center py-12"><div className="text-[13px] font-medium text-slate-700">{error}</div></Card>
       ) : (

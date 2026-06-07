@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { SkeletonSheet } from "@/components/ui/skeleton";
 import { CertificateSheet, type CertStat } from "@/components/cert/certificate-sheet";
 import { BADGES } from "@/lib/badges";
 import { certificateApi, CERT_LOCKED, type Certificate } from "@/lib/certificate";
@@ -176,7 +177,7 @@ export default function CertificatePage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>
+        <SkeletonSheet />
       ) : isLocked ? (
         <CertStage dep={tab}>
           <CertificateSheet

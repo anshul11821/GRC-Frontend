@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { SkeletonSheet } from "@/components/ui/skeleton";
 import { CvSheet } from "@/components/cv/cv-sheet";
 import { cvApi, type Cv } from "@/lib/cv";
 
@@ -101,7 +102,7 @@ export default function CvPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-slate-400"><div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" /></div>
+        <SkeletonSheet />
       ) : cv ? (
         <>
           <CvSheet cv={cv} />

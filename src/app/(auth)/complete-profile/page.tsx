@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProfileForm } from "@/components/auth/profile-form";
+import { SkeletonForm } from "@/components/ui/skeleton";
 
 /**
  * Profile-completion gate. Reached when a signed-in user hasn't finished their profile.
@@ -20,11 +21,7 @@ export default function CompleteProfilePage() {
   }, [loading, user, router]);
 
   if (loading || !user || user.isProfileComplete) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-400">
-        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
-      </div>
-    );
+    return <SkeletonForm fields={3} />;
   }
 
   return (

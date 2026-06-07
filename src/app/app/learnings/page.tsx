@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { Bar } from "@/components/ui/primitives";
 import { catalog, type Program } from "@/lib/catalog";
@@ -237,9 +238,7 @@ export default function LearningsPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-slate-400">
-          <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
-        </div>
+        <SkeletonCardGrid cards={6} className="grid grid-cols-1 lg:grid-cols-2 gap-4" />
       ) : error ? (
         <Card className="text-center py-12">
           <div className="w-11 h-11 mx-auto rounded-xl bg-rose-50 ring-1 ring-rose-100 flex items-center justify-center text-rose-500 mb-3"><Icon name="info" size={20} /></div>

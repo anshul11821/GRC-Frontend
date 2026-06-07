@@ -1,23 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion, useMotionValue, animate } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Card, Bar, Ring } from "@/components/ui/primitives";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Reveal, Stagger, StaggerItem } from "@/components/ui/motion";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
-import { learningsApi, type Learnings, type LearningTask } from "@/lib/learnings";
+import { learningsApi, type Learnings, type LearningOrg } from "@/lib/learnings";
 import { catalog, type RubricDimension } from "@/lib/catalog";
 import { useCachedQuery } from "@/lib/use-query";
-import { deskApi, type ActivityFeedItem } from "@/lib/desk";
 import { BADGES } from "@/lib/badges";
-import { SOFT_TONES } from "@/lib/tones";
+import { LRN_AVATAR } from "@/lib/tones";
 
 const PROGRAM = "grc101";
 
 interface Continue { activityId: string; taskCode: string; taskTitle: string; stepCode: string; verb: string; stepTitle: string }
 
 /** Pick the task to surface: first in-progress, else first not-started. */
-function deriveContinue(l: Learnings): { cont: Continue | null; activeProject: { code: string; title: string; tasks: LearningTask[] } | null } {
+function deriveContinue(l: Learnings): Continue | null {
   for (const org of l.orgs) {
     if (org.status === "locked") continue;
     for (const proj of org.projects) {
@@ -28,17 +31,39 @@ function deriveContinue(l: Learnings): { cont: Continue | null; activeProject: {
           target.steps.find((s) => s.status === "current" || s.status === "in-progress") ??
           target.steps.find((s) => s.status !== "complete" && s.status !== "locked") ??
           target.steps[0];
-        return {
-          cont: step ? { activityId: step.id, taskCode: target.code, taskTitle: target.title, stepCode: step.code, verb: step.verb, stepTitle: step.title } : null,
-          activeProject: { code: proj.code, title: proj.title, tasks: proj.tasks },
-        };
+        return step ? { activityId: step.id, taskCode: target.code, taskTitle: target.title, stepCode: step.code, verb: step.verb, stepTitle: step.title } : null;
       }
     }
   }
-  return { cont: null, activeProject: null };
+  return null;
 }
 
-function Stat({ icon, tone, value, sub, label }: { icon: IconName; tone: string; value: string; sub?: string; label: string }) {
+/** Roll up per-org engagement stats for the dashboard cards. */
+function orgStats(o: LearningOrg): { total: number; done: number; pct: number } {
+  let total = 0, done = 0;
+  o.projects.forEach((p) => p.tasks.forEach((t) => { total++; if (t.status === "complete") done++; }));
+  return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+/** Counts a number up from 0 on mount (respects reduced motion). */
+function CountUp({ value, decimals = 0 }: { value: number; decimals?: number }) {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState("0");
+  useEffect(() => {
+    // setState only happens inside animate's onUpdate callback (not synchronously in the
+    // effect body); a 0-duration tween snaps straight to the value when motion is reduced.
+    const controls = animate(mv, value, {
+      duration: reduce ? 0 : 0.9,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setDisplay(v.toFixed(decimals)),
+    });
+    return () => controls.stop();
+  }, [value, decimals, reduce, mv]);
+  return <>{display}</>;
+}
+
+function Stat({ icon, tone, value, decimals, sub, label }: { icon: IconName; tone: string; value: string | number; decimals?: number; sub?: string; label: string }) {
   const tones: Record<string, string> = {
     indigo: "bg-indigo-50 text-indigo-600 ring-indigo-100", emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     violet: "bg-violet-50 text-violet-600 ring-violet-100", amber: "bg-amber-50 text-amber-700 ring-amber-100",
@@ -48,12 +73,60 @@ function Stat({ icon, tone, value, sub, label }: { icon: IconName; tone: string;
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 ${tones[tone]}`}><Icon name={icon} size={19} /></div>
       <div className="min-w-0">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900">{value}</span>
+          <span className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900 tabular-nums">{typeof value === "number" ? <CountUp value={value} decimals={decimals} /> : value}</span>
           {sub && <span className="text-[12px] text-slate-400 font-medium">{sub}</span>}
         </div>
         <div className="text-[12px] text-slate-500 tracking-tight truncate">{label}</div>
       </div>
     </Card>
+  );
+}
+
+/** Pentagon-style radar of the five rubric dimensions (values out of 5). */
+function RubricRadar({ dims }: { dims: { label: string; value?: number }[] }) {
+  const N = dims.length;
+  const size = 232, cx = size / 2, cy = size / 2, R = 74, MAX = 5;
+  const angle = (i: number) => (-90 + (360 / N) * i) * (Math.PI / 180);
+  const pt = (i: number, radius: number): [number, number] => [cx + radius * Math.cos(angle(i)), cy + radius * Math.sin(angle(i))];
+  const poly = (radius: (i: number) => number) => dims.map((_, i) => pt(i, radius(i)).join(",")).join(" ");
+  const reduce = useReducedMotion();
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[240px] mx-auto">
+      {[1, 2, 3, 4, 5].map((lvl) => (
+        <polygon key={lvl} points={poly(() => (R * lvl) / MAX)} fill="none" stroke="#EEF2F7" strokeWidth={1} />
+      ))}
+      {dims.map((_, i) => {
+        const [x, y] = pt(i, R);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#EEF2F7" strokeWidth={1} />;
+      })}
+      <motion.polygon
+        points={poly((i) => R * ((dims[i].value ?? 0) / MAX))}
+        fill="rgba(99,102,241,0.16)" stroke="#6366F1" strokeWidth={2} strokeLinejoin="round"
+        style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        initial={reduce ? false : { scale: 0.3, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 140, damping: 18, delay: 0.12 }}
+      />
+      {dims.map((d, i) => {
+        const [x, y] = pt(i, R * ((d.value ?? 0) / MAX));
+        return d.value !== undefined ? (
+          <motion.circle key={i} cx={x} cy={y} r={2.6} fill="#6366F1"
+            initial={reduce ? false : { scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4 + i * 0.05, duration: 0.25 }}
+          />
+        ) : null;
+      })}
+      {dims.map((d, i) => {
+        const [x, y] = pt(i, R + 15);
+        const anchor = Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end";
+        return (
+          <text key={i} x={x} y={y} textAnchor={anchor} dominantBaseline="middle" className="fill-slate-500" style={{ fontSize: 9.5, fontWeight: 500 }}>
+            {d.label.split(" ")[0]}
+          </text>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -63,28 +136,46 @@ export default function DashboardPage() {
   const { data: progress, loading: pLoad } = useCachedQuery(`progress:${PROGRAM}`, () => learningsApi.progress(PROGRAM));
   const { data: learnings, loading: lLoad } = useCachedQuery(`learnings:${PROGRAM}`, () => learningsApi.get(PROGRAM));
   const { data: rubricData } = useCachedQuery("rubric", () => catalog.rubric());
-  const { data: feedData } = useCachedQuery(`feed:${PROGRAM}`, () => deskApi.activityFeed(PROGRAM));
   const rubric = rubricData ?? [];
-  const feed = feedData ?? [];
   const loading = (pLoad || lLoad) && !progress && !learnings;
 
   const first = user?.firstName || "there";
-  const { cont, activeProject } = learnings ? deriveContinue(learnings) : { cont: null, activeProject: null };
+  const cont = learnings ? deriveContinue(learnings) : null;
+  const orgs = learnings?.orgs ?? [];
 
   const rubricScoreMap = new Map<string, number>();
   progress?.rubricScores.forEach((s) => { rubricScoreMap.set(s.id, s.value); rubricScoreMap.set(s.label.toLowerCase(), s.value); });
   const scoreFor = (r: RubricDimension) => rubricScoreMap.get(r.id) ?? rubricScoreMap.get(r.label.toLowerCase());
   const anyRubricScored = (progress?.rubricScores.length ?? 0) > 0;
-  const rubricTone = (v: number) => (v >= 4.3 ? "emerald" : v >= 4.0 ? "indigo" : "amber");
 
   const completedTaskCodes = new Set<string>();
-  learnings?.orgs.forEach((o) => o.projects.forEach((p) => p.tasks.forEach((t) => { if (t.status === "complete") completedTaskCodes.add(t.code); })));
+  let totalTasks = 0;
+  learnings?.orgs.forEach((o) => o.projects.forEach((p) => { totalTasks += p.tasks.length; p.tasks.forEach((t) => { if (t.status === "complete") completedTaskCodes.add(t.code); }); }));
+  const completedTasks = completedTaskCodes.size;
+  const certPct = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const earnedBadges = BADGES.filter((b) => b.taskCodes.length > 0 && b.taskCodes.every((c) => completedTaskCodes.has(c)));
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400">
-        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
+      <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5 animate-pulse">
+        <div className="h-[168px] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Skeleton className="h-[76px] rounded-2xl" />
+          <Skeleton className="h-[76px] rounded-2xl" />
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          <div className="xl:col-span-2 space-y-5">
+            <Skeleton className="h-[230px] rounded-2xl" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Skeleton className="h-[260px] rounded-2xl" />
+              <Skeleton className="h-[260px] rounded-2xl" />
+            </div>
+          </div>
+          <div className="space-y-5">
+            <Skeleton className="h-[200px] rounded-2xl" />
+            <Skeleton className="h-[92px] rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -92,6 +183,7 @@ export default function DashboardPage() {
   return (
     <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
       {/* Hero / continue */}
+      <Reveal>
       <div className="relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%)" }}>
         <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex flex-col md:flex-row md:items-center gap-6">
@@ -132,121 +224,137 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      </Reveal>
 
       {/* Stat strip */}
       {progress && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Stat icon="checkSquare" tone="indigo" value={`${progress.activitiesDone}`} sub={`/ ${progress.activitiesTotal}`} label="Activities completed" />
-          <Stat icon="star" tone="amber" value={progress.reviewsCount ? progress.avgScore.toFixed(1) : "—"} sub={progress.reviewsCount ? `/ ${progress.scoreOutOf}` : undefined} label={`Avg mentor score · ${progress.reviewsCount} reviews`} />
-          <Stat icon="bolt" tone="violet" value={`${progress.verbsPracticed}`} sub={`/ ${progress.verbsTotal}`} label="Method verbs practised" />
+        <Reveal delay={0.08}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Stat icon="checkSquare" tone="indigo" value={progress.activitiesDone} sub={`/ ${progress.activitiesTotal}`} label="Activities completed" />
+          <Stat icon="star" tone="amber" value={progress.reviewsCount ? progress.avgScore : "—"} decimals={1} sub={progress.reviewsCount ? `/ ${progress.scoreOutOf}` : undefined} label={`Avg mentor score · ${progress.reviewsCount} reviews`} />
         </div>
+        </Reveal>
       )}
 
+      <Reveal delay={0.16}>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* Main column */}
         <div className="xl:col-span-2 space-y-5">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Active engagement</h2>
-              <Link href="/app/learnings" className="text-[11.5px] text-slate-400 hover:text-indigo-600 font-medium no-underline">View all</Link>
+              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Your organisations</h2>
+              <span className="text-[11.5px] text-slate-400 font-medium">{orgs.length} engagement{orgs.length === 1 ? "" : "s"}</span>
             </div>
-            {activeProject ? (
-              <div className="space-y-2.5">
-                {activeProject.tasks.map((t) => {
-                  const active = t.status === "in-progress";
-                  const pct = t.total ? Math.round((t.done / t.total) * 100) : 0;
+            {orgs.length === 0 ? (
+              <p className="text-[13px] text-slate-500">No organisations assigned yet.</p>
+            ) : (
+              <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {orgs.map((o) => {
+                  const s = orgStats(o);
+                  const locked = o.status === "locked";
+                  const done = s.total > 0 && s.done === s.total;
                   return (
-                    <Link key={t.id} href="/app/learnings" className="group block rounded-xl p-3.5 ring-1 transition-all no-underline bg-slate-50/60 ring-slate-200/60 hover:bg-slate-50">
-                      <div className="flex items-center gap-3 mb-2.5">
-                        <span className={`shrink-0 inline-flex items-center justify-center px-1.5 h-5 rounded-md text-[10.5px] font-mono font-medium ${active ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"}`}>{t.code}</span>
+                    <StaggerItem key={o.id} className={`rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60 ${locked ? "opacity-60" : ""}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${LRN_AVATAR[o.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[13px] font-semibold shrink-0`}>{o.initials}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-medium tracking-tight text-slate-900 truncate">{t.title}</div>
-                          <div className="text-[11px] text-slate-400 tracking-tight">{t.standards}</div>
+                          <div className="text-[13px] font-semibold tracking-tight text-slate-900 truncate">{o.name}</div>
+                          <div className="text-[11px] text-slate-400 tracking-tight truncate">{o.industry}</div>
                         </div>
+                        <span className={`shrink-0 inline-flex items-center gap-1 px-2 h-5 rounded-full text-[10px] font-semibold tracking-tight ring-1 ${
+                          locked ? "bg-slate-100 text-slate-500 ring-slate-200" : done ? "bg-emerald-50 text-emerald-700 ring-emerald-100" : "bg-indigo-50 text-indigo-700 ring-indigo-100"
+                        }`}>
+                          {locked && <Icon name="lock" size={9} />}
+                          {locked ? "Locked" : done ? "Complete" : "Active"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {[
+                          { label: "Tasks", value: s.total },
+                          { label: "Done", value: s.done },
+                        ].map((m) => (
+                          <div key={m.label} className="rounded-lg bg-white ring-1 ring-slate-200/60 px-2 py-1.5 text-center">
+                            <div className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900 tabular-nums">{m.value}</div>
+                            <div className="text-[10px] text-slate-400 tracking-tight">{m.label}</div>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex items-center gap-3">
-                        <Bar pct={pct || 2} tone={active ? "indigo" : "slate"} className="flex-1" />
-                        <span className="text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{t.done}/{t.total}</span>
+                        <Bar pct={s.pct || (locked ? 0 : 2)} tone={done ? "emerald" : locked ? "slate" : "indigo"} className="flex-1" />
+                        <span className="text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{s.pct}%</span>
                       </div>
-                    </Link>
+                    </StaggerItem>
                   );
                 })}
-              </div>
-            ) : (
-              <p className="text-[13px] text-slate-500">No active engagement yet.</p>
+              </Stagger>
             )}
           </Card>
 
-          {/* Recent activity */}
-          <Card>
-            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">Recent activity</h2>
-            {feed.length === 0 ? (
-              <div className="flex flex-col items-center text-center py-8">
-                <div className="w-11 h-11 rounded-xl bg-slate-100 ring-1 ring-slate-200/70 flex items-center justify-center text-slate-400 mb-3"><Icon name="history" size={20} /></div>
-                <div className="text-[13px] font-medium text-slate-700">No activity yet</div>
-                <div className="text-[12px] text-slate-400 mt-0.5 max-w-xs">Mentor feedback and completed steps will appear here as you work through tasks.</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Skill rubric — radar */}
+            <Card>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Skill rubric</h2>
+                <span className="text-[11px] text-slate-400">/ 5</span>
               </div>
-            ) : (
-              <div className="relative">
-                <div className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-100" />
-                <div className="space-y-4">
-                  {feed.map((a, i) => {
-                    const pass = a.decision === "pass";
-                    return (
-                      <div key={`${a.activityId}-${i}`} className="relative flex gap-3">
-                        <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ring-1 shrink-0 bg-white ${pass ? "text-emerald-600 ring-emerald-100" : "text-amber-600 ring-amber-100"}`}>
-                          <Icon name={pass ? "check" : "refresh"} size={14} strokeWidth={pass ? 3 : 1.9} />
-                        </div>
-                        <div className="flex-1 min-w-0 pt-0.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <DVerb verbId={a.verb} />
-                            <span className="font-mono text-[10.5px] text-slate-400">{a.taskCode}·{a.activityCode}</span>
-                            <span className="inline-flex items-center gap-1 px-1.5 h-5 rounded-md bg-amber-50 ring-1 ring-amber-100">
-                              <Icon name="star" size={10} className="text-amber-500" fill="currentColor" />
-                              <span className="text-[10.5px] font-semibold text-amber-700 tabular-nums">{a.overallScore.toFixed(1)}</span>
-                            </span>
-                            <span className="text-[10.5px] text-slate-400 ml-auto">{new Date(a.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
-                          </div>
-                          <p className="text-[12px] text-slate-600 tracking-tight mt-0.5 line-clamp-2" style={{ textWrap: "pretty" }}>{a.feedback}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+              {rubric.length > 0 ? (
+                <RubricRadar dims={rubric.map((r) => ({ label: r.label, value: scoreFor(r) }))} />
+              ) : (
+                <div className="py-10 text-center text-[12.5px] text-slate-400">No rubric data.</div>
+              )}
+              {!anyRubricScored && (
+                <div className="mt-1 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
+                  <Icon name="info" size={13} className="text-slate-400 shrink-0" /> Scores appear after your first mentor-graded activity.
+                </div>
+              )}
+            </Card>
+
+            {/* Certificate progress */}
+            <Card className="flex flex-col">
+              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">Certificate progress</h2>
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-2">
+                <Ring pct={certPct} size={108} stroke={9}>
+                  <span className="text-[19px] font-semibold tracking-[-0.02em] text-slate-900">{certPct}%</span>
+                </Ring>
+                <div className="mt-3 text-[12.5px] font-medium text-slate-700 tracking-tight tabular-nums">{completedTasks} of {totalTasks} tasks complete</div>
+                <div className="text-[11px] text-slate-400 mt-1 max-w-[210px]" style={{ textWrap: "pretty" }}>
+                  {certPct >= 100 ? "All tasks done — your GRC 101 certificate is ready." : "Finish every task to unlock your GRC 101 certificate."}
                 </div>
               </div>
-            )}
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Side column */}
         <div className="space-y-5">
-          {/* Rubric */}
+          {/* Progress overview */}
           <Card>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Skill rubric</h2>
-              <span className="text-[11px] text-slate-400">/ 5</span>
-            </div>
-            <div className="space-y-3">
-              {rubric.map((r) => {
-                const v = scoreFor(r);
-                return (
-                  <div key={r.id}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[12px] text-slate-500 tracking-tight">{r.label}</span>
-                      {v !== undefined
-                        ? <span className="text-[11.5px] font-semibold text-slate-900 tabular-nums">{v.toFixed(1)}</span>
-                        : <Icon name="history" size={12} className="text-slate-300" />}
-                    </div>
-                    <Bar pct={v !== undefined ? (v / 5) * 100 : 0} tone={v !== undefined ? rubricTone(v) : "slate"} />
-                  </div>
-                );
-              })}
-            </div>
-            {!anyRubricScored && (
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
-                <Icon name="info" size={13} className="text-slate-400 shrink-0" /> Scores appear after your first mentor-graded activity.
+            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3.5">Progress overview</h2>
+            <div className="space-y-3.5">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[12.5px] text-slate-600 tracking-tight">Badges earned</span>
+                  <span className="text-[12px] font-semibold text-slate-900 tabular-nums">{earnedBadges.length} / {BADGES.length}</span>
+                </div>
+                <Bar pct={BADGES.length ? (earnedBadges.length / BADGES.length) * 100 : 0} tone="amber" />
               </div>
-            )}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[12.5px] text-slate-600 tracking-tight">Tasks completed</span>
+                  <span className="text-[12px] font-semibold text-slate-900 tabular-nums">{completedTasks} / {totalTasks}</span>
+                </div>
+                <Bar pct={certPct} tone="indigo" />
+              </div>
+              {progress && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12.5px] text-slate-600 tracking-tight">Activities completed</span>
+                    <span className="text-[12px] font-semibold text-slate-900 tabular-nums">{progress.activitiesDone} / {progress.activitiesTotal}</span>
+                  </div>
+                  <Bar pct={progress.activitiesTotal ? (progress.activitiesDone / progress.activitiesTotal) * 100 : 0} tone="emerald" />
+                </div>
+              )}
+            </div>
           </Card>
 
           {/* Due soon — empty */}
@@ -257,35 +365,9 @@ export default function DashboardPage() {
               <span className="text-[12.5px]">Nothing due — set your own pace.</span>
             </div>
           </Card>
-
-          {/* Badges */}
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Badges</h2>
-              <Link href="/app/badges" className="text-[11px] text-indigo-600 font-medium no-underline hover:underline">{earnedBadges.length} of {BADGES.length} earned</Link>
-            </div>
-            {earnedBadges.length === 0 ? (
-              <div className="flex flex-col items-center text-center py-4">
-                <div className="w-12 h-12 rounded-full bg-slate-100 ring-1 ring-slate-200/70 flex items-center justify-center text-slate-300 mb-2"><Icon name="ribbon" size={22} /></div>
-                <div className="text-[12.5px] text-slate-500 max-w-[200px]">Complete tasks to earn credential badges toward your certificate.</div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {earnedBadges.slice(0, 4).map((b) => (
-                  <Link key={b.id} href="/app/badges" className="flex items-center gap-2.5 no-underline group">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ring-1 shrink-0 ${SOFT_TONES[b.tone] ?? SOFT_TONES.indigo}`}><Icon name={b.icon} size={15} /></div>
-                    <span className="text-[12.5px] text-slate-700 tracking-tight group-hover:text-slate-900 truncate">{b.name}</span>
-                    <Icon name="check" size={13} strokeWidth={3} className="text-emerald-500 ml-auto shrink-0" />
-                  </Link>
-                ))}
-                {earnedBadges.length > 4 && (
-                  <Link href="/app/badges" className="block text-[11.5px] text-indigo-600 font-medium no-underline hover:underline pt-1">+{earnedBadges.length - 4} more →</Link>
-                )}
-              </div>
-            )}
-          </Card>
         </div>
       </div>
+      </Reveal>
 
       <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · GRC 101 · Foundations</div>
     </div>
