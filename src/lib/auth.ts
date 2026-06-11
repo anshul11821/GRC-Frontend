@@ -94,6 +94,8 @@ export interface SigninRequest {
   email: string;
   password: string;
   captchaToken: string;
+  /** Persist the session across browser restarts (persistent vs. session cookie). */
+  rememberMe: boolean;
 }
 
 export interface ChangePasswordRequest {
@@ -110,9 +112,43 @@ export interface PasswordResetRequest {
   newPassword: string;
 }
 
+/** Auditor onboarding (auto-approved). Verify-email is the shared signupVerifyEmail. */
+export interface AuditorSignupStartRequest {
+  email: string;
+  password: string;
+  captchaToken: string;
+}
+export interface AuditorApplicationRequest {
+  firstName: string;
+  lastName: string;
+  discipline: string;
+  firm?: string | null;
+  yearsExperience?: number | null;
+  certifications: string[];
+  bio?: string | null;
+  assignedStandards: string[];
+}
+export interface AuditorApplicationResponse {
+  message: string;
+  profile: {
+    discipline: string;
+    firm: string | null;
+    yearsExperience: number | null;
+    certifications: string[];
+    bio: string | null;
+    assignedStandards: string[];
+    status: string;
+    createdAt: string;
+  };
+}
+
 export const authApi = {
   signupStart: (b: SignupStartRequest) =>
     api.post<SignupStartResponse>("/auth/signup/start", b, { noAuth: true }),
+  auditorSignupStart: (b: AuditorSignupStartRequest) =>
+    api.post<SignupStartResponse>("/auth/auditor/signup/start", b, { noAuth: true }),
+  auditorApplication: (b: AuditorApplicationRequest, token?: string) =>
+    api.post<AuditorApplicationResponse>("/auth/auditor/application", b, { token }),
   signupResendOtp: (b: SignupResendOtpRequest) =>
     api.post<{ message: string; email: string }>("/auth/signup/resend-otp", b, { noAuth: true }),
   signupVerifyEmail: (b: SignupVerifyRequest) =>

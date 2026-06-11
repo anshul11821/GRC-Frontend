@@ -79,7 +79,7 @@ function Field({ f, value, onChange }: { f: FieldSpec; value: unknown; onChange:
         {rows.map((it, i) => (
           <div key={i} className="flex items-center gap-2">
             <input value={it} placeholder={(f.placeholder as string) ?? "Add an item"} onChange={(e) => { const n = [...rows]; n[i] = e.target.value; update(n); }} className={inputCls} />
-            <button type="button" onClick={() => update(rows.filter((_, j) => j !== i))} className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-rose-600 shrink-0"><Icon name="x" size={14} /></button>
+            <button type="button" aria-label="Remove item" onClick={() => update(rows.filter((_, j) => j !== i))} className="focus-ring w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-rose-600 shrink-0"><Icon name="x" size={14} /></button>
           </div>
         ))}
         <button type="button" onClick={() => update([...rows, ""])} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-700"><Icon name="plus" size={13} /> Add</button>
@@ -119,7 +119,7 @@ function Field({ f, value, onChange }: { f: FieldSpec; value: unknown; onChange:
                   </td>
                 ))}
                 <td className="px-1">
-                  <button type="button" onClick={() => onChange(display.filter((_, j) => j !== ri))} className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-rose-600"><Icon name="x" size={13} /></button>
+                  <button type="button" aria-label="Remove row" onClick={() => onChange(display.filter((_, j) => j !== ri))} className="focus-ring w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-rose-600"><Icon name="x" size={13} /></button>
                 </td>
               </tr>
             ))}

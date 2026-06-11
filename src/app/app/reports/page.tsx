@@ -78,7 +78,7 @@ function ReportKpis({ rows }: { rows: ReportRow[] }) {
   return (
     <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
       {items.map((s) => (
-        <Card key={s.label} pad={false}>
+        <Card key={s.label} pad={false} className="transition-all duration-300 hover:-translate-y-0.5 hover:ring-indigo-200/70">
           <div className="flex items-center gap-3 p-3.5 w-full">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ring-1 shrink-0 ${tones[s.tone]}`}><Icon name={s.icon} size={16} /></div>
             <div className="min-w-0">
@@ -121,7 +121,7 @@ function ActivitiesTable({ row }: { row: ReportRow }) {
   const stepStatus: Record<string, { dot: string; txt: string; label: string }> = {
     complete: { dot: "bg-emerald-500", txt: "text-emerald-600", label: "Complete" },
     "in-progress": { dot: "bg-indigo-500", txt: "text-indigo-600", label: "In progress" },
-    pending: { dot: "bg-slate-300", txt: "text-slate-400", label: "Pending" },
+    pending: { dot: "bg-slate-300", txt: "text-slate-500", label: "Pending" },
   };
   return (
     <div className="overflow-x-auto rounded-xl ring-1 ring-slate-200/70">
@@ -136,7 +136,7 @@ function ActivitiesTable({ row }: { row: ReportRow }) {
             const st = stepStatus[a.status ?? "pending"] ?? stepStatus.pending;
             return (
               <tr key={i} className="hover:bg-slate-50/50">
-                <td className="px-3 py-2.5"><span className="font-mono text-[11px] text-slate-400">{a.step}</span></td>
+                <td className="px-3 py-2.5"><span className="font-mono text-[11px] text-slate-500">{a.step}</span></td>
                 <td className="px-3 py-2.5"><DVerb verbId={a.verb} /></td>
                 <td className="px-3 py-2.5 text-[12px] text-slate-700 tracking-tight">{a.activity}</td>
                 <td className="px-3 py-2.5"><span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${st.txt}`}><span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />{st.label}</span></td>
@@ -155,15 +155,15 @@ function ReportTask({ row, defaultOpen }: { row: ReportRow; defaultOpen?: boolea
   const pct = row.total ? Math.round((row.done / row.total) * 100) : 0;
   const active = row.status === "in-progress";
   return (
-    <Card pad={false}>
-      <button onClick={() => setOpen((o) => !o)} className="w-full text-left p-4 flex items-center gap-3">
+    <Card pad={false} className="transition-all duration-300 hover:ring-indigo-200/70">
+      <button onClick={() => setOpen((o) => !o)} className="focus-ring w-full text-left p-4 flex items-center gap-3 rounded-2xl">
         <span className={`shrink-0 inline-flex items-center justify-center px-1.5 h-6 rounded-md text-[11px] font-mono font-medium ${active ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"}`}>{row.code}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[14px] font-semibold tracking-tight text-slate-900">{row.title}</span>
             <span className="inline-flex items-center gap-1 h-[19px] px-1.5 rounded-md bg-slate-100 ring-1 ring-slate-200/70 text-[10px] font-medium text-slate-500">{row.category}</span>
           </div>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 tracking-tight flex-wrap">
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 tracking-tight flex-wrap">
             <span className="inline-flex items-center gap-1"><Icon name="briefcase" size={11} /> {row.industry}</span>
             <span className="text-slate-300">·</span><span className="truncate">{row.orgs.join(" · ")}</span>
             <span className="text-slate-300">·</span><span>{row.controls.length} controls · {row.activities.length} activities</span>
@@ -243,11 +243,16 @@ export default function ReportsPage() {
   return (
     <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Reports</h1>
-          <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-2xl" style={{ textWrap: "pretty" }}>
-            A detailed register of every learning, task and activity — mapped to its industry, standard, domain, control and purpose, with live completion.
-          </p>
+        <div className="flex items-start gap-3.5">
+          <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
+            <Icon name="chart" size={20} />
+          </span>
+          <div>
+            <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Reports</h1>
+            <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-2xl" style={{ textWrap: "pretty" }}>
+              A detailed register of every learning, task and activity — mapped to its industry, standard, domain, control and purpose, with live completion.
+            </p>
+          </div>
         </div>
         {programs.length > 0 && (
           <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 w-fit">
@@ -292,7 +297,7 @@ export default function ReportsPage() {
               <Card className="text-center py-12">
                 <div className="w-11 h-11 mx-auto rounded-xl bg-slate-100 ring-1 ring-slate-200/70 flex items-center justify-center text-slate-400 mb-3"><Icon name="search" size={20} /></div>
                 <div className="text-[13px] font-medium text-slate-700">No results</div>
-                <div className="text-[12px] text-slate-400 mt-0.5">Try a different search or standard filter.</div>
+                <div className="text-[12px] text-slate-500 mt-0.5">Try a different search or standard filter.</div>
               </Card>
             ) : rows.map((r) => (
               <ReportTask key={r.code} row={r} defaultOpen={r.status === "in-progress" || q !== "" || std !== "All standards"} />
@@ -301,7 +306,7 @@ export default function ReportsPage() {
         </>
       )}
 
-      <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · {program?.code ?? programId}</div>
+      <div className="text-center text-[11px] text-slate-500 pt-2 pb-4">grcmentor · {program?.code ?? programId}</div>
     </div>
   );
 }

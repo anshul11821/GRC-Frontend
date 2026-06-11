@@ -78,6 +78,20 @@ const paths: Record<string, ReactNode> = {
   globe: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>),
   trash: (<><path d="M4 7h16" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" /></>),
   camera: (<><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L18 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="13" r="3.5" /></>),
+  // --- auditor console glyphs ---
+  inbox: (<><path d="M3 12l3-7h12l3 7" /><path d="M3 12v6a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6" /><path d="M3 12h5l1.5 3h5L16 12h5" /></>),
+  users: (<><circle cx="9" cy="8" r="3.5" /><path d="M3 20c1-3.5 3.3-5 6-5s5 1.5 6 5" /><path d="M16 5a3 3 0 0 1 0 6" /><path d="M16.5 15c2 .4 3.6 1.8 4.5 4.5" /></>),
+  clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>),
+  paperclip: <path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 6" />,
+  messageSquare: <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-4 4v-4a2 2 0 0 1-1-1.7z" />,
+  gauge: (<><path d="M3 16a9 9 0 1 1 18 0" /><path d="M12 16l4-5" /><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none" /></>),
+  checkCircle: (<><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 4.5-5" /></>),
+  xCircle: (<><circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6" /><path d="M9 9l6 6" /></>),
+  cornerUpRight: (<><path d="M5 19v-7a4 4 0 0 1 4-4h10" /><path d="M15 4l5 4-5 4" /></>),
+  calendarCheck: (<><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M8 3v4" /><path d="M16 3v4" /><path d="M9 15l2 2 4-4" /></>),
+  lightbulb: (<><path d="M9 18h6" /><path d="M10 21h4" /><path d="M8.5 14a5.5 5.5 0 1 1 7 0c-.7.6-1 1.2-1 2H9.5c0-.8-.3-1.4-1-2z" /></>),
+  pin: (<><path d="M12 17v5" /><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z" /></>),
+  alertTriangle: (<><path d="M12 3l9.5 16.5H2.5L12 3z" /><path d="M12 10v4" /><path d="M12 17.5v.01" /></>),
 };
 
 export type IconName = keyof typeof paths;

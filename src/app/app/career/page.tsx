@@ -238,11 +238,16 @@ export default function CareerPage() {
   return (
     <div className="max-w-[1100px] mx-auto px-6 py-6 space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Career</h1>
-          <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-xl" style={{ textWrap: "pretty" }}>
-            What each program develops — the skills, frameworks, management level and expertise that shape your GRC career path.
-          </p>
+        <div className="flex items-start gap-3.5">
+          <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
+            <Icon name="rocket" size={20} />
+          </span>
+          <div>
+            <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Career</h1>
+            <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-xl" style={{ textWrap: "pretty" }}>
+              What each program develops — the skills, frameworks, management level and expertise that shape your GRC career path.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 w-fit">
           {CAREER_PROGRAMS.map((p) => {

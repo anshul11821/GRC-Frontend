@@ -103,7 +103,7 @@ export function NotificationBell() {
       <button
         onClick={toggle}
         aria-label="Notifications"
-        className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative"
+        className="focus-ring w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative"
       >
         <Icon name="bell" size={17} />
         {unread > 0 && (

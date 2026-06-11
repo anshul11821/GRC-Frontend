@@ -42,9 +42,19 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
   const tone = meta ? VERB_TONES[meta.standardTone] ?? VERB_TONES.indigo : VERB_TONES.indigo;
   const locked = state === "locked";
 
+  // Two-shade highlight: a directly-selected task gets the strong "you are here" treatment;
+  // a task that merely *contains* the active verb gets a softer ambient tint so the verb row
+  // stays the visually primary selection.
+  const taskRowCls =
+    activeTaskCode === task.code
+      ? "bg-indigo-50 ring-1 ring-indigo-100"
+      : onThisTask
+        ? "bg-indigo-50/50"
+        : "";
+
   return (
     <div>
-      <div className={`flex items-center gap-1 rounded-lg ${activeTaskCode === task.code ? "bg-indigo-50 ring-1 ring-indigo-100" : ""}`}>
+      <div className={`flex items-center gap-1 rounded-lg ${taskRowCls}`}>
         <button onClick={() => setOpen((o) => !o)} className="w-6 h-7 flex items-center justify-center shrink-0 text-slate-400 hover:text-slate-600" aria-label="Toggle actions">
           <Icon name="chevronRight" size={13} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
@@ -112,6 +122,88 @@ function CategoryNode({ category, tasks, taskStates, activeId, activeTaskCode }:
   );
 }
 
+type OrgState = "complete" | "active" | "locked";
+
+/** Map a placement's backend status to a display state. Anything not complete or accessible is locked. */
+function orgDisplayState(org: LearningOrg): OrgState {
+  if (org.status === "complete") return "complete";
+  if (org.status === "locked" || org.status === "upcoming") return "locked";
+  return "active";
+}
+
+/** A whole placement (organisation): a rich header + its category→task→step tree. Locked placements
+ *  are disabled until the previous one is complete; completed ones collapse but stay open-able. */
+function OrgNode({ org, defaultOpen, activeId, activeTaskCode, lockedHint }: {
+  org: LearningOrg;
+  defaultOpen: boolean;
+  activeId?: string;
+  activeTaskCode?: string;
+  lockedHint: string;
+}) {
+  const state = orgDisplayState(org);
+  const locked = state === "locked";
+  const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => { if (defaultOpen) setOpen(true); }, [defaultOpen]);
+
+  // Flatten this placement's tasks + derive per-task state and method-category grouping.
+  const tasks: LearningTask[] = [];
+  org.projects.forEach((p) => p.tasks.forEach((t) => tasks.push(t)));
+  const taskStates = new Map<string, TaskState>();
+  tasks.forEach((t) => taskStates.set(t.code, taskState(t)));
+  const doneTasks = tasks.filter(taskComplete).length;
+
+  const byCat = new Map<string, LearningTask[]>();
+  tasks.forEach((t) => {
+    const cat = TASK_META[t.code]?.methodCategory ?? "Other";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push(t);
+  });
+  const cats = [...byCat.keys()].sort((a, b) => {
+    const ia = METHOD_CATEGORY_ORDER.indexOf(a), ib = METHOD_CATEGORY_ORDER.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  const pct = tasks.length ? (doneTasks / tasks.length) * 100 : 0;
+  const expandable = !locked && tasks.length > 0;
+
+  return (
+    <div className={`rounded-xl ${state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
+      <button
+        onClick={() => expandable && setOpen((o) => !o)}
+        disabled={!expandable}
+        title={locked ? lockedHint : undefined}
+        className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-left transition-colors ${locked ? "cursor-not-allowed" : "hover:bg-slate-100/50"}`}
+      >
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${LRN_AVATAR[org.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[11px] font-semibold shrink-0 ${locked ? "grayscale opacity-50" : ""}`}>{org.initials}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[12.5px] font-semibold tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-900"}`}>{org.name}</span>
+            {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
+            {locked && <Icon name="lock" size={11} className="text-slate-300 shrink-0" />}
+          </div>
+          <div className={`text-[10.5px] tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-500"}`}>{org.industry}</div>
+        </div>
+        {expandable && <Icon name="chevronDown" size={13} className={`text-slate-400 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />}
+      </button>
+
+      {!locked && tasks.length > 0 && (
+        <div className="px-2.5 pb-2 flex items-center gap-2">
+          <div className="h-1 flex-1 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full rounded-full transition-all ${state === "complete" ? "bg-emerald-500" : "bg-indigo-500"}`} style={{ width: `${pct}%` }} /></div>
+          <span className="text-[9.5px] text-slate-400 tabular-nums shrink-0">{doneTasks}/{tasks.length}</span>
+        </div>
+      )}
+
+      {open && expandable && (
+        <div className="px-1 pb-1.5 space-y-0.5">
+          {cats.map((c) => <CategoryNode key={c} category={c} tasks={byCat.get(c)!} taskStates={taskStates} activeId={activeId} activeTaskCode={activeTaskCode} />)}
+        </div>
+      )}
+
+      {locked && <p className="px-2.5 pb-2.5 text-[10.5px] text-slate-400 tracking-tight">{lockedHint}</p>}
+    </div>
+  );
+}
+
 function SidebarShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   return (
     <aside className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
@@ -149,63 +241,25 @@ export function DeskSidebar() {
   }
 
   const orgs = learnings?.orgs ?? [];
-  const activeOrg: LearningOrg | undefined = orgs.find((o) => o.status === "active") ?? orgs.find((o) => o.status !== "locked") ?? orgs[0];
-  const upcoming = orgs.find((o) => o.status === "upcoming" && o.id !== activeOrg?.id);
-
-  // tasks of the active org; state comes from the backend's authoritative statuses
-  const tasks: LearningTask[] = [];
-  activeOrg?.projects.forEach((p) => p.tasks.forEach((t) => tasks.push(t)));
-  const taskStates = new Map<string, TaskState>();
-  tasks.forEach((t) => taskStates.set(t.code, taskState(t)));
-
-  // group by method category (catalogue order)
-  const byCat = new Map<string, LearningTask[]>();
-  tasks.forEach((t) => {
-    const cat = TASK_META[t.code]?.methodCategory ?? "Other";
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat)!.push(t);
-  });
-  const cats = [...byCat.keys()].sort((a, b) => {
-    const ia = METHOD_CATEGORY_ORDER.indexOf(a), ib = METHOD_CATEGORY_ORDER.indexOf(b);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-
-  const doneTasks = tasks.filter(taskComplete).length;
+  // The current placement: the first one that's accessible (not complete, not locked).
+  const activeOrgId = (orgs.find((o) => o.status === "active") ?? orgs.find((o) => orgDisplayState(o) === "active"))?.id;
 
   return (
-    <aside className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
-      {/* Industry / current placement */}
-      {activeOrg && (
-        <div className="shrink-0 px-4 py-3 border-b border-slate-200/60">
-          <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-1.5">Current placement</div>
-          <div className="flex items-center gap-2.5">
-            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${LRN_AVATAR[activeOrg.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[13px] font-semibold shrink-0`}>{activeOrg.initials}</div>
-            <div className="min-w-0">
-              <div className="text-[13px] font-semibold tracking-tight text-slate-900 truncate">{activeOrg.name}</div>
-              <div className="text-[11px] text-slate-500 tracking-tight truncate">{activeOrg.industry}</div>
-            </div>
-          </div>
-          <div className="mt-2.5 flex items-center gap-2">
-            <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width: `${tasks.length ? (doneTasks / tasks.length) * 100 : 0}%` }} /></div>
-            <span className="text-[10px] text-slate-400 tabular-nums shrink-0">{doneTasks}/{tasks.length} tasks</span>
-          </div>
-        </div>
+    <SidebarShell>
+      {orgs.length === 0 ? (
+        <div className="px-2 py-6 text-center text-[12px] text-slate-500">No placements yet.</div>
+      ) : (
+        orgs.map((org, i) => (
+          <OrgNode
+            key={org.id}
+            org={org}
+            defaultOpen={org.id === activeOrgId}
+            activeId={activeId}
+            activeTaskCode={activeTaskCode}
+            lockedHint={i > 0 ? `Complete ${orgs[i - 1].name} to unlock` : "Locked"}
+          />
+        ))
       )}
-
-      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
-        {tasks.length === 0 ? (
-          <div className="px-2 py-6 text-center text-[12px] text-slate-400">No tasks yet.</div>
-        ) : (
-          cats.map((c) => <CategoryNode key={c} category={c} tasks={byCat.get(c)!} taskStates={taskStates} activeId={activeId} activeTaskCode={activeTaskCode} />)
-        )}
-      </div>
-
-      {upcoming && (
-        <div className="shrink-0 px-4 py-3 border-t border-slate-200/60 flex items-center gap-2 text-slate-400">
-          <Icon name="lock" size={12} className="shrink-0" />
-          <span className="text-[11px] tracking-tight truncate">Up next: {upcoming.name} · {upcoming.industry}</span>
-        </div>
-      )}
-    </aside>
+    </SidebarShell>
   );
 }

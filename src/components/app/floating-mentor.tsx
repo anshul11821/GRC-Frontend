@@ -36,9 +36,10 @@ export function FloatingMentor() {
       )}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative w-14 h-14 rounded-full shadow-[0_8px_24px_-6px_rgba(99,102,241,0.6)] ring-2 ring-white flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95"
+        className="focus-ring relative w-14 h-14 rounded-full shadow-[0_8px_24px_-6px_rgba(99,102,241,0.6)] ring-2 ring-white flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95"
         style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)" }}
-        aria-label="Your AI mentor"
+        aria-label={open ? "Close AI mentor" : "Open AI mentor"}
+        aria-expanded={open}
       >
         {open ? <Icon name="x" size={20} /> : <Icon name="bot" size={22} />}
         {!open && <span className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white" />}

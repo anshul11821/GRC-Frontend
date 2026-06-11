@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { Card, Bar, Ring } from "@/components/ui/primitives";
 import { DVerb } from "@/components/ui/dverb";
 import { Drawer } from "@/components/ui/drawer";
+import { DraggablePanel } from "@/components/ui/draggable-panel";
 import { RefBody } from "@/components/app/reference-material";
 import { VERBS } from "@/lib/verbs";
-import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail } from "@/lib/desk";
+import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
 import { SchemaForm } from "@/components/app/schema-form";
-import { VERB_FORMS, GENERIC_FORM } from "@/lib/verb-forms";
+import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { ACTIVITY_CONTENT } from "@/lib/activity-content";
 import type { TaskReference } from "@/lib/taskmeta";
+import { meAuditsApi, type MeAuditItem } from "@/lib/me-audits";
 
 function ReviewPanel({ review }: { review: Review }) {
   const pass = review.decision === "pass";
@@ -90,6 +92,135 @@ function RefAccordion({ references }: { references: TaskReference[] }) {
   );
 }
 
+/** Non-empty test for a single form value (string, list, or table-row array). */
+function isFilled(v: unknown): boolean {
+  return Array.isArray(v)
+    ? v.some((x) => (typeof x === "string" ? x.trim() !== "" : Object.values(x ?? {}).some((c) => String(c ?? "").trim() !== "")))
+    : String(v ?? "").trim() !== "";
+}
+
+/** [criterion-keyword, form-token] pairs — tie an acceptance criterion to the input(s) that satisfy it. */
+const CRITERION_CONCEPTS: [RegExp, RegExp][] = [
+  [/role|owner|accountable|stakeholder|audience|named/, /role|owner|accountable|stakeholder|audience/],
+  [/deadline|date|target|time/, /date|deadline|target|time/],
+  [/citation|cited|cite|standard|control|reference|cross-?ref|evidence|source/, /cit|standard|control|refer|cross|evidence|source/],
+  [/rationale|justification|justif/, /rational|justif/],
+  [/question/, /question|guide|interview/],
+  [/subject/, /subject/],
+  [/purpose/, /purpose/],
+  [/agenda/, /agenda/],
+  [/confirmation|confirmed/, /confirm/],
+  [/method/, /method/],
+  [/formula/, /formula/],
+  [/result/, /result/],
+  [/summary/, /executive|summary/],
+  [/decision|sign-?off|approval|approved/, /decision|signoff|sign-?off|approv/],
+  [/cover/, /cover/],
+  [/deck|uploaded|slide|artefact/, /deck|slide|artefact|link/],
+  [/feedback|prior/, /feedback|prior/],
+  [/revision/, /revision/],
+  [/discrepan/, /discrepan/],
+  [/flag/, /flag/],
+  [/action|recommend/, /action|recommend/],
+  [/\bask\b/, /\bask\b/],
+  [/section/, /section/],
+  [/item|rank|mapping|\blink|finding|dimension|register|asset|entr/, /item|rank|map|link|find|dimension|register|asset|entr|name/],
+];
+
+type Atom = { tokens: string; filled: boolean };
+
+/** Flatten a verb form-spec + current values into matchable atoms (one per field, one per table column). */
+function formAtoms(spec: FieldSpec[], values: Record<string, unknown>): Atom[] {
+  const atoms: Atom[] = [];
+  for (const f of spec) {
+    const v = values[f.key];
+    if ("columns" in f && f.columns) {
+      const rows = Array.isArray(v) ? (v as Record<string, unknown>[]) : [];
+      atoms.push({ tokens: `${f.key} ${f.label}`.toLowerCase(), filled: rows.some((r) => Object.values(r ?? {}).some((c) => String(c ?? "").trim() !== "")) });
+      for (const c of f.columns) atoms.push({ tokens: `${c.key} ${c.label}`.toLowerCase(), filled: rows.some((r) => String(r?.[c.key] ?? "").trim() !== "") });
+    } else {
+      const type = "type" in f ? f.type : "";
+      atoms.push({ tokens: `${f.key} ${f.label} ${type}`.toLowerCase(), filled: isFilled(v) });
+    }
+  }
+  return atoms;
+}
+
+/** Provisional, client-side guess at whether a Layer-1 criterion is met by the current inputs. */
+function criterionMet(criterion: string, atoms: Atom[], allFilled: boolean, anyFilled: boolean): boolean {
+  const t = criterion.toLowerCase();
+  if (/if applicable|if any|if rejected|where applicable|n\/a/.test(t)) return anyFilled; // conditional/optional
+  const relevant = CRITERION_CONCEPTS.filter(([kw, atomRe]) => kw.test(t) && atoms.some((a) => atomRe.test(a.tokens)));
+  if (relevant.length === 0) return allFilled; // quality checks we can't verify client-side → gate on completion
+  return relevant.some(([, atomRe]) => atoms.some((a) => atomRe.test(a.tokens) && a.filled));
+}
+
+/** Live acceptance-criteria checklist (always expanded). Heuristic before submit; authoritative after.
+ *  Pass `onClose` to show a dismiss (✕) button (used by the floating HUD). */
+function AcceptanceChecklist({ criteria, spec, values, layer1, onClose }: {
+  criteria: string[];
+  spec: FieldSpec[];
+  values: Record<string, unknown>;
+  layer1?: Layer1Result | null;
+  onClose?: () => void;
+}) {
+  const atoms = formAtoms(spec, values);
+  const allFilled = spec.length > 0 && spec.every((f) => isFilled(values[f.key]));
+  const anyFilled = atoms.some((a) => a.filled);
+  // Once graded, defer to the backend's deterministic result (when it lines up 1:1 with the criteria).
+  const graded = !!layer1 && layer1.checks.length === criteria.length;
+  const states = criteria.map((c, i) => (graded ? layer1!.checks[i].passed : criterionMet(c, atoms, allFilled, anyFilled)));
+  const met = states.filter(Boolean).length;
+  const allMet = met === criteria.length;
+
+  const pct = criteria.length ? (met / criteria.length) * 100 : 0;
+
+  return (
+    // Light, on-theme frosted glass: a brand indigo tint (the same language as the Brief cards) so it
+    // separates from the white form without the white-on-white muddiness; blur + saturation keep it
+    // glassy and soften whatever scrolls behind. Emerald shift once every check is met.
+    <div className={`rounded-2xl overflow-hidden backdrop-blur-2xl backdrop-saturate-150 ring-1 [box-shadow:inset_0_1px_0_0_rgba(255,255,255,0.8),0_16px_44px_-14px_rgba(79,70,229,0.35)] ${allMet ? "bg-gradient-to-b from-emerald-50/85 to-emerald-100/80 ring-emerald-200/80" : "bg-gradient-to-b from-white/85 to-indigo-50/85 ring-indigo-200/70"}`}>
+      {/* header */}
+      <div className={`px-3.5 pt-3 pb-3 border-b ${allMet ? "border-emerald-200/60" : "border-indigo-100/80"}`}>
+        <div className="flex items-center gap-2.5">
+          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ring-1 transition-colors ${allMet ? "bg-emerald-100 text-emerald-600 ring-emerald-200/70" : "bg-indigo-100 text-indigo-600 ring-indigo-200/70"}`}>
+            <Icon name="checkSquare" size={15} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[12.5px] font-semibold tracking-tight text-slate-900 leading-tight">Acceptance criteria</h3>
+            <p className="text-[10.5px] text-slate-500 tracking-tight leading-tight mt-px">{graded ? "From your last submission" : "Live — updates as you type"}</p>
+          </div>
+          <span className={`shrink-0 text-[12.5px] font-semibold tabular-nums ${allMet ? "text-emerald-600" : "text-slate-600"}`}>{met}<span className="text-slate-400 mx-px">/</span>{criteria.length}</span>
+          {onClose && (
+            <button onClick={onClose} aria-label="Hide acceptance criteria" className="focus-ring shrink-0 -mr-1 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-900/5 transition-colors cursor-pointer">
+              <Icon name="x" size={13} />
+            </button>
+          )}
+        </div>
+        <div className={`mt-2.5 h-1 rounded-full overflow-hidden ${allMet ? "bg-emerald-100" : "bg-indigo-100/80"}`}>
+          <div className={`h-full rounded-full transition-all duration-500 ease-out ${allMet ? "bg-emerald-500" : "bg-indigo-500"}`} style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      {/* rows */}
+      <div className="p-1.5">
+        {criteria.map((c, i) => {
+          const ok = states[i];
+          const failed = graded && !ok;
+          return (
+            <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded-lg">
+              <span className={`mt-px w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 transition-colors ${ok ? "bg-emerald-500 text-white" : failed ? "bg-rose-500 text-white" : "ring-[1.5px] ring-inset ring-slate-300 bg-white/70"}`}>
+                {ok && <Icon name="check" size={11} strokeWidth={3.5} />}
+                {failed && <Icon name="x" size={11} strokeWidth={3.5} />}
+              </span>
+              <span className={`text-[12px] leading-snug tracking-tight transition-colors ${ok ? "text-slate-700" : failed ? "text-rose-700 font-medium" : "text-slate-500"}`}>{c}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function ActivityWorkspace() {
   const { activityId } = useParams<{ activityId: string }>();
   const { learnings, refresh: refreshTree } = useDeskLearnings();
@@ -104,9 +235,14 @@ export default function ActivityWorkspace() {
   const [error, setError] = useState<string | null>(null);
 
   const [history, setHistory] = useState<SubmissionDetail[]>([]);
+  const [audit, setAudit] = useState<MeAuditItem | null>(null);
+  const [revising, setRevising] = useState(false);
   const [briefOpen, setBriefOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [briefShown, setBriefShown] = useState(true);
+  // The criteria HUD stays closed until the user scrolls the deliverable into view (see observer below).
+  const [criteriaHidden, setCriteriaHidden] = useState(true);
+  const deliverableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +259,29 @@ export default function ActivityWorkspace() {
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [activityId]);
+
+  // Pull this task's audit standing so a "changes requested" verdict surfaces a rework path.
+  useEffect(() => {
+    if (!activity) return;
+    let cancelled = false;
+    meAuditsApi.list()
+      .then((r) => { if (!cancelled) setAudit(r.tasks.find((t) => t.taskCode === activity.taskCode) ?? null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [activity]);
+
+  // Reveal the criteria HUD once the deliverable scrolls into view; keep it closed (chip) before then.
+  // Re-attaches when the deliverable card mounts (after the activity loads).
+  useEffect(() => {
+    const el = deliverableRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setCriteriaHidden(!entry.isIntersecting),
+      { rootMargin: "-80px 0px -25% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [activity]);
 
   const payload = (): ActivityPayload => {
     const { notes, ...fields } = values;
@@ -151,7 +310,12 @@ export default function ActivityWorkspace() {
       deskApi.submissions(activityId).then(setHistory).catch(() => {});
       if (res.review) {
         setActivity((a) => (a ? { ...a, status: res.review!.decision === "pass" ? "complete" : "in-progress", latestReview: res.review } : a));
-        if (res.review.decision === "pass") await refreshTree(); // refresh tree so the next step unlocks in place
+        if (res.review.decision === "pass") {
+          await refreshTree(); // refresh tree so the next step unlocks in place
+          setRevising(false);
+          // re-pull audit standing — a rework resubmit re-enters the auditor pool
+          if (activity) meAuditsApi.list().then((r) => setAudit(r.tasks.find((t) => t.taskCode === activity.taskCode) ?? null)).catch(() => {});
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Submission failed.");
@@ -206,6 +370,17 @@ export default function ActivityWorkspace() {
     );
   }
 
+  const reworkMode = audit?.status === "changes_requested";
+  const auditFindings = audit?.findings ?? [];
+  const sectionFindings = auditFindings.filter((f) => f.anchor === activity.code);
+  const startRevise = () => {
+    // prefill from the latest submission so the mentee edits their prior answer
+    const latest = history.find((h) => h.submission.payload);
+    const p = latest?.submission.payload;
+    if (p) setValues({ ...(p.fields ?? {}), notes: p.notes ?? "" });
+    setRevising(true);
+  };
+
   const verb = VERBS[activity.verb.id];
   const content = ACTIVITY_CONTENT[`${activity.taskCode}/${activity.code}`];
   const layer1 = result?.layer1;
@@ -213,6 +388,8 @@ export default function ActivityWorkspace() {
   const passed = review?.decision === "pass" || activity.status === "complete";
   const hasFeedback = !!(layer1 || review);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
+  const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
+  const formSpec = verb ? VERB_FORMS[verb.id] ?? GENERIC_FORM : GENERIC_FORM;
 
   // After a pass the backend marks the next step "current" — find it (from the refreshed tree) to advance.
   let nextStepId: string | null = null;
@@ -271,7 +448,9 @@ export default function ActivityWorkspace() {
               <Icon name="chevronDown" size={14} className={`transition-transform ${briefShown ? "" : "-rotate-90"}`} />
             </span>
           </button>
-          {briefShown && (
+          {/* grid-rows 0fr→1fr animates the auto height smoothly without measuring it */}
+          <div className={`grid transition-all duration-300 ease-in-out ${briefShown ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden min-h-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
               {content?.objective && (
                 <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-50/40 to-transparent ring-1 ring-indigo-100/80 p-4 flex flex-col justify-center">
@@ -299,11 +478,13 @@ export default function ActivityWorkspace() {
                 </div>
               )}
             </div>
-          )}
+            </div>
+          </div>
         </div>
       )}
 
       {/* deliverable */}
+      <div ref={deliverableRef}>
       <Card>
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0">
@@ -316,25 +497,57 @@ export default function ActivityWorkspace() {
             onClick={() => setBriefOpen(true)}
             className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
           >
-            <Icon name="book" size={14} /> Resources &amp; criteria
+            <Icon name="book" size={14} /> Reference material
             {content?.references && content.references.length > 0 && (
               <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{content.references.length}</span>
             )}
           </button>
         </div>
 
-        <SchemaForm spec={verb ? VERB_FORMS[verb.id] ?? GENERIC_FORM : GENERIC_FORM} value={values} onChange={setValues} />
+        <SchemaForm spec={formSpec} value={values} onChange={setValues} />
 
         {error && <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
         <div className="mt-5">
-          {passed ? (
+          {passed && !revising && !busy && reworkMode ? (
+            <div className="rounded-xl bg-amber-50/60 ring-1 ring-amber-200/70 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="cornerUpRight" size={15} className="text-amber-600" />
+                <span className="text-[12.5px] font-semibold text-amber-800 tracking-tight">An auditor requested changes to this task</span>
+              </div>
+              {sectionFindings.length > 0 ? (
+                <ul className="space-y-1.5 mb-3">
+                  {sectionFindings.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[12.5px] text-slate-700">
+                      <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${f.status === "resolved" ? "bg-emerald-400" : "bg-amber-400"}`} />
+                      <span className={f.status === "resolved" ? "line-through text-slate-400" : ""}>{f.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[12.5px] text-slate-600 mb-3">
+                  This step has no notes of its own — check other steps in this task, then revise and resubmit.
+                </p>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button onClick={startRevise} className="h-10 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2">
+                  <Icon name="edit" size={14} /> Revise &amp; resubmit
+                </button>
+                <Link href="/app/certificate" className="text-[12.5px] text-slate-500 hover:text-slate-700">See all audit feedback →</Link>
+              </div>
+            </div>
+          ) : passed && !revising && !busy ? (
             <div className="flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 ring-1 ring-emerald-200/70 text-emerald-700 text-[13px] font-medium tracking-tight">
                 <Icon name="check" size={14} strokeWidth={3} /> Submitted — step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}
               </span>
+              {audit && (
+                <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 text-[12px] font-medium tracking-tight">
+                  <Icon name="shield" size={13} /> Audit: {audit.label}
+                </span>
+              )}
               {nextStepId ? (
-                <Link href={`/app/desk/${nextStepId}`} className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline">
+                <Link href={`/app/desk/${nextStepId}`} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
                   Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
                 </Link>
               ) : (
@@ -345,20 +558,57 @@ export default function ActivityWorkspace() {
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
-              <button onClick={submit} disabled={busy || !hasContent} className="h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2">
-                <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
+              {revising && (
+                <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg bg-amber-50 ring-1 ring-amber-200/70 text-amber-700 text-[12px] font-medium tracking-tight">
+                  <Icon name="cornerUpRight" size={13} /> Reworking for the auditor
+                </span>
+              )}
+              <button onClick={submit} disabled={busy || !hasContent} className="focus-ring h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2 shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)] transition-all">
+                <Icon name="send" size={14} /> {busy ? "Grading…" : revising ? "Resubmit for review" : "Submit for review"}
               </button>
-              <button onClick={saveDraft} disabled={busy} className="h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
+              <button onClick={saveDraft} disabled={busy} className="focus-ring h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
                 Save draft
               </button>
+              {revising && (
+                <button onClick={() => setRevising(false)} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 hover:text-slate-700 text-[13px] font-medium tracking-tight">
+                  Cancel
+                </button>
+              )}
               {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
             </div>
           )}
         </div>
       </Card>
+      </div>
 
-      {/* ===== Resources & criteria drawer (context · documents · acceptance · rubric) ===== */}
-      <Drawer open={briefOpen} onClose={() => setBriefOpen(false)} title="Resources & criteria" eyebrow={verb?.label}>
+      {/* Acceptance criteria. Small screens: inline card under the deliverable. */}
+      {hasChecklist && (
+        <div className="md:hidden mt-5">
+          <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} />
+        </div>
+      )}
+
+      {/* md+: translucent glass HUD fixed to the top-right so the full checklist stays in view
+          throughout the activity (anchored top+right → no sidebar math, no layout reflow).
+          Dismissable — cross-fades to a small "Criteria" chip that brings it back. Both elements
+          stay mounted so the swap can fade rather than pop. */}
+      {hasChecklist && (
+        <>
+          <div className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
+            <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
+          </div>
+          <button
+            onClick={() => setCriteriaHidden(false)}
+            aria-hidden={!criteriaHidden}
+            className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+          >
+            <Icon name="checkSquare" size={14} className="text-indigo-600" /> Criteria
+          </button>
+        </>
+      )}
+
+      {/* ===== Reference material — draggable, non-modal panel (context · documents) ===== */}
+      <DraggablePanel open={briefOpen} onClose={() => setBriefOpen(false)} title="Reference material" eyebrow={verb?.label}>
         <div className="space-y-6">
           {verb?.when && (
             <section>
@@ -377,35 +627,8 @@ export default function ActivityWorkspace() {
               <RefAccordion references={content.references} />
             </section>
           )}
-
-          {verb?.layer1 && verb.layer1.length > 0 && (
-            <section>
-              <h3 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1.5">Acceptance criteria</h3>
-              <p className="text-[12px] text-slate-500 tracking-tight mb-2.5">Deterministic checks your submission must pass (Layer 1).</p>
-              <div className="space-y-2">
-                {verb.layer1.map((c, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 w-4 h-4 rounded border-2 border-slate-300 shrink-0" />
-                    <span className="text-[12.5px] leading-snug text-slate-600 tracking-tight">{c}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {verb?.layer2 && verb.layer2.length > 0 && (
-            <section>
-              <h3 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1.5">How it&apos;s graded</h3>
-              <p className="text-[12px] text-slate-500 tracking-tight mb-2.5">Dimensions the AI mentor scores, out of 5 (Layer 2).</p>
-              <div className="flex flex-wrap gap-1.5">
-                {verb.layer2.map((d) => (
-                  <span key={d} className="inline-flex items-center h-[24px] px-2.5 rounded-md text-[11px] font-medium bg-slate-50 text-slate-600 ring-1 ring-slate-200/70 tracking-tight">{d}</span>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
-      </Drawer>
+      </DraggablePanel>
 
       {/* ===== Submission feedback drawer (results · revision history) ===== */}
       <Drawer
@@ -480,6 +703,26 @@ export default function ActivityWorkspace() {
                   );
                 })}
               </div>
+            </section>
+          )}
+
+          {passed && !revising && !busy && (
+            <section className="rounded-xl bg-emerald-50/70 ring-1 ring-emerald-200/70 p-3.5">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Icon name="check" size={11} strokeWidth={3} />
+                </span>
+                <span className="text-[12.5px] font-semibold text-emerald-800 tracking-tight">Step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}</span>
+              </div>
+              {nextStepId ? (
+                <Link href={`/app/desk/${nextStepId}`} onClick={() => setFeedbackOpen(false)} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
+                  Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
+                </Link>
+              ) : (
+                <Link href="/app/desk" onClick={() => setFeedbackOpen(false)} className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-50">
+                  Back to Working Desk <Icon name="arrowRight" size={15} />
+                </Link>
+              )}
             </section>
           )}
         </div>

@@ -12,7 +12,7 @@ export function BrandMark({ size = 36, className = "" }: { size?: number; classN
 /** The grcmentor wordmark. */
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex items-baseline gap-0 no-underline">
+    <Link href="/" className="focus-ring rounded-md flex items-baseline gap-0 no-underline">
       <span
         className={`text-[18px] font-semibold tracking-[-0.02em] ${light ? "text-white" : "text-slate-900"}`}
       >
@@ -36,7 +36,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.10)] ${pad ? "p-5" : ""} ${className}`}
+      className={`bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-card ${pad ? "p-5" : ""} ${className}`}
     >
       {children}
     </div>

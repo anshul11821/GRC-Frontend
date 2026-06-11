@@ -13,19 +13,6 @@ import { CONTROLS_BY_TASK } from "@/lib/controls";
 import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
 
-function MetaItem({ icon, label, value }: { icon: Parameters<typeof Icon>[0]["name"]; label: string; value: string }) {
-  if (!value) return null;
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="w-8 h-8 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 flex items-center justify-center text-slate-500 shrink-0"><Icon name={icon} size={15} /></span>
-      <div className="min-w-0">
-        <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-400">{label}</div>
-        <div className="text-[12.5px] text-slate-800 tracking-tight">{value}</div>
-      </div>
-    </div>
-  );
-}
-
 export default function TaskOverview() {
   const { taskCode } = useParams<{ taskCode: string }>();
   const meta = TASK_META[taskCode];
@@ -45,7 +32,7 @@ export default function TaskOverview() {
 
   if (loading) {
     return (
-      <div className="max-w-[920px] mx-auto px-8 py-7 space-y-5 animate-pulse">
+      <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5 animate-pulse">
         <Skeleton className="h-3 w-40" />
         <Skeleton className="h-7 w-2/3 max-w-md" />
         <Skeleton className="h-24 w-full rounded-2xl" />
@@ -57,7 +44,7 @@ export default function TaskOverview() {
   }
 
   return (
-    <div className="max-w-[920px] mx-auto px-8 py-7 space-y-5">
+    <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5">
       {/* header */}
       <div>
         <div className="flex items-center gap-2 mb-2">
@@ -67,6 +54,11 @@ export default function TaskOverview() {
           <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold">{taskCode}</span>
           <h1 className="text-[21px] font-semibold tracking-[-0.02em] text-slate-900">{meta?.name ?? task?.title ?? taskCode}</h1>
           {meta && <span className={`inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}><Icon name="shield" size={12} /> {meta.standardLabel}</span>}
+          {meta?.badge && (
+            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-amber-50 text-amber-700 ring-amber-100" title="Badge earned on completion">
+              <Icon name="ribbon" size={12} /> {meta.badge}
+            </span>
+          )}
         </div>
       </div>
 
@@ -84,25 +76,12 @@ export default function TaskOverview() {
         </Card>
       )}
 
-
-      {/* meta grid */}
-      {meta && (
-        <Card>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <MetaItem icon="bot" label="Mentor" value={meta.mentorRole + (meta.persona ? ` · ${meta.persona}` : "")} />
-            <MetaItem icon="calendar" label="Duration" value={meta.duration} />
-            <MetaItem icon="ribbon" label="Badge on completion" value={meta.badge} />
-            <MetaItem icon="target" label="NIST CSF cross-reference" value={meta.nistCrossRef} />
-          </div>
-        </Card>
-      )}
-
       {/* actions / verbs */}
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Actions</h2>
           {nextStep && (
-            <Link href={`/app/desk/${nextStep.id}`} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 transition-colors no-underline">
+            <Link href={`/app/desk/${nextStep.id}`} className="focus-ring inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 transition-colors no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
               <Icon name="play" size={13} /> {task?.done ? "Continue" : "Start task"}
             </Link>
           )}
@@ -111,7 +90,7 @@ export default function TaskOverview() {
           {task?.steps.map((s) => {
             const done = s.status === "complete";
             return (
-              <Link key={s.id} href={`/app/desk/${s.id}`} className="flex items-center gap-3 px-3 py-2.5 rounded-xl ring-1 ring-slate-200/60 bg-white hover:bg-slate-50 no-underline transition-colors group">
+              <Link key={s.id} href={`/app/desk/${s.id}`} className="focus-ring flex items-center gap-3 px-3 py-2.5 rounded-xl ring-1 ring-slate-200/60 bg-white hover:bg-slate-50 hover:ring-indigo-200/70 no-underline transition-all duration-200 group">
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center ring-1 shrink-0 ${done ? "bg-emerald-50 text-emerald-600 ring-emerald-100" : s.status === "in-progress" ? "bg-indigo-50 text-indigo-600 ring-indigo-100" : "bg-slate-50 text-slate-300 ring-slate-200/60"}`}>
                   <Icon name={done ? "check" : "minus"} size={11} strokeWidth={done ? 3 : 2} />
                 </span>

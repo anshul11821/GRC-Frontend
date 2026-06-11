@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling / scratch (not for the shared repo)
+.claude/
+.dev-*.log
+.dev-*.err
+_*_decoded.jsx
+*(standalone)*.html

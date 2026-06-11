@@ -57,6 +57,8 @@ export interface SubmitResponse {
 
 export interface SubmissionSummary {
   id: number;
+  activityId?: string;
+  payload?: ActivityPayload;
   revisionNo: number;
   status: string;
   createdAt: string;

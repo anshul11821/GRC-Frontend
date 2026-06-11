@@ -12,8 +12,15 @@ export interface Certificate {
   eyebrow: string;
   programTitle: string;
   blurb: string;
-  status: "issued" | "preview";
+  status: "issued" | "preview" | "awaiting_audit";
   statusNote: string;
+  // audit clearance (two-stage gate)
+  auditTotal?: number;
+  auditCleared?: number;
+  auditUnderReview?: number;
+  auditWithOpenFindings?: number;
+  auditOpenFindings?: number;
+  auditorAvg?: number | null;
   recipient: string;
   recipientInitials: string;
   tasksDone: number;

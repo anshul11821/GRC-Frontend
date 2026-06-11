@@ -8,14 +8,43 @@ import { Card, Bar, Ring } from "@/components/ui/primitives";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Drawer } from "@/components/ui/drawer";
 import { DVerb } from "@/components/ui/dverb";
 import { learningsApi, type Learnings, type LearningOrg } from "@/lib/learnings";
-import { catalog, type RubricDimension } from "@/lib/catalog";
+import { catalog, type RubricDimension, type Standard } from "@/lib/catalog";
 import { useCachedQuery } from "@/lib/use-query";
 import { BADGES } from "@/lib/badges";
-import { LRN_AVATAR } from "@/lib/tones";
+import { LRN_AVATAR, LRN_CHIP } from "@/lib/tones";
 
 const PROGRAM = "grc101";
+
+/** Status → pill styling, shared by the org detail panel. */
+const STATUS_CHIP: Record<string, { label: string; cls: string }> = {
+  "not-started": { label: "Not started", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
+  pending: { label: "Not started", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
+  "in-progress": { label: "In progress", cls: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
+  active: { label: "Active", cls: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
+  complete: { label: "Complete", cls: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
+  upcoming: { label: "Upcoming", cls: "bg-amber-50 text-amber-700 ring-amber-100" },
+  locked: { label: "Locked", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
+};
+const chipFor = (s: string) => STATUS_CHIP[s] ?? STATUS_CHIP["not-started"];
+
+/** Next openable step in an org — drives the card "Next up" line and the panel "Continue" CTA. */
+function nextStepOf(o: LearningOrg): { id: string; taskCode: string; stepCode: string; verb: string; title: string } | null {
+  for (const proj of o.projects) {
+    const ip = proj.tasks.find((t) => t.status === "in-progress");
+    const target = ip ?? proj.tasks.find((t) => t.status === "not-started") ?? proj.tasks[0];
+    if (target) {
+      const step =
+        target.steps.find((s) => s.status === "current" || s.status === "in-progress") ??
+        target.steps.find((s) => s.status !== "complete" && s.status !== "locked") ??
+        target.steps[0];
+      if (step) return { id: step.id, taskCode: target.code, stepCode: step.code, verb: step.verb, title: step.title };
+    }
+  }
+  return null;
+}
 
 interface Continue { activityId: string; taskCode: string; taskTitle: string; stepCode: string; verb: string; stepTitle: string }
 
@@ -69,12 +98,12 @@ function Stat({ icon, tone, value, decimals, sub, label }: { icon: IconName; ton
     violet: "bg-violet-50 text-violet-600 ring-violet-100", amber: "bg-amber-50 text-amber-700 ring-amber-100",
   };
   return (
-    <Card className="flex items-center gap-4">
+    <Card className="flex items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:ring-indigo-200/70">
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 ${tones[tone]}`}><Icon name={icon} size={19} /></div>
       <div className="min-w-0">
         <div className="flex items-baseline gap-1.5">
           <span className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900 tabular-nums">{typeof value === "number" ? <CountUp value={value} decimals={decimals} /> : value}</span>
-          {sub && <span className="text-[12px] text-slate-400 font-medium">{sub}</span>}
+          {sub && <span className="text-[12px] text-slate-500 font-medium">{sub}</span>}
         </div>
         <div className="text-[12px] text-slate-500 tracking-tight truncate">{label}</div>
       </div>
@@ -130,6 +159,151 @@ function RubricRadar({ dims }: { dims: { label: string; value?: number }[] }) {
   );
 }
 
+/** Soft chip tones for the standards-coverage pills (includes slate, which SOFT_TONES omits). */
+const STD_TONE: Record<string, string> = {
+  indigo: "bg-indigo-50 text-indigo-700 ring-indigo-200/70",
+  violet: "bg-violet-50 text-violet-700 ring-violet-200/70",
+  emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200/70",
+  amber: "bg-amber-50 text-amber-800 ring-amber-200/70",
+  rose: "bg-rose-50 text-rose-700 ring-rose-200/70",
+  sky: "bg-sky-50 text-sky-700 ring-sky-200/70",
+  slate: "bg-slate-100 text-slate-700 ring-slate-200/70",
+};
+
+/** Which GRC frameworks the mentee has worked across, out of the full catalogue. */
+function StandardsCoverage({ standards, engaged }: { standards: Standard[]; engaged: { label: string; tone: string }[] }) {
+  const engagedSet = new Set(engaged.map((s) => s.label));
+  const total = standards.length;
+  const covered = standards.filter((s) => engagedSet.has(s.label)).length;
+  const pct = total ? Math.round((covered / total) * 100) : 0;
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Standards coverage</h2>
+        <span className="text-[11px] text-slate-400 tabular-nums">{covered} / {total}</span>
+      </div>
+      {total === 0 ? (
+        <div className="py-8 text-center text-[12.5px] text-slate-400">No standards catalogue.</div>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 mb-3.5">
+            <Bar pct={pct} tone={pct >= 100 ? "emerald" : "violet"} className="flex-1" />
+            <span className="text-[11px] font-semibold text-slate-500 tabular-nums shrink-0">{pct}%</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {standards.map((s) => {
+              const on = engagedSet.has(s.label);
+              return (
+                <span key={s.id} className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-[11.5px] font-medium tracking-tight ring-1 transition-colors ${on ? (STD_TONE[s.tone] ?? STD_TONE.indigo) : "bg-slate-50 text-slate-400 ring-slate-200/60"}`}>
+                  <Icon name={on ? "check" : "shield"} size={11} strokeWidth={on ? 3 : 2} className={on ? "" : "opacity-60"} />
+                  {s.label}
+                </span>
+              );
+            })}
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+            {covered === 0
+              ? "Frameworks light up as you complete graded tasks."
+              : covered >= total
+                ? "You've worked across every framework in GRC 101."
+                : `${total - covered} framework${total - covered === 1 ? "" : "s"} still to engage.`}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+/** Right-side detail panel for a single organisation engagement. */
+function OrgDetail({ org }: { org: LearningOrg }) {
+  const s = orgStats(org);
+  const cont = nextStepOf(org);
+  const locked = org.status === "locked";
+  const projects = org.projects.length;
+  const tasks = org.projects.reduce((n, p) => n + p.tasks.length, 0);
+  return (
+    <div className="space-y-5">
+      {/* Identity + context */}
+      <div className="flex items-start gap-3.5">
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${LRN_AVATAR[org.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[15px] font-semibold shrink-0 ${locked ? "opacity-50 grayscale" : ""}`}>
+          {org.initials}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 h-[20px] px-2 rounded-md text-[10.5px] font-medium tracking-tight ring-1 ${LRN_CHIP[org.tone] ?? LRN_CHIP.indigo}`}>
+              <Icon name="briefcase" size={11} /> {org.industry}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-medium ring-1 tracking-tight ${chipFor(org.status).cls}`}>{chipFor(org.status).label}</span>
+          </div>
+          {org.context && (
+            <p className="text-[12.5px] text-slate-500 tracking-tight mt-2 leading-relaxed" style={{ textWrap: "pretty" }}>{org.context}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Overall progress */}
+      <div className="rounded-xl ring-1 ring-slate-200/70 bg-slate-50/60 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[12px] font-medium text-slate-600 tracking-tight">Engagement progress</span>
+          <span className="text-[12px] font-semibold text-slate-900 tabular-nums">{s.done}/{s.total} tasks</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Bar pct={s.pct || (locked ? 0 : 2)} tone={s.done === s.total && s.total > 0 ? "emerald" : locked ? "slate" : "indigo"} className="flex-1" />
+          <span className="text-[11px] font-semibold text-slate-500 tabular-nums shrink-0">{s.pct}%</span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {[{ label: "Projects", value: projects }, { label: "Tasks", value: tasks }].map((m) => (
+            <div key={m.label} className="rounded-lg bg-white ring-1 ring-slate-200/60 px-2 py-1.5 text-center">
+              <div className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900 tabular-nums">{m.value}</div>
+              <div className="text-[10px] text-slate-500 tracking-tight">{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Project / task breakdown */}
+      <div className="space-y-4">
+        {org.projects.map((proj) => {
+          const done = proj.tasks.filter((t) => t.status === "complete").length;
+          return (
+            <div key={proj.id}>
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 text-white text-[10.5px] font-mono font-semibold shrink-0">{proj.code}</span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold tracking-tight text-slate-900 truncate">{proj.title}</div>
+                  <div className="text-[10.5px] text-slate-400 tracking-tight truncate">{proj.standards}</div>
+                </div>
+                <span className="ml-auto text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{done}/{proj.tasks.length}</span>
+              </div>
+              <div className="space-y-2">
+                {proj.tasks.map((t) => (
+                  <div key={t.id} className="flex items-center gap-3 rounded-lg ring-1 ring-slate-200/70 bg-white px-3 py-2">
+                    <span className={`shrink-0 inline-flex items-center justify-center px-1.5 h-5 rounded-md text-[10.5px] font-mono font-medium ${t.status === "in-progress" ? "bg-indigo-600 text-white" : t.status === "locked" ? "bg-slate-200 text-slate-400" : "bg-slate-200 text-slate-600"}`}>{t.code}</span>
+                    <span className={`flex-1 min-w-0 text-[12.5px] tracking-tight truncate ${t.status === "locked" ? "text-slate-400" : "text-slate-700"}`}>{t.title}</span>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium ring-1 tracking-tight ${chipFor(t.status).cls}`}>{chipFor(t.status).label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* CTA */}
+      <div className="pt-1 flex flex-wrap items-center gap-3">
+        {!locked && cont && (
+          <Link href={`/app/desk/${cont.id}`} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-sm">
+            <Icon name="play" size={13} /> Continue · {cont.taskCode} · {cont.stepCode}
+          </Link>
+        )}
+        <Link href="/app/learnings" className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-200 transition-colors">
+          View in Learnings <Icon name="arrowRight" size={13} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   // Shared, cached fetches — learnings/progress are reused across pages, so repeat visits are instant.
@@ -137,11 +311,14 @@ export default function DashboardPage() {
   const { data: learnings, loading: lLoad } = useCachedQuery(`learnings:${PROGRAM}`, () => learningsApi.get(PROGRAM));
   const { data: rubricData } = useCachedQuery("rubric", () => catalog.rubric());
   const rubric = rubricData ?? [];
+  const { data: standardsData } = useCachedQuery("standards", () => catalog.standards());
+  const standards = standardsData ?? [];
   const loading = (pLoad || lLoad) && !progress && !learnings;
 
   const first = user?.firstName || "there";
   const cont = learnings ? deriveContinue(learnings) : null;
   const orgs = learnings?.orgs ?? [];
+  const [activeOrg, setActiveOrg] = useState<LearningOrg | null>(null);
 
   const rubricScoreMap = new Map<string, number>();
   progress?.rubricScores.forEach((s) => { rubricScoreMap.set(s.id, s.value); rubricScoreMap.set(s.label.toLowerCase(), s.value); });
@@ -159,22 +336,16 @@ export default function DashboardPage() {
     return (
       <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5 animate-pulse">
         <div className="h-[168px] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-[76px] rounded-2xl" />
           <Skeleton className="h-[76px] rounded-2xl" />
           <Skeleton className="h-[76px] rounded-2xl" />
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          <div className="xl:col-span-2 space-y-5">
-            <Skeleton className="h-[230px] rounded-2xl" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Skeleton className="h-[260px] rounded-2xl" />
-              <Skeleton className="h-[260px] rounded-2xl" />
-            </div>
-          </div>
-          <div className="space-y-5">
-            <Skeleton className="h-[200px] rounded-2xl" />
-            <Skeleton className="h-[92px] rounded-2xl" />
-          </div>
+        <Skeleton className="h-[230px] rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <Skeleton className="h-[260px] rounded-2xl" />
+          <Skeleton className="h-[260px] rounded-2xl" />
+          <Skeleton className="h-[260px] rounded-2xl" />
         </div>
       </div>
     );
@@ -184,7 +355,8 @@ export default function DashboardPage() {
     <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
       {/* Hero / continue */}
       <Reveal>
-      <div className="relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%)" }}>
+      <div className="bg-brand-gradient relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
         <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex flex-col md:flex-row md:items-center gap-6">
           <div className="flex-1 min-w-0">
@@ -197,7 +369,7 @@ export default function DashboardPage() {
               {cont ? <>Your next move is <span className="font-medium text-white">{cont.taskCode}</span> — step {cont.stepCode}.</> : <>You&apos;re enrolled in GRC 101. Open your first engagement to begin.</>}
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href={cont ? `/app/desk/${cont.activityId}` : "/app/desk"} className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white text-indigo-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
+              <Link href={cont ? `/app/desk/${cont.activityId}` : "/app/desk"} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white text-indigo-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
                 <Icon name="play" size={13} /> {cont ? "Continue task" : "Start GRC 101"}
               </Link>
               {cont && (
@@ -209,15 +381,15 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          {progress && (
-            <div className="shrink-0 md:w-[200px]">
+          {learnings && (
+            <div className="shrink-0 md:w-[210px]">
               <div className="rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm p-4 flex items-center gap-3">
-                <Ring pct={progress.overallPct} size={64} stroke={8}>
-                  <span className="text-[13px] font-semibold text-white">{progress.overallPct}%</span>
+                <Ring pct={certPct} size={64} stroke={8}>
+                  <span className="text-[13px] font-semibold text-white">{certPct}%</span>
                 </Ring>
                 <div>
-                  <div className="text-[12px] font-medium tracking-tight">Program completion</div>
-                  <div className="text-[11px] text-indigo-100/85 mt-0.5">Phase {progress.currentPhase} of {progress.totalPhases}</div>
+                  <div className="text-[12px] font-medium tracking-tight">Certificate progress</div>
+                  <div className="text-[11px] text-indigo-100/85 mt-0.5 tabular-nums">{completedTasks} of {totalTasks} tasks complete</div>
                 </div>
               </div>
             </div>
@@ -229,37 +401,44 @@ export default function DashboardPage() {
       {/* Stat strip */}
       {progress && (
         <Reveal delay={0.08}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Stat icon="checkSquare" tone="indigo" value={progress.activitiesDone} sub={`/ ${progress.activitiesTotal}`} label="Activities completed" />
           <Stat icon="star" tone="amber" value={progress.reviewsCount ? progress.avgScore : "—"} decimals={1} sub={progress.reviewsCount ? `/ ${progress.scoreOutOf}` : undefined} label={`Avg mentor score · ${progress.reviewsCount} reviews`} />
+          <Stat icon="calendar" tone="violet" value="None" label="Due soon · self-paced" />
         </div>
         </Reveal>
       )}
 
       <Reveal delay={0.16}>
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Main column */}
-        <div className="xl:col-span-2 space-y-5">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Your organisations</h2>
-              <span className="text-[11.5px] text-slate-400 font-medium">{orgs.length} engagement{orgs.length === 1 ? "" : "s"}</span>
-            </div>
-            {orgs.length === 0 ? (
-              <p className="text-[13px] text-slate-500">No organisations assigned yet.</p>
-            ) : (
-              <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {orgs.map((o) => {
-                  const s = orgStats(o);
-                  const locked = o.status === "locked";
-                  const done = s.total > 0 && s.done === s.total;
-                  return (
-                    <StaggerItem key={o.id} className={`rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60 ${locked ? "opacity-60" : ""}`}>
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${LRN_AVATAR[o.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[13px] font-semibold shrink-0`}>{o.initials}</div>
+      <div className="space-y-5">
+        {/* Your organisations — click a card for the full engagement breakdown */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Your organisations</h2>
+            <span className="text-[11.5px] text-slate-500 font-medium">{orgs.length} engagement{orgs.length === 1 ? "" : "s"}</span>
+          </div>
+          {orgs.length === 0 ? (
+            <p className="text-[13px] text-slate-500">No organisations assigned yet.</p>
+          ) : (
+            <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {orgs.map((o) => {
+                const s = orgStats(o);
+                const locked = o.status === "locked";
+                const done = s.total > 0 && s.done === s.total;
+                const next = locked ? null : nextStepOf(o);
+                return (
+                  <StaggerItem key={o.id} className="h-full">
+                    <button
+                      type="button"
+                      onClick={() => setActiveOrg(o)}
+                      aria-label={`Open ${o.name} engagement details`}
+                      className={`focus-ring group flex h-full w-full flex-col gap-3 text-left rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-card hover:ring-indigo-200/70 ${locked ? "opacity-60" : ""}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${LRN_AVATAR[o.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[14px] font-semibold shrink-0`}>{o.initials}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-semibold tracking-tight text-slate-900 truncate">{o.name}</div>
-                          <div className="text-[11px] text-slate-400 tracking-tight truncate">{o.industry}</div>
+                          <div className="text-[13.5px] font-semibold tracking-tight text-slate-900 truncate">{o.name}</div>
+                          <div className="text-[11px] text-slate-500 tracking-tight truncate">{o.industry}</div>
                         </div>
                         <span className={`shrink-0 inline-flex items-center gap-1 px-2 h-5 rounded-full text-[10px] font-semibold tracking-tight ring-1 ${
                           locked ? "bg-slate-100 text-slate-500 ring-slate-200" : done ? "bg-emerald-50 text-emerald-700 ring-emerald-100" : "bg-indigo-50 text-indigo-700 ring-indigo-100"
@@ -268,65 +447,72 @@ export default function DashboardPage() {
                           {locked ? "Locked" : done ? "Complete" : "Active"}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 mb-3">
+
+                      {o.context && (
+                        <p className="text-[12px] text-slate-500 tracking-tight leading-relaxed line-clamp-2" style={{ textWrap: "pretty" }}>{o.context}</p>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-2">
                         {[
+                          { label: "Projects", value: o.projects.length },
                           { label: "Tasks", value: s.total },
                           { label: "Done", value: s.done },
                         ].map((m) => (
                           <div key={m.label} className="rounded-lg bg-white ring-1 ring-slate-200/60 px-2 py-1.5 text-center">
                             <div className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900 tabular-nums">{m.value}</div>
-                            <div className="text-[10px] text-slate-400 tracking-tight">{m.label}</div>
+                            <div className="text-[10px] text-slate-500 tracking-tight">{m.label}</div>
                           </div>
                         ))}
                       </div>
+
                       <div className="flex items-center gap-3">
                         <Bar pct={s.pct || (locked ? 0 : 2)} tone={done ? "emerald" : locked ? "slate" : "indigo"} className="flex-1" />
                         <span className="text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{s.pct}%</span>
                       </div>
-                    </StaggerItem>
-                  );
-                })}
-              </Stagger>
+
+                      <div className="flex items-center gap-2 pt-3 mt-auto border-t border-slate-200/60">
+                        {locked ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400"><Icon name="lock" size={11} /> Unlocks later in the track</span>
+                        ) : done ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600"><Icon name="check" size={12} strokeWidth={3} /> Engagement complete</span>
+                        ) : next ? (
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-slate-400 shrink-0">Next</span>
+                            <DVerb verbId={next.verb} />
+                            <span className="text-[11.5px] text-slate-600 tracking-tight truncate">{next.title}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-400">No open steps</span>
+                        )}
+                        <Icon name="arrowRight" size={14} className="text-slate-300 shrink-0 ml-auto transition-colors group-hover:text-indigo-500" />
+                      </div>
+                    </button>
+                  </StaggerItem>
+                );
+              })}
+            </Stagger>
+          )}
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Skill rubric — radar */}
+          <Card>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Skill rubric</h2>
+              <span className="text-[11px] text-slate-400">/ 5</span>
+            </div>
+            {rubric.length > 0 ? (
+              <RubricRadar dims={rubric.map((r) => ({ label: r.label, value: scoreFor(r) }))} />
+            ) : (
+              <div className="py-10 text-center text-[12.5px] text-slate-400">No rubric data.</div>
+            )}
+            {!anyRubricScored && (
+              <div className="mt-1 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
+                <Icon name="info" size={13} className="text-slate-400 shrink-0" /> Scores appear after your first mentor-graded activity.
+              </div>
             )}
           </Card>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Skill rubric — radar */}
-            <Card>
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Skill rubric</h2>
-                <span className="text-[11px] text-slate-400">/ 5</span>
-              </div>
-              {rubric.length > 0 ? (
-                <RubricRadar dims={rubric.map((r) => ({ label: r.label, value: scoreFor(r) }))} />
-              ) : (
-                <div className="py-10 text-center text-[12.5px] text-slate-400">No rubric data.</div>
-              )}
-              {!anyRubricScored && (
-                <div className="mt-1 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
-                  <Icon name="info" size={13} className="text-slate-400 shrink-0" /> Scores appear after your first mentor-graded activity.
-                </div>
-              )}
-            </Card>
-
-            {/* Certificate progress */}
-            <Card className="flex flex-col">
-              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">Certificate progress</h2>
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-2">
-                <Ring pct={certPct} size={108} stroke={9}>
-                  <span className="text-[19px] font-semibold tracking-[-0.02em] text-slate-900">{certPct}%</span>
-                </Ring>
-                <div className="mt-3 text-[12.5px] font-medium text-slate-700 tracking-tight tabular-nums">{completedTasks} of {totalTasks} tasks complete</div>
-                <div className="text-[11px] text-slate-400 mt-1 max-w-[210px]" style={{ textWrap: "pretty" }}>
-                  {certPct >= 100 ? "All tasks done — your GRC 101 certificate is ready." : "Finish every task to unlock your GRC 101 certificate."}
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Side column */}
-        <div className="space-y-5">
           {/* Progress overview */}
           <Card>
             <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3.5">Progress overview</h2>
@@ -357,17 +543,16 @@ export default function DashboardPage() {
             </div>
           </Card>
 
-          {/* Due soon — empty */}
-          <Card>
-            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900 mb-3">Due soon</h2>
-            <div className="flex items-center gap-3 text-slate-500">
-              <Icon name="calendar" size={16} className="text-slate-400" />
-              <span className="text-[12.5px]">Nothing due — set your own pace.</span>
-            </div>
-          </Card>
+          {/* Standards coverage */}
+          <StandardsCoverage standards={standards} engaged={progress?.standardsEngaged ?? []} />
         </div>
       </div>
       </Reveal>
+
+      {/* Org detail panel */}
+      <Drawer open={!!activeOrg} onClose={() => setActiveOrg(null)} eyebrow="Engagement" title={activeOrg?.name}>
+        {activeOrg && <OrgDetail org={activeOrg} />}
+      </Drawer>
 
       <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · GRC 101 · Foundations</div>
     </div>

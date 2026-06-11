@@ -13,32 +13,55 @@ import { NotificationBell } from "./notification-bell";
 function DashSidebar({
   collapsed,
   setCollapsed,
+  mobileOpen,
+  closeMobile,
 }: {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
+  mobileOpen: boolean;
+  closeMobile: () => void;
 }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/app" ? pathname === "/app" : pathname.startsWith(href));
+  // Labels/badge/brand are hidden only on desktop when collapsed; the mobile drawer is always
+  // full-width, so on small screens `collapsed` must not hide them.
+  const hideWhenCollapsed = collapsed ? "md:hidden" : "";
 
   return (
     <aside
-      className={`shrink-0 h-full bg-white/60 backdrop-blur-xl border-r border-slate-200/70 flex flex-col transition-all duration-300 print:hidden ${collapsed ? "w-[68px]" : "w-[244px]"}`}
+      aria-label="Sidebar"
+      className={[
+        "bg-white/60 backdrop-blur-xl border-r border-slate-200/70 flex flex-col print:hidden",
+        // Mobile: fixed off-canvas drawer that slides in over the content.
+        "fixed inset-y-0 left-0 z-50 w-[244px] transition-transform duration-300",
+        mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
+        // Desktop (md+): part of the flex flow, collapsible width, never translated.
+        "md:static md:z-auto md:translate-x-0 md:shadow-none md:h-full md:shrink-0 md:transition-all",
+        collapsed ? "md:w-[68px]" : "md:w-[244px]",
+      ].join(" ")}
     >
       <div className="h-[68px] flex items-center px-4 gap-3 border-b border-slate-200/60">
+        {/* Desktop: collapse toggle. */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="focus-ring hidden md:flex w-9 h-9 rounded-lg items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           aria-label="Toggle sidebar"
         >
           <Icon name="menu" size={18} />
         </button>
-        {!collapsed && (
-          <div className="flex items-baseline gap-0">
-            <span className="text-[17px] font-semibold tracking-[-0.02em] text-slate-900">grc</span>
-            <span className="text-[17px] font-semibold tracking-[-0.02em] text-indigo-600">mentor</span>
-            <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-500 self-center mt-1" />
-          </div>
-        )}
+        {/* Mobile: close drawer. */}
+        <button
+          onClick={closeMobile}
+          className="focus-ring md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Close menu"
+        >
+          <Icon name="x" size={18} />
+        </button>
+        <div className={`flex items-baseline gap-0 ${hideWhenCollapsed}`}>
+          <span className="text-[17px] font-semibold tracking-[-0.02em] text-slate-900">grc</span>
+          <span className="text-[17px] font-semibold tracking-[-0.02em] text-indigo-600">mentor</span>
+          <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-500 self-center mt-1" />
+        </div>
       </div>
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {DASH_NAV.map((item) => {
@@ -47,26 +70,25 @@ function DashSidebar({
             <Link
               key={item.id}
               href={item.href}
+              onClick={closeMobile}
               title={item.soon ? `${item.label} — coming soon` : item.label}
-              className={`group w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
+              className={`focus-ring group w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
                 active ? "bg-indigo-50/80 text-indigo-700" : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
               }`}
             >
               <Icon name={item.icon} size={17} strokeWidth={active ? 2 : 1.6} />
-              {!collapsed && (
-                <>
-                  <span className={`text-[13.5px] tracking-tight ${active ? "font-medium" : ""}`}>{item.label}</span>
-                  {item.badge && (
-                    <span
-                      className={`ml-auto px-1.5 h-5 rounded-md text-[11px] font-medium flex items-center ${
-                        active ? "bg-indigo-100 text-indigo-700" : "bg-slate-200/70 text-slate-600"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
+              <span className={`flex-1 flex items-center min-w-0 ${hideWhenCollapsed}`}>
+                <span className={`text-[13.5px] tracking-tight truncate ${active ? "font-medium" : ""}`}>{item.label}</span>
+                {item.badge && (
+                  <span
+                    className={`ml-auto shrink-0 px-1.5 h-5 rounded-md text-[11px] font-medium flex items-center ${
+                      active ? "bg-indigo-100 text-indigo-700" : "bg-slate-200/70 text-slate-600"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </span>
             </Link>
           );
         })}
@@ -101,7 +123,10 @@ function UserMenu() {
     <div className="relative pl-3 ml-1 border-l border-slate-200/70" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-2 h-11 pl-1.5 pr-2 rounded-xl transition-colors ${open ? "bg-slate-100" : "hover:bg-slate-100/70"}`}
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`focus-ring flex items-center gap-2 h-11 pl-1.5 pr-2 rounded-xl transition-colors ${open ? "bg-slate-100" : "hover:bg-slate-100/70"}`}
       >
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[12px] font-semibold ring-2 ring-white">
           {initials}
@@ -128,7 +153,7 @@ function UserMenu() {
             <Link
               href="/app/settings"
               onClick={() => setOpen(false)}
-              className="group w-full h-10 px-2.5 rounded-lg flex items-center gap-2.5 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors no-underline"
+              className="focus-ring group w-full h-10 px-2.5 rounded-lg flex items-center gap-2.5 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors no-underline"
             >
               <Icon name="settings" size={17} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
               <span className="text-[13px] tracking-tight">Account Settings</span>
@@ -138,7 +163,7 @@ function UserMenu() {
           <div className="p-1.5 border-t border-slate-100">
             <button
               onClick={onSignOut}
-              className="w-full h-9 px-2.5 rounded-lg flex items-center gap-2.5 text-rose-600 hover:bg-rose-50 transition-colors"
+              className="focus-ring w-full h-9 px-2.5 rounded-lg flex items-center gap-2.5 text-rose-600 hover:bg-rose-50 transition-colors"
             >
               <Icon name="logout" size={16} />
               <span className="text-[13px] font-medium tracking-tight">Sign out</span>
@@ -150,10 +175,18 @@ function UserMenu() {
   );
 }
 
-function DashTopBar() {
+function DashTopBar({ openMobile }: { openMobile: () => void }) {
   return (
-    <div className="relative z-30 h-[68px] shrink-0 flex items-center justify-between px-6 border-b border-slate-200/70 bg-white/40 backdrop-blur-xl print:hidden">
+    <div className="relative z-30 h-[68px] shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-slate-200/70 bg-white/40 backdrop-blur-xl print:hidden">
       <div className="flex items-center gap-3">
+        {/* Mobile: open the navigation drawer. */}
+        <button
+          onClick={openMobile}
+          className="focus-ring md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Open menu"
+        >
+          <Icon name="menu" size={18} />
+        </button>
         <BrandMark size={36} />
         <div>
           <div className="text-[13.5px] font-semibold tracking-tight text-slate-900">GRC 101</div>
@@ -170,11 +203,36 @@ function DashTopBar() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the mobile drawer on navigation and on Escape.
+  useEffect(() => setMobileOpen(false), [pathname]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-[#FAFAF7] print:h-auto print:w-auto print:overflow-visible print:block">
-      <DashSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      {/* Mobile drawer backdrop. */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden print:hidden"
+          aria-hidden="true"
+        />
+      )}
+      <DashSidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        mobileOpen={mobileOpen}
+        closeMobile={() => setMobileOpen(false)}
+      />
       <div className="flex-1 flex flex-col min-w-0 print:block">
-        <DashTopBar />
+        <DashTopBar openMobile={() => setMobileOpen(true)} />
         <main className="flex-1 min-h-0 overflow-y-auto print:overflow-visible print:h-auto">{children}</main>
       </div>
       <div className="print:hidden"><FloatingMentor /></div>

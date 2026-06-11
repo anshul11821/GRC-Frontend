@@ -16,6 +16,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,9 +26,13 @@ export default function SignInPage() {
     setBusy(true);
     try {
       const captchaToken = await getCaptchaToken("signin");
-      const { accessToken } = await authApi.signin({ email, password, captchaToken });
-      const me = await signIn(accessToken);
-      router.replace(me.isProfileComplete ? "/app" : "/complete-profile");
+      const { accessToken } = await authApi.signin({ email, password, captchaToken, rememberMe });
+      const me = await signIn(accessToken, rememberMe);
+      if (me.role === "auditor") {
+        router.replace(me.isProfileComplete ? "/audit" : "/auditor");
+      } else {
+        router.replace(me.isProfileComplete ? "/app" : "/complete-profile");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Try again.");
       setBusy(false);
@@ -57,6 +62,15 @@ export default function SignInPage() {
             </button>
           </div>
         </Field>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/60 focus:ring-2 focus:ring-offset-0 cursor-pointer"
+          />
+          <span className="text-[12.5px] text-slate-600">Remember me on this device</span>
+        </label>
         <PrimaryBtn type="submit" disabled={busy} className="w-full">
           {busy ? "Signing in…" : "Sign in"}
         </PrimaryBtn>
@@ -66,6 +80,12 @@ export default function SignInPage() {
         New to grcmentor?{" "}
         <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-700">
           Create an account
+        </Link>
+      </p>
+      <p className="mt-2 text-center text-[12px] text-slate-400">
+        Want to assess work?{" "}
+        <Link href="/auditor" className="font-medium text-slate-600 hover:text-indigo-700">
+          Apply as an auditor
         </Link>
       </p>
     </div>

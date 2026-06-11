@@ -8,8 +8,8 @@ import { getAccessToken, setAccessToken } from "@/lib/token";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  /** Store a fresh access token and load the current user. */
-  signIn: (accessToken: string) => Promise<User>;
+  /** Store a fresh access token and load the current user. `remember` picks the storage location. */
+  signIn: (accessToken: string, remember?: boolean) => Promise<User>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setUser: (u: User) => void;
@@ -68,8 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadUser]);
 
   const signIn = useCallback(
-    async (accessToken: string) => {
-      setAccessToken(accessToken);
+    async (accessToken: string, remember = true) => {
+      setAccessToken(accessToken, remember);
       const me = await authApi.me();
       setUserState(me);
       return me;

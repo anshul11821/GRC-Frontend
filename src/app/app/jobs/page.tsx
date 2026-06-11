@@ -32,12 +32,12 @@ const AVA: Record<string, string> = {
 const RESP: Record<RespState, { icon: IconName; cls: string; sw: number; tag: string; tagcls: string }> = {
   matched: { icon: "check", cls: "bg-emerald-50 text-emerald-600 ring-emerald-100", sw: 3, tag: "Matched", tagcls: "text-emerald-600" },
   partial: { icon: "play", cls: "bg-indigo-50 text-indigo-600 ring-indigo-100", sw: 1.8, tag: "Developing", tagcls: "text-indigo-600" },
-  gap: { icon: "plus", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2, tag: "Growth area", tagcls: "text-slate-400" },
+  gap: { icon: "plus", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2, tag: "Growth area", tagcls: "text-slate-500" },
 };
 const STD_STATE: Record<RespState, string> = {
   matched: "bg-emerald-50 text-emerald-700 ring-emerald-100",
   partial: "bg-indigo-50 text-indigo-700 ring-indigo-100",
-  gap: "bg-slate-50 text-slate-400 ring-slate-200/60",
+  gap: "bg-slate-50 text-slate-500 ring-slate-200/60",
 };
 
 // ---- saved jobs (local, per-browser; backend persistence is a later phase) ----
@@ -147,7 +147,7 @@ function JobsSummary({ jobs }: { jobs: DerivedJob[] }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {items.map((s) => (
-        <Card key={s.label} className="flex items-center gap-3">
+        <Card key={s.label} className="flex items-center gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:ring-indigo-200/70">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ring-1 ${tones[s.tone]}`}>
             <Icon name={s.icon} size={17} />
           </div>
@@ -176,7 +176,7 @@ function JobCard({ job, saved, onToggleSave }: { job: DerivedJob; saved: boolean
   const m = matchMeta(job.match);
   const matchedCount = job.derivedResponsibilities.filter((r) => r.state !== "gap").length;
   return (
-    <Card pad={false}>
+    <Card pad={false} className="transition-all duration-300 hover:-translate-y-0.5 hover:ring-indigo-200/70">
       <div className="p-5">
         <div className="flex items-start gap-4">
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${AVA[job.tone]} flex items-center justify-center text-white text-[15px] font-semibold shrink-0`}>
@@ -188,7 +188,7 @@ function JobCard({ job, saved, onToggleSave }: { job: DerivedJob; saved: boolean
               <SourceChip source={job.source} />
             </div>
             <div className="text-[12.5px] text-slate-600 tracking-tight mt-0.5">{job.company}</div>
-            <div className="flex items-center gap-2 mt-1.5 text-[11.5px] text-slate-400 tracking-tight flex-wrap">
+            <div className="flex items-center gap-2 mt-1.5 text-[11.5px] text-slate-500 tracking-tight flex-wrap">
               <span className="inline-flex items-center gap-1">
                 <Icon name="user" size={11} /> {job.location}
               </span>
@@ -282,7 +282,7 @@ function JobCard({ job, saved, onToggleSave }: { job: DerivedJob; saved: boolean
                       <div className="text-[12.5px] text-slate-700 tracking-tight">{r.duty}</div>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         {r.verb && <DVerb verbId={r.verb} />}
-                        <span className="font-mono text-[10px] text-slate-400">{r.task}</span>
+                        <span className="font-mono text-[10px] text-slate-500">{r.task}</span>
                         <span className={`text-[10.5px] font-medium ${rs.tagcls}`}>· {rs.tag}</span>
                       </div>
                     </div>
@@ -330,12 +330,17 @@ export default function JobsPage() {
 
   return (
     <div className="max-w-[1000px] mx-auto px-6 py-6 space-y-5">
-      <div>
-        <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Matching jobs</h1>
-        <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-2xl" style={{ textWrap: "pretty" }}>
-          Roles from LinkedIn and remote-work platforms, matched to the projects, tasks and activities you&apos;ve executed in
-          GRC 101. Matches rise as you complete more tasks.
-        </p>
+      <div className="flex items-start gap-3.5">
+        <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
+          <Icon name="briefcase" size={20} />
+        </span>
+        <div>
+          <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">Matching jobs</h1>
+          <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-2xl" style={{ textWrap: "pretty" }}>
+            Roles from LinkedIn and remote-work platforms, matched to the projects, tasks and activities you&apos;ve executed in
+            GRC 101. Matches rise as you complete more tasks.
+          </p>
+        </div>
       </div>
 
       {loading && !learnings ? (
@@ -387,7 +392,7 @@ export default function JobsPage() {
                   className={`px-2.5 h-7 rounded-md text-[11.5px] font-medium tracking-tight transition-all ${sort === k ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                 >
                   {label}
-                  {k === "saved" && saved.size > 0 && <span className="ml-1 text-slate-400 tabular-nums">{saved.size}</span>}
+                  {k === "saved" && saved.size > 0 && <span className="ml-1 text-slate-500 tabular-nums">{saved.size}</span>}
                 </button>
               ))}
             </div>
@@ -403,7 +408,7 @@ export default function JobsPage() {
                 <div className="text-[13px] font-medium text-slate-700">
                   {sort === "saved" ? "No saved roles yet" : "No matching roles"}
                 </div>
-                <div className="text-[12px] text-slate-400 mt-0.5">
+                <div className="text-[12px] text-slate-500 mt-0.5">
                   {sort === "saved" ? "Star a role to keep it here." : "Try a different search or source."}
                 </div>
               </Card>
@@ -412,7 +417,7 @@ export default function JobsPage() {
             )}
           </div>
 
-          <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">
+          <div className="text-center text-[11px] text-slate-500 pt-2 pb-4">
             grcmentor · matches refresh as you complete more tasks · {allJobs.length} roles tracked
           </div>
         </>

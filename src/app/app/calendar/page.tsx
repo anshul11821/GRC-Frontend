@@ -153,9 +153,14 @@ export default function CalendarPage() {
     >
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900">Calendar</h1>
-          <p className="text-[12.5px] text-slate-500 mt-0.5">Your scheduled stakeholder interactions and revision reminders.</p>
+        <div className="flex items-start gap-3.5">
+          <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
+            <Icon name="calendar" size={20} />
+          </span>
+          <div>
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900">Calendar</h1>
+            <p className="text-[12.5px] text-slate-500 mt-0.5">Your scheduled stakeholder interactions and revision reminders.</p>
+          </div>
         </div>
         <div className="flex items-center gap-3.5 text-[11.5px]">
           <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Interaction</span>

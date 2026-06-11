@@ -3,6 +3,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Logo, SectionHead } from "@/components/ui/primitives";
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 import { Faq, type FaqEntry } from "@/components/landing/faq";
+import { LandingStats } from "@/components/landing/stats";
 import { GLOW, SOFT_TONES } from "@/lib/tones";
 
 // ============ CONTENT (ported from the mockup) ============
@@ -68,16 +69,16 @@ function Nav() {
         <Logo />
         <nav className="hidden md:flex items-center gap-7">
           {NAV_LINKS.map(([href, label]) => (
-            <a key={href} href={href} className="text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline transition-colors">
+            <a key={href} href={href} className="focus-ring rounded-md px-1 py-0.5 text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline transition-colors">
               {label}
             </a>
           ))}
         </nav>
         <div className="flex items-center gap-2.5">
-          <Link href="/signin" className="hidden sm:inline text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
+          <Link href="/signin" className="focus-ring rounded-md px-1 py-0.5 hidden sm:inline text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
             Sign in
           </Link>
-          <Link href="/signup" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
+          <Link href="/signup" className="focus-ring inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
             Get started <Icon name="arrowRight" size={14} />
           </Link>
         </div>
@@ -90,10 +91,13 @@ function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
+        {/* faint grid texture for subtle depth */}
+        <div className="absolute inset-0 opacity-[0.5]" style={{ backgroundImage: "linear-gradient(rgba(15,23,42,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.035) 1px, transparent 1px)", backgroundSize: "44px 44px", maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 75%)" }} />
         <div className="absolute -top-24 left-1/3 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.18), transparent 70%)" }} />
         <div className="absolute top-10 right-10 w-[380px] h-[380px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.14), transparent 70%)" }} />
+        <div className="absolute -bottom-10 left-10 w-[320px] h-[320px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%)" }} />
       </div>
-      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-20 text-center">
+      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-24 text-center">
         <div className="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-white ring-1 ring-slate-200/70 text-[12px] font-medium text-slate-600 tracking-tight">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Hands-on GRC mentorship · ISO 27001 · NIST · GDPR
         </div>
@@ -104,12 +108,37 @@ function Hero() {
           Practise governance, risk and compliance on simulated enterprise engagements — mentor-graded, standards-aligned, and mapped straight to the roles you want.
         </p>
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/signup" className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
+          <Link href="/signup" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
             Start GRC 101 <Icon name="arrowRight" size={15} />
           </Link>
-          <a href="#tracks" className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white ring-1 ring-slate-200/70 text-slate-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-slate-50 transition-colors">
+          <a href="#tracks" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white ring-1 ring-slate-200/70 text-slate-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-slate-50 transition-colors">
             Explore tracks
           </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Frameworks() {
+  const items = ["ISO/IEC 27001", "NIST CSF 2.0", "CIS Controls v8", "SOC 2", "GDPR"];
+  return (
+    <section className="bg-[#FAFAF7]">
+      <div className="max-w-[1140px] mx-auto px-6 pt-12 pb-6">
+        <div className="flex flex-col items-center gap-4">
+          <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold tracking-[0.14em] uppercase text-slate-500">
+            <Icon name="shield" size={13} className="text-emerald-500" /> Aligned with industry standards
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {items.map((f) => (
+              <span
+                key={f}
+                className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white ring-1 ring-slate-200/70 text-[13px] font-medium text-slate-700 tracking-tight shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:ring-slate-300 hover:-translate-y-0.5"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {f}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -161,9 +190,12 @@ function Program() {
           Our <span className="text-indigo-600">Mentorship</span> Program
         </SectionHead>
         <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PROGRAM.map((p) => (
-            <StaggerItem key={p.title} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-18px_rgba(15,23,42,0.12)] hover:ring-indigo-200 transition-all">
-              <span className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 ${SOFT_TONES[p.tone]}`}>
+          {PROGRAM.map((p, i) => (
+            <StaggerItem key={p.title} className="group relative bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:ring-indigo-200/80">
+              <span className="absolute top-5 right-6 font-mono text-[13px] font-semibold tabular-nums text-slate-300 transition-colors group-hover:text-indigo-400">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 transition-transform duration-300 group-hover:scale-105 ${SOFT_TONES[p.tone]}`}>
                 <Icon name={p.icon} size={20} />
               </span>
               <h3 className="mt-4 text-[16px] font-semibold tracking-tight text-slate-900">{p.title}</h3>
@@ -185,11 +217,17 @@ function Testimonials() {
         </SectionHead>
         <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
           {TESTIMONIALS.map((t) => (
-            <StaggerItem key={t.name} className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-6 flex flex-col">
-              <span className="text-[44px] leading-none text-indigo-300" style={{ fontFamily: "Georgia, serif" }}>&ldquo;</span>
-              <p className="-mt-3 text-[14px] text-slate-700 leading-relaxed tracking-tight flex-1" style={{ textWrap: "pretty" }}>{t.quote}</p>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[12px] font-semibold">
+            <StaggerItem key={t.name} className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-card p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:ring-indigo-200/80">
+              <div className="flex items-center gap-0.5 text-amber-400 mb-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Icon key={i} name="star" size={14} fill="currentColor" />
+                ))}
+              </div>
+              <p className="text-[14px] text-slate-700 leading-relaxed tracking-tight flex-1" style={{ textWrap: "pretty" }}>
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[12px] font-semibold ring-2 ring-white shadow-sm">
                   {t.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                 </div>
                 <div>
@@ -214,7 +252,7 @@ function Tracks() {
         </SectionHead>
         <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
           {TRACKS.map((t) => (
-            <StaggerItem key={t.code} className="relative rounded-2xl overflow-hidden ring-1 ring-white/10 p-6 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #312e81 0%, #1e1b3a 60%, #0f172a 100%)" }}>
+            <StaggerItem key={t.code} className="relative rounded-2xl overflow-hidden ring-1 ring-white/10 p-6 flex flex-col text-white transition-all duration-300 hover:-translate-y-1 hover:ring-indigo-400/30 hover:shadow-[0_24px_50px_-24px_rgba(79,70,229,0.6)]" style={{ background: "linear-gradient(160deg, #312e81 0%, #1e1b3a 60%, #0f172a 100%)" }}>
               <div className="pointer-events-none absolute -top-8 -right-6 w-40 h-40 rounded-full blur-2xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.5), transparent 70%)" }} />
               <div className="pointer-events-none absolute inset-0 opacity-[0.1]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "26px 26px" }} />
               <div className="relative flex-1">
@@ -225,7 +263,7 @@ function Tracks() {
                 <div className="text-[11.5px] text-indigo-200/90 tracking-tight mt-0.5">{t.years}</div>
                 <p className="mt-3 text-[13px] text-indigo-50/85 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{t.body}</p>
               </div>
-              <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
+              <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="focus-ring relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
                 Know more <Icon name="arrowRight" size={14} />
               </Link>
             </StaggerItem>
@@ -246,13 +284,15 @@ function CtaFooter() {
     <>
       <section className="bg-white">
         <div className="max-w-[1140px] mx-auto px-6 py-16">
-          <div className="relative overflow-hidden rounded-3xl text-white px-8 py-12 md:px-14 md:py-14 text-center" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%)" }}>
+          <div className="bg-brand-gradient relative overflow-hidden rounded-3xl text-white px-8 py-12 md:px-14 md:py-14 text-center">
+            <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
             <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
             <h2 className="relative text-[28px] md:text-[36px] font-semibold tracking-[-0.03em] leading-tight">Ready to build a GRC career?</h2>
             <p className="relative mt-3 text-[15px] text-indigo-100/90 tracking-tight max-w-xl mx-auto" style={{ textWrap: "pretty" }}>
               Start GRC 101 today — your first mentor-graded task takes minutes to begin.
             </p>
-            <Link href="/signup" className="relative mt-7 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
+            <Link href="/signup" className="focus-ring relative mt-7 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
               Get started free <Icon name="arrowRight" size={15} />
             </Link>
           </div>
@@ -271,7 +311,7 @@ function CtaFooter() {
               <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">{title}</div>
               <div className="mt-3 flex flex-col gap-2">
                 {items.map(([l, h]) => (
-                  <Link key={l} href={h} className="text-[13px] text-slate-600 hover:text-indigo-600 tracking-tight no-underline transition-colors">
+                  <Link key={l} href={h} className="focus-ring rounded-md px-1 py-0.5 text-[13px] text-slate-600 hover:text-indigo-600 tracking-tight no-underline transition-colors">
                     {l}
                   </Link>
                 ))}
@@ -281,11 +321,11 @@ function CtaFooter() {
         </div>
         <div className="border-t border-slate-200/60">
           <div className="max-w-[1140px] mx-auto px-6 py-5 flex items-center justify-between flex-wrap gap-3">
-            <span className="text-[12px] text-slate-400">© 2026 grcmentor · All rights reserved.</span>
-            <div className="flex items-center gap-4 text-[12px] text-slate-400">
-              <a href="#" className="no-underline hover:text-slate-600">Privacy</a>
-              <a href="#" className="no-underline hover:text-slate-600">Terms</a>
-              <a href="#" className="no-underline hover:text-slate-600">Contact</a>
+            <span className="text-[12px] text-slate-500">© 2026 grcmentor · All rights reserved.</span>
+            <div className="flex items-center gap-4 text-[12px] text-slate-500">
+              <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Privacy</a>
+              <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Terms</a>
+              <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Contact</a>
             </div>
           </div>
         </div>
@@ -299,6 +339,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FAFAF7]">
       <Nav />
       <Hero />
+      <LandingStats />
+      <Frameworks />
       <Industries />
       <Program />
       <Testimonials />

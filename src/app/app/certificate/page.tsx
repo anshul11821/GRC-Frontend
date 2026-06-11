@@ -6,6 +6,7 @@ import { SkeletonSheet } from "@/components/ui/skeleton";
 import { CertificateSheet, type CertStat } from "@/components/cert/certificate-sheet";
 import { BADGES } from "@/lib/badges";
 import { certificateApi, CERT_LOCKED, type Certificate } from "@/lib/certificate";
+import { MenteeAssurancePanel } from "@/components/audit/mentee-assurance";
 
 const AI_MENTOR = { name: "grcmentor AI Mentor", title: "Automated Assessment · ISO 27001 aligned" };
 const ISSUER = { name: "grcmentor", title: "Issuing Authority" };
@@ -192,10 +193,15 @@ export default function CertificatePage() {
             <CertificateSheet preview={cert.status !== "issued"} stats={stats} cert={cert} />
           </CertStage>
           <div className="text-center text-[11px] text-slate-400 pt-5 pb-2 cert-noprint">
-            {cert.status === "issued"
-              ? <>Verifiable at {cert.verifyUrl}</>
-              : <>Issues automatically at 100% completion · {cert.completionPct}% complete</>}
+            {cert.status === "issued" ? (
+              <>Verifiable at {cert.verifyUrl}</>
+            ) : cert.status === "awaiting_audit" ? (
+              <>All tasks complete · awaiting independent auditor clearance before issue</>
+            ) : (
+              <>Issues automatically at 100% completion · {cert.completionPct}% complete</>
+            )}
           </div>
+          {tab === "grc101" && <MenteeAssurancePanel program="grc101" />}
         </>
       ) : (
         <div className="text-center text-[13px] text-slate-400 py-24">Couldn&apos;t load your certificate. Please try again.</div>
