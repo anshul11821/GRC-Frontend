@@ -28,11 +28,7 @@ export default function SignInPage() {
       const captchaToken = await getCaptchaToken("signin");
       const { accessToken } = await authApi.signin({ email, password, captchaToken, rememberMe });
       const me = await signIn(accessToken, rememberMe);
-      if (me.role === "auditor") {
-        router.replace(me.isProfileComplete ? "/audit" : "/auditor");
-      } else {
-        router.replace(me.isProfileComplete ? "/app" : "/complete-profile");
-      }
+      router.replace(me.isProfileComplete ? "/app" : "/complete-profile");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Try again.");
       setBusy(false);
@@ -80,12 +76,6 @@ export default function SignInPage() {
         New to grcmentor?{" "}
         <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-700">
           Create an account
-        </Link>
-      </p>
-      <p className="mt-2 text-center text-[12px] text-slate-400">
-        Want to assess work?{" "}
-        <Link href="/auditor" className="font-medium text-slate-600 hover:text-indigo-700">
-          Apply as an auditor
         </Link>
       </p>
     </div>

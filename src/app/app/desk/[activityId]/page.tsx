@@ -17,7 +17,6 @@ import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { ACTIVITY_CONTENT } from "@/lib/activity-content";
 import type { TaskReference } from "@/lib/taskmeta";
-import { meAuditsApi, type MeAuditItem } from "@/lib/me-audits";
 
 function ReviewPanel({ review }: { review: Review }) {
   const pass = review.decision === "pass";
@@ -235,8 +234,6 @@ export default function ActivityWorkspace() {
   const [error, setError] = useState<string | null>(null);
 
   const [history, setHistory] = useState<SubmissionDetail[]>([]);
-  const [audit, setAudit] = useState<MeAuditItem | null>(null);
-  const [revising, setRevising] = useState(false);
   const [briefOpen, setBriefOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [briefShown, setBriefShown] = useState(true);
@@ -259,16 +256,6 @@ export default function ActivityWorkspace() {
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [activityId]);
-
-  // Pull this task's audit standing so a "changes requested" verdict surfaces a rework path.
-  useEffect(() => {
-    if (!activity) return;
-    let cancelled = false;
-    meAuditsApi.list()
-      .then((r) => { if (!cancelled) setAudit(r.tasks.find((t) => t.taskCode === activity.taskCode) ?? null); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [activity]);
 
   // Reveal the criteria HUD once the deliverable scrolls into view; keep it closed (chip) before then.
   // Re-attaches when the deliverable card mounts (after the activity loads).
@@ -312,9 +299,6 @@ export default function ActivityWorkspace() {
         setActivity((a) => (a ? { ...a, status: res.review!.decision === "pass" ? "complete" : "in-progress", latestReview: res.review } : a));
         if (res.review.decision === "pass") {
           await refreshTree(); // refresh tree so the next step unlocks in place
-          setRevising(false);
-          // re-pull audit standing — a rework resubmit re-enters the auditor pool
-          if (activity) meAuditsApi.list().then((r) => setAudit(r.tasks.find((t) => t.taskCode === activity.taskCode) ?? null)).catch(() => {});
         }
       }
     } catch (e) {
@@ -369,17 +353,6 @@ export default function ActivityWorkspace() {
       </div>
     );
   }
-
-  const reworkMode = audit?.status === "changes_requested";
-  const auditFindings = audit?.findings ?? [];
-  const sectionFindings = auditFindings.filter((f) => f.anchor === activity.code);
-  const startRevise = () => {
-    // prefill from the latest submission so the mentee edits their prior answer
-    const latest = history.find((h) => h.submission.payload);
-    const p = latest?.submission.payload;
-    if (p) setValues({ ...(p.fields ?? {}), notes: p.notes ?? "" });
-    setRevising(true);
-  };
 
   const verb = VERBS[activity.verb.id];
   const content = ACTIVITY_CONTENT[`${activity.taskCode}/${activity.code}`];
@@ -509,43 +482,11 @@ export default function ActivityWorkspace() {
         {error && <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
         <div className="mt-5">
-          {passed && !revising && !busy && reworkMode ? (
-            <div className="rounded-xl bg-amber-50/60 ring-1 ring-amber-200/70 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="cornerUpRight" size={15} className="text-amber-600" />
-                <span className="text-[12.5px] font-semibold text-amber-800 tracking-tight">An auditor requested changes to this task</span>
-              </div>
-              {sectionFindings.length > 0 ? (
-                <ul className="space-y-1.5 mb-3">
-                  {sectionFindings.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[12.5px] text-slate-700">
-                      <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${f.status === "resolved" ? "bg-emerald-400" : "bg-amber-400"}`} />
-                      <span className={f.status === "resolved" ? "line-through text-slate-400" : ""}>{f.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[12.5px] text-slate-600 mb-3">
-                  This step has no notes of its own — check other steps in this task, then revise and resubmit.
-                </p>
-              )}
-              <div className="flex items-center gap-2 flex-wrap">
-                <button onClick={startRevise} className="h-10 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2">
-                  <Icon name="edit" size={14} /> Revise &amp; resubmit
-                </button>
-                <Link href="/app/certificate" className="text-[12.5px] text-slate-500 hover:text-slate-700">See all audit feedback →</Link>
-              </div>
-            </div>
-          ) : passed && !revising && !busy ? (
+          {passed && !busy ? (
             <div className="flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 ring-1 ring-emerald-200/70 text-emerald-700 text-[13px] font-medium tracking-tight">
                 <Icon name="check" size={14} strokeWidth={3} /> Submitted — step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}
               </span>
-              {audit && (
-                <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 text-[12px] font-medium tracking-tight">
-                  <Icon name="shield" size={13} /> Audit: {audit.label}
-                </span>
-              )}
               {nextStepId ? (
                 <Link href={`/app/desk/${nextStepId}`} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
                   Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
@@ -558,22 +499,12 @@ export default function ActivityWorkspace() {
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
-              {revising && (
-                <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg bg-amber-50 ring-1 ring-amber-200/70 text-amber-700 text-[12px] font-medium tracking-tight">
-                  <Icon name="cornerUpRight" size={13} /> Reworking for the auditor
-                </span>
-              )}
               <button onClick={submit} disabled={busy || !hasContent} className="focus-ring h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2 shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)] transition-all">
-                <Icon name="send" size={14} /> {busy ? "Grading…" : revising ? "Resubmit for review" : "Submit for review"}
+                <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
               </button>
               <button onClick={saveDraft} disabled={busy} className="focus-ring h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
                 Save draft
               </button>
-              {revising && (
-                <button onClick={() => setRevising(false)} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 hover:text-slate-700 text-[13px] font-medium tracking-tight">
-                  Cancel
-                </button>
-              )}
               {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
             </div>
           )}
@@ -706,7 +637,7 @@ export default function ActivityWorkspace() {
             </section>
           )}
 
-          {passed && !revising && !busy && (
+          {passed && !busy && (
             <section className="rounded-xl bg-emerald-50/70 ring-1 ring-emerald-200/70 p-3.5">
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">

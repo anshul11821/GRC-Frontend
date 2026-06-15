@@ -78,7 +78,6 @@ const paths: Record<string, ReactNode> = {
   globe: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>),
   trash: (<><path d="M4 7h16" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" /></>),
   camera: (<><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L18 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="13" r="3.5" /></>),
-  // --- auditor console glyphs ---
   inbox: (<><path d="M3 12l3-7h12l3 7" /><path d="M3 12v6a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6" /><path d="M3 12h5l1.5 3h5L16 12h5" /></>),
   users: (<><circle cx="9" cy="8" r="3.5" /><path d="M3 20c1-3.5 3.3-5 6-5s5 1.5 6 5" /><path d="M16 5a3 3 0 0 1 0 6" /><path d="M16.5 15c2 .4 3.6 1.8 4.5 4.5" /></>),
   clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>),

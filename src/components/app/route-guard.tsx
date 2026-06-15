@@ -16,9 +16,6 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     if (loading) return;
     if (!user) {
       router.replace("/");
-    } else if (user.role === "auditor") {
-      // Auditors belong in the assessment console, not the mentee app.
-      router.replace("/audit");
     } else if (!user.isProfileComplete) {
       router.replace("/complete-profile");
     } else if (!paid) {
@@ -26,7 +23,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, paid, router]);
 
-  if (loading || !user || user.role === "auditor" || !user.isProfileComplete || !paid) {
+  if (loading || !user || !user.isProfileComplete || !paid) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#FAFAF7]">
         <div className="flex flex-col items-center gap-3 text-slate-400">
