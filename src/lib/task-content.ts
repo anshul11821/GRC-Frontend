@@ -656,7 +656,7 @@ An obligation with status "Met" but no evidence is really a Gap — flag it. An 
         title: "LearnTech — How Incidents Are Handled Today",
         kind: "Source document",
         summary: "The current informal path and its gaps — your procedure must fix these.",
-        body: `## What happens now (from interviews)
+        body: `## What happens now (from staff)
 - Staff "mention it in the support Slack channel" if they spot something odd.
 - There's no definition of what counts as an incident, so phishing emails go unreported.
 - No one owns triage; sometimes the CTO sees it days later.
@@ -960,7 +960,7 @@ Every policy statement should map to at least one control — an unmapped statem
       "You will assess one GlobalConnect department's GRC maturity against the NIST CSF 2.0 tiers, score each function with evidence, and produce a one-page roadmap to reach at least Tier 2.",
     whatToDo: [
       "Familiarise yourself with the four CSF tiers.",
-      "Run a maturity interview with the department head and IT lead.",
+      "Request maturity evidence from the department head and IT lead.",
       "Score each CSF function (Govern, Identify, Protect, Detect, Respond, Recover) 1–4 with justification.",
       "Plot current vs target on the spider diagram and draft a roadmap for the top three gaps.",
     ],
@@ -1177,7 +1177,7 @@ A KPI you can't compute from a named data source is an opinion, not a metric.`,
       "You will run structured discovery interviews with three GlobalConnect stakeholders to surface what the GRC programme actually needs to address — the real concerns, gaps and priorities — and turn them into a needs report.",
     whatToDo: [
       "Prepare a structured interview guide (8–10 open questions per stakeholder type).",
-      "Brief each stakeholder in advance, then conduct the three interviews, probing for specifics.",
+      "Brief each stakeholder in advance, then request input from the three stakeholders, probing for specifics.",
       "Write up each interview summary within 24 hours.",
       "Identify themes across all three and compile a needs-discovery report.",
     ],
@@ -1364,7 +1364,7 @@ Every risk needs a named owner and a treatment. A Critical/High risk marked "acc
       "You will create a defensible data-retention schedule for one data category at the firm — stating how long each data element is kept, why (the legal basis), and how it's disposed of — so the firm neither over-retains nor deletes too early.",
     whatToDo: [
       "Identify the target data category and research the applicable legal retention requirements.",
-      "Interview the data and system owners to learn where the data lives, is backed up and archived.",
+      "Request from the data and system owners where the data lives, is backed up and archived.",
       "Complete the retention schedule row by row (trigger, period, review point, disposal method).",
       "Map each entry to the relevant ISO control and obtain Legal sign-off.",
     ],

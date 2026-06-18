@@ -1,9 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DeskLearningsProvider } from "@/components/app/desk-context";
+import Link from "next/link";
+import { DeskLearningsProvider, useDeskLearnings } from "@/components/app/desk-context";
 import { DeskSidebar } from "@/components/app/desk-sidebar";
 import { Icon } from "@/components/ui/icon";
+
+/** A slim status bar pinned to the bottom of the workspace column. On short tasks it anchors the
+ *  bottom of the viewport so there's no bare whitespace under the content; on long tasks it simply
+ *  follows the content. Shows the current placement context + quick navigation (real, useful chrome
+ *  — not filler). */
+function DeskFooter() {
+  const { learnings } = useDeskLearnings();
+  const orgs = learnings?.orgs ?? [];
+  const activeOrg = orgs.find((o) => o.status === "active") ?? orgs[0];
+  return (
+    <footer className="shrink-0 border-t border-slate-200/60 bg-white/40 backdrop-blur-sm">
+      <div className="max-w-[920px] mx-auto px-6 h-12 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 min-w-0 text-[11.5px] text-slate-500">
+          {activeOrg ? (
+            <>
+              <Icon name="briefcase" size={13} className="text-slate-400 shrink-0" />
+              <span className="font-medium text-slate-700 truncate">{activeOrg.name}</span>
+              <span className="text-slate-300">·</span>
+              <span className="truncate">{activeOrg.industry}</span>
+            </>
+          ) : (
+            <span>GRC 101 · Foundations</span>
+          )}
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <Link href="/app/desk" className="inline-flex items-center gap-1.5 text-[11.5px] text-slate-500 hover:text-indigo-600 no-underline transition-colors">
+            <Icon name="desk" size={13} /> Working Desk
+          </Link>
+          <Link href="/app" className="text-[11.5px] text-slate-500 hover:text-indigo-600 no-underline transition-colors">Dashboard</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 export default function DeskLayout({ children }: { children: React.ReactNode }) {
   const [treeOpen, setTreeOpen] = useState(false);
@@ -62,7 +97,14 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
               <Icon name="menu" size={16} /> Activities
             </button>
           </div>
-          <div className="flex-1 min-w-0 overflow-y-auto">{children}</div>
+          {/* min-h-full makes the content column at least viewport-tall so the footer anchors the
+              bottom on short tasks (no bare whitespace); it grows + scrolls for long tasks. */}
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            <div className="min-h-full flex flex-col">
+              <div className="flex-1 min-w-0">{children}</div>
+              <DeskFooter />
+            </div>
+          </div>
         </div>
       </div>
     </DeskLearningsProvider>

@@ -12,7 +12,7 @@ import { RefBody } from "@/components/app/reference-material";
 import { VERBS } from "@/lib/verbs";
 import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
-import { SchemaForm } from "@/components/app/schema-form";
+import { VerbWorkspace } from "@/components/app/workspaces";
 import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { ACTIVITY_CONTENT } from "@/lib/activity-content";
@@ -386,10 +386,12 @@ export default function ActivityWorkspace() {
           <Link href="/app/learnings" className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-2">
             <Icon name="chevronLeft" size={14} /> {activity.taskCode} · {activity.taskTitle}
           </Link>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold">{activity.code}</span>
-            <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">{activity.title}</h1>
-            {verb && <DVerb verbId={verb.id} />}
+          <div className="flex items-start gap-3">
+            <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold shrink-0 mt-0.5">{activity.code}</span>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900 leading-snug">{activity.title}</h1>
+              {verb && <div className="mt-1.5"><DVerb verbId={verb.id} /></div>}
+            </div>
           </div>
         </div>
 
@@ -477,7 +479,7 @@ export default function ActivityWorkspace() {
           </button>
         </div>
 
-        <SchemaForm spec={formSpec} value={values} onChange={setValues} />
+        <VerbWorkspace verbId={activity.verb.id} value={values} onChange={setValues} />
 
         {error && <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
@@ -525,13 +527,13 @@ export default function ActivityWorkspace() {
           stay mounted so the swap can fade rather than pop. */}
       {hasChecklist && (
         <>
-          <div className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
+          <div className={`hidden md:block fixed top-[140px] right-4 z-20 w-[300px] max-h-[calc(100vh-160px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
             <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
             onClick={() => setCriteriaHidden(false)}
             aria-hidden={!criteriaHidden}
-            className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+            className={`focus-ring hidden md:inline-flex fixed top-[140px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
           >
             <Icon name="checkSquare" size={14} className="text-indigo-600" /> Criteria
           </button>

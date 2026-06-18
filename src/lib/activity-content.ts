@@ -850,13 +850,13 @@ Pick the system whose loss hurts most — recovery effort follows business impac
 - Restores have NEVER been tested (the key gap).` }],
   },
   "BCRP-002/3": {
-    objective: "You will interview the system owner to capture the manual recovery steps and any runbooks.",
-    whatToDo: ["Ask how a restore would actually be done, step by step.", "Capture who has the access and credentials needed."],
-    references: [{ id: "bcrp002-3", title: "Recovery interview guide", kind: "Interview guide", summary: "What to ask.", body: `## Ask the owner
-- Walk me through a restore from scratch.
-- Who has the credentials/access to do it?
-- What's documented, and what's only in your head?
-- What would slow a restore down at 3am?
+    objective: "You will request the manual recovery steps and any runbooks from the system owner.",
+    whatToDo: ["Address the request to the system owner.", "Ask for the step-by-step restore process, who holds the credentials/access, and any runbooks.", "Set a deadline for the response."],
+    references: [{ id: "bcrp002-3", title: "What to request", kind: "Request guide", summary: "What to ask for.", body: `## Request
+- The step-by-step restore process, from scratch.
+- Who holds the credentials/access needed to do it.
+- Any runbooks or documentation that exist.
+- What is only in someone's head (undocumented).
 
 ## Why
 The undocumented steps are the ones that fail under pressure — surface them.` }],
@@ -1157,14 +1157,14 @@ Add the methodology sheets + overview to the QA library, with a version and revi
 Schools sign up, teachers create student accounts, students (many under 16) use the platform. It involves children's data, behavioural analytics, and a US analytics transfer — the highest-risk, most instructive choice.` }],
   },
   "AA-003/3.2": {
-    objective: "You will interview the process owner to trace exactly what personal data flows where.",
-    whatToDo: ["Ask what data is collected, from whom, stored where, shared with whom, kept how long.", "Capture special-category and children's data specifically."],
-    references: [{ id: "aa003-3-2", title: "Data-flow interview guide", kind: "Interview guide", summary: "What to ask.", body: `## Ask
-- What personal data do we collect, and from whom (student? school?)?
-- Where is it stored, and who can access it?
-- Who do we share it with (third parties, other countries)?
-- How long do we keep it?
-- Any health/accessibility data (special category)?
+    objective: "You will request the data-flow details from the process owner — exactly what personal data flows where.",
+    whatToDo: ["Address the request to the process owner.", "Ask what data is collected, from whom, stored where, shared with whom, kept how long.", "Call out special-category and children's data specifically."],
+    references: [{ id: "aa003-3-2", title: "What to request", kind: "Request guide", summary: "What to ask for.", body: `## Request
+- What personal data we collect, and from whom (student? school?).
+- Where it is stored, and who can access it.
+- Who we share it with (third parties, other countries).
+- How long we keep it.
+- Any health/accessibility data (special category).
 
 ## At LearnTech
 You'll uncover: student DOB/email/progress + behavioural analytics, accessibility flags (special category), and a US analytics tool (Mixpanel).` }],
@@ -1237,13 +1237,13 @@ The process owner confirms the RoPA is accurate and accepts the DPIA finding. Re
 Children's-data rules (Children's Code, COPPA) are the easy ones to miss — capture them.` }],
   },
   "CRM-001/7.2": {
-    objective: "You will interview the Legal/Compliance contact and IT Manager to confirm which obligations actually apply.",
-    whatToDo: ["Use the scoping guide to confirm applicability.", "Capture who owns each area."],
-    references: [{ id: "crm001-7-2", title: "Regulatory scoping interview", kind: "Interview guide", summary: "What to confirm.", body: `## Ask
-- Which jurisdictions do our customers sit in?
-- Do we process data of under-13s? Under-16s?
-- What contractual security/privacy terms do schools impose?
-- Who owns privacy, security, and contracts internally?` }],
+    objective: "You will request confirmation from the Legal/Compliance contact and IT Manager of which obligations actually apply.",
+    whatToDo: ["Address the request to the Legal/Compliance contact and the IT Manager.", "Ask them to confirm applicability and who owns each area.", "Set a deadline."],
+    references: [{ id: "crm001-7-2", title: "What to request", kind: "Request guide", summary: "What to confirm.", body: `## Request confirmation of
+- Which jurisdictions our customers sit in.
+- Whether we process data of under-13s / under-16s.
+- What contractual security/privacy terms schools impose.
+- Who owns privacy, security, and contracts internally.` }],
   },
   "CRM-001/7.3": {
     objective: "You will list all applicable obligations across legislation, sector rules, contracts, and voluntary standards.",
@@ -1316,12 +1316,12 @@ An obligations register is only useful if maintained — laws change. Set a quar
 - Staff fear blame, so stay quiet.` }],
   },
   "DD-001/2": {
-    objective: "You will interview the IT Manager and a front-line staff member to map the real reporting path.",
-    whatToDo: ["Ask how reporting actually happens and where it breaks.", "Capture the cultural barrier (blame)."],
-    references: [{ id: "dd001-2", title: "Interview focus", kind: "Interview guide", summary: "What to ask.", body: `## Ask
-- If you saw something suspicious right now, what would you do?
-- Has anything stopped you reporting before?
-- Who deals with it once reported?
+    objective: "You will request, from the IT Manager and a front-line staff member, details of the real reporting path.",
+    whatToDo: ["Address the request to the IT Manager and a front-line staff member.", "Ask how reporting actually happens, where it breaks, and what stops people reporting.", "Set a deadline."],
+    references: [{ id: "dd001-2", title: "What to request", kind: "Request guide", summary: "What to ask for.", body: `## Request
+- What someone would actually do on seeing something suspicious.
+- Anything that has stopped people reporting before.
+- Who deals with a report once it's made.
 
 ## Why
 The "I didn't want to look stupid" answers reveal why a no-blame statement must be in the procedure.` }],
@@ -1850,9 +1850,9 @@ Ask for evidence: "How do you decide what to patch first, and where's that docum
 Tailor to the department's reality — generic questions get generic, unscorable answers.` }],
   },
   "GRM-003/6.3": {
-    objective: "You will conduct a 90-minute maturity interview with the department head and IT lead.",
-    whatToDo: ["Run the questionnaire, probing for evidence.", "Capture specifics, not opinions."],
-    references: [{ id: "grm003-6-3", title: "Department current state", kind: "Source document", summary: "What you'll hear (and score).", body: `## Operations dept
+    objective: "You will request maturity evidence from the department head and IT lead to score each CSF function.",
+    whatToDo: ["Address the request to the department head and IT lead.", "Ask for evidence against each CSF function (Govern/Identify/Protect/Detect/Respond/Recover).", "Ask for specifics, not opinions."],
+    references: [{ id: "grm003-6-3", title: "Department current state", kind: "Source document", summary: "What the responses reveal (and score).", body: `## Operations dept
 - Govern: no documented risk appetite → Tier 1.
 - Identify: partial asset list, no risk register → Tier 1/2.
 - Protect: MFA on email, induction-only training → Tier 2.
@@ -2192,12 +2192,12 @@ Tailor to their angle (ops wants practicality; account lead wants to keep the co
 Their priorities conflict — that tension is the real finding.` }],
   },
   "CA-003/3": {
-    objective: "You will conduct the three interviews, listening actively and probing for specifics.",
-    whatToDo: ["Run each interview to the guide.", "Probe for concrete examples; take structured notes."],
-    references: [{ id: "ca003-3", title: "Running the interview", kind: "Briefing notes", summary: "How to get signal.", body: `## During
-- Ask, then listen — don't lead.
-- Probe: "Can you give me an example?"
-- Capture their words (quote them) and specific incidents.` }],
+    objective: "You will request input from the three stakeholders and capture their responses.",
+    whatToDo: ["Send the request to each of the three stakeholders.", "Ask for concrete examples and specifics, not generalities.", "Capture their responses in their own words."],
+    references: [{ id: "ca003-3", title: "Getting good responses", kind: "Briefing notes", summary: "How to get signal.", body: `## When you request
+- Ask open questions and capture the answers verbatim.
+- Probe for examples: "Can you give a specific instance?"
+- Record their words (quote them) and specific incidents.` }],
   },
   "CA-003/4": {
     objective: "You will write up a Stakeholder Interview Summary within 24 hours of each.",
@@ -2497,12 +2497,13 @@ A well-defined category with clear legal retention rules and a real GDPR-vs-tax-
 GDPR says don't over-retain; tax law says keep 6 years. Reconcile: keep the legal minimum, then dispose securely.` }],
   },
   "DD-003/3": {
-    objective: "You will interview the data and system owners to learn where the data lives.",
-    whatToDo: ["Ask where the data is stored, backed up, and archived.", "Capture every copy (backups count)."],
-    references: [{ id: "dd003-3", title: "Interview focus", kind: "Interview guide", summary: "What to ask.", body: `## Ask
-- Where is this data stored (system, backups, archives)?
-- Who can access it?
-- Is it copied anywhere (exports, spreadsheets)?
+    objective: "You will request the storage, backup, and archive details for this data category from the data owner and IT/system owner.",
+    whatToDo: ["Address the request to the data owner and the IT/system owner.", "Ask for every storage location, all backup copies and their schedule, and any archives or exports.", "Set a clear deadline for the response."],
+    references: [{ id: "dd003-3", title: "What to request", kind: "Request guide", summary: "What to ask for.", body: `## Request
+- Every place this data is stored (primary systems, databases).
+- All backup copies, and the backup schedule/retention.
+- Any archives, exports, or spreadsheet copies.
+- Who can access each copy.
 
 ## Why
 You can't dispose of data you don't know about — backups and exports are where retention rules quietly fail.` }],
@@ -2889,12 +2890,12 @@ Reflect on specific tasks, not generalities.` }],
 Specific, actionable improvements — not "make it easier".` }],
   },
   "KT-002/4": {
-    objective: "You will interview one peer mentee to gather a second perspective.",
-    whatToDo: ["Ask a peer about their experience and lessons.", "Capture where your views differ."],
-    references: [{ id: "kt002-4", title: "Peer interview", kind: "Interview guide", summary: "What to ask.", body: `## Ask a peer
-- What did you find hardest?
-- What would you change about the programme?
-- What surprised you?
+    objective: "You will request a second perspective from one peer mentee.",
+    whatToDo: ["Address the request to a peer mentee.", "Ask about their experience, lessons, and what they'd change.", "Capture where your views differ."],
+    references: [{ id: "kt002-4", title: "What to request", kind: "Request guide", summary: "What to ask for.", body: `## Request from a peer
+- What they found hardest.
+- What they would change about the programme.
+- What surprised them.
 
 ## Why
 A second perspective reveals patterns (and blind spots) yours alone won't.` }],

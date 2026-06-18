@@ -158,47 +158,50 @@ const STD_TONE: Record<string, string> = {
   slate: "bg-slate-100 text-slate-700 ring-slate-200/70",
 };
 
-/** Which GRC frameworks the mentee has worked across, out of the full catalogue. */
-function StandardsCoverage({ standards, engaged }: { standards: Standard[]; engaged: { label: string; tone: string }[] }) {
+/**
+ * Glass-styled standards coverage for the hero band. Which GRC frameworks the
+ * mentee has worked across, out of the full catalogue — adapted to read on the
+ * dark brand gradient (white-on-glass chips rather than the light card pills).
+ */
+function HeroStandards({ standards, engaged }: { standards: Standard[]; engaged: { label: string; tone: string }[] }) {
   const engagedSet = new Set(engaged.map((s) => s.label));
   const total = standards.length;
+  if (total === 0) return null;
   const covered = standards.filter((s) => engagedSet.has(s.label)).length;
   const pct = total ? Math.round((covered / total) * 100) : 0;
   return (
-    <Card>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Standards coverage</h2>
-        <span className="text-[11px] text-slate-400 tabular-nums">{covered} / {total}</span>
+    <div className="relative mt-6 pt-5 border-t border-white/15">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon name="shield" size={14} className="text-indigo-100 shrink-0" />
+          <h2 className="text-[13px] font-semibold tracking-tight text-white">Standards coverage</h2>
+        </div>
+        <span className="text-[11px] text-indigo-100/85 tabular-nums shrink-0">
+          {covered} / {total} framework{total === 1 ? "" : "s"}
+          {covered >= total ? " · all engaged" : covered === 0 ? " · none yet" : ""}
+        </span>
       </div>
-      {total === 0 ? (
-        <div className="py-8 text-center text-[12.5px] text-slate-400">No standards catalogue.</div>
-      ) : (
-        <>
-          <div className="flex items-center gap-3 mb-3.5">
-            <Bar pct={pct} tone={pct >= 100 ? "emerald" : "violet"} className="flex-1" />
-            <span className="text-[11px] font-semibold text-slate-500 tabular-nums shrink-0">{pct}%</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {standards.map((s) => {
-              const on = engagedSet.has(s.label);
-              return (
-                <span key={s.id} className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-[11.5px] font-medium tracking-tight ring-1 transition-colors ${on ? (STD_TONE[s.tone] ?? STD_TONE.indigo) : "bg-slate-50 text-slate-400 ring-slate-200/60"}`}>
-                  <Icon name={on ? "check" : "shield"} size={11} strokeWidth={on ? 3 : 2} className={on ? "" : "opacity-60"} />
-                  {s.label}
-                </span>
-              );
-            })}
-          </div>
-          <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
-            {covered === 0
-              ? "Frameworks light up as you complete graded tasks."
-              : covered >= total
-                ? "You've worked across every framework in GRC 101."
-                : `${total - covered} framework${total - covered === 1 ? "" : "s"} still to engage.`}
-          </div>
-        </>
-      )}
-    </Card>
+      <div className="flex items-center gap-3 mb-3.5">
+        <div className="h-1.5 flex-1 rounded-full bg-white/15 overflow-hidden">
+          <div className="h-full rounded-full bg-emerald-300 transition-all duration-700" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-[11px] font-semibold text-white tabular-nums shrink-0">{pct}%</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {standards.map((s) => {
+          const on = engagedSet.has(s.label);
+          return (
+            <span
+              key={s.id}
+              className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-[11.5px] font-medium tracking-tight ring-1 transition-colors ${on ? "bg-white/[0.16] text-white ring-white/25" : "bg-white/[0.04] text-indigo-100/45 ring-white/10"}`}
+            >
+              <Icon name={on ? "check" : "shield"} size={11} strokeWidth={on ? 3 : 2} className={on ? "text-emerald-300" : "opacity-60"} />
+              {s.label}
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -412,15 +415,14 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5 animate-pulse">
-        <div className="h-[168px] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100" />
+        <div className="h-[290px] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Skeleton className="h-[76px] rounded-2xl" />
           <Skeleton className="h-[76px] rounded-2xl" />
           <Skeleton className="h-[76px] rounded-2xl" />
         </div>
         <Skeleton className="h-[230px] rounded-2xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <Skeleton className="h-[260px] rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <Skeleton className="h-[260px] rounded-2xl" />
           <Skeleton className="h-[260px] rounded-2xl" />
         </div>
@@ -472,6 +474,9 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Standards coverage — frameworks engaged across the track */}
+        <HeroStandards standards={standards} engaged={progress?.standardsEngaged ?? []} />
       </div>
       </Reveal>
 
@@ -571,7 +576,7 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Skill rubric — radar */}
           <Card>
             <div className="flex items-center justify-between mb-1">
@@ -619,9 +624,6 @@ export default function DashboardPage() {
               )}
             </div>
           </Card>
-
-          {/* Standards coverage */}
-          <StandardsCoverage standards={standards} engaged={progress?.standardsEngaged ?? []} />
         </div>
       </div>
       </Reveal>

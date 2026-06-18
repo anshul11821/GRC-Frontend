@@ -207,10 +207,6 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, lockedHint }: {
 function SidebarShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   return (
     <aside className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
-      <div className="h-[52px] shrink-0 flex items-center gap-2 px-4 border-b border-slate-200/60">
-        <Icon name="desk" size={16} className="text-indigo-600" />
-        <span className="text-[13px] font-semibold tracking-tight text-slate-900">Working Desk</span>
-      </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">{children}</div>
       {footer}
     </aside>
@@ -244,8 +240,25 @@ export function DeskSidebar() {
   // The current placement: the first one that's accessible (not complete, not locked).
   const activeOrgId = (orgs.find((o) => o.status === "active") ?? orgs.find((o) => orgDisplayState(o) === "active"))?.id;
 
+  // Overall program progress — pinned to the rail's footer so the lower area always reads as
+  // intentional chrome rather than blank space, regardless of how short the tree is.
+  let done = 0, total = 0;
+  orgs.forEach((o) => o.projects.forEach((p) => p.tasks.forEach((t) => { done += t.done; total += t.total; })));
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  const progressFooter = total > 0 ? (
+    <div className="shrink-0 border-t border-slate-200/60 px-3.5 py-3 bg-white/40">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-semibold tracking-tight text-slate-700">GRC 101 · Foundations</span>
+        <span className="text-[10.5px] text-slate-400 tabular-nums">{done}/{total}</span>
+      </div>
+      <div className="h-1 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  ) : undefined;
+
   return (
-    <SidebarShell>
+    <SidebarShell footer={progressFooter}>
       {orgs.length === 0 ? (
         <div className="px-2 py-6 text-center text-[12px] text-slate-500">No placements yet.</div>
       ) : (
