@@ -15,7 +15,6 @@ export const VERB_FORMS: Record<string, FieldSpec[]> = {
     { key: "to", label: "To (named role)", type: "text", placeholder: "e.g. IT Operations Lead" },
     { key: "subject", label: "Subject (≤ 80 chars)", type: "text" },
     { key: "items", label: "Requested items (≥ 3)", type: "list", placeholder: "An item you're requesting" },
-    { key: "deadline", label: "Deadline", type: "date" },
   ],
   conduct: [
     { key: "stakeholder", label: "Stakeholder / role interviewed", type: "text", placeholder: "e.g. Process Owner" },
@@ -77,7 +76,7 @@ export const VERB_FORMS: Record<string, FieldSpec[]> = {
   ],
   recommend: [
     { key: "recommendations", label: "Recommendations", type: "table", columns: [
-      { key: "action", label: "Action" }, { key: "control", label: "Control ref" }, { key: "owner", label: "Owner (role)" }, { key: "targetDate", label: "Target date" },
+      { key: "action", label: "Action" }, { key: "control", label: "Control ref" }, { key: "owner", label: "Owner (role)" },
     ] },
   ],
   validate: [

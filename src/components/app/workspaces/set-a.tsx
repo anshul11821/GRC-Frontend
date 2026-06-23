@@ -1,16 +1,262 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextInput, WTextArea,
   GivenNote, RefBox, ScriptedExchange, SOFT, DOT, CLASS_TONE, type Tone,
 } from "./kit";
+import {
+  getRequestConversation, routeMood,
+  type RequestConversation, type ConvOption, type MoodResult,
+} from "@/lib/request-conversations";
 
 const CLASS = ["Public", "Internal", "Confidential"];
 
 /* ============================ REQUEST ============================ */
-export function RequestWorkspace({ value, onChange }: WorkspaceProps) {
+// Two modes: when the activity has an authored branching conversation, run the compose →
+// mood-route → multi-turn flow (ScriptedRequestFlow). Otherwise fall back to the legacy
+// single-shot composer so not-yet-authored Request activities keep working.
+export function RequestWorkspace({ value, onChange, taskCode, activityCode, addReference }: WorkspaceProps) {
+  const conv = useMemo(() => getRequestConversation(taskCode, activityCode), [taskCode, activityCode]);
+  if (conv) return <ScriptedRequestFlow conv={conv} value={value} onChange={onChange} addReference={addReference} />;
+  return <LegacyRequestWorkspace value={value} onChange={onChange} />;
+}
+
+/* A small mood pill for the routing banner. */
+function MoodPill({ mood }: { mood: MoodResult["mood"] }) {
+  const tone: Tone = mood === "cooperative" ? "emerald" : mood === "vague" ? "amber" : "rose";
+  const label = mood.charAt(0).toUpperCase() + mood.slice(1);
+  return <span className={`inline-flex items-center gap-1.5 px-2 h-6 rounded-full text-[11px] font-medium ring-1 ${SOFT[tone]}`}><span className={`w-1.5 h-1.5 rounded-full ${DOT[tone]}`} />{label}</span>;
+}
+
+/* A read-only stakeholder/mentee chat bubble (supports multi-paragraph text). */
+function Bubble({ who, initials, text }: { who: "you" | "stakeholder"; initials: string; text: string }) {
+  const mine = who === "you";
+  return (
+    <div className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
+      {!mine && <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{initials}</div>}
+      <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[82%] leading-relaxed ring-1 whitespace-pre-line ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}>{text}</div>
+      {mine && <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{initials}</div>}
+    </div>
+  );
+}
+
+const REQ_REF_ID = "request-incoming-reply";
+
+function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: RequestConversation } & Pick<WorkspaceProps, "value" | "onChange" | "addReference">) {
+  const [to, setTo] = useState(() => seed(value, "to", conv.recipient));
+  const [subject, setSubject] = useState(() => seed(value, "subject", conv.subject));
+  const [purpose, setPurpose] = useState(() => seed(value, "purpose", conv.purpose));
+  const [items, setItems] = useState<string[]>(() => seed(value, "items", [] as string[]));
+
+  // Conversation state (post-send).
+  const [routed, setRouted] = useState<MoodResult | null>(null);
+  const [correctPicks, setCorrectPicks] = useState<ConvOption[]>([]);
+  const [terminal, setTerminal] = useState<"met" | "miss" | null>(null);
+  const [missOption, setMissOption] = useState<ConvOption | null>(null);
+
+  const subjectOk = subject.length > 0 && subject.length <= 80;
+  const itemsN = items.filter((i) => i.trim()).length;
+  const toOk = to.trim().length > 0;
+  const canSend = toOk && subjectOk && itemsN >= 3;
+
+  useLift({ to, subject, purpose, items, mood: routed?.mood, objectiveMet: terminal === "met" }, onChange);
+
+  const thread = routed ? conv.threads[routed.mood] : null;
+
+  const send = () => {
+    if (!canSend) return;
+    const sent = items.filter((i) => i.trim());
+    setRouted(routeMood({ subject, purpose, items: sent }));
+    setCorrectPicks([]);
+    setTerminal(null);
+    setMissOption(null);
+    // Surface the request in Reference material so the mentee feels a reply is incoming.
+    addReference?.({
+      id: REQ_REF_ID,
+      title: `Incoming · reply from ${to}`,
+      kind: "Awaiting stakeholder reply",
+      summary: "Your request has been sent — the response will land here.",
+      body: `## Request sent to ${to}\n\n${subject}\n\nYou asked for:\n${sent.map((i) => `- ${i}`).join("\n")}\n\nThe stakeholder is preparing their response. Work through the conversation in the workspace — once you reach the objective, their reply is captured here.`,
+    });
+  };
+
+  const reset = () => {
+    setRouted(null);
+    setCorrectPicks([]);
+    setTerminal(null);
+    setMissOption(null);
+  };
+
+  const pick = (o: ConvOption, roundIdx: number) => {
+    if (terminal || !thread) return;
+    if (!o.correct) { setMissOption(o); setTerminal("miss"); return; }
+    const next = [...correctPicks, o];
+    setCorrectPicks(next);
+    if (roundIdx >= thread.rounds.length - 1) {
+      setTerminal("met");
+      // Replace the "awaiting" doc with the captured reply.
+      const replyLines = [thread.opener, ...next.map((_, i) => thread.rounds[i].stakeholderNext).filter(Boolean)];
+      addReference?.({
+        id: REQ_REF_ID,
+        title: `Reply received · ${to}`,
+        kind: "Stakeholder response (captured)",
+        summary: "The stakeholder responded — captured to this engagement.",
+        body: `## Reply from ${to}\n\n${replyLines.join("\n\n")}\n\n---\n${thread.metEnd}`,
+      });
+    }
+  };
+
+  // ── Conversation view ──
+  if (routed && thread) {
+    const activeRound = terminal ? -1 : correctPicks.length; // index of the round awaiting a pick
+
+    // Suggested-item chips not yet added (kept for the retry path).
+    return (
+      <div className="space-y-5">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2">
+          <div className="flex items-center gap-2 text-[11.5px] text-slate-600 min-w-0">
+            <Icon name="info" size={13} className="text-slate-400 shrink-0" />
+            <span className="truncate"><strong className="font-medium text-slate-700">Stakeholder mood:</strong> {routed.reason}</span>
+          </div>
+          <MoodPill mood={routed.mood} />
+        </div>
+
+        <div>
+          <SectionLabel action={
+            <button onClick={reset} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1"><Icon name="chevronLeft" size={12} />Edit request</button>
+          }>Conversation · {thread.speaker}</SectionLabel>
+
+          <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
+            {/* Your opening request */}
+            <Bubble who="you" initials="ME" text={`${subject}\n\n${purpose}\n\nRequested:\n${items.filter((i) => i.trim()).map((i) => `• ${i}`).join("\n")}`} />
+            {/* Stakeholder opener */}
+            <Bubble who="stakeholder" initials={thread.initials} text={thread.opener} />
+
+            {/* Resolved rounds */}
+            {correctPicks.map((p, i) => (
+              <div key={`r${i}`} className="space-y-2.5">
+                <Bubble who="you" initials="ME" text={p.text} />
+                {thread.rounds[i].stakeholderNext && <Bubble who="stakeholder" initials={thread.initials} text={thread.rounds[i].stakeholderNext!} />}
+              </div>
+            ))}
+
+            {/* The wrong pick (miss) */}
+            {terminal === "miss" && missOption && <Bubble who="you" initials="ME" text={missOption.text} />}
+
+            {/* Active decision: choose one reply */}
+            {activeRound >= 0 && thread.rounds[activeRound] && (
+              <div className="pt-1.5">
+                <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your reply</div>
+                <div className="space-y-2">
+                  {thread.rounds[activeRound].options.map((o) => (
+                    <button key={o.id} onClick={() => pick(o, activeRound)}
+                      className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
+                      <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                      <span>{o.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Coaching on a wrong pick */}
+        {terminal === "miss" && missOption && (
+          <div className="rounded-2xl bg-rose-50 ring-1 ring-rose-200 p-4">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-rose-800 mb-1"><Icon name="x" size={14} /> Objective not met</div>
+            <p className="text-[12.5px] text-rose-900/80 leading-relaxed">{missOption.coaching}</p>
+            <p className="text-[12px] text-rose-900/70 leading-relaxed mt-2">{thread.missEnd}</p>
+            <button onClick={reset} className="mt-3 h-8 px-3 rounded-lg bg-rose-600 text-white text-[12px] font-medium hover:bg-rose-700 flex items-center gap-1.5"><Icon name="arrowRight" size={13} /> Try the request again</button>
+          </div>
+        )}
+
+        {/* Success */}
+        {terminal === "met" && (
+          <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Objective met</div>
+            <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">{thread.metEnd}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Compose view (compose-with-assists) ──
+  const unusedSuggestions = conv.suggestedItems.filter((s) => !items.some((i) => i.trim() === s));
+
+  return (
+    <div className="space-y-5">
+      <GivenNote>The recipient is pre-set for this engagement. Compose a specific, well-scoped request — name at least three concrete items. A vague or over-broad ask changes how the stakeholder responds.</GivenNote>
+
+      <div>
+        <SectionLabel>To · stakeholder (named role)</SectionLabel>
+        <WTextInput value={to} onChange={setTo} placeholder="e.g. IT Operations Lead" />
+      </div>
+
+      <div>
+        <SectionLabel hint={`${subject.length} / 80`}>Subject</SectionLabel>
+        <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectOk ? "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30" : "ring-rose-300"}`}>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} className="flex-1 bg-transparent outline-none text-[13px] text-slate-900" />
+          <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
+        </div>
+      </div>
+
+      <div>
+        <SectionLabel>Purpose</SectionLabel>
+        <WTextArea value={purpose} onChange={setPurpose} rows={3} hint={`${purpose.length} chars`} />
+      </div>
+
+      <div>
+        <SectionLabel hint={`${itemsN} of min 3`} action={
+          <button onClick={() => setItems([...items, ""])} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add item</button>
+        }>Requested items</SectionLabel>
+
+        {unusedSuggestions.length > 0 && (
+          <div className="mb-2.5">
+            <div className="text-[10.5px] text-slate-400 tracking-tight mb-1.5">Suggested — click to add:</div>
+            <div className="flex flex-wrap gap-1.5">
+              {unusedSuggestions.map((s) => (
+                <button key={s} onClick={() => setItems([...items.filter((i) => i.trim()), s])}
+                  className="text-left rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200/70 px-2.5 h-7 text-[11.5px] font-medium flex items-center gap-1 transition-colors">
+                  <Icon name="plus" size={11} /> <span className="max-w-[260px] truncate">{s}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {items.length === 0 && <p className="text-[11.5px] text-slate-400 italic px-1">Add at least three items — use the suggestions above or write your own.</p>}
+          {items.map((it, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="w-6 h-9 flex items-center justify-center text-[11.5px] font-mono text-slate-400">{i + 1}.</span>
+              <input value={it} onChange={(e) => { const n = [...items]; n[i] = e.target.value; setItems(n); }}
+                placeholder="An item you're requesting"
+                className="flex-1 h-9 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
+              <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="w-9 h-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><Icon name="x" size={14} /></button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <p className="text-[11px] text-slate-400 tracking-tight">
+          {canSend ? "Ready to send — the stakeholder's response depends on how scoped your request is." : "Complete the request: named recipient · subject ≤ 80 · ≥ 3 items."}
+        </p>
+        <button onClick={send} disabled={!canSend}
+          className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0">
+          <Icon name="arrowUpRight" size={14} /> Send request
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Legacy single-shot composer — fallback for Request activities not yet authored as a branching flow. */
+function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value" | "onChange">) {
   const [to, setTo] = useState(() => seed(value, "to", "Legal Counsel"));
   const [subject, setSubject] = useState(() => seed(value, "subject", "Request: regulated jurisdictions for EU operations"));
   const [purpose, setPurpose] = useState(() => seed(value, "purpose", "To complete the interested-parties register I need your authoritative list of jurisdictions where we hold regulatory obligations."));
@@ -19,9 +265,8 @@ export function RequestWorkspace({ value, onChange }: WorkspaceProps) {
     "Any new regulations expected to take effect within 12 months",
     "Status of existing data-residency commitments to enterprise customers",
   ]));
-  const [deadline, setDeadline] = useState(() => seed(value, "deadline", "2026-07-03"));
 
-  useLift({ to, subject, purpose, items, deadline }, onChange);
+  useLift({ to, subject, purpose, items }, onChange);
   const subjectOk = subject.length > 0 && subject.length <= 80;
   const itemsN = items.filter((i) => i.trim()).length;
 
@@ -63,11 +308,6 @@ export function RequestWorkspace({ value, onChange }: WorkspaceProps) {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="max-w-[220px]">
-        <SectionLabel>Proposed deadline</SectionLabel>
-        <WTextInput type="date" value={deadline} onChange={setDeadline} />
       </div>
 
       <ScriptedExchange title="Stakeholder response (pre-scripted)" turns={[

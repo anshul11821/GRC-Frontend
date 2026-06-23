@@ -244,6 +244,8 @@ export default function ActivityWorkspace() {
   const [briefShown, setBriefShown] = useState(true);
   // The criteria HUD stays closed until the user scrolls the deliverable into view (see observer below).
   const [criteriaHidden, setCriteriaHidden] = useState(true);
+  // Live reference docs a workspace pushes in (e.g. the incoming stakeholder reply after a request).
+  const [dynamicRefs, setDynamicRefs] = useState<TaskReference[]>([]);
   const deliverableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -253,6 +255,7 @@ export default function ActivityWorkspace() {
       .then((a) => {
         if (cancelled) return;
         setActivity(a);
+        setDynamicRefs([]); // clear any incoming-reply docs from a previously viewed activity
         if (a.draft) {
           setValues(a.draft.fields ?? {});
           setNotesVal(a.draft.notes ?? "");
@@ -278,6 +281,12 @@ export default function ActivityWorkspace() {
 
   const payload = (): ActivityPayload => ({ fields: values, notes: notesVal, attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
+  // Upsert a live reference by id, then surface it in the Reference-material panel.
+  const addReference = (ref: TaskReference) => {
+    setDynamicRefs((prev) => prev.some((r) => r.id === ref.id) ? prev.map((r) => (r.id === ref.id ? ref : r)) : [...prev, ref]);
+    setFocusRefId(ref.id);
+    setBriefOpen(true);
+  };
   const hasContent = notesVal.trim() !== "" || Object.entries(values).some(([, v]) =>
     Array.isArray(v) ? v.some((x) => (typeof x === "string" ? x.trim() : Object.values(x ?? {}).some(Boolean))) : String(v ?? "").trim() !== "",
   );
@@ -369,7 +378,7 @@ export default function ActivityWorkspace() {
   const formSpec = verb ? VERB_FORMS[verb.id] ?? GENERIC_FORM : GENERIC_FORM;
   // Reference panel = the activity's required reading + the verb workspace's scripted artefacts
   // (Scope Statement, Asset Register, …) opened via the workspace "Open" buttons. Deduped by id.
-  const references = [...(content?.references ?? []), ...(WORKSPACE_REFS[activity.verb.id] ?? [])]
+  const references = [...dynamicRefs, ...(content?.references ?? []), ...(WORKSPACE_REFS[activity.verb.id] ?? [])]
     .filter((r, i, a) => a.findIndex((x) => x.id === r.id) === i);
 
   // After a pass the backend marks the next step "current" — find it (from the refreshed tree) to advance.
@@ -490,7 +499,7 @@ export default function ActivityWorkspace() {
           </button>
         </div>
 
-        <VerbWorkspace verbId={activity.verb.id} value={values} onChange={setValues} openRef={openRef} />
+        <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} addReference={addReference} />
 
         <div className="mt-5">
           <div className="text-[12px] font-medium text-slate-700 tracking-tight mb-1.5">Additional notes</div>

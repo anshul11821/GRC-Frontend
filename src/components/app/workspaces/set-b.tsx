@@ -204,21 +204,21 @@ export function PrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
 }
 
 /* ============================ RECOMMEND ============================ */
-type Rec = { id: number; gap: string; action: string; owner: string; date: string; control: string; rationale: string };
+type Rec = { id: number; gap: string; action: string; owner: string; control: string; rationale: string };
 export function RecommendWorkspace({ value, onChange }: WorkspaceProps) {
   const [recs, setRecs] = useState<Rec[]>(() => seed(value, "recommendations", [
-    { id: 1, gap: "Missing per-record audit log on orders-db", action: "Enable RDS audit-log streaming to CloudTrail; 90 days hot, 1 year cold.", owner: "Data Platform Lead", date: "2026-07-15", control: "ISO 27001 A.8.15", rationale: "Closes the residual-risk gap from RR-2026.1. Audit logs are required for incident response and forensic review." },
-    { id: 2, gap: "Snowflake personal-data joinability", action: "Apply data-masking to PII columns; restrict joinable identifiers to a dedicated role.", owner: "Data Platform Lead", date: "2026-08-01", control: "ISO 27001 A.5.34", rationale: "Joinable hashed IDs effectively reconstitute PII; masking + role isolation aligns with Annex A PII guidance." },
-    { id: 3, gap: "Stripe sub-processor disclosure cadence", action: "", owner: "", date: "", control: "", rationale: "" },
+    { id: 1, gap: "Missing per-record audit log on orders-db", action: "Enable RDS audit-log streaming to CloudTrail; 90 days hot, 1 year cold.", owner: "Data Platform Lead", control: "ISO 27001 A.8.15", rationale: "Closes the residual-risk gap from RR-2026.1. Audit logs are required for incident response and forensic review." },
+    { id: 2, gap: "Snowflake personal-data joinability", action: "Apply data-masking to PII columns; restrict joinable identifiers to a dedicated role.", owner: "Data Platform Lead", control: "ISO 27001 A.5.34", rationale: "Joinable hashed IDs effectively reconstitute PII; masking + role isolation aligns with Annex A PII guidance." },
+    { id: 3, gap: "Stripe sub-processor disclosure cadence", action: "", owner: "", control: "", rationale: "" },
   ]));
   useLift({ recommendations: recs }, onChange);
   const set = (id: number, k: keyof Rec, v: string) => setRecs((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: v } : r)));
   const owners = ["Data Platform Lead", "Head of Platform", "Security Eng. Lead", "Compliance Lead", "DPO"];
-  const valid = (r: Rec) => r.action.length > 10 && r.owner && r.date && r.control && r.rationale.length >= 30;
+  const valid = (r: Rec) => r.action.length > 10 && r.owner && r.control && r.rationale.length >= 30;
 
   return (
     <div className="space-y-3">
-      <GivenNote>Propose a remediation for each open gap. Every recommendation must cite a control, name an owner role, and have a target date.</GivenNote>
+      <GivenNote>Propose a remediation for each open gap. Every recommendation must cite a control and name an owner role.</GivenNote>
       {recs.map((r) => {
         const ok = valid(r);
         return (
@@ -226,8 +226,7 @@ export function RecommendWorkspace({ value, onChange }: WorkspaceProps) {
             <div className="flex items-start gap-2.5 mb-3"><div className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 flex items-center justify-center text-[11px] font-mono font-semibold">G{r.id}</div><div><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500">Gap</div><div className="text-[13px] font-semibold text-slate-900 tracking-tight">{r.gap}</div></div>{ok && <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200/70"><Icon name="check" size={10} strokeWidth={3} />valid</span>}</div>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2"><L>Action *</L><textarea value={r.action} onChange={(e) => set(r.id, "action", e.target.value)} rows={2} placeholder="Concrete, action-specific…" className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px] resize-none" /></div>
-              <div><L>Owner role *</L><select value={r.owner} onChange={(e) => set(r.id, "owner", e.target.value)} className="w-full h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px]"><option value="">Pick a role…</option>{owners.map((o) => <option key={o}>{o}</option>)}</select></div>
-              <div><L>Target date *</L><input type="date" value={r.date} onChange={(e) => set(r.id, "date", e.target.value)} className="w-full h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px]" /></div>
+              <div className="col-span-2"><L>Owner role *</L><select value={r.owner} onChange={(e) => set(r.id, "owner", e.target.value)} className="w-full h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px]"><option value="">Pick a role…</option>{owners.map((o) => <option key={o}>{o}</option>)}</select></div>
               <div className="col-span-2"><L>Control reference *</L><input value={r.control} onChange={(e) => set(r.id, "control", e.target.value)} placeholder="ISO 27001 A.x.x or NIST SP 800-…" className="w-full h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px] font-mono" /></div>
               <div className="col-span-2"><div className="flex items-baseline justify-between"><L>Rationale *</L><span className={`text-[10.5px] tabular-nums ${r.rationale.length >= 30 ? "text-emerald-600" : "text-slate-400"}`}>{r.rationale.length} / 30</span></div><textarea value={r.rationale} onChange={(e) => set(r.id, "rationale", e.target.value)} rows={2} placeholder="Why this action closes the gap; reference the cited control." className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px] resize-none" /></div>
             </div>
