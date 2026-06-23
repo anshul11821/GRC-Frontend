@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,21 @@ import { STANDARD_BY_ID, buildTaskIndex } from "@/lib/standards";
 import { StandardLanding } from "@/components/app/standards";
 
 export default function StandardOverviewPage() {
+  return (
+    <Suspense fallback={<PageSkeleton cards={4} />}>
+      <StandardOverview />
+    </Suspense>
+  );
+}
+
+function StandardOverview() {
   const { standardId } = useParams<{ standardId: string }>();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  // When we arrived from an activity workspace, send the back link there instead of the index.
+  const backProps = from
+    ? { backHref: `/app/desk/${from}`, backLabel: "Back to activity" }
+    : {};
   const standard = STANDARD_BY_ID[standardId];
   const { data: learnings, loading } = useCachedQuery("learnings:grc101", () => learningsApi.get("grc101"));
   const taskByCode = useMemo(() => buildTaskIndex(learnings), [learnings]);
@@ -31,5 +45,5 @@ export default function StandardOverviewPage() {
 
   if (loading) return <PageSkeleton cards={4} />;
 
-  return <StandardLanding standard={standard} taskByCode={taskByCode} />;
+  return <StandardLanding standard={standard} taskByCode={taskByCode} {...backProps} />;
 }

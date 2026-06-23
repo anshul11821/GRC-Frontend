@@ -124,25 +124,22 @@ export function TaskRowCard({ code, task, standard }: { code: string; task?: Lea
 }
 
 /** The standard overview page body. */
-export function StandardLanding({ standard, taskByCode }: { standard: StandardMeta; taskByCode: Map<string, LearningTask> }) {
+export function StandardLanding({ standard, taskByCode, backHref = "/app/standards", backLabel = "All standards" }: { standard: StandardMeta; taskByCode: Map<string, LearningTask>; backHref?: string; backLabel?: string }) {
   const t = tone(standard.tone);
   const codes = tasksForStandard(standard.id);
   const tasks = codes.map((c) => taskByCode.get(c)).filter(Boolean) as LearningTask[];
   const activities = tasks.reduce((a, x) => a + (x.total || x.steps.length), 0);
-  const methods = new Set<string>();
-  tasks.forEach((x) => x.steps.forEach((s) => methods.add(s.verb)));
   const crossCodes = standard.crossCutting ? nistCrossRefTaskCodes() : [];
 
   const stats = [
     { label: "Tasks owned", value: codes.length || "—", hint: "Live in GRC 101" },
     { label: "Activities", value: activities || "—", hint: "Across all tasks" },
     { label: "Cross-refs", value: crossCodes.length || (standard.crossCutting ? "—" : "0"), hint: standard.crossCutting ? "Cross-cutting tasks" : "None" },
-    { label: "Methods used", value: methods.size || "—", hint: "Action verbs" },
   ];
 
   return (
     <div className="max-w-[920px] mx-auto px-6 py-6">
-      <Link href="/app/standards" className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-3"><Icon name="chevronLeft" size={14} /> All standards</Link>
+      <Link href={backHref} className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-3"><Icon name="chevronLeft" size={14} /> {backLabel}</Link>
 
       {/* Hero */}
       <div className={`rounded-3xl ring-1 ring-slate-200/70 overflow-hidden bg-gradient-to-br ${HERO[standard.tone]} via-white to-white`}>
@@ -163,7 +160,7 @@ export function StandardLanding({ standard, taskByCode }: { standard: StandardMe
               <p className={`mt-2 text-[12.5px] italic tracking-tight ${t.text}`}>{standard.tagline}</p>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {stats.map((m) => (
               <div key={m.label} className="rounded-xl bg-white ring-1 ring-slate-200/70 px-4 py-3">
                 <div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500">{m.label}</div>
@@ -225,19 +222,21 @@ export function StandardLanding({ standard, taskByCode }: { standard: StandardMe
 }
 
 /** The standard banner that rides above the activity workspace. */
-export function StandardBanner({ taskCode }: { taskCode: string }) {
+export function StandardBanner({ taskCode, activityId }: { taskCode: string; activityId?: string }) {
   const standard = standardForTaskCode(taskCode);
   if (!standard) return null;
   const t = tone(standard.tone);
   const nistRef = TASK_META[taskCode]?.nistCrossRef?.trim();
   const alsoNist = standard.id !== "nistcsf" && !!nistRef ? STANDARD_BY_ID["nistcsf"] : null;
+  // Carry the originating activity so the overview's back link returns to this workspace.
+  const fromQuery = activityId ? `?from=${encodeURIComponent(activityId)}` : "";
 
   return (
     <div className="mb-4 rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_2px_8px_-2px_rgba(15,23,42,0.04)]">
       <div className="flex items-stretch">
         <div className={`w-1.5 ${SOLID[standard.tone]}`} />
         <div className="flex-1 flex items-center gap-4 px-4 py-3 flex-wrap">
-          <Link href={`/app/standards/${standard.id}`} className="flex items-center gap-3 min-w-0 no-underline group">
+          <Link href={`/app/standards/${standard.id}${fromQuery}`} className="flex items-center gap-3 min-w-0 no-underline group">
             <span className={`shrink-0 w-10 h-10 rounded-xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none`}>
               <span className="text-[10px] font-mono font-semibold tracking-[0.06em]">{standard.short}</span>
               <span className="text-[8px] font-mono opacity-70 mt-0.5">STD</span>
@@ -255,12 +254,12 @@ export function StandardBanner({ taskCode }: { taskCode: string }) {
           {alsoNist && (
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               <span className="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400">Also applies</span>
-              <Link href={`/app/standards/${alsoNist.id}`} className={`inline-flex items-center gap-1 h-6 px-2 rounded-md ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring} text-[10.5px] font-medium no-underline hover:opacity-80`}>
+              <Link href={`/app/standards/${alsoNist.id}${fromQuery}`} className={`inline-flex items-center gap-1 h-6 px-2 rounded-md ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring} text-[10.5px] font-medium no-underline hover:opacity-80`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${tone(alsoNist.tone).dot}`} />{alsoNist.code}
               </Link>
             </div>
           )}
-          <Link href={`/app/standards/${standard.id}`} className={`ml-auto shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-medium tracking-tight ${t.text} hover:${t.bg} transition-colors no-underline`}>
+          <Link href={`/app/standards/${standard.id}${fromQuery}`} className={`ml-auto shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-medium tracking-tight ${t.text} hover:${t.bg} transition-colors no-underline`}>
             Standard overview <Icon name="arrowUpRight" size={12} />
           </Link>
         </div>

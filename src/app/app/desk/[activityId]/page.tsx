@@ -189,12 +189,12 @@ function AcceptanceChecklist({ criteria, spec, values, layer1, onClose }: {
             <Icon name="checkSquare" size={15} />
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="text-[12.5px] font-semibold tracking-tight text-slate-900 leading-tight">Acceptance criteria</h3>
+            <h3 className="text-[12.5px] font-semibold tracking-tight text-slate-900 leading-tight">Checklist</h3>
             <p className="text-[10.5px] text-slate-500 tracking-tight leading-tight mt-px">{graded ? "From your last submission" : "Live — updates as you type"}</p>
           </div>
           <span className={`shrink-0 text-[12.5px] font-semibold tabular-nums ${allMet ? "text-emerald-600" : "text-slate-600"}`}>{met}<span className="text-slate-400 mx-px">/</span>{criteria.length}</span>
           {onClose && (
-            <button onClick={onClose} aria-label="Hide acceptance criteria" className="focus-ring shrink-0 -mr-1 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-900/5 transition-colors cursor-pointer">
+            <button onClick={onClose} aria-label="Hide checklist" className="focus-ring shrink-0 -mr-1 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-900/5 transition-colors cursor-pointer">
               <Icon name="x" size={13} />
             </button>
           )}
@@ -389,7 +389,7 @@ export default function ActivityWorkspace() {
   return (
     <div className="max-w-[920px] mx-auto px-6 py-6">
       {/* standard banner — ties the step back to the framework it belongs to */}
-      <StandardBanner taskCode={activity.taskCode} />
+      <StandardBanner taskCode={activity.taskCode} activityId={activityId} />
 
       {/* header — description left, submission-feedback trigger on the right */}
       <div className="mb-5 flex items-start justify-between gap-4 flex-wrap">
@@ -557,7 +557,7 @@ export default function ActivityWorkspace() {
             aria-hidden={!criteriaHidden}
             className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
           >
-            <Icon name="checkSquare" size={14} className="text-indigo-600" /> Criteria
+            <Icon name="checkSquare" size={14} className="text-indigo-600" /> Checklist
           </button>
         </>
       )}
