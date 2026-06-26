@@ -63,7 +63,7 @@ function DashSidebar({
           <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-500 self-center mt-1" />
         </div>
       </div>
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 min-h-0 p-3 flex flex-col gap-0.5">
         {DASH_NAV.map((item) => {
           const active = isActive(item.href);
           return (
@@ -72,11 +72,11 @@ function DashSidebar({
               href={item.href}
               onClick={closeMobile}
               title={item.soon ? `${item.label} — coming soon` : item.label}
-              className={`focus-ring group w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
+              className={`focus-ring group w-full flex-1 min-h-0 max-h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
                 active ? "bg-indigo-50/80 text-indigo-700" : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
               }`}
             >
-              <Icon name={item.icon} size={17} strokeWidth={active ? 2 : 1.6} />
+              <Icon name={item.icon} size={17} strokeWidth={active ? 2 : 1.6} className="shrink-0" />
               <span className={`flex-1 flex items-center min-w-0 ${hideWhenCollapsed}`}>
                 <span className={`text-[13.5px] tracking-tight truncate ${active ? "font-medium" : ""}`}>{item.label}</span>
                 {item.badge && (

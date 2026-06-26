@@ -13,6 +13,7 @@ import {
 import { getIdentifyTask, type IdentifyTask } from "@/lib/identify-tasks";
 import { getXRefTask, type XRefTask } from "@/lib/xref-tasks";
 import { getApplyTask, type ApplyTask } from "@/lib/apply-tasks";
+import { getReviewTask, type ReviewTask } from "@/lib/review-tasks";
 
 const CLASS = ["Public", "Internal", "Confidential"];
 
@@ -20,9 +21,9 @@ const CLASS = ["Public", "Internal", "Confidential"];
 // Two modes: when the activity has an authored branching conversation, run the compose →
 // mood-route → multi-turn flow (ScriptedRequestFlow). Otherwise fall back to the legacy
 // single-shot composer so not-yet-authored Request activities keep working.
-export function RequestWorkspace({ value, onChange, taskCode, activityCode, addReference }: WorkspaceProps) {
+export function RequestWorkspace({ value, onChange, taskCode, activityCode }: WorkspaceProps) {
   const conv = useMemo(() => getRequestConversation(taskCode, activityCode), [taskCode, activityCode]);
-  if (conv) return <ScriptedRequestFlow conv={conv} value={value} onChange={onChange} addReference={addReference} />;
+  if (conv) return <ScriptedRequestFlow conv={conv} value={value} onChange={onChange} />;
   return <LegacyRequestWorkspace value={value} onChange={onChange} />;
 }
 
@@ -45,7 +46,7 @@ function Bubble({ who, initials, text }: { who: "you" | "stakeholder"; initials:
   );
 }
 
-function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: RequestConversation } & Pick<WorkspaceProps, "value" | "onChange" | "addReference">) {
+function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversation } & Pick<WorkspaceProps, "value" | "onChange">) {
   const [to, setTo] = useState(() => seed(value, "to", conv.recipient));
   const [subject, setSubject] = useState(() => seed(value, "subject", conv.subject));
   const [purpose, setPurpose] = useState(() => seed(value, "purpose", conv.purpose));
@@ -74,6 +75,7 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
   const [correctPicks, setCorrectPicks] = useState<ConvOption[]>(() => restored?.picks ?? []);
   const [terminal, setTerminal] = useState<"met" | "miss" | null>(() => restored ? "met" : null);
   const [missOption, setMissOption] = useState<ConvOption | null>(null);
+  const [tried, setTried] = useState(false); // a send attempt with an incorrect item selection
 
   // The picker mixes correct items with plausible-but-wrong distractors, in a stable order.
   const options = useMemo(
@@ -85,8 +87,13 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
   const toggle = (s: string) => setItems(selected(s) ? items.filter((i) => i !== s) : [...items, s]);
 
   const subjectOk = subject.length > 0 && subject.length <= 80;
-  const itemsN = items.filter((i) => i.trim()).length;
+  const sel = items.filter((i) => i.trim());
+  const itemsN = sel.length;
   const toOk = to.trim().length > 0;
+  // Item selection must be exactly right before the conversation can start.
+  const wrongSelected = conv.wrongItems.filter((w) => sel.includes(w));
+  const missed = conv.suggestedItems.filter((c) => !sel.includes(c));
+  const itemsCorrect = wrongSelected.length === 0 && missed.length === 0;
   const canSend = toOk && subjectOk && itemsN >= 3;
 
   const thread = routed ? conv.threads[routed.mood] : null;
@@ -102,8 +109,9 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
 
   const send = () => {
     if (!canSend) return;
-    const sent = items.filter((i) => i.trim());
-    setRouted(routeMood({ subject, purpose, items: sent, correctItems: conv.suggestedItems, wrongItems: conv.wrongItems }));
+    if (!itemsCorrect) { setTried(true); return; } // force a correct selection before continuing
+    setTried(false);
+    setRouted(routeMood({ subject, purpose, items: sel, correctItems: conv.suggestedItems, wrongItems: conv.wrongItems }));
     setCorrectPicks([]);
     setTerminal(null);
     setMissOption(null);
@@ -121,18 +129,7 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
     if (!o.correct) { setMissOption(o); setTerminal("miss"); return; }
     const next = [...correctPicks, o];
     setCorrectPicks(next);
-    if (roundIdx >= thread.rounds.length - 1) {
-      setTerminal("met");
-      // Save the gathered reply as a document in Reference material — the input the next step uses.
-      const reply = [thread.opener, ...next.map((_, i) => thread.rounds[i].stakeholderNext).filter((x): x is string => !!x)];
-      addReference?.({
-        id: "request-captured-reply",
-        title: `Captured · reply from ${to}`,
-        kind: "Gathered evidence (feeds next step)",
-        summary: "Information gathered from this request — input for the next step of the task.",
-        body: `## Reply from ${to}\n\n${reply.join("\n\n")}\n\n---\n${thread.metEnd}`,
-      });
-    }
+    if (roundIdx >= thread.rounds.length - 1) setTerminal("met");
   };
 
   // ── Conversation view ──
@@ -239,7 +236,7 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
             <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
               <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Objective met</div>
               <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">{thread.metEnd}</p>
-              <p className="text-[12px] text-emerald-900/70 leading-relaxed mt-2 flex items-start gap-1.5"><Icon name="arrowRight" size={13} className="shrink-0 mt-px" /> Saved to this step&apos;s <strong className="font-medium">Reference material</strong> and carried into the next step.</p>
+              <p className="text-[12px] text-emerald-900/70 leading-relaxed mt-2 flex items-start gap-1.5"><Icon name="arrowRight" size={13} className="shrink-0 mt-px" /> Captured to this step and carried into the next step.</p>
             </div>
           </>
         )}
@@ -299,9 +296,28 @@ function ScriptedRequestFlow({ conv, value, onChange, addReference }: { conv: Re
         <button onClick={() => setItems([...items, ""])} className="mt-2 h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add your own item</button>
       </div>
 
+      {/* Re-select prompt: a send attempt with a wrong/missing selection — must be fixed to continue */}
+      {tried && !itemsCorrect && (
+        <div className="rounded-2xl bg-rose-50 ring-1 ring-rose-200 p-4 text-[12px] space-y-2">
+          <div className="flex items-center gap-1.5 font-semibold text-rose-800"><Icon name="x" size={13} /> Fix your selection before sending</div>
+          {wrongSelected.length > 0 && (
+            <div>
+              <div className="font-medium text-rose-700">Remove these — they don&apos;t belong in this request:</div>
+              <ul className="mt-1 ml-5 list-disc space-y-0.5 text-rose-900/80">{wrongSelected.map((w) => <li key={w}>{w}</li>)}</ul>
+            </div>
+          )}
+          {missed.length > 0 && (
+            <div>
+              <div className="font-medium text-amber-700">Add these — they&apos;re needed:</div>
+              <ul className="mt-1 ml-5 list-disc space-y-0.5 text-amber-900/80">{missed.map((m) => <li key={m}>{m}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-3 pt-1">
         <p className="text-[11px] text-slate-400 tracking-tight">
-          {canSend ? "Ready to send — the stakeholder's response depends on how scoped your request is." : "Complete the request: named recipient · subject ≤ 80 · ≥ 3 items."}
+          {canSend ? "Select the right items, then send — the stakeholder won't engage with a wrong or incomplete request." : "Complete the request: named recipient · subject ≤ 80 · ≥ 3 items."}
         </p>
         <button onClick={send} disabled={!canSend}
           className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0">
@@ -385,6 +401,7 @@ export function ConductWorkspace({ value, onChange }: WorkspaceProps) {
     { q: "How is sub-processor disclosure handled?", a: "Contractually required, but we don't have a routine cadence to re-check the published list." },
   ];
   const stakeholder = "Compliance Lead";
+  const [activeQ, setActiveQ] = useState(0);
   const [findings, setFindings] = useState(() => seed(value, "findings", ""));
   useLift({ stakeholder, questionsAnswered: `${script.length} / ${script.length}`, findings }, onChange);
 
@@ -393,17 +410,38 @@ export function ConductWorkspace({ value, onChange }: WorkspaceProps) {
       <GivenNote>The structured walkthrough with the <strong>{stakeholder}</strong> has been run — the transcript below is pre-scripted. Read it, then capture your key findings.</GivenNote>
 
       <div>
-        <SectionLabel hint={`${script.length} / ${script.length} answered`}>Walkthrough transcript · {stakeholder}</SectionLabel>
-        <div className="rounded-2xl ring-1 ring-slate-200/70 bg-white divide-y divide-slate-100">
-          {script.map((s, i) => (
-            <div key={i} className="px-4 py-3">
-              <div className="flex items-start gap-2.5">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-semibold mt-0.5"><Icon name="check" size={11} strokeWidth={3} /></span>
-                <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{s.q}</div>
+        <SectionLabel hint={`${script.length} / ${script.length} answered`}>Walkthrough · {stakeholder}</SectionLabel>
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden grid grid-cols-1 sm:grid-cols-[240px_1fr]">
+          {/* Interview guide */}
+          <div className="border-b sm:border-b-0 sm:border-r border-slate-100 bg-slate-50/40">
+            <div className="px-4 py-2.5 border-b border-slate-100 text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500">Interview Guide</div>
+            {script.map((s, i) => (
+              <button key={i} onClick={() => setActiveQ(i)} className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left border-b border-slate-100 last:border-0 transition-colors ${activeQ === i ? "bg-white" : "hover:bg-white/60"}`}>
+                <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mt-0.5"><Icon name="check" size={11} strokeWidth={3} /></span>
+                <span className={`text-[12px] leading-snug tracking-tight ${activeQ === i ? "text-slate-900 font-medium" : "text-slate-600"}`}>{s.q}</span>
+              </button>
+            ))}
+          </div>
+          {/* Dialogue (read-only — scripted) */}
+          <div className="flex flex-col">
+            <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10.5px] font-semibold">CL</div>
+              <div>
+                <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{stakeholder}</div>
+                <div className="text-[10.5px] text-slate-500 font-mono">structured walkthrough · pre-scripted</div>
               </div>
-              <p className="mt-1.5 ml-7.5 pl-0 text-[12.5px] text-slate-600 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{s.a}</p>
             </div>
-          ))}
+            <div className="px-5 py-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">AS</div>
+                <div className="rounded-2xl bg-indigo-50 px-3.5 py-2 text-[12.5px] text-slate-800 tracking-tight max-w-[85%]">{script[activeQ].q}</div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">CL</div>
+                <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 px-3.5 py-2 text-[12.5px] text-slate-800 tracking-tight max-w-[85%] leading-relaxed">{script[activeQ].a}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -980,7 +1018,98 @@ function LegacyIdentifyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ REVIEW ============================ */
-export function ReviewWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+// Data-driven Review: mentor quality-gate. Mentee confirms prior feedback addressed + writes a cover
+// note (Layer 1, the submit gate); submitting for review reveals the 5-dim rubric, outcome, coaching.
+export function ReviewWorkspace({ value, onChange, openRef, taskCode, activityCode }: WorkspaceProps) {
+  const task = useMemo(() => getReviewTask(taskCode, activityCode), [taskCode, activityCode]);
+  if (task) return <ScriptedReviewFlow task={task} value={value} onChange={onChange} />;
+  return <LegacyReviewWorkspace value={value} onChange={onChange} openRef={openRef} />;
+}
+
+function ScriptedReviewFlow({ task, value, onChange }: { task: ReviewTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const [cover, setCover] = useState(() => seed(value, "coverNote", ""));
+  const [addressed, setAddressed] = useState<Record<number, boolean>>(() => seed(value, "addressed", {} as Record<number, boolean>));
+  const [submitted, setSubmitted] = useState(() => seed<boolean>(value, "objectiveMet", false));
+
+  const allAddressed = task.feedback.every((_, i) => addressed[i]);
+  const objectiveMet = cover.trim().length > 0 && allAddressed;
+  useLift({ coverNote: cover, addressed, objectiveMet, reviewOutcome: task.outcome }, onChange);
+
+  const signoff = task.outcome.toUpperCase().includes("SIGN");
+  const dimTone = (s: string): Tone => { const n = Number(s); return n >= 3 ? "emerald" : n === 2 ? "amber" : "rose"; };
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Submit the near-final artefact to your mentor for review. Confirm every prior-feedback item is addressed and write a cover note summarising your changes — then submit for review.</GivenNote>
+
+      <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4">
+        <div className="flex items-center gap-2.5">
+          <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0"><Icon name="file" size={14} /></span>
+          <div className="min-w-0">
+            <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{task.artefact}</div>
+            <div className="text-[10.5px] text-slate-500">Reviewer: {task.reviewer} · Attempt {task.attempt}</div>
+          </div>
+        </div>
+      </div>
+
+      {task.feedback.length > 0 ? (
+        <div>
+          <SectionLabel hint={`${task.feedback.filter((_, i) => addressed[i]).length} / ${task.feedback.length}`}>Prior feedback — confirm addressed</SectionLabel>
+          <div className="space-y-2">
+            {task.feedback.map((f, i) => (
+              <button key={i} onClick={() => setAddressed((a) => ({ ...a, [i]: !a[i] }))} className="w-full flex items-start gap-2.5 text-left group">
+                <span className={`mt-0.5 w-4 h-4 shrink-0 rounded flex items-center justify-center transition-all ${addressed[i] ? "bg-emerald-500 text-white" : "ring-2 ring-slate-300 group-hover:ring-indigo-300"}`}>{addressed[i] && <Icon name="check" size={11} strokeWidth={3} />}</span>
+                <span className={`text-[12.5px] leading-snug tracking-tight ${addressed[i] ? "text-slate-500 line-through" : "text-slate-700"}`}>{f}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11.5px] text-slate-400 italic px-1">First submission — no prior feedback to address.</p>
+      )}
+
+      <div>
+        <SectionLabel hint={`${cover.length} chars`}>Cover note <span className="text-rose-500">*</span></SectionLabel>
+        <WTextArea value={cover} onChange={setCover} rows={3} placeholder={task.coverExample} />
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] text-slate-400 tracking-tight">{objectiveMet ? "Ready — submit for the mentor's review." : "Write a cover note and confirm all prior feedback to submit."}</p>
+        <button onClick={() => setSubmitted(true)} disabled={!objectiveMet} className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"><Icon name="send" size={14} />Submit for review</button>
+      </div>
+
+      {submitted && objectiveMet && (
+        <div className="space-y-3">
+          <div>
+            <SectionLabel hint={`avg ${task.aggregate} · lowest ${task.lowest}`}>Mentor rubric — all five dimensions</SectionLabel>
+            <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-hidden">
+              {task.rubric.map((d) => (
+                <div key={d.dim} className="px-4 py-2.5 border-b border-slate-50 last:border-0 flex items-start gap-3">
+                  <span className={`mt-0.5 w-6 h-6 rounded-md text-[11px] font-semibold flex items-center justify-center shrink-0 ring-1 ${SOFT[dimTone(d.score)]}`}>{d.score}</span>
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-medium text-slate-800">{d.dim}</div>
+                    <div className="text-[11.5px] text-slate-500 leading-snug">{d.anchor}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`rounded-2xl ring-1 p-4 ${signoff ? "bg-emerald-50 ring-emerald-200" : "bg-amber-50 ring-amber-200"}`}>
+            <div className={`flex items-center gap-2 text-[12px] font-semibold mb-1 ${signoff ? "text-emerald-800" : "text-amber-800"}`}>
+              <Icon name={signoff ? "check" : "refresh"} size={14} /> {task.outcome}
+            </div>
+            <p className={`text-[12.5px] leading-relaxed ${signoff ? "text-emerald-900/80" : "text-amber-900/80"}`}><strong>RA-MENTOR:</strong> {task.coaching}</p>
+            {signoff && <p className="text-[12px] text-emerald-900/70 mt-2">{task.feedsNext}</p>}
+            {!signoff && <p className="text-[12px] text-amber-900/70 mt-2">In the live programme this loops back for revision (attempt +1, max 3). Worked demo — the gate is met, so you can still submit.</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LegacyReviewWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [fb, setFb] = useState(() => seed(value, "priorFeedback", [
     { id: 1, text: "Scope statement needs a line on excluded systems with rationale.", done: true },
     { id: 2, text: "Standards Alignment: cite ISO §4.3 explicitly.", done: true },

@@ -53,7 +53,11 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <DeskLearningsProvider>
-      <div className="flex h-full min-h-0">
+      {/* Definite height so the tree rail and the workspace column each own their scroll, instead
+          of a fragile h-full % collapsing to auto and letting the whole desk scroll as one in
+          AppShell's <main>. 68px = AppShell's DashTopBar height. ponytail: hardcoded topbar height,
+          turn into a CSS var if the topbar ever becomes dynamic. */}
+      <div className="flex h-[calc(100dvh-68px)] min-h-0">
         {/* Drawer backdrop (mobile only). */}
         {treeOpen && (
           <div

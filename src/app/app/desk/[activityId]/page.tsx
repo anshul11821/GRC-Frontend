@@ -244,8 +244,6 @@ export default function ActivityWorkspace() {
   const [briefShown, setBriefShown] = useState(true);
   // The criteria HUD stays closed until the user scrolls the deliverable into view (see observer below).
   const [criteriaHidden, setCriteriaHidden] = useState(true);
-  // Live docs a workspace pushes in (e.g. the reply captured after a completed request).
-  const [dynamicRefs, setDynamicRefs] = useState<TaskReference[]>([]);
   // When a passed activity is reopened, lets the user choose to edit and submit again.
   const [resubmit, setResubmit] = useState(false);
   const deliverableRef = useRef<HTMLDivElement>(null);
@@ -257,7 +255,6 @@ export default function ActivityWorkspace() {
         if (cancelled) return;
         setActivity(a);
         setHistory(h);
-        setDynamicRefs([]); // clear captured docs from a previously viewed activity
         setResubmit(false);
         // Restore from the saved draft, or — for an already-submitted task — the latest submission,
         // so a completed activity opens already filled in.
@@ -287,12 +284,6 @@ export default function ActivityWorkspace() {
 
   const payload = (): ActivityPayload => ({ fields: values, notes: notesVal, attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
-  // Upsert a captured doc by id and surface it in the Reference-material panel so the user sees it.
-  const addReference = (ref: TaskReference) => {
-    setDynamicRefs((prev) => prev.some((r) => r.id === ref.id) ? prev.map((r) => (r.id === ref.id ? ref : r)) : [...prev, ref]);
-    setFocusRefId(ref.id);
-    setBriefOpen(true);
-  };
   const hasContent = notesVal.trim() !== "" || Object.entries(values).some(([, v]) =>
     Array.isArray(v) ? v.some((x) => (typeof x === "string" ? x.trim() : Object.values(x ?? {}).some(Boolean))) : String(v ?? "").trim() !== "",
   );
@@ -389,7 +380,7 @@ export default function ActivityWorkspace() {
   const formSpec = verb ? VERB_FORMS[verb.id] ?? GENERIC_FORM : GENERIC_FORM;
   // Reference panel = the activity's required reading + the verb workspace's scripted artefacts
   // (Scope Statement, Asset Register, …) opened via the workspace "Open" buttons. Deduped by id.
-  const references = [...dynamicRefs, ...(content?.references ?? []), ...(WORKSPACE_REFS[activity.verb.id] ?? [])]
+  const references = [...(content?.references ?? []), ...(WORKSPACE_REFS[activity.verb.id] ?? [])]
     .filter((r, i, a) => a.findIndex((x) => x.id === r.id) === i);
 
   // After a pass the backend marks the next step "current" — find it (from the refreshed tree) to advance.
@@ -510,7 +501,7 @@ export default function ActivityWorkspace() {
           </button>
         </div>
 
-        <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} addReference={addReference} />
+        <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
 
         <div className="mt-5">
           <div className="text-[12px] font-medium text-slate-700 tracking-tight mb-1.5">Additional notes</div>

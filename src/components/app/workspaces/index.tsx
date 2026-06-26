@@ -59,7 +59,7 @@ function GenericWorkspace({ value, onChange }: WorkspaceProps) {
   );
 }
 
-export function VerbWorkspace({ verbId, taskCode, activityCode, value, onChange, openRef, addReference }: {
+export function VerbWorkspace({ verbId, taskCode, activityCode, value, onChange, openRef }: {
   verbId: string; taskCode?: string; activityCode?: string;
 } & WorkspaceProps) {
   // An authored worked-task takes precedence over the catalog verb tag. This covers steps whose
@@ -69,5 +69,5 @@ export function VerbWorkspace({ verbId, taskCode, activityCode, value, onChange,
     ? VERB_WORKSPACES.identify
     : (VERB_WORKSPACES[verbId] ?? GenericWorkspace);
   // `key` resets internal workspace state when navigating between activities (incl. same verb).
-  return <Component key={`${verbId}/${taskCode ?? ""}/${activityCode ?? ""}`} taskCode={taskCode} activityCode={activityCode} value={value} onChange={onChange} openRef={openRef} addReference={addReference} />;
+  return <Component key={`${verbId}/${taskCode ?? ""}/${activityCode ?? ""}`} taskCode={taskCode} activityCode={activityCode} value={value} onChange={onChange} openRef={openRef} />;
 }

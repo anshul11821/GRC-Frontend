@@ -9,7 +9,6 @@
 
 import { useEffect } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
-import type { TaskReference } from "@/lib/taskmeta";
 
 /** Every workspace is a controlled component over the graded `fields` object. */
 export interface WorkspaceProps {
@@ -23,8 +22,6 @@ export interface WorkspaceProps {
   taskCode?: string;
   /** This activity's code (e.g. "1.1"), used to select per-activity scripted content. */
   activityCode?: string;
-  /** Add (or upsert by id) a live document into the page's Reference-material panel. */
-  addReference?: (ref: TaskReference) => void;
 }
 
 /**
