@@ -14,6 +14,9 @@ export interface TaskReference {
   /** Full content shown in the drawer. Plain text; lines starting with "## " are headings,
    *  "- " are bullets, "| " rows render as a simple table, blank lines separate paragraphs. */
   body: string;
+  /** Which panel section this belongs to. "task" = data carried forward from a step you already
+   *  completed (e.g. requested in a Request verb, filled in a Record step). Absent = documentation. */
+  group?: "documentation" | "task";
 }
 
 export interface TaskMeta {

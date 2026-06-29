@@ -22,7 +22,7 @@ export const ACTIVITY_CONTENT: Record<string, ActivityContent> = {
       {
         id: "aa001-1-1-what",
         title: "What IT/Operations Can Give You",
-        kind: "Source document",
+        kind: "Source document", group: "task",
         summary: "What to actually ask for — and what they'll hand back.",
         body: `## Who to ask
 The IT/Operations Lead at CloudTech maintains the day-to-day systems list.
@@ -73,7 +73,7 @@ The marketing email-list spreadsheet and the old database backup on an engineer'
       {
         id: "aa001-1-3-intake",
         title: "CloudTech — Asset Intake Notes",
-        kind: "Source document",
+        kind: "Source document", group: "task",
         summary: "The assets to record (from IT + the interviews).",
         body: `## Assets gathered so far
 - Customer accounts database (Postgres, AWS eu-west-1): names, emails, hashed passwords, billing addresses. Owner: Platform Engineering Lead.
@@ -142,7 +142,7 @@ Support tickets feel "Internal" but hold personal-data attachments → Confident
       {
         id: "aa001-1-5-diagram",
         title: "CloudTech — Network Diagram (annotated)",
-        kind: "Source document",
+        kind: "Source document", group: "task",
         summary: "Systems on the network — some are missing from your register.",
         body: `## What the diagram shows
 - App servers → Customer accounts DB (in your register ✓).
@@ -240,7 +240,7 @@ Record the decision (approved / approved with conditions), any conditions, and t
     ],
     references: [
       {
-        id: "crm002-8-1", title: "CloudTech — Candidate Processes", kind: "Source document",
+        id: "crm002-8-1", title: "CloudTech — Candidate Processes", kind: "Source document", group: "task",
         summary: "The processes available and the risk each carries.",
         body: `## Pick five from these
 - User onboarding — creates accounts, stores personal data, sends credentials.
@@ -307,7 +307,7 @@ A control is applicable only if the process creates the risk it addresses.`,
     ],
     references: [
       {
-        id: "crm002-8-4", title: "CloudTech — Implementation Snapshot", kind: "Source document",
+        id: "crm002-8-4", title: "CloudTech — Implementation Snapshot", kind: "Source document", group: "task",
         summary: "What's actually in place — record from this.",
         body: `## Current state
 - A.8.2 Privileged access — partial; admin list exists, no quarterly review. Owner: Platform Eng Lead.
@@ -410,7 +410,7 @@ Scope + your top 2–3 gaps + open questions. Keep it to a few lines so the ment
   "CRM-003/9.1": {
     objective: "You will read and annotate a sample SOC 2 Type II report so you understand what a SOC 2 control and audit test actually look like before mapping CloudTech to them.",
     whatToDo: ["Read the sample report and annotate the control descriptions and test results.", "Note the structure: criterion, control, test performed, result."],
-    references: [{ id: "crm003-9-1", title: "Sample SOC 2 Report — what to look for", kind: "Source document", summary: "How a SOC 2 report is structured.", body: `## A SOC 2 Type II report contains
+    references: [{ id: "crm003-9-1", title: "Sample SOC 2 Report — what to look for", kind: "Source document", group: "task", summary: "How a SOC 2 report is structured.", body: `## A SOC 2 Type II report contains
 - The Trust Services Criteria (here: Security / Common Criteria).
 - For each: the service organisation's control, the auditor's test, and the result (no exceptions / exceptions noted).
 
@@ -429,7 +429,7 @@ CC6 and CC8 overlap directly with your ISO work (access control, change manageme
   "CRM-003/9.3": {
     objective: "You will document, for each criterion, an example audit test, the evidence expected, and which CloudTech control or policy addresses it.",
     whatToDo: ["For each criterion record: example test, expected evidence, mapped CloudTech control.", "Be specific about evidence (the actual artefact an auditor would request)."],
-    references: [{ id: "crm003-9-3", title: "CloudTech controls to map", kind: "Source document", summary: "What CloudTech has, to map against each criterion.", body: `## CloudTech controls
+    references: [{ id: "crm003-9-3", title: "CloudTech controls to map", kind: "Source document", group: "task", summary: "What CloudTech has, to map against each criterion.", body: `## CloudTech controls
 - MFA on admin + AWS; SSO for staff (CC6).
 - Joiner/leaver process, but deprovisioning manual & delayed (CC6 partial).
 - Code review before merge; automated deploys, no approval record (CC8 partial).
@@ -499,7 +499,7 @@ Audience is engineers, not auditors. Concrete actions beat criteria numbers.` }]
   "SPA-001/1": {
     objective: "You will consolidate the findings from the gap analysis, risk register and maturity assessment into one place, so the roadmap is built from real evidence.",
     whatToDo: ["Pull the open gaps and risks from the three prior deliverables.", "De-duplicate overlapping items."],
-    references: [{ id: "spa001-1", title: "CloudTech — Consolidated Findings", kind: "Source document", summary: "The items your roadmap schedules.", body: `## Rolled up from earlier work
+    references: [{ id: "spa001-1", title: "CloudTech — Consolidated Findings", kind: "Source document", group: "task", summary: "The items your roadmap schedules.", body: `## Rolled up from earlier work
 - CIS IG1 at 41%; gaps: MFA everywhere, asset inventory, backup testing.
 - Top risks: delayed deprovisioning (High), untested backups (High), informal vendor reviews (Medium).
 - Maturity: Identify/Protect Tier 1; Detect/Respond weak.
@@ -581,7 +581,7 @@ Record endorsement (full / with conditions) and date.` }],
   "TV-001/1": {
     objective: "You will obtain the current list of active system accounts from the system owner — one side of the reconciliation.",
     whatToDo: ["Request the account extract (accounts, roles, last-login dates) from a named owner.", "Specify the format and a deadline."],
-    references: [{ id: "tv001-1", title: "System Account Extract", kind: "Source document", summary: "What you're requesting (and will receive).", body: `## You will receive
+    references: [{ id: "tv001-1", title: "System Account Extract", kind: "Source document", group: "task", summary: "What you're requesting (and will receive).", body: `## You will receive
 | Account | Role | Last login |
 | a.shah | Platform Admin | 2 days ago |
 | r.kapoor | Developer | 96 days ago |
@@ -596,7 +596,7 @@ You need last-login dates to spot dormant accounts — ask for them explicitly.`
   "TV-001/2": {
     objective: "You will obtain the current HR list of active staff — the other side of the reconciliation.",
     whatToDo: ["Request the active-staff list (names, start dates, department) from HR.", "Make sure it shows who has left."],
-    references: [{ id: "tv001-2", title: "HR Active-Staff List", kind: "Source document", summary: "The authoritative list of who actually works here.", body: `## HR active staff
+    references: [{ id: "tv001-2", title: "HR Active-Staff List", kind: "Source document", group: "task", summary: "The authoritative list of who actually works here.", body: `## HR active staff
 - a.shah — Platform Engineering (active)
 - j.lee — Finance (active)
 - m.osei — Engineering (active)
@@ -670,7 +670,7 @@ Frame the leaver accounts as the urgent item — an ex-employee with live access
   "CA-002/1": {
     objective: "You will gather the outputs from all completed CloudTech tasks into one data pack, so the report is built from facts not impressions.",
     whatToDo: ["Collect the headline numbers from each prior deliverable.", "Note the source of each figure."],
-    references: [{ id: "ca002-1", title: "CloudTech — Prior Task Outputs", kind: "Source document", summary: "The numbers your report draws on.", body: `## Available data
+    references: [{ id: "ca002-1", title: "CloudTech — Prior Task Outputs", kind: "Source document", group: "task", summary: "The numbers your report draws on.", body: `## Available data
 - CIS IG1: 41% → 58% after quick wins.
 - Risk register: 14 open; 2 High (untested backups, delayed deprovisioning).
 - Access review: 2 orphaned accounts disabled, 1 excess-privilege fixed.
@@ -749,7 +749,7 @@ Five messages, not fifty. If it doesn't change a decision, it doesn't go on the 
   "RR-001/1": {
     objective: "You will study the incident procedure and the scenario brief before the exercise, so you know what 'good' looks like to observe against.",
     whatToDo: ["Read the IR procedure (DD-001) and the scenario.", "Note the required timings and escalation steps."],
-    references: [{ id: "rr001-1", title: "Scenario + procedure", kind: "Source document", summary: "What you're observing against.", body: `## Scenario: ransomware on the build server
+    references: [{ id: "rr001-1", title: "Scenario + procedure", kind: "Source document", group: "task", summary: "What you're observing against.", body: `## Scenario: ransomware on the build server
 09:14 — CI/CD server encrypted, deploys blocked, ransom note also on a shared drive.
 
 ## Procedure requires
@@ -834,7 +834,7 @@ Post-incident review evidence (CIS 17.8 / ISO A.5.27) shows the organisation lea
   "BCRP-002/1": {
     objective: "You will agree the one system the DR checklist will cover, with the IT Manager and mentor.",
     whatToDo: ["Pick the most business-critical system in scope.", "Confirm why it's the priority."],
-    references: [{ id: "bcrp002-1", title: "System selection", kind: "Source document", summary: "The candidate and why.", body: `## Recommended: Customer accounts database
+    references: [{ id: "bcrp002-1", title: "System selection", kind: "Source document", group: "task", summary: "The candidate and why.", body: `## Recommended: Customer accounts database
 Postgres, AWS eu-west-1 — the most business-critical store; a customer audit is coming. Its recovery objectives (BCRP-001): RTO 4h, RPO 1h.
 
 ## Rule
@@ -843,7 +843,7 @@ Pick the system whose loss hurts most — recovery effort follows business impac
   "BCRP-002/2": {
     objective: "You will review the system's existing backup configuration to ground the checklist in reality.",
     whatToDo: ["Capture the backup schedule, media, retention, and off-site copy.", "Note what's never been tested."],
-    references: [{ id: "bcrp002-2", title: "Backup configuration", kind: "Source document", summary: "The real config your checklist must match.", body: `## Customer accounts DB
+    references: [{ id: "bcrp002-2", title: "Backup configuration", kind: "Source document", group: "task", summary: "The real config your checklist must match.", body: `## Customer accounts DB
 - Nightly snapshot 02:00 UTC, retained 14 days.
 - Cross-region copy to eu-central-1 (off-site).
 - Point-in-time recovery (5-min granularity) — this is what makes RPO 1h achievable.
@@ -916,7 +916,7 @@ Store the checklist in the DR documentation library with a review date.` }],
   "TPRM-001/1": {
     objective: "You will gather a complete list of CloudTech's vendors from every source, so no third party is missed.",
     whatToDo: ["Pull vendor names from contracts, accounts payable, IT procurement, and dept heads.", "Cross-check sources — shadow vendors hide between them."],
-    references: [{ id: "tprm001-1", title: "Where vendors hide", kind: "Source document", summary: "The sources to pull from.", body: `## Sources
+    references: [{ id: "tprm001-1", title: "Where vendors hide", kind: "Source document", group: "task", summary: "The sources to pull from.", body: `## Sources
 - Contract management system (the official ones).
 - Accounts payable (anyone you pay — catches the freelancers).
 - IT procurement / SaaS subscriptions (Mailchimp, Slack, etc.).
@@ -997,7 +997,7 @@ Lead the summary with the offshore contractor + the DPA gaps — those are the a
   "PE-001/1": {
     objective: "You will meet the Programme Manager to agree the scope of the compliance initiative before writing anything.",
     whatToDo: ["Confirm the goal, deadline, budget, and what's in/out of scope.", "Write down what was agreed."],
-    references: [{ id: "pe001-1", title: "Initiative brief", kind: "Source document", summary: "The scope facts from the sponsor.", body: `## From the CTO (sponsor)
+    references: [{ id: "pe001-1", title: "Initiative brief", kind: "Source document", group: "task", summary: "The scope facts from the sponsor.", body: `## From the CTO (sponsor)
 - Goal: SOC 2 readiness in 9 months to win an enterprise customer.
 - Budget: £60k; one part-time security hire.
 - In scope: the customer platform + cloud infra.
@@ -1071,7 +1071,7 @@ The sponsor formally approves scope, budget, and timeline. Record the decision a
   "QA-002/1": {
     objective: "You will select three controls to build test methodologies for, with the auditor mentor.",
     whatToDo: ["Pick three controls of different types from the ISO matrix.", "Confirm what 'working' means for each."],
-    references: [{ id: "qa002-1", title: "Three controls", kind: "Source document", summary: "The controls and what 'working' looks like.", body: `## Selected
+    references: [{ id: "qa002-1", title: "Three controls", kind: "Source document", group: "task", summary: "The controls and what 'working' looks like.", body: `## Selected
 1. A.8.2 Privileged access — only approved admins, reviewed quarterly.
 2. A.8.13 Backup — backups run + periodically restore-tested.
 3. A.8.32 Change management — production changes reviewed and approved.
@@ -1153,7 +1153,7 @@ Add the methodology sheets + overview to the QA library, with a version and revi
   "AA-003/3.1": {
     objective: "You will choose one data-heavy LearnTech process to map, with the mentor — ideally one involving children's data, where GDPR risk is highest.",
     whatToDo: ["Pick a process that processes a lot of personal data.", "Confirm why it's the right one to assess."],
-    references: [{ id: "aa003-3-1", title: "Candidate processes", kind: "Source document", summary: "Which process to pick and why.", body: `## Recommended: student enrolment
+    references: [{ id: "aa003-3-1", title: "Candidate processes", kind: "Source document", group: "task", summary: "Which process to pick and why.", body: `## Recommended: student enrolment
 Schools sign up, teachers create student accounts, students (many under 16) use the platform. It involves children's data, behavioural analytics, and a US analytics transfer — the highest-risk, most instructive choice.` }],
   },
   "AA-003/3.2": {
@@ -1172,7 +1172,7 @@ You'll uncover: student DOB/email/progress + behavioural analytics, accessibilit
   "AA-003/3.3": {
     objective: "You will draw the data-flow diagram showing each step, purpose, lawful basis, and any cross-border transfer.",
     whatToDo: ["Diagram the flow from collection to deletion.", "Mark the lawful basis and the US transfer."],
-    references: [{ id: "aa003-3-3", title: "Data-flow facts", kind: "Source document", summary: "The flow you must draw.", body: `## The flow
+    references: [{ id: "aa003-3-3", title: "Data-flow facts", kind: "Source document", group: "task", summary: "The flow you must draw.", body: `## The flow
 School → student accounts (AWS eu-west-1) → behavioural analytics via Mixpanel (US) → retained "indefinitely" (a gap).
 
 ## Mark on the diagram
@@ -1226,7 +1226,7 @@ The process owner confirms the RoPA is accurate and accepts the DPIA finding. Re
   "CRM-001/7.1": {
     objective: "You will review the regulatory landscape for LearnTech's jurisdictions and sector, so you know which laws to inventory.",
     whatToDo: ["Identify the laws that apply to a UK EdTech selling to UK + US schools.", "Note children's-data rules specifically."],
-    references: [{ id: "crm001-7-1", title: "LearnTech regulatory context", kind: "Source document", summary: "What applies and why.", body: `## Triggers
+    references: [{ id: "crm001-7-1", title: "LearnTech regulatory context", kind: "Source document", group: "task", summary: "What applies and why.", body: `## Triggers
 - UK GDPR + DPA 2018; ICO Children's Code (children's data).
 - EU GDPR (some EU schools).
 - US FERPA + COPPA (US districts, under-13 users).
@@ -1308,7 +1308,7 @@ An obligations register is only useful if maintained — laws change. Set a quar
   "DD-001/1": {
     objective: "You will review any existing incident-related documentation to understand the current (informal) state.",
     whatToDo: ["Read helpdesk tickets, email chains, and informal guidance.", "Note how incidents are handled today and the gaps."],
-    references: [{ id: "dd001-1", title: "Current state", kind: "Source document", summary: "How LearnTech handles incidents now.", body: `## Today
+    references: [{ id: "dd001-1", title: "Current state", kind: "Source document", group: "task", summary: "How LearnTech handles incidents now.", body: `## Today
 - Staff "mention it in Slack" if they notice something.
 - No definition of an incident → phishing goes unreported.
 - No triage owner; the CTO sometimes sees it days later.
@@ -1380,13 +1380,13 @@ One short paragraph: we now have a simple way to report security concerns, here'
   "SPA-002/1": {
     objective: "You will choose the GRC initiative whose stakeholders you'll map (e.g. ISO 27001 certification).",
     whatToDo: ["Pick an initiative from the roadmap.", "Confirm its scope so you know who's affected."],
-    references: [{ id: "spa002-1", title: "The initiative", kind: "Source document", summary: "What you're mapping stakeholders for.", body: `## Initiative
+    references: [{ id: "spa002-1", title: "The initiative", kind: "Source document", group: "task", summary: "What you're mapping stakeholders for.", body: `## Initiative
 LearnTech's ISO 27001 certification, driven by a major school-district customer. It touches engineering (process change), the customer, and the regulator.` }],
   },
   "SPA-002/2": {
     objective: "You will brainstorm every potential stakeholder, internal and external.",
     whatToDo: ["List internal (IT, HR, Legal, Finance, Board) and external (customer, regulator, vendors) stakeholders.", "Don't miss the affected-but-quiet groups (end users)."],
-    references: [{ id: "spa002-2", title: "Stakeholder list", kind: "Source document", summary: "Who's involved.", body: `## Stakeholders
+    references: [{ id: "spa002-2", title: "Stakeholder list", kind: "Source document", group: "task", summary: "Who's involved.", body: `## Stakeholders
 - CEO (sponsor), CTO (delivery), Engineering (must change).
 - The school-district customer (can walk away).
 - ICO / regulator.
@@ -1487,7 +1487,7 @@ Customer (Manage Closely) → monthly progress + audit-readiness update, by call
   "CA-001/5": {
     objective: "You will administer the five-question knowledge check.",
     whatToDo: ["Run the check (poll or written).", "Make sure everyone present completes it."],
-    references: [{ id: "ca001-5", title: "The knowledge check", kind: "Source document", summary: "The questions + pass rule.", body: `## 5 questions
+    references: [{ id: "ca001-5", title: "The knowledge check", kind: "Source document", group: "task", summary: "The questions + pass rule.", body: `## 5 questions
 1. Suspicious email — what do you do? 2. Why never reuse your work password? 3. What is student personal data? 4. Where do you report an incident? 5. Public Wi-Fi without a VPN — the risk?
 
 ## Pass rule
@@ -1526,7 +1526,7 @@ This report is the audit evidence that awareness training operated effectively.`
   "LRC-001/1": {
     objective: "You will obtain LearnTech's current published privacy notice.",
     whatToDo: ["Get the live website version.", "Read it once before assessing."],
-    references: [{ id: "lrc001-1", title: "Current privacy notice", kind: "Source document", summary: "The notice you're assessing — it's thin.", body: `## Current notice (published)
+    references: [{ id: "lrc001-1", title: "Current privacy notice", kind: "Source document", group: "task", summary: "The notice you're assessing — it's thin.", body: `## Current notice (published)
 "LearnTech cares about your privacy. We collect some information to provide our services and may share it with partners. We keep your data secure. For questions, contact us. We may update this policy from time to time."
 
 ## First impression
@@ -1552,7 +1552,7 @@ Must be in clear, age-appropriate language (ICO Children's Code).` }],
   "LRC-001/4": {
     objective: "You will research one well-drafted privacy notice in the same sector as a model.",
     whatToDo: ["Study the example the mentor provides.", "Note how it handles children and plain language."],
-    references: [{ id: "lrc001-4", title: "Model notice features", kind: "Source document", summary: "What good looks like.", body: `## A good EdTech notice
+    references: [{ id: "lrc001-4", title: "Model notice features", kind: "Source document", group: "task", summary: "What good looks like.", body: `## A good EdTech notice
 - Names the controller + DPO.
 - Lists each purpose with its lawful basis.
 - Has a child-friendly summary alongside the full notice.
@@ -1596,7 +1596,7 @@ DPO/Legal formally approve the notice before it's published. Record the decision
   "KT-001/1": {
     objective: "You will identify the top ten things every LearnTech new joiner must know about security and privacy.",
     whatToDo: ["List the ten most important, actionable items.", "Base them on real LearnTech facts, not theory."],
-    references: [{ id: "kt001-1", title: "LearnTech essentials", kind: "Source document", summary: "The facts a joiner needs.", body: `## Key facts
+    references: [{ id: "kt001-1", title: "LearnTech essentials", kind: "Source document", group: "task", summary: "The facts a joiner needs.", body: `## Key facts
 - Policies in Confluence under "GRC"; AUP + Data Protection are mandatory reading.
 - Report incidents via #security and the IT Manager (DD-001).
 - Student data is always Confidential.
@@ -1690,7 +1690,7 @@ You'll record Implemented / Partial / Not, with evidence.` }],
   "AA-002/2.3": {
     objective: "You will record the current state of each safeguard with supporting evidence.",
     whatToDo: ["Mark each safeguard Implemented / Partial / Not.", "Cite the evidence (or note its absence)."],
-    references: [{ id: "aa002-2-3", title: "GlobalConnect current state", kind: "Source document", summary: "The facts to score against.", body: `## Walkthrough findings
+    references: [{ id: "aa002-2-3", title: "GlobalConnect current state", kind: "Source document", group: "task", summary: "The facts to score against.", body: `## Walkthrough findings
 - No central asset/software inventory; agents on BYOD.
 - MFA on email, not on the customer CRM.
 - Local admin common on agent machines.
@@ -1757,7 +1757,7 @@ Lead with the overall figure and the client-data risks.` }],
   "GRM-002/5.1": {
     objective: "You will review two existing GlobalConnect policies to learn the house style before drafting.",
     whatToDo: ["Read two policies for tone, structure, and referencing.", "Note the document-control conventions."],
-    references: [{ id: "grm002-5-1", title: "House style", kind: "Source document", summary: "The conventions to match.", body: `## Existing style
+    references: [{ id: "grm002-5-1", title: "House style", kind: "Source document", group: "task", summary: "The conventions to match.", body: `## Existing style
 - Numbered statements ("3.1 Staff must…").
 - A control block: owner, version, approval & review dates.
 - Plain, directive language; ISO references in a side column.
@@ -1768,7 +1768,7 @@ Your policy must fit this style or it won't pass review.` }],
   "GRM-002/5.2": {
     objective: "You will select the policy type to draft (AUP or Remote Working) with the mentor.",
     whatToDo: ["Pick the policy that addresses GlobalConnect's biggest real risk.", "Confirm the scope."],
-    references: [{ id: "grm002-5-2", title: "The real risks to govern", kind: "Source document", summary: "What the policy must address.", body: `## GlobalConnect reality
+    references: [{ id: "grm002-5-2", title: "The real risks to govern", kind: "Source document", group: "task", summary: "What the policy must address.", body: `## GlobalConnect reality
 - Agents work home + office on a mix of devices (BYOD).
 - They handle clients' customer data on screen.
 - Shared workstations; tailgating happens.
@@ -1852,7 +1852,7 @@ Tailor to the department's reality — generic questions get generic, unscorable
   "GRM-003/6.3": {
     objective: "You will request maturity evidence from the department head and IT lead to score each CSF function.",
     whatToDo: ["Address the request to the department head and IT lead.", "Ask for evidence against each CSF function (Govern/Identify/Protect/Detect/Respond/Recover).", "Ask for specifics, not opinions."],
-    references: [{ id: "grm003-6-3", title: "Department current state", kind: "Source document", summary: "What the responses reveal (and score).", body: `## Operations dept
+    references: [{ id: "grm003-6-3", title: "Department current state", kind: "Source document", group: "task", summary: "What the responses reveal (and score).", body: `## Operations dept
 - Govern: no documented risk appetite → Tier 1.
 - Identify: partial asset list, no risk register → Tier 1/2.
 - Protect: MFA on email, induction-only training → Tier 2.
@@ -1900,7 +1900,7 @@ A roadmap item with no owner or target is a wish, not a plan.` }],
   "DD-002/1": {
     objective: "You will review existing materials so the new module doesn't duplicate or contradict them.",
     whatToDo: ["Read the current onboarding/security guidance.", "Note gaps and the real incident history."],
-    references: [{ id: "dd002-1", title: "Why these topics", kind: "Source document", summary: "The incident data behind the content.", body: `## Last 6 months
+    references: [{ id: "dd002-1", title: "Why these topics", kind: "Source document", group: "task", summary: "The incident data behind the content.", body: `## Last 6 months
 - 4 phishing emails clicked (one credential theft).
 - 3 password-reuse cases found.
 - 2 agents emailed client customer lists to personal accounts.
@@ -1975,7 +1975,7 @@ A manager with no security background must be able to deliver it from this guide
   "IE-001/1": {
     objective: "You will select five IG1 safeguards to implement, with the Compliance and IT managers.",
     whatToDo: ["Pick five high-impact, feasible safeguards.", "Confirm what 'done' means for each."],
-    references: [{ id: "ie001-1", title: "Five safeguards", kind: "Source document", summary: "The safeguards + acceptance criteria.", body: `## Selected (from AA-002)
+    references: [{ id: "ie001-1", title: "Five safeguards", kind: "Source document", group: "task", summary: "The safeguards + acceptance criteria.", body: `## Selected (from AA-002)
 1. 6.3 MFA on the CRM. 2. 5.3 Disable dormant accounts (>45d). 3. 4.1 Secure laptop baseline. 4. 1.1 Asset inventory. 5. 14.1 Awareness programme.
 
 ## Rule
@@ -2042,7 +2042,7 @@ Move the verified safeguards to Implemented and recompute the % (e.g. IG1 41% �
   "IE-002/1": {
     objective: "You will audit the current state of GlobalConnect's document storage.",
     whatToDo: ["Find where documents live and how they're named/versioned.", "Document the specific problems."],
-    references: [{ id: "ie002-1", title: "Current storage audit", kind: "Source document", summary: "The mess to fix.", body: `## Found
+    references: [{ id: "ie002-1", title: "Current storage audit", kind: "Source document", group: "task", summary: "The mess to fix.", body: `## Found
 - Policies in three places (shared drive, email, a laptop).
 - Multiple "Security Policy" versions; unclear which is current.
 - Files named "policy_final_v2_FINAL.docx".
@@ -2110,7 +2110,7 @@ Set a calendar reminder for each document's review date, owned by its owner. Doc
   "MM-001/1": {
     objective: "You will identify five measurable GRC indicators from GlobalConnect's current status.",
     whatToDo: ["Pick five KPIs that are measurable and meaningful.", "Avoid vanity metrics."],
-    references: [{ id: "mm001-1", title: "Candidate KPIs", kind: "Source document", summary: "The indicators + targets.", body: `## Five KPIs (month-1 data)
+    references: [{ id: "mm001-1", title: "Candidate KPIs", kind: "Source document", group: "task", summary: "The indicators + targets.", body: `## Five KPIs (month-1 data)
 1. % staff trained — 68% (target ≥95%). 2. % policies reviewed in 12m — 40% (≥90%). 3. Open risk items — 14 (<10). 4. % systems patched — 72% (≥90%). 5. Mean time to close findings — 38d (<30d).
 
 ## Rule
@@ -2183,7 +2183,7 @@ Tailor to their angle (ops wants practicality; account lead wants to keep the co
   "CA-003/2": {
     objective: "You will brief each stakeholder in advance on the purpose and duration.",
     whatToDo: ["Send a short brief before each interview.", "Set expectations (30 minutes, honest input)."],
-    references: [{ id: "ca003-2", title: "The three interviewees", kind: "Source document", summary: "Who they are.", body: `## Stakeholders
+    references: [{ id: "ca003-2", title: "The three interviewees", kind: "Source document", group: "task", summary: "Who they are.", body: `## Stakeholders
 - Operations Manager — wants practical rules, not paperwork.
 - Client Account Lead — clients demand ISO/SOC 2; fears losing deals.
 - IT Lead — overstretched; fears controls slow agents down.
@@ -2248,13 +2248,13 @@ Group across the three: common concerns, knowledge gaps, conflicting priorities.
   "BCRP-001/1": {
     objective: "You will select the department for the BIA, with the Business Continuity mentor.",
     whatToDo: ["Pick the department whose downtime hurts most.", "Confirm its scope."],
-    references: [{ id: "bcrp001-1", title: "The department", kind: "Source document", summary: "Which to pick and why.", body: `## Recommended: Customer Operations
+    references: [{ id: "bcrp001-1", title: "The department", kind: "Source document", group: "task", summary: "Which to pick and why.", body: `## Recommended: Customer Operations
 Agents answer calls/chats for three client brands, 24/7, under SLAs with penalties. Its downtime has direct financial impact — the most instructive BIA.` }],
   },
   "BCRP-001/2": {
     objective: "You will conduct a 60-minute BIA interview with the department manager.",
     whatToDo: ["Use the BIA questionnaire.", "Capture functions, dependencies, and impacts."],
-    references: [{ id: "bcrp001-2", title: "BIA interview facts", kind: "Source document", summary: "What you'll learn.", body: `## Customer Operations
+    references: [{ id: "bcrp001-2", title: "BIA interview facts", kind: "Source document", group: "task", summary: "What you'll learn.", body: `## Customer Operations
 - Live call/chat → depends on telephony (Genesys) + CRM + internet.
 - SLA reporting → depends on CRM data + reporting tool.
 - Each contract has penalties for downtime > 2 hours.
@@ -2323,7 +2323,7 @@ Telephony top (highest financial + SLA impact).` }],
   "TPRM-002/1": {
     objective: "You will select one Medium-risk vendor from the supplier register to assess in depth.",
     whatToDo: ["Pick a Medium-risk vendor worth deeper review.", "Confirm its service and data access."],
-    references: [{ id: "tprm002-1", title: "Vendor selection", kind: "Source document", summary: "The vendor in focus.", body: `## Vendor: DataDial Ltd
+    references: [{ id: "tprm002-1", title: "Vendor selection", kind: "Source document", group: "task", summary: "The vendor in focus.", body: `## Vendor: DataDial Ltd
 A Medium-risk vendor that processes some client customer data. Worth a deeper questionnaire because of the data access.` }],
   },
   "TPRM-002/2": {
@@ -2346,7 +2346,7 @@ Tailor to the vendor — generic questions get generic answers.` }],
   "TPRM-002/4": {
     objective: "You will review the returned responses for completeness and credibility.",
     whatToDo: ["Rate each answer satisfactory/partial/unsatisfactory.", "Spot the weak and unsupported claims."],
-    references: [{ id: "tprm002-4", title: "DataDial responses", kind: "Source document", summary: "The actual answers to judge.", body: `## Selected responses
+    references: [{ id: "tprm002-4", title: "DataDial responses", kind: "Source document", group: "task", summary: "The actual answers to judge.", body: `## Selected responses
 - Encrypt at rest? → "Yes." (no detail — weak).
 - ISO 27001 / SOC 2? → "We follow ISO 27001 principles." (NOT certified — red flag).
 - Sub-processors? → blank.
@@ -2402,7 +2402,7 @@ A vendor handling client personal data with a low score needs contractual mitiga
   "GRM-001/4.1": {
     objective: "You will review the firm's asset register to understand the risk surface before identifying risks.",
     whatToDo: ["Read the asset register (from AA-001 or provided).", "Note where the sensitive client data lives."],
-    references: [{ id: "grm001-4-1", title: "The risk surface", kind: "Source document", summary: "What's at stake.", body: `## The firm
+    references: [{ id: "grm001-4-1", title: "The risk surface", kind: "Source document", group: "task", summary: "What's at stake.", body: `## The firm
 A consultancy holding highly sensitive client data (financials, legal docs, M&A info). Reputation is everything — a single leak can lose clients.
 
 ## Focus
@@ -2411,7 +2411,7 @@ The crown jewels: client document stores, email, and any place consultants keep 
   "GRM-001/4.2": {
     objective: "You will run risk-identification workshops with two business-unit managers.",
     whatToDo: ["Facilitate brainstorming with STRIDE-lite prompts.", "Capture risks in the managers' own words."],
-    references: [{ id: "grm001-4-2", title: "Workshop inputs", kind: "Source document", summary: "Risks raised (with L/I).", body: `## Risks raised
+    references: [{ id: "grm001-4-2", title: "Workshop inputs", kind: "Source document", group: "task", summary: "Risks raised (with L/I).", body: `## Risks raised
 - Consultants email client docs to personal accounts (L4, I5).
 - Lost unencrypted laptop with client files last year (L3, I5).
 - No NDA tracking — unclear who's covered (L3, I4).
@@ -2480,7 +2480,7 @@ A Critical/High risk marked "accept" without leadership sign-off is itself a fin
   "DD-003/1": {
     objective: "You will identify the target data category for the retention schedule, with the mentor.",
     whatToDo: ["Pick one data category to schedule.", "Confirm why it's the priority."],
-    references: [{ id: "dd003-1", title: "Target category", kind: "Source document", summary: "Which category and why.", body: `## Recommended: HR & payroll records
+    references: [{ id: "dd003-1", title: "Target category", kind: "Source document", group: "task", summary: "Which category and why.", body: `## Recommended: HR & payroll records
 A well-defined category with clear legal retention rules and a real GDPR-vs-tax-law tension — the most instructive to schedule.` }],
   },
   "DD-003/2": {
@@ -2559,7 +2559,7 @@ Retention decisions have legal consequences (delete too early = lose evidence; t
   "TV-002/1": {
     objective: "You will select three policies to spot-check, with the Compliance Manager.",
     whatToDo: ["Pick three policies that are testable and matter.", "Confirm what compliance looks like for each."],
-    references: [{ id: "tv002-1", title: "Policies to test", kind: "Source document", summary: "The three + their claims.", body: `## Policies
+    references: [{ id: "tv002-1", title: "Policies to test", kind: "Source document", group: "task", summary: "The three + their claims.", body: `## Policies
 1. Security Awareness — "all staff trained annually".
 2. Access Control — "access reviewed quarterly".
 3. Encryption — "all laptops encrypted".
@@ -2590,7 +2590,7 @@ A statement you can't gather evidence for isn't testable — rewrite it.` }],
   "TV-002/4": {
     objective: "You will evaluate each evidence sample against its control statement.",
     whatToDo: ["Rate each compliant / partial / non-compliant.", "Judge from the evidence, not impression."],
-    references: [{ id: "tv002-4", title: "Evidence samples", kind: "Source document", summary: "The actual evidence.", body: `## Samples
+    references: [{ id: "tv002-4", title: "Evidence samples", kind: "Source document", group: "task", summary: "The actual evidence.", body: `## Samples
 - Training: 22 of 30 trained → 73% → partial.
 - Access review: last one was 14 months ago → non-compliant.
 - Encryption: 28 of 30 encrypted; 2 personal laptops not → partial.
@@ -2653,7 +2653,7 @@ Send the current register so the meeting reviews, not reads.` }],
   "MM-002/3": {
     objective: "You will facilitate the review meeting.",
     whatToDo: ["Walk each risk: change in L/I, treatment progress, new risks.", "Keep it moving and decisive."],
-    references: [{ id: "mm002-3", title: "Current register", kind: "Source document", summary: "The starting position.", body: `## Open risks (last month)
+    references: [{ id: "mm002-3", title: "Current register", kind: "Source document", group: "task", summary: "The starting position.", body: `## Open risks (last month)
 - R1 Client data on personal devices — High (12); MDM rollout 40%.
 - R2 Lost-laptop/unencrypted — High (15); encryption project now COMPLETE → re-score down.
 - R3 No NDA tracking — Medium (9); not started.
@@ -2711,13 +2711,13 @@ A one-line trend (improved / worsened / stable) backed by the numbers.` }],
   "PE-002/1": {
     objective: "You will select the ISO clause or controls to prepare evidence for, with the auditor mentor.",
     whatToDo: ["Pick a clause / small control set.", "Confirm scope so the evidence pack is focused."],
-    references: [{ id: "pe002-1", title: "Scope", kind: "Source document", summary: "What to prepare for.", body: `## Recommended: A.8.2 Privileged access
+    references: [{ id: "pe002-1", title: "Scope", kind: "Source document", group: "task", summary: "What to prepare for.", body: `## Recommended: A.8.2 Privileged access
 A control with clear, checkable evidence — and known gaps at this firm — making it a realistic audit-prep exercise.` }],
   },
   "PE-002/2": {
     objective: "You will identify every evidence item an auditor would expect for the selected controls.",
     whatToDo: ["List the expected evidence using the requirements list.", "Be exhaustive — auditors test completeness."],
-    references: [{ id: "pe002-2", title: "Expected evidence (A.8.2)", kind: "Source document", summary: "What the auditor will ask for.", body: `## An auditor expects
+    references: [{ id: "pe002-2", title: "Expected evidence (A.8.2)", kind: "Source document", group: "task", summary: "What the auditor will ask for.", body: `## An auditor expects
 - The approved privileged-user list.
 - Approval records for each grant.
 - The last quarterly access-review (dated, signed).
@@ -2781,7 +2781,7 @@ The mentor tests completeness and challenges weak items. An honestly-indexed pac
   "QA-001/1": {
     objective: "You will select three GRC documents to quality-review, with the Compliance Manager.",
     whatToDo: ["Pick three documents that matter.", "Confirm they're current versions."],
-    references: [{ id: "qa001-1", title: "Documents under review", kind: "Source document", summary: "The three + their planted defects.", body: `## Documents
+    references: [{ id: "qa001-1", title: "Documents under review", kind: "Source document", group: "task", summary: "The three + their planted defects.", body: `## Documents
 1. Information Security Policy — no version/approval date; references "ISO 27001:2013" (outdated).
 2. Incident Response Procedure — inconsistent: §2 says report in 1 hour, §5 says 24 hours.
 3. Access Control Policy — jargon-heavy, no plain-language; no review date.
@@ -2856,7 +2856,7 @@ Confirm the correction actually fixed the deficiency. The "ISO 27001:2013" refer
   "KT-002/1": {
     objective: "You will review all your completed deliverables from the full GRC 101 rotation.",
     whatToDo: ["Gather every deliverable you produced.", "Re-read them to ground your reflection."],
-    references: [{ id: "kt002-1", title: "Your deliverables", kind: "Source document", summary: "What you produced.", body: `## Across four placements
+    references: [{ id: "kt002-1", title: "Your deliverables", kind: "Source document", group: "task", summary: "What you produced.", body: `## Across four placements
 - Asset register, CIS gap analysis, GDPR RoPA/DPIA.
 - Risk register, policies, maturity assessment.
 - Incident procedure, BIA & DR checklist, evidence pack.

@@ -10,6 +10,7 @@ export const WORKSPACE_REFS: Record<string, TaskReference[]> = {
       id: "ws-soc2-sysdesc",
       title: "SOC 2 System Description (extract)",
       kind: "Source document",
+      group: "task",
       summary: "The system boundary the report names as in-scope.",
       body: `## §III.A — Core production systems (in scope)
 - Production Kubernetes cluster (us-east-1)
@@ -72,6 +73,7 @@ Personal-data items must never be classified Public. Any override of the suggest
       id: "ws-cmdb-export",
       title: "IT Asset CMDB export (Source A)",
       kind: "Source document",
+      group: "task",
       summary: "The authoritative system inventory to reconcile against.",
       body: `## CMDB export — 2026-05-20
 | Asset | Owner | Note |
@@ -86,6 +88,7 @@ Personal-data items must never be classified Public. Any override of the suggest
       id: "ws-vendor-register",
       title: "Vendor register (Source B)",
       kind: "Source document",
+      group: "task",
       summary: "Procurement's vendor list — compare owners and coverage.",
       body: `## Vendor register — 2026-05-22
 | Asset | Owner (role) | Note |
@@ -138,6 +141,7 @@ Cite the source for every input variable. Layer 1 re-computes the result; any dr
       id: "ws-scope-statement",
       title: "ISMS Scope Statement v0.4",
       kind: "Work product",
+      group: "task",
       summary: "The near-final artefact under review.",
       body: `## In scope
 - orders-db, Production K8s, Snowflake DW, Stripe Connect
@@ -173,6 +177,7 @@ The aggregate is the weighted total. Every justification must reference its anch
       id: "ws-deck",
       title: "ISMS Scope — presentation deck",
       kind: "Work product",
+      group: "task",
       summary: "The 8-slide deck presented for sign-off.",
       body: `## Slides
 - 1 Title · 2 Why an ISMS now · 3 In-scope systems · 4 Exclusions & rationale
@@ -187,6 +192,7 @@ Prepare answers on phasing, Snowflake joinability, and SOC 2 timeline impact bef
       id: "ws-scope-statement",
       title: "ISMS Scope Statement v0.4",
       kind: "Work product",
+      group: "task",
       summary: "The artefact awaiting formal sign-off.",
       body: `## In scope
 - orders-db, Production K8s, Snowflake DW, Stripe Connect
@@ -204,6 +210,7 @@ Add a line on data-residency commitments and circulate to the DPO before publish
       id: "ws-source-index",
       title: "Source artefact index",
       kind: "Source document",
+      group: "task",
       summary: "The upstream artefacts assembled into the final report.",
       body: `## Available sources
 | Code | Artefact | Date |
@@ -222,6 +229,7 @@ Every required section must link to ≥ 1 source. Submission is blocked while nu
       id: "ws-driver-map",
       title: "Regulatory drivers & assets",
       kind: "Source document",
+      group: "task",
       summary: "The drivers and assets to map for obligations.",
       body: `## Regulatory drivers
 - EU GDPR · UK GDPR · PCI-DSS v4.0 · SOC 2 (existing) · ISO 27701

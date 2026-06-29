@@ -10,12 +10,15 @@ export function Drawer({
   title,
   eyebrow,
   children,
+  width = "min(520px,100vw)",
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   eyebrow?: string;
   children: React.ReactNode;
+  /** CSS width for the panel. Defaults to the standard 520px drawer. */
+  width?: string;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -39,7 +42,8 @@ export function Drawer({
       <div
         role="dialog"
         aria-modal="true"
-        className={`absolute right-0 top-0 h-full w-[min(520px,100vw)] bg-white shadow-[0_0_60px_-12px_rgba(15,23,42,0.4)] flex flex-col transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
+        style={{ width }}
+        className={`absolute right-0 top-0 h-full bg-white shadow-[0_0_60px_-12px_rgba(15,23,42,0.4)] flex flex-col transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="shrink-0 flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200/70">
           <div className="min-w-0">

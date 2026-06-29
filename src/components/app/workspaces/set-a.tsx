@@ -14,6 +14,8 @@ import { getIdentifyTask, type IdentifyTask } from "@/lib/identify-tasks";
 import { getXRefTask, type XRefTask } from "@/lib/xref-tasks";
 import { getApplyTask, type ApplyTask } from "@/lib/apply-tasks";
 import { getReviewTask, type ReviewTask } from "@/lib/review-tasks";
+import { getConductTask, type ConductTask, type ConductOption, type ConductOpening } from "@/lib/conduct-tasks";
+import { getPresentTask } from "@/lib/present-tasks";
 
 const CLASS = ["Public", "Internal", "Confidential"];
 
@@ -392,7 +394,153 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
 }
 
 /* ============================ CONDUCT ============================ */
-export function ConductWorkspace({ value, onChange }: WorkspaceProps) {
+// Data-driven Conduct: pick an opening approach (sets the interviewee's disposition) → run the scripted
+// interview, probing with 1-of-3 choices. Objective met only via the correct probe.
+export function ConductWorkspace({ value, onChange, taskCode, activityCode }: WorkspaceProps) {
+  const task = useMemo(() => getConductTask(taskCode, activityCode), [taskCode, activityCode]);
+  if (task) return <ScriptedConductFlow task={task} value={value} onChange={onChange} />;
+  return <LegacyConductWorkspace value={value} onChange={onChange} />;
+}
+
+export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const restored = useMemo(() => {
+    if (seed<boolean>(value, "objectiveMet", false) !== true) return null;
+    const op = task.openings.find((o) => o.id === seed(value, "openingId", ""));
+    if (!op) return null;
+    const picks = task.threads[op.routesTo].rounds.map((rd) => rd.options.find((o) => o.correct)!);
+    return { opening: op, picks };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [opening, setOpening] = useState<ConductOpening | null>(() => restored?.opening ?? null);
+  const [correctPicks, setCorrectPicks] = useState<ConductOption[]>(() => restored?.picks ?? []);
+  const [terminal, setTerminal] = useState<"met" | "miss" | null>(() => restored ? "met" : null);
+  const [missOption, setMissOption] = useState<ConductOption | null>(null);
+
+  const thread = opening ? task.threads[opening.routesTo] : null;
+  const captured = terminal === "met" && thread
+    ? [thread.opener, ...correctPicks.map((_, i) => thread.rounds[i].stakeholderNext).filter((x): x is string => !!x)]
+    : [];
+  useLift({ roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", captured: captured.join("\n\n") || undefined }, onChange);
+
+  const reset = () => { setOpening(null); setCorrectPicks([]); setTerminal(null); setMissOption(null); };
+  const pickOpening = (o: ConductOpening) => { setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); };
+  const pick = (o: ConductOption, roundIdx: number) => {
+    if (terminal || !thread) return;
+    if (!o.correct) { setMissOption(o); setTerminal("miss"); return; }
+    const next = [...correctPicks, o];
+    setCorrectPicks(next);
+    if (roundIdx >= thread.rounds.length - 1) setTerminal("met");
+  };
+
+  // ── Opening view ──
+  if (!opening) {
+    return (
+      <div className="space-y-5">
+        {task.prep ? (
+          <>
+            <GivenNote>Presenting <strong>{task.interview}</strong> to the <strong>{task.roleAgent}</strong> for sign-off. Your deck and anticipated Q&A are prepared below — choose how to open the pitch; your framing sets the senior&apos;s disposition.</GivenNote>
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 space-y-3">
+              <div>
+                <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1">Deck summary</div>
+                <p className="text-[12.5px] text-slate-700 leading-relaxed">{task.prep.deck}</p>
+              </div>
+              <div>
+                <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1">Anticipated Q&amp;A (prepared)</div>
+                <ul className="space-y-1.5">{task.prep.qa.map((q, i) => <li key={i} className="text-[12px] text-slate-600 whitespace-pre-line border-l-2 border-slate-200 pl-2.5">{q}</li>)}</ul>
+              </div>
+            </div>
+          </>
+        ) : (
+          <GivenNote>You&apos;re interviewing the <strong>{task.roleAgent}</strong> ({task.interview}). Choose how to open — your approach sets how forthcoming they are.</GivenNote>
+        )}
+        <div>
+          <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your opening</div>
+          <div className="space-y-2">
+            {task.openings.map((o) => (
+              <button key={o.id} onClick={() => pickOpening(o)}
+                className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
+                <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                <span>{o.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Interview view ──
+  const activeRound = terminal ? -1 : correctPicks.length;
+  return (
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2">
+        <div className="flex items-start gap-2 text-[11.5px] text-slate-600 min-w-0">
+          <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
+          <span><strong className="font-medium text-slate-700">Interviewee disposition:</strong> your opening set a {opening.routesTo} interviewee.{!opening.correct && opening.coaching ? ` ${opening.coaching}` : ""}</span>
+        </div>
+        <MoodPill mood={opening.routesTo} />
+      </div>
+
+      <div>
+        <SectionLabel action={
+          <button onClick={reset} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1"><Icon name="chevronLeft" size={12} />Re-open</button>
+        }>Interview · {thread!.speaker}</SectionLabel>
+        <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
+          <Bubble who="you" initials="ME" text={opening.text} />
+          <Bubble who="stakeholder" initials={thread!.initials} text={thread!.opener} />
+          {correctPicks.map((p, i) => (
+            <div key={`r${i}`} className="space-y-2.5">
+              <Bubble who="you" initials="ME" text={p.text} />
+              {thread!.rounds[i].stakeholderNext && <Bubble who="stakeholder" initials={thread!.initials} text={thread!.rounds[i].stakeholderNext!} />}
+            </div>
+          ))}
+          {terminal === "miss" && missOption && <Bubble who="you" initials="ME" text={missOption.text} />}
+          {activeRound >= 0 && thread!.rounds[activeRound] && (
+            <div className="pt-1.5">
+              <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your probe</div>
+              <div className="space-y-2">
+                {thread!.rounds[activeRound].options.map((o) => (
+                  <button key={o.id} onClick={() => pick(o, activeRound)}
+                    className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
+                    <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                    <span>{o.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {terminal === "miss" && missOption && (
+        <div className="rounded-2xl bg-rose-50 ring-1 ring-rose-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-rose-800 mb-1"><Icon name="x" size={14} /> Objective not met</div>
+          <p className="text-[12.5px] text-rose-900/80 leading-relaxed">{missOption.coaching}</p>
+          <p className="text-[12px] text-rose-900/70 leading-relaxed mt-2">{task.missEnd}</p>
+          <button onClick={reset} className="mt-3 h-8 px-3 rounded-lg bg-rose-600 text-white text-[12px] font-medium hover:bg-rose-700 flex items-center gap-1.5"><Icon name="arrowRight" size={13} /> Re-run the interview</button>
+        </div>
+      )}
+
+      {terminal === "met" && (
+        <>
+          <div>
+            <SectionLabel hint="captured to this step">Interview notes</SectionLabel>
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 space-y-3 text-[12.5px] text-slate-800 leading-relaxed">
+              {captured.map((para, i) => <p key={i} className="whitespace-pre-line">{para}</p>)}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Objective met</div>
+            <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">{task.metEnd}</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function LegacyConductWorkspace({ value, onChange }: Pick<WorkspaceProps, "value" | "onChange">) {
   const script = [
     { q: "Walk me through how new vendors are added to the procurement list.", a: "We use the Vendor Intake form in ServiceNow. Procurement triages within 2 days; Security gets a copy if the vendor processes data." },
     { q: "Who approves vendors classified as 'data processor'?", a: "Depends on data class. Internal: VP Procurement. Confidential / personal data: DPO + Security Eng. Lead." },
@@ -521,7 +669,7 @@ export function ApplyWorkspace({ value, onChange, openRef, taskCode, activityCod
   return <LegacyApplyWorkspace value={value} onChange={onChange} openRef={openRef} />;
 }
 
-function ScriptedApplyFlow({ task, value, onChange }: { task: ApplyTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+export function ScriptedApplyFlow({ task, value, onChange }: { task: ApplyTask } & Pick<WorkspaceProps, "value" | "onChange">) {
   const [outcomeByRow, setOutcomeByRow] = useState<Record<number, string>>(() => seed(value, "outcomes", {} as Record<number, string>));
   const [noteByRow, setNoteByRow] = useState<Record<number, string>>(() => seed(value, "notes", {} as Record<number, string>));
   const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
@@ -1153,7 +1301,13 @@ function LegacyReviewWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ PRESENT ============================ */
-export function PresentWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+// Data-driven Present: deck + anticipated Q&A prep → senior sign-off Q&A (reuses the Conduct engine).
+export function PresentWorkspace({ value, onChange, openRef, taskCode, activityCode }: WorkspaceProps) {
+  const task = getPresentTask(taskCode, activityCode);
+  if (task) return <ScriptedConductFlow task={task} value={value} onChange={onChange} />;
+  return <LegacyPresentWorkspace value={value} onChange={onChange} openRef={openRef} />;
+}
+function LegacyPresentWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [qa, setQa] = useState(() => seed(value, "anticipatedQuestions", [
     { q: "Why this scope and not a phased approach?", a: "ISMS scope must be coherent — phasing risks gaps at boundaries. We sequence by maturity within the agreed scope." },
     { q: "What's our exposure on Snowflake personal-data joinability?", a: "Joinable hashed identifiers are present. We classify Snowflake Confidential and apply the same controls as orders-db." },

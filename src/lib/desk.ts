@@ -47,12 +47,18 @@ export interface ActivityDetail {
   status: string;
   draft: ActivityPayload | null;
   latestReview: Review | null;
+  attemptsUsed: number;
+  attemptsRemaining: number;
+  maxAttempts: number;
 }
 
 export interface SubmitResponse {
   submissionId: number;
   layer1: Layer1Result;
   review: Review | null;
+  attemptsUsed: number;
+  attemptsRemaining: number;
+  maxAttempts: number;
 }
 
 export interface SubmissionSummary {

@@ -205,16 +205,33 @@ function HeroStandards({ standards, engaged }: { standards: Standard[]; engaged:
   );
 }
 
-/** A titled block in the org-context drawer. */
-function CtxSection({ icon, title, children }: { icon: IconName; title: string; children: React.ReactNode }) {
+/**
+ * A titled block in the org-context drawer. Collapsible by default via native
+ * <details> (open on mount); pass collapsible={false} to keep it always-expanded.
+ */
+function CtxSection({ icon, title, children, collapsible = true }: { icon: IconName; title: string; children: React.ReactNode; collapsible?: boolean }) {
+  const head = (
+    <>
+      <Icon name={icon} size={14} className="text-indigo-500 shrink-0" />
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.09em] text-slate-500">{title}</h3>
+    </>
+  );
+  if (!collapsible) {
+    return (
+      <section>
+        <div className="flex items-center gap-2 mb-2.5">{head}</div>
+        {children}
+      </section>
+    );
+  }
   return (
-    <section>
-      <div className="flex items-center gap-2 mb-2.5">
-        <Icon name={icon} size={14} className="text-indigo-500 shrink-0" />
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.09em] text-slate-500">{title}</h3>
-      </div>
+    <details open className="group">
+      <summary className="flex items-center gap-2 mb-2.5 cursor-pointer list-none select-none">
+        {head}
+        <Icon name="chevronDown" size={14} className="text-slate-400 shrink-0 ml-auto transition-transform group-open:rotate-180" />
+      </summary>
       {children}
-    </section>
+    </details>
   );
 }
 
@@ -295,7 +312,7 @@ function OrgDetail({ org }: { org: LearningOrg }) {
       </div>
 
       {(p?.organisationalContext || org.context) && (
-        <CtxSection icon="book" title="Overview">
+        <CtxSection icon="book" title="Overview" collapsible={false}>
           <p className="text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{p?.organisationalContext || org.context}</p>
         </CtxSection>
       )}
@@ -629,7 +646,7 @@ export default function DashboardPage() {
       </Reveal>
 
       {/* Org detail panel */}
-      <Drawer open={!!activeOrg} onClose={() => setActiveOrg(null)} eyebrow="Organisation context" title={activeOrg?.name}>
+      <Drawer open={!!activeOrg} onClose={() => setActiveOrg(null)} eyebrow="Organisation context" title={activeOrg?.name} width="min(720px,100vw)">
         {activeOrg && <OrgDetail org={activeOrg} />}
       </Drawer>
 

@@ -1,0 +1,124 @@
+// Map worked tasks (Domain A → Domain B linkage). Source: Map_Verb_Task_Register.xlsx. Modelled as
+// an Apply task: per row pick the correct target + a mapping rationale (answer-key gated).
+
+import type { ApplyTask } from "./apply-tasks";
+
+export const MAP_TASKS: Record<string, ApplyTask> = {
+  "GRM-001/4.4": {
+    title: "Risks → Annex A Control Domains", standard: "ISO 27001 Cl 6.1.2; Annex A themes",
+    columns: ["Operational risk"],
+    outcomes: ["Organisational (A.5)", "People (A.6)", "Physical (A.7)", "Technological (A.8)"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Phishing leads to consultant account compromise"], outcome: "People (A.6)" },
+      { id: 2, cells: ["Client confidential report emailed to wrong recipient"], outcome: "People (A.6)" },
+      { id: 3, cells: ["Laptop lost/stolen with client data"], outcome: "Physical (A.7)" },
+      { id: 4, cells: ["Ransomware encrypts shared file server"], outcome: "Technological (A.8)" },
+      { id: 5, cells: ["Unpatched VPN exploited"], outcome: "Technological (A.8)" },
+      { id: 6, cells: ["Departing consultant retains client files"], outcome: "People (A.6)" },
+      { id: 7, cells: ["Cloud storage bucket left public"], outcome: "Technological (A.8)" },
+      { id: 8, cells: ["Weak/reused passwords on key SaaS"], outcome: "Technological (A.8)" },
+      { id: 9, cells: ["Vendor (sub-processor) breach exposes client data"], outcome: "Organisational (A.5)" },
+      { id: 10, cells: ["No formal data-retention, over-retention"], outcome: "Organisational (A.5)" },
+      { id: 11, cells: ["Sensitive print-outs left on desks"], outcome: "Physical (A.7)" },
+      { id: 12, cells: ["Office tailgating / unauthorised entry"], outcome: "Physical (A.7)" },
+    ],
+  },
+  "GRM-002/5.4": {
+    title: "Policy Statements → Annex A Controls", standard: "ISO 27001 Annex A controls",
+    columns: ["Policy statement"],
+    outcomes: ["A.5.10 Acceptable use of information", "A.5.12 Classification of information", "A.5.17 Authentication information", "A.6.7 Remote working", "A.6.8 Information security event reporting", "A.7.7 Clear desk and clear screen", "A.8.1 User endpoint devices", "A.8.12 Data leakage prevention", "A.8.19 Installation of software", "A.8.5 Secure authentication"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Users must protect their credentials and never share passwords"], outcome: "A.5.17 Authentication information" },
+      { id: 2, cells: ["Use multi-factor authentication where enabled"], outcome: "A.8.5 Secure authentication" },
+      { id: 3, cells: ["Do not install unauthorised software"], outcome: "A.8.19 Installation of software" },
+      { id: 4, cells: ["Report suspected incidents promptly"], outcome: "A.6.8 Information security event reporting" },
+      { id: 5, cells: ["Handle customer data only for assigned tasks"], outcome: "A.5.10 Acceptable use of information" },
+      { id: 6, cells: ["Lock screens and clear your desk"], outcome: "A.7.7 Clear desk and clear screen" },
+      { id: 7, cells: ["Use only approved remote-working controls"], outcome: "A.6.7 Remote working" },
+      { id: 8, cells: ["Encrypt company mobile devices"], outcome: "A.8.1 User endpoint devices" },
+      { id: 9, cells: ["Do not use personal email for company data"], outcome: "A.8.12 Data leakage prevention" },
+      { id: 10, cells: ["Follow data classification & labelling rules"], outcome: "A.5.12 Classification of information" },
+    ],
+  },
+  "CRM-001/7.5": {
+    title: "Obligations → ISO Clauses/Controls", standard: "ISO 27001 Cl 4.1; Annex A",
+    columns: ["Regulatory obligation"],
+    outcomes: ["A.5.19 Supplier relationships", "A.5.2 Information security roles", "A.5.26 Response to incidents", "A.5.33 Protection of records", "A.5.34 Privacy & protection of PII", "A.6.3 Awareness, education & training", "A.8.3 Information access restriction"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Appoint a Data Protection Officer (GDPR Art 37)"], outcome: "A.5.2 Information security roles" },
+      { id: 2, cells: ["Maintain Records of Processing — RoPA (Art 30)"], outcome: "A.5.34 Privacy & protection of PII" },
+      { id: 3, cells: ["Notify breaches within 72 hours (Art 33)"], outcome: "A.5.26 Response to incidents" },
+      { id: 4, cells: ["Provide a privacy notice (Art 13/14)"], outcome: "A.5.34 Privacy & protection of PII" },
+      { id: 5, cells: ["Honour data-subject rights (Art 15–22)"], outcome: "A.5.34 Privacy & protection of PII" },
+      { id: 6, cells: ["Retain student records per statute"], outcome: "A.5.33 Protection of records" },
+      { id: 7, cells: ["Vet third-party processors (Art 28)"], outcome: "A.5.19 Supplier relationships" },
+      { id: 8, cells: ["Train staff on data protection"], outcome: "A.6.3 Awareness, education & training" },
+      { id: 9, cells: ["Obtain consent for marketing"], outcome: "A.5.34 Privacy & protection of PII" },
+      { id: 10, cells: ["Secure exam & assessment data"], outcome: "A.8.3 Information access restriction" },
+    ],
+  },
+  "DD-001/5": {
+    title: "Procedure Steps → A.6.8 Requirements", standard: "ISO 27001 A.6.8; A.5.25/5.26/5.28",
+    columns: ["Procedure step"],
+    outcomes: ["A.5.25 Assessment & decision on events", "A.5.26 Response to incidents", "A.5.28 Collection of evidence", "A.6.8 Event reporting (awareness of what to report)", "A.6.8 Event reporting (reporting content)", "A.6.8 Event reporting (reporting mechanism)", "A.6.8 Event reporting (timeliness)"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Recognise a suspected incident"], outcome: "A.6.8 Event reporting (awareness of what to report)" },
+      { id: 2, cells: ["Report via the Service Desk channel"], outcome: "A.6.8 Event reporting (reporting mechanism)" },
+      { id: 3, cells: ["Report within one hour"], outcome: "A.6.8 Event reporting (timeliness)" },
+      { id: 4, cells: ["Provide the required information"], outcome: "A.6.8 Event reporting (reporting content)" },
+      { id: 5, cells: ["Log and triage the event"], outcome: "A.5.25 Assessment & decision on events" },
+      { id: 6, cells: ["Escalate high-severity incidents"], outcome: "A.5.26 Response to incidents" },
+      { id: 7, cells: ["Preserve evidence"], outcome: "A.5.28 Collection of evidence" },
+      { id: 8, cells: ["Maintain confidentiality of the incident"], outcome: "A.5.26 Response to incidents" },
+    ],
+  },
+  "DD-003/7": {
+    title: "Retention Entries → Annex A Controls", standard: "ISO 27001 A.8.10; A.5.33; GDPR Art 5(1)(e)",
+    columns: ["Retention-schedule entry"],
+    outcomes: ["A.5.33 Protection of records", "A.5.34 Privacy & protection of PII", "A.5.37 Documented operating procedures", "A.8.10 Information deletion", "A.8.13 Information backup"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Employee records — keep 6 years then delete"], outcome: "A.8.10 Information deletion" },
+      { id: 2, cells: ["Client contact records — delete on contract end +2y"], outcome: "A.8.10 Information deletion" },
+      { id: 3, cells: ["Payroll records — statutory 7-year retention"], outcome: "A.5.33 Protection of records" },
+      { id: 4, cells: ["Marketing consent logs — keep until withdrawn"], outcome: "A.5.34 Privacy & protection of PII" },
+      { id: 5, cells: ["Backups — retain 90 days"], outcome: "A.8.13 Information backup" },
+      { id: 6, cells: ["Certificates of destruction — keep 6 years"], outcome: "A.5.33 Protection of records" },
+      { id: 7, cells: ["Secure-deletion method (NIST 800-88)"], outcome: "A.8.10 Information deletion" },
+      { id: 8, cells: ["Annual retention-schedule review"], outcome: "A.5.37 Documented operating procedures" },
+    ],
+  },
+  "TPRM-002/6": {
+    title: "Vendor Responses → Annex A Controls", standard: "ISO 27001 A.5.19/5.20/5.21/5.22",
+    columns: ["Vendor response"],
+    outcomes: ["A.5.19 Supplier relationships", "A.5.20 Addressing security in supplier agreements", "A.5.21 Managing security in the ICT supply chain", "A.5.22 Monitoring & review of supplier services", "A.5.30 ICT readiness for continuity", "A.5.34 Privacy & protection of PII", "A.6.1 Screening", "A.8.24 Use of cryptography", "A.8.5 Secure authentication", "A.8.8 Management of technical vulnerabilities"],
+    clean: null, noteMode: "all", noteLabel: "Mapping rationale",
+    feedsNext: "Feeds the Recommend / Validate step.",
+    rows: [
+      { id: 1, cells: ["Vendor holds ISO 27001 certification"], outcome: "A.5.19 Supplier relationships" },
+      { id: 2, cells: ["Access management & MFA in place"], outcome: "A.8.5 Secure authentication" },
+      { id: 3, cells: ["Encryption in transit and at rest"], outcome: "A.8.24 Use of cryptography" },
+      { id: 4, cells: ["Documented incident response & breach notification"], outcome: "A.5.20 Addressing security in supplier agreements" },
+      { id: 5, cells: ["Business continuity / disaster recovery"], outcome: "A.5.30 ICT readiness for continuity" },
+      { id: 6, cells: ["Sub-processor management"], outcome: "A.5.21 Managing security in the ICT supply chain" },
+      { id: 7, cells: ["Right-to-audit clause"], outcome: "A.5.22 Monitoring & review of supplier services" },
+      { id: 8, cells: ["Staff background screening"], outcome: "A.6.1 Screening" },
+      { id: 9, cells: ["Vulnerability & patch management"], outcome: "A.8.8 Management of technical vulnerabilities" },
+      { id: 10, cells: ["Data location / transfer controls — NO EVIDENCE (gap)"], outcome: "A.5.34 Privacy & protection of PII" },
+    ],
+  },
+};
+
+export function getMapTask(taskCode?: string, activityCode?: string): ApplyTask | undefined {
+  if (!taskCode || !activityCode) return undefined;
+  return MAP_TASKS[`${taskCode}/${activityCode}`];
+}

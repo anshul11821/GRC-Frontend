@@ -18,6 +18,7 @@ import { useDeskLearnings } from "@/components/app/desk-context";
 import { ACTIVITY_CONTENT } from "@/lib/activity-content";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { StandardBanner } from "@/components/app/standards";
+import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import type { TaskReference } from "@/lib/taskmeta";
 
 function ReviewPanel({ review }: { review: Review }) {
@@ -59,6 +60,29 @@ function ReviewPanel({ review }: { review: Review }) {
         <p className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{review.feedback}</p>
       </div>
     </div>
+  );
+}
+
+/** Attempts-left meter — depleting pips (lives metaphor) + count. Brand indigo with full attempts,
+ *  amber on the last one, rose when exhausted. Pure-presentational; renders nothing without a cap. */
+function AttemptsMeter({ used, max }: { used: number; max: number }) {
+  if (!max || max <= 0) return null;
+  const left = Math.max(0, max - used);
+  const tone = left === 0 ? "rose" : left === 1 ? "amber" : "indigo";
+  const text = { indigo: "text-slate-600", amber: "text-amber-700", rose: "text-rose-600" }[tone];
+  const pip = { indigo: "bg-indigo-500", amber: "bg-amber-400", rose: "bg-rose-400" }[tone];
+  const ring = { indigo: "ring-slate-200/70 bg-slate-50", amber: "ring-amber-200/70 bg-amber-50/60", rose: "ring-rose-200/70 bg-rose-50/60" }[tone];
+  return (
+    <span className={`inline-flex items-center gap-2 h-8 pl-2.5 pr-3 rounded-full ring-1 ${ring}`} title={`${left} of ${max} submission attempts remaining`}>
+      <span className="flex items-center gap-1" aria-hidden>
+        {Array.from({ length: max }).map((_, i) => (
+          <span key={i} className={`w-4 h-1.5 rounded-full transition-colors ${i < left ? pip : "bg-slate-200"}`} />
+        ))}
+      </span>
+      <span className={`text-[11.5px] font-medium tracking-tight tabular-nums ${text}`}>
+        {left === 0 ? "No attempts left" : `${left} of ${max} attempts left`}
+      </span>
+    </span>
   );
 }
 
@@ -247,9 +271,17 @@ export default function ActivityWorkspace() {
   // When a passed activity is reopened, lets the user choose to edit and submit again.
   const [resubmit, setResubmit] = useState(false);
   const deliverableRef = useRef<HTMLDivElement>(null);
+  // Guided walkthrough: objective → what to do → checklist → deliverable. -1 = closed.
+  const [tourStep, setTourStep] = useState(-1);
+  const objectiveRef = useRef<HTMLDivElement>(null);
+  const whatToDoRef = useRef<HTMLDivElement>(null);
+  const referenceBtnRef = useRef<HTMLButtonElement>(null);
+  const checklistHudRef = useRef<HTMLDivElement>(null);
+  const checklistInlineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setTourStep(-1); // close the tour during navigation so it never shows a stale step
     Promise.all([deskApi.activity(activityId), deskApi.submissions(activityId).catch(() => [] as SubmissionDetail[])])
       .then(([a, h]) => {
         if (cancelled) return;
@@ -276,11 +308,23 @@ export default function ActivityWorkspace() {
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => setCriteriaHidden(!entry.isIntersecting),
-      { rootMargin: "-80px 0px -25% 0px" },
+      // Thin band right under the sticky header: fires once the "Your deliverable"
+      // heading scrolls up to the top of the screen, and stays open while the (tall)
+      // card still overlaps the band — i.e. for the rest of the activity.
+      { rootMargin: "-84px 0px -90% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
   }, [activity]);
+
+  // Auto-run the guided walkthrough on every activity (replayable any time via the Guide button).
+  useEffect(() => {
+    if (!activity) return;
+    const id = setTimeout(() => setTourStep(0), 400); // let the brief animate in first
+    return () => clearTimeout(id);
+  }, [activity]);
+
+  const closeTour = () => setTourStep(-1);
 
   const payload = (): ActivityPayload => ({ fields: values, notes: notesVal, attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
@@ -309,6 +353,7 @@ export default function ActivityWorkspace() {
       setResult(res);
       setFeedbackOpen(true); // surface the graded result immediately
       deskApi.submissions(activityId).then(setHistory).catch(() => {});
+      setActivity((a) => (a ? { ...a, attemptsUsed: res.attemptsUsed, attemptsRemaining: res.attemptsRemaining, maxAttempts: res.maxAttempts } : a));
       if (res.review) {
         setActivity((a) => (a ? { ...a, status: res.review!.decision === "pass" ? "complete" : "in-progress", latestReview: res.review } : a));
         if (res.review.decision === "pass") {
@@ -374,6 +419,10 @@ export default function ActivityWorkspace() {
   const layer1 = result?.layer1;
   const review = result?.review ?? activity.latestReview;
   const passed = review?.decision === "pass" || activity.status === "complete";
+  const attemptsRemaining = result?.attemptsRemaining ?? activity.attemptsRemaining;
+  const attemptsUsed = result?.attemptsUsed ?? activity.attemptsUsed;
+  const maxAttempts = result?.maxAttempts ?? activity.maxAttempts;
+  const noAttemptsLeft = attemptsRemaining <= 0;
   const hasFeedback = !!(layer1 || review);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
@@ -382,6 +431,8 @@ export default function ActivityWorkspace() {
   // (Scope Statement, Asset Register, …) opened via the workspace "Open" buttons. Deduped by id.
   const references = [...(content?.references ?? []), ...(WORKSPACE_REFS[activity.verb.id] ?? [])]
     .filter((r, i, a) => a.findIndex((x) => x.id === r.id) === i);
+  const taskRefs = references.filter((r) => r.group === "task");
+  const docRefs = references.filter((r) => r.group !== "task");
 
   // After a pass the backend marks the next step "current" — find it (from the refreshed tree) to advance.
   let nextStepId: string | null = null;
@@ -397,8 +448,41 @@ export default function ActivityWorkspace() {
     }
   }
 
+  // Guided walkthrough steps, in order, skipping any target this activity doesn't have.
+  const tourSteps: TourStep[] = [];
+  if (content?.objective) tourSteps.push({
+    title: "Start with the objective",
+    body: "This is the goal of the step — what a good deliverable must achieve. Read it first so everything else has context.",
+    getEl: () => objectiveRef.current,
+    onEnter: () => setBriefShown(true),
+  });
+  if (content?.whatToDo && content.whatToDo.length > 0) tourSteps.push({
+    title: "Follow what to do",
+    body: "These are the concrete actions to work through. Tackle them in order — each one feeds your deliverable.",
+    getEl: () => whatToDoRef.current,
+    onEnter: () => setBriefShown(true),
+  });
+  tourSteps.push({
+    title: "Open the reference material",
+    body: `The facts, rules and artefacts you need to do this step correctly${references.length ? ` — ${references.length} document${references.length > 1 ? "s" : ""} here` : ""}. Click it any time to read alongside your work.`,
+    getEl: () => referenceBtnRef.current,
+  });
+  if (hasChecklist) tourSteps.push({
+    title: "Watch the checklist",
+    body: "Every acceptance criterion the mentor grades against. It ticks off live as you type — aim for all green before submitting.",
+    getEl: () => (window.matchMedia("(min-width: 768px)").matches ? checklistHudRef.current : checklistInlineRef.current),
+    onEnter: () => setCriteriaHidden(false),
+  });
+  tourSteps.push({
+    title: "Fill in your deliverable",
+    body: "Do your work here, then Submit for review. The AI mentor grades it and tells you what to improve. You can save a draft any time.",
+    getEl: () => deliverableRef.current,
+  });
+
   return (
     <div className="max-w-[920px] mx-auto px-6 py-6">
+      <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />
+
       {/* standard banner — ties the step back to the framework it belongs to */}
       <StandardBanner taskCode={activity.taskCode} activityId={activityId} />
 
@@ -450,7 +534,7 @@ export default function ActivityWorkspace() {
             <div className="overflow-hidden min-h-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
               {content?.objective && (
-                <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-50/40 to-transparent ring-1 ring-indigo-100/80 p-4 flex flex-col justify-center">
+                <div ref={objectiveRef} className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-50/40 to-transparent ring-1 ring-indigo-100/80 p-4 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-2">
                     <Icon name="target" size={14} className="text-indigo-600" />
                     <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-indigo-700">Objective</h2>
@@ -459,7 +543,7 @@ export default function ActivityWorkspace() {
                 </div>
               )}
               {content?.whatToDo && content.whatToDo.length > 0 && (
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-transparent ring-1 ring-emerald-100/80 p-4">
+                <div ref={whatToDoRef} className="rounded-2xl bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-transparent ring-1 ring-emerald-100/80 p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Icon name="list" size={14} className="text-emerald-700" />
                     <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-emerald-700">What to do</h2>
@@ -490,15 +574,24 @@ export default function ActivityWorkspace() {
               {verb ? `${verb.label} — ${verb.when}` : "Capture your work for this step."}
             </p>
           </div>
-          <button
-            onClick={() => setBriefOpen(true)}
-            className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
-          >
-            <Icon name="book" size={14} /> Reference material
-            {references.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{references.length}</span>
-            )}
-          </button>
+          <div className="shrink-0 flex items-center gap-2">
+            <button
+              onClick={() => setTourStep(0)}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
+            >
+              <Icon name="help" size={14} /> Guide
+            </button>
+            <button
+              ref={referenceBtnRef}
+              onClick={() => setBriefOpen(true)}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
+            >
+              <Icon name="book" size={14} /> Reference material
+              {references.length > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{references.length}</span>
+              )}
+            </button>
+          </div>
         </div>
 
         <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
@@ -531,18 +624,22 @@ export default function ActivityWorkspace() {
                   Back to Working Desk <Icon name="arrowRight" size={15} />
                 </Link>
               )}
-              <button onClick={() => setResubmit(true)} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-medium tracking-tight hover:bg-slate-50">
-                <Icon name="refresh" size={14} /> Resubmit
-              </button>
+              {!noAttemptsLeft && (
+                <button onClick={() => setResubmit(true)} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-medium tracking-tight hover:bg-slate-50">
+                  <Icon name="refresh" size={14} /> Resubmit
+                </button>
+              )}
+              <AttemptsMeter used={attemptsUsed} max={maxAttempts} />
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
-              <button onClick={submit} disabled={busy || !hasContent || objectiveBlocked} className="focus-ring h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2 shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)] transition-all">
+              <button onClick={submit} disabled={busy || !hasContent || objectiveBlocked || noAttemptsLeft} className="focus-ring h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2 shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)] transition-all">
                 <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
               </button>
               <button onClick={saveDraft} disabled={busy} className="focus-ring h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
                 Save draft
               </button>
+              <AttemptsMeter used={attemptsUsed} max={maxAttempts} />
               {passed && resubmit && (
                 <button onClick={() => setResubmit(false)} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 text-[13px] font-medium tracking-tight hover:bg-slate-50 disabled:opacity-50">
                   Cancel
@@ -558,7 +655,7 @@ export default function ActivityWorkspace() {
 
       {/* Acceptance criteria. Small screens: inline card under the deliverable. */}
       {hasChecklist && (
-        <div className="md:hidden mt-5">
+        <div ref={checklistInlineRef} className="md:hidden mt-5">
           <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} />
         </div>
       )}
@@ -569,7 +666,7 @@ export default function ActivityWorkspace() {
           stay mounted so the swap can fade rather than pop. */}
       {hasChecklist && (
         <>
-          <div className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
+          <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
             <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
@@ -592,14 +689,22 @@ export default function ActivityWorkspace() {
             </section>
           )}
 
-          {references.length > 0 && (
+          {docRefs.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Reference documents</h3>
+                <h3 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Documentation</h3>
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 ring-1 ring-amber-100 rounded-full px-2 h-5"><Icon name="info" size={10} /> Required</span>
               </div>
               <p className="text-[12px] text-slate-500 tracking-tight mb-2.5">The facts, rules and artefacts you need to complete this step correctly.</p>
-              <RefAccordion key={focusRefId ?? "default"} references={references} focusId={focusRefId} />
+              <RefAccordion key={`doc-${focusRefId ?? "default"}`} references={docRefs} focusId={focusRefId} />
+            </section>
+          )}
+
+          {taskRefs.length > 0 && (
+            <section>
+              <h3 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1.5">Carried forward from prior steps</h3>
+              <p className="text-[12px] text-slate-500 tracking-tight mb-2.5">Data you produced in earlier steps — requested, recorded, or signed off — now available here.</p>
+              <RefAccordion key={`task-${focusRefId ?? "default"}`} references={taskRefs} focusId={focusRefId} />
             </section>
           )}
         </div>

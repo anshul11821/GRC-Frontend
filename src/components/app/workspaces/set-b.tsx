@@ -1,15 +1,195 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import {
-  type WorkspaceProps, useLift, seed, SectionLabel, WTextArea,
+  type WorkspaceProps, useLift, seed, SectionLabel, WTextArea, WTextInput,
   GivenNote, ScriptedExchange,
 } from "./kit";
+import { getCalcTask, type CalcTask } from "@/lib/calc-tasks";
+import { getFormTask, type FormTask, type FormKind } from "@/lib/form-tasks";
+import { getMapTask } from "@/lib/map-tasks";
+import { getPrioTask, type PrioTask } from "@/lib/prioritise-tasks";
+import { ScriptedApplyFlow } from "./set-a";
+
+/* ===== Prioritise: score items per criterion → live aggregate + rank → ties need a tiebreaker ===== */
+function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const [scores, setScores] = useState<Record<number, Record<string, string>>>(() => seed(value, "scores", {} as Record<number, Record<string, string>>));
+  const [tiebreak, setTiebreak] = useState<Record<number, string>>(() => seed(value, "tiebreak", {} as Record<number, string>));
+  const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
+
+  const scoreOf = (id: number, cr: string) => scores[id]?.[cr] ?? "";
+  const scored = (id: number) => task.criteria.every((cr) => { const v = scoreOf(id, cr).trim(); const n = Number(v); return v !== "" && n >= 1 && n <= task.scaleMax; });
+  const agg = (id: number): number | null => { if (!scored(id)) return null; const ns = task.criteria.map((cr) => Number(scoreOf(id, cr))); return task.aggregate === "sum" ? ns.reduce((a, b) => a + b, 0) : ns.reduce((a, b) => a * b, 1); };
+  const aggs = task.items.map((it) => agg(it.id));
+  const rankOf = (id: number): number | null => { const a = agg(id); if (a == null) return null; return 1 + aggs.filter((x) => x != null && x > a).length; };
+  const isTied = (id: number) => { const a = agg(id); return a != null && aggs.filter((x) => x === a).length > 1; };
+  const tiedIds = task.items.filter((it) => isTied(it.id)).map((it) => it.id);
+  const allScored = task.items.every((it) => scored(it.id));
+  const tiesResolved = tiedIds.every((id) => (tiebreak[id] ?? "").trim().length > 0);
+  const objectiveMet = allScored && tiesResolved;
+  useLift({ scores, tiebreak, objectiveMet }, onChange);
+
+  const setScore = (id: number, cr: string, v: string) => setScores((s) => ({ ...s, [id]: { ...s[id], [cr]: v } }));
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Score each item from 1–{task.scaleMax} on every criterion. The aggregate ({task.aggregate}) and rank compute automatically — any tie needs a documented tiebreaker before you can submit.</GivenNote>
+      <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
+      <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
+              <th className="px-3 py-2 font-semibold">Item</th>
+              {task.criteria.map((cr) => <th key={cr} className="px-3 py-2 font-semibold text-center w-[90px]">{cr}</th>)}
+              <th className="px-3 py-2 font-semibold text-center w-[70px]">Aggregate</th>
+              <th className="px-3 py-2 font-semibold text-center w-[60px]">Rank</th>
+            </tr>
+          </thead>
+          <tbody>
+            {task.items.map((it) => {
+              const tied = isTied(it.id);
+              const bad = checked && (!scored(it.id) || (tied && !(tiebreak[it.id] ?? "").trim()));
+              return (
+                <tr key={it.id} className={`border-t border-slate-100 align-top ${bad ? "bg-rose-50/60" : tied ? "bg-amber-50/40" : ""}`}>
+                  <td className="px-3 py-2 text-[12px] font-medium text-slate-900">{it.label}
+                    {tied && (
+                      <input value={tiebreak[it.id] ?? ""} onChange={(e) => setTiebreak((t) => ({ ...t, [it.id]: e.target.value }))} placeholder="Tiebreaker rationale (required)…"
+                        className="mt-1.5 w-full h-8 px-2 rounded-md bg-white ring-1 ring-amber-300 focus:ring-2 focus:ring-amber-400/50 outline-none text-[11.5px]" />
+                    )}
+                  </td>
+                  {task.criteria.map((cr) => (
+                    <td key={cr} className="px-3 py-2 text-center">
+                      <input value={scoreOf(it.id, cr)} onChange={(e) => setScore(it.id, cr, e.target.value)} inputMode="numeric" placeholder="—"
+                        className="w-12 h-8 px-1 text-center rounded-md bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/40 outline-none text-[12px] tabular-nums" />
+                    </td>
+                  ))}
+                  <td className="px-3 py-2 text-center text-[13px] font-semibold text-slate-900 tabular-nums">{agg(it.id) ?? "—"}</td>
+                  <td className="px-3 py-2 text-center text-[13px] font-semibold text-indigo-700 tabular-nums">{rankOf(it.id) ?? "—"}{tied ? " *" : ""}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] text-slate-400">{objectiveMet ? "Ranked and ties resolved — ready to submit." : tiedIds.length > 0 && allScored ? `${tiedIds.length} tied items need a tiebreaker.` : "Score every item on all criteria."}</p>
+        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check ranking</button>
+      </div>
+      {objectiveMet && (
+        <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Ranked</div>
+          <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">All items scored and ties resolved with a documented tiebreaker. {task.feedsNext}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== Generic completeness-form flow: Recommend / Validate / Draft / Schedule ===== */
+type FF = { key: string; label: string; type: "text" | "textarea" | "date" | "select"; required?: boolean; minLen?: number; placeholder?: string; options?: string[]; optionsFrom?: "owners" | "item"; condOn?: { key: string; equals: string } };
+const FORM_FIELDS: Record<FormKind, FF[]> = {
+  recommend: [
+    { key: "action", label: "Action", type: "textarea", required: true, placeholder: "A specific, actionable remediation…" },
+    { key: "control", label: "Control reference", type: "text", required: true, placeholder: "e.g. ISO A.5.17 / CIS 4.7" },
+    { key: "owner", label: "Owner role", type: "select", required: true, optionsFrom: "owners" },
+    { key: "date", label: "Target date", type: "date", required: true },
+    { key: "rationale", label: "Rationale", type: "textarea", required: true, minLen: 30, placeholder: "Why this matters / the risk it closes (≥ 30 chars)…" },
+  ],
+  validate: [
+    { key: "citation", label: "Citation / source", type: "textarea", required: true, placeholder: "Standard control + how it was confirmed…" },
+    { key: "status", label: "Status", type: "select", required: true, options: ["Verified", "Unverified"] },
+    { key: "followup", label: "Follow-up action", type: "textarea", required: true, condOn: { key: "status", equals: "Unverified" }, placeholder: "Required for unverified findings…" },
+  ],
+  draft: [
+    { key: "content", label: "Section content", type: "textarea", required: true, placeholder: "Write this section in plain language…" },
+    { key: "citation", label: "Standards cited (if applicable)", type: "text", placeholder: "e.g. ISO 27001 A.5.26" },
+  ],
+  schedule: [
+    { key: "purpose", label: "Purpose", type: "text", required: true, placeholder: "Why you're meeting…" },
+    { key: "agenda", label: "Agenda", type: "textarea", required: true, placeholder: "What you'll cover…" },
+    { key: "time", label: "Agreed time", type: "select", required: true, optionsFrom: "item" },
+  ],
+};
+
+function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const fields = FORM_FIELDS[task.kind];
+  const [entries, setEntries] = useState<Record<number, Record<string, string>>>(() => seed(value, "entries", {} as Record<number, Record<string, string>>));
+  const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
+
+  const val = (id: number, k: string) => entries[id]?.[k] ?? "";
+  const active = (id: number, f: FF) => f.required && (!f.condOn || val(id, f.condOn.key) === f.condOn.equals);
+  const fieldOk = (id: number, f: FF) => !active(id, f) || (val(id, f.key).trim().length > 0 && (!f.minLen || val(id, f.key).trim().length >= f.minLen));
+  const itemOk = (id: number) => fields.every((f) => fieldOk(id, f));
+  const objectiveMet = task.items.every((it) => itemOk(it.id));
+  useLift({ kind: task.kind, entries, objectiveMet }, onChange);
+
+  const set = (id: number, k: string, v: string) => setEntries((e) => ({ ...e, [id]: { ...e[id], [k]: v } }));
+  const incomplete = task.items.filter((it) => !itemOk(it.id));
+
+  const optionsFor = (it: FormTask["items"][number], f: FF) => f.options ?? (f.optionsFrom === "owners" ? task.owners ?? [] : f.optionsFrom === "item" ? it.options?.time ?? [] : []);
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Complete every {task.itemLabel} below. Submission unlocks once each has its required fields filled in.</GivenNote>
+      <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
+      <div className="space-y-3">
+        {task.items.map((it) => {
+          const bad = checked && !itemOk(it.id);
+          return (
+            <div key={it.id} className={`rounded-2xl ring-1 p-4 ${bad ? "ring-rose-300 bg-rose-50/40" : "ring-slate-200/70 bg-white"}`}>
+              <div className="text-[12.5px] font-medium text-slate-900 mb-2.5 flex items-start gap-2"><span className="text-[11px] font-mono text-slate-400 mt-0.5">{it.id}.</span><span>{it.label}</span></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {fields.map((f) => {
+                  if (f.condOn && val(it.id, f.condOn.key) !== f.condOn.equals) return null;
+                  const wide = f.type === "textarea";
+                  return (
+                    <div key={f.key} className={wide ? "sm:col-span-2" : ""}>
+                      <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">{f.label}{f.required ? <span className="text-rose-500"> *</span> : null}</div>
+                      {f.type === "textarea" ? (
+                        <textarea value={val(it.id, f.key)} onChange={(e) => set(it.id, f.key, e.target.value)} rows={2} placeholder={f.placeholder}
+                          className="w-full px-2.5 py-2 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[12.5px] resize-none" />
+                      ) : f.type === "select" ? (
+                        <select value={val(it.id, f.key)} onChange={(e) => set(it.id, f.key, e.target.value)} className="w-full h-9 px-2 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[12.5px]">
+                          <option value="">— pick —</option>
+                          {optionsFor(it, f).map((o) => <option key={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input type={f.type} value={val(it.id, f.key)} onChange={(e) => set(it.id, f.key, e.target.value)} placeholder={f.placeholder}
+                          className="w-full h-9 px-2.5 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[12.5px]" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {task.kind === "schedule" && val(it.id, "time") && <div className="mt-2 text-[11.5px] text-emerald-700 flex items-center gap-1.5"><Icon name="check" size={12} /> Confirmation captured — accepted: {val(it.id, "time")}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] text-slate-400">{objectiveMet ? "All complete — ready to submit." : `${incomplete.length} ${task.itemLabel}${incomplete.length === 1 ? "" : "s"} still need attention.`}</p>
+        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check completeness</button>
+      </div>
+
+      {objectiveMet && (
+        <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Complete</div>
+          <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">Every {task.itemLabel} is complete. {task.feedsNext}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ============================ DRAFT ============================ */
 type Section = { id: string; title: string; content: string };
-export function DraftWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function DraftWorkspace(props: WorkspaceProps) {
+  const t = getFormTask(props.taskCode, props.activityCode);
+  return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyDraftWorkspace {...props} />;
+}
+function LegacyDraftWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [docTitle] = useState(() => seed(value, "docTitle", "Information Classification Policy"));
   const [sections, setSections] = useState<Section[]>(() => seed(value, "sectionList", [
     { id: "purpose", title: "1 · Purpose", content: "Establish how the organisation classifies information assets so consistent protective controls apply across all in-scope systems." },
@@ -56,7 +236,11 @@ export function DraftWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ MAP ============================ */
-export function MapWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function MapWorkspace(props: WorkspaceProps) {
+  const t = getMapTask(props.taskCode, props.activityCode);
+  return t ? <ScriptedApplyFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyMapWorkspace {...props} />;
+}
+function LegacyMapWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const rowsA = ["EU GDPR", "UK GDPR", "PCI-DSS v4.0", "SOC 2 (existing)", "ISO 27701"];
   const colsB = ["orders-db", "K8s prod", "Stripe Connect", "Snowflake", "Marketing CMS"];
   const [cells, setCells] = useState<Record<string, string>>(() => seed(value, "cells", {
@@ -100,7 +284,107 @@ export function MapWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ CALCULATE ============================ */
-export function CalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+// Data-driven Calculate: enter a computed result per row (must match the engine recompute ±0) and
+// cite the formula ID. Submission is gated on all results matching + the formula cited.
+export function CalculateWorkspace({ value, onChange, openRef, taskCode, activityCode }: WorkspaceProps) {
+  const task = useMemo(() => getCalcTask(taskCode, activityCode), [taskCode, activityCode]);
+  if (task) return <ScriptedCalcFlow task={task} value={value} onChange={onChange} />;
+  return <LegacyCalculateWorkspace value={value} onChange={onChange} openRef={openRef} />;
+}
+
+function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const [results, setResults] = useState<Record<number, string>>(() => seed(value, "results", {} as Record<number, string>));
+  const [cite, setCite] = useState(() => seed(value, "formulaCite", ""));
+  const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
+
+  const matchOf = (r: { id: number; expected: number }) => {
+    const v = results[r.id];
+    return v != null && v.trim() !== "" && Math.abs(Number(v) - r.expected) < 0.05;
+  };
+  const wrongIds = task.rows.filter((r) => (results[r.id] ?? "").trim() !== "" && !matchOf(r)).map((r) => r.id);
+  const unsetIds = task.rows.filter((r) => (results[r.id] ?? "").trim() === "").map((r) => r.id);
+  const citeOk = cite.trim().toUpperCase() === task.formulaId.toUpperCase();
+  const allMatch = task.rows.every(matchOf);
+  const objectiveMet = allMatch && citeOk;
+  useLift({ formulaCite: cite, results, objectiveMet }, onChange);
+
+  const setResult = (id: number, v: string) => setResults((s) => ({ ...s, [id]: v }));
+  const label = (id: number) => task.rows.find((r) => r.id === id)?.instance ?? `#${id}`;
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Compute the metric for each row using the formula below, then enter your result. The engine re-runs the formula — your result must match exactly (±0). Cite the formula ID to submit.</GivenNote>
+
+      <div className="rounded-2xl bg-slate-900 text-white p-4">
+        <div className="flex items-center gap-2 text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-1.5">Formula · {task.formulaId}</div>
+        <div className="font-mono text-[13px] text-slate-100">{task.formula}</div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-3 items-start">
+        <div>
+          <SectionLabel hint={cite && !citeOk ? "must match the formula ID" : undefined}>Cite the formula ID <span className="text-rose-500">*</span></SectionLabel>
+          <WTextInput value={cite} onChange={setCite} placeholder={task.formulaId} />
+        </div>
+        <div className="text-[11.5px] text-slate-500 sm:pt-7">{task.metric}{task.unit ? ` · result in ${task.unit}` : ""}</div>
+      </div>
+
+      <div>
+        <SectionLabel hint={`${task.rows.filter(matchOf).length} / ${task.rows.length} correct`} action={
+          <button onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check results</button>
+        }>{task.title}</SectionLabel>
+        <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
+                <th className="px-3 py-2 font-semibold">Instance</th>
+                {task.inputCols.map((c) => <th key={c} className="px-3 py-2 font-semibold text-right">{c}</th>)}
+                <th className="px-3 py-2 font-semibold w-[150px]">Your result{task.unit ? ` (${task.unit})` : ""}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {task.rows.map((r) => {
+                const wrong = checked && (results[r.id] ?? "").trim() !== "" && !matchOf(r);
+                const unset = checked && (results[r.id] ?? "").trim() === "";
+                return (
+                  <tr key={r.id} className={`border-t border-slate-100 ${wrong ? "bg-rose-50/70" : unset ? "bg-amber-50/70" : ""}`}>
+                    <td className="px-3 py-2 text-[12px] font-medium text-slate-900">{r.instance}</td>
+                    {r.inputs.map((inp, i) => <td key={i} className="px-3 py-2 text-[12px] text-slate-600 text-right tabular-nums">{inp.value}</td>)}
+                    <td className="px-3 py-2">
+                      <input value={results[r.id] ?? ""} onChange={(e) => setResult(r.id, e.target.value)} inputMode="decimal" placeholder="—"
+                        className="w-full h-8 px-2 rounded-md bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/40 outline-none text-[12px] tabular-nums" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {checked && !objectiveMet && (
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 text-[12px] space-y-2">
+          {wrongIds.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 font-medium text-rose-700"><Icon name="x" size={13} /> Recompute these — they don&apos;t match the engine:</div>
+              <ul className="mt-1 ml-5 list-disc space-y-0.5 text-rose-900/80">{wrongIds.map((id) => <li key={id}>{label(id)}</li>)}</ul>
+            </div>
+          )}
+          {unsetIds.length > 0 && <div className="text-amber-700 font-medium flex items-center gap-1.5"><Icon name="info" size={13} /> {unsetIds.length} row{unsetIds.length > 1 ? "s" : ""} still need a result.</div>}
+          {!citeOk && <div className="text-rose-700 font-medium">Cite the formula ID ({task.formulaId}) to submit.</div>}
+        </div>
+      )}
+
+      {objectiveMet && (
+        <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> All results match the engine</div>
+          <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">Every value recomputes to ±0 and the formula is cited. {task.feedsNext}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LegacyCalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [inputs, setInputs] = useState(() => seed(value, "inputValues", { likelihood: 3, impact: 4, controlEff: 2 }));
   const [citations, setCitations] = useState(() => seed(value, "citations", {
     likelihood: "Sec Ops 2025 Incident Report §4.2", impact: "Org profile · ~2.4M customers", controlEff: "Internal audit ISMS-AUD-2026-01",
@@ -147,7 +431,11 @@ export function CalculateWorkspace({ value, onChange, openRef }: WorkspaceProps)
 
 /* ============================ PRIORITISE ============================ */
 type PRow = { id: number; name: string; lik: number; imp: number; vel: number; exp: number };
-export function PrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
+export function PrioritiseWorkspace(props: WorkspaceProps) {
+  const t = getPrioTask(props.taskCode, props.activityCode);
+  return t ? <ScriptedPrioritiseFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyPrioritiseWorkspace {...props} />;
+}
+function LegacyPrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
   const crit: { id: "lik" | "imp" | "vel" | "exp"; label: string; weight: number }[] = [
     { id: "lik", label: "Likelihood", weight: 0.3 }, { id: "imp", label: "Impact", weight: 0.4 }, { id: "vel", label: "Velocity", weight: 0.15 }, { id: "exp", label: "Exposure", weight: 0.15 },
   ];
@@ -205,7 +493,11 @@ export function PrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
 
 /* ============================ RECOMMEND ============================ */
 type Rec = { id: number; gap: string; action: string; owner: string; control: string; rationale: string };
-export function RecommendWorkspace({ value, onChange }: WorkspaceProps) {
+export function RecommendWorkspace(props: WorkspaceProps) {
+  const t = getFormTask(props.taskCode, props.activityCode);
+  return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyRecommendWorkspace {...props} />;
+}
+function LegacyRecommendWorkspace({ value, onChange }: WorkspaceProps) {
   const [recs, setRecs] = useState<Rec[]>(() => seed(value, "recommendations", [
     { id: 1, gap: "Missing per-record audit log on orders-db", action: "Enable RDS audit-log streaming to CloudTrail; 90 days hot, 1 year cold.", owner: "Data Platform Lead", control: "ISO 27001 A.8.15", rationale: "Closes the residual-risk gap from RR-2026.1. Audit logs are required for incident response and forensic review." },
     { id: 2, gap: "Snowflake personal-data joinability", action: "Apply data-masking to PII columns; restrict joinable identifiers to a dedicated role.", owner: "Data Platform Lead", control: "ISO 27001 A.5.34", rationale: "Joinable hashed IDs effectively reconstitute PII; masking + role isolation aligns with Annex A PII guidance." },
@@ -240,7 +532,11 @@ function L({ children }: { children: React.ReactNode }) { return <div className=
 
 /* ============================ VALIDATE ============================ */
 type Finding = { id: number; text: string; citation: string; verified: boolean | null; followup: string };
-export function ValidateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function ValidateWorkspace(props: WorkspaceProps) {
+  const t = getFormTask(props.taskCode, props.activityCode);
+  return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyValidateWorkspace {...props} />;
+}
+function LegacyValidateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [findings, setFindings] = useState<Finding[]>(() => seed(value, "findings", [
     { id: 1, text: "orders-db lacks per-record audit log", citation: "ISO 27001 A.8.15", verified: true, followup: "" },
     { id: 2, text: "Snowflake personal-data joinability risk", citation: "ISO 27001 A.5.34", verified: true, followup: "" },
@@ -284,7 +580,11 @@ export function ValidateWorkspace({ value, onChange, openRef }: WorkspaceProps) 
 }
 
 /* ============================ SCHEDULE ============================ */
-export function ScheduleWorkspace({ value, onChange }: WorkspaceProps) {
+export function ScheduleWorkspace(props: WorkspaceProps) {
+  const t = getFormTask(props.taskCode, props.activityCode);
+  return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyScheduleWorkspace {...props} />;
+}
+function LegacyScheduleWorkspace({ value, onChange }: WorkspaceProps) {
   const [purpose, setPurpose] = useState(() => seed(value, "purpose", "Walk through the Q3 access-review approach and confirm RBAC role definitions for the new ISMS scope."));
   const [agenda, setAgenda] = useState(() => seed(value, "agenda", "1. Current access-review cadence (10 min)\n2. RBAC role catalogue review (15 min)\n3. Privileged-access workflow gaps (15 min)\n4. Decision on Q3 ownership (10 min)"));
   const [slots, setSlots] = useState(() => seed(value, "slots", [
