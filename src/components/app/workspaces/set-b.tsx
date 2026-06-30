@@ -87,7 +87,7 @@ function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & 
 }
 
 /* ===== Generic completeness-form flow: Recommend / Validate / Draft / Schedule ===== */
-type FF = { key: string; label: string; type: "text" | "textarea" | "date" | "select"; required?: boolean; minLen?: number; placeholder?: string; options?: string[]; optionsFrom?: "owners" | "item"; condOn?: { key: string; equals: string } };
+type FF = { key: string; label: string; type: "text" | "textarea" | "date" | "select"; required?: boolean; minLen?: number; placeholder?: string; options?: string[]; optionsFrom?: "owners" | "item" | "scale"; condOn?: { key: string; equals: string }; condOutlier?: boolean };
 const FORM_FIELDS: Record<FormKind, FF[]> = {
   recommend: [
     { key: "action", label: "Action", type: "textarea", required: true, placeholder: "A specific, actionable remediation…" },
@@ -110,15 +110,51 @@ const FORM_FIELDS: Record<FormKind, FF[]> = {
     { key: "agenda", label: "Agenda", type: "textarea", required: true, placeholder: "What you'll cover…" },
     { key: "time", label: "Agreed time", type: "select", required: true, optionsFrom: "item" },
   ],
+  compile: [
+    { key: "source", label: "Source artefact", type: "text", required: true, placeholder: "Which prior step this comes from…" },
+    { key: "content", label: "Section content / key figure", type: "textarea", required: true, placeholder: "Summarise the section; keep figures consistent with the detail…" },
+  ],
+  document: [
+    { key: "content", label: "Section content", type: "textarea", required: true, placeholder: "Write in a professional tone (no first-person/contractions)…" },
+    { key: "crossref", label: "Cross-reference", type: "text", required: true, placeholder: "Link to a prior-step artefact, e.g. 'See AA-003 RoPA'…" },
+  ],
+  signoff: [
+    { key: "decision", label: "Decision", type: "select", required: true, options: ["Approved", "Approved with Conditions", "Rejected"] },
+    { key: "date", label: "Decision date", type: "date", required: true },
+    { key: "conditions", label: "Conditions", type: "textarea", required: true, condOn: { key: "decision", equals: "Approved with Conditions" }, placeholder: "What must be done…" },
+    { key: "revision", label: "Revision plan", type: "textarea", required: true, condOn: { key: "decision", equals: "Rejected" }, placeholder: "What to fix and re-present…" },
+  ],
+  score: [
+    { key: "score", label: "Score (0–4)", type: "select", required: true, options: ["0", "1", "2", "3", "4"] },
+    { key: "justification", label: "Justification", type: "textarea", required: true, minLen: 15, placeholder: "Why this score, against the anchor (≥ 15 chars)…" },
+  ],
+  assess: [
+    { key: "level", label: "Assigned level", type: "select", required: true, optionsFrom: "scale" },
+    { key: "evidence", label: "Cited evidence", type: "textarea", required: true, placeholder: "The specific evidence supporting this level…" },
+    { key: "outlier", label: "Outlier justification", type: "textarea", required: true, condOutlier: true, placeholder: "This level is far from the cluster — justify it…" },
+  ],
 };
 
-function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+export function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<WorkspaceProps, "value" | "onChange">) {
   const fields = FORM_FIELDS[task.kind];
   const [entries, setEntries] = useState<Record<number, Record<string, string>>>(() => seed(value, "entries", {} as Record<number, Record<string, string>>));
   const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
 
   const val = (id: number, k: string) => entries[id]?.[k] ?? "";
-  const active = (id: number, f: FF) => f.required && (!f.condOn || val(id, f.condOn.key) === f.condOn.equals);
+
+  // Assess: flag items whose assigned level is ≥2 steps from the median of the assigned cluster.
+  const scaleVal = (label: string) => task.scale?.find((s) => s.label === label)?.value;
+  const outlierSet = (() => {
+    if (task.kind !== "assess") return new Set<number>();
+    const vs = task.items.map((it) => ({ id: it.id, v: scaleVal(val(it.id, "level")) })).filter((x) => x.v != null) as { id: number; v: number }[];
+    if (vs.length < 3) return new Set<number>();
+    const sorted = vs.map((x) => x.v).sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return new Set(vs.filter((x) => Math.abs(x.v - median) >= 2).map((x) => x.id));
+  })();
+
+  const active = (id: number, f: FF) => !!f.required && (!f.condOn || val(id, f.condOn.key) === f.condOn.equals) && (!f.condOutlier || outlierSet.has(id));
   const fieldOk = (id: number, f: FF) => !active(id, f) || (val(id, f.key).trim().length > 0 && (!f.minLen || val(id, f.key).trim().length >= f.minLen));
   const itemOk = (id: number) => fields.every((f) => fieldOk(id, f));
   const objectiveMet = task.items.every((it) => itemOk(it.id));
@@ -127,7 +163,16 @@ function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<Workspace
   const set = (id: number, k: string, v: string) => setEntries((e) => ({ ...e, [id]: { ...e[id], [k]: v } }));
   const incomplete = task.items.filter((it) => !itemOk(it.id));
 
-  const optionsFor = (it: FormTask["items"][number], f: FF) => f.options ?? (f.optionsFrom === "owners" ? task.owners ?? [] : f.optionsFrom === "item" ? it.options?.time ?? [] : []);
+  // Score: live weighted aggregate (Σ score×weight ÷ Σ weight) on a 0–4 scale.
+  const allScored = task.kind === "score" && task.items.every((it) => val(it.id, "score") !== "");
+  const aggregate = (() => {
+    if (task.kind !== "score") return null;
+    const totW = task.items.reduce((a, it) => a + (it.weight ?? 1), 0);
+    const wsum = task.items.reduce((a, it) => a + Number(val(it.id, "score") || 0) * (it.weight ?? 1), 0);
+    return totW ? wsum / totW : 0;
+  })();
+
+  const optionsFor = (it: FormTask["items"][number], f: FF) => f.options ?? (f.optionsFrom === "owners" ? task.owners ?? [] : f.optionsFrom === "item" ? it.options?.time ?? [] : f.optionsFrom === "scale" ? task.scale?.map((s) => s.label) ?? [] : []);
 
   return (
     <div className="space-y-4">
@@ -136,12 +181,14 @@ function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<Workspace
       <div className="space-y-3">
         {task.items.map((it) => {
           const bad = checked && !itemOk(it.id);
+          const outlier = outlierSet.has(it.id);
           return (
-            <div key={it.id} className={`rounded-2xl ring-1 p-4 ${bad ? "ring-rose-300 bg-rose-50/40" : "ring-slate-200/70 bg-white"}`}>
-              <div className="text-[12.5px] font-medium text-slate-900 mb-2.5 flex items-start gap-2"><span className="text-[11px] font-mono text-slate-400 mt-0.5">{it.id}.</span><span>{it.label}</span></div>
+            <div key={it.id} className={`rounded-2xl ring-1 p-4 ${bad ? "ring-rose-300 bg-rose-50/40" : outlier ? "ring-amber-300 bg-amber-50/30" : "ring-slate-200/70 bg-white"}`}>
+              <div className="text-[12.5px] font-medium text-slate-900 mb-2.5 flex items-start gap-2"><span className="text-[11px] font-mono text-slate-400 mt-0.5">{it.id}.</span><span>{it.label}</span>{outlier && <span className="ml-auto text-[10px] font-semibold text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">OUTLIER</span>}{task.kind === "score" && it.weight ? <span className="ml-auto text-[10px] text-slate-400">weight ×{it.weight}</span> : null}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {fields.map((f) => {
                   if (f.condOn && val(it.id, f.condOn.key) !== f.condOn.equals) return null;
+                  if (f.condOutlier && !outlier) return null;
                   const wide = f.type === "textarea";
                   return (
                     <div key={f.key} className={wide ? "sm:col-span-2" : ""}>
@@ -167,6 +214,13 @@ function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<Workspace
           );
         })}
       </div>
+
+      {task.kind === "score" && (
+        <div className="flex items-center justify-between rounded-xl bg-slate-900 text-white px-4 py-3">
+          <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-400">Weighted aggregate (0–4)</span>
+          <span className="text-[18px] font-semibold tabular-nums">{allScored && aggregate != null ? aggregate.toFixed(2) : "—"}</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400">{objectiveMet ? "All complete — ready to submit." : `${incomplete.length} ${task.itemLabel}${incomplete.length === 1 ? "" : "s"} still need attention.`}</p>

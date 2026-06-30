@@ -19,8 +19,6 @@ import {
 } from "./set-c";
 import { useState } from "react";
 import { seed, useLift } from "./kit";
-import { getIdentifyTask } from "@/lib/identify-tasks";
-import { getCalcTask } from "@/lib/calc-tasks";
 
 export const VERB_WORKSPACES: Record<string, (p: WorkspaceProps) => React.ReactElement> = {
   request: RequestWorkspace,
@@ -63,12 +61,7 @@ function GenericWorkspace({ value, onChange }: WorkspaceProps) {
 export function VerbWorkspace({ verbId, taskCode, activityCode, value, onChange, openRef }: {
   verbId: string; taskCode?: string; activityCode?: string;
 } & WorkspaceProps) {
-  // An authored worked-task takes precedence over the catalog verb tag. This covers steps whose
-  // catalog verb differs from the exercise's real mechanics (e.g. AA-002's flag-by-criterion gap
-  // task is tagged `prioritise` but is an Identify exercise; CA-001's pass-rate is tagged `score`).
-  const Component = getIdentifyTask(taskCode, activityCode) ? VERB_WORKSPACES.identify
-    : getCalcTask(taskCode, activityCode) ? VERB_WORKSPACES.calculate
-    : (VERB_WORKSPACES[verbId] ?? GenericWorkspace);
+  const Component = VERB_WORKSPACES[verbId] ?? GenericWorkspace;
   // `key` resets internal workspace state when navigating between activities (incl. same verb).
   return <Component key={`${verbId}/${taskCode ?? ""}/${activityCode ?? ""}`} taskCode={taskCode} activityCode={activityCode} value={value} onChange={onChange} openRef={openRef} />;
 }

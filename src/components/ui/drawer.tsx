@@ -24,10 +24,15 @@ export function Drawer({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
+    // The app's scroll container is <main>, not <body> — lock it so its scrollbars don't show
+    // behind the drawer and the background can't scroll under it.
+    const main = document.querySelector("main");
     document.body.style.overflow = "hidden";
+    if (main) main.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      if (main) main.style.overflow = "";
     };
   }, [open, onClose]);
 
@@ -54,7 +59,7 @@ export function Drawer({
             <Icon name="x" size={17} />
           </button>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5">{children}</div>
       </div>
     </div>
   );

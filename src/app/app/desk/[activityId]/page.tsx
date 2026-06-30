@@ -317,12 +317,15 @@ export default function ActivityWorkspace() {
     return () => io.disconnect();
   }, [activity]);
 
-  // Auto-run the guided walkthrough on every activity (replayable any time via the Guide button).
+  // Auto-run the guided walkthrough only on a new mentee's entry point — the first action of the
+  // first task. Everywhere else it's on-demand via the Guide button (which blinks to hint it exists).
   useEffect(() => {
-    if (!activity) return;
+    if (!activity || !learnings) return;
+    const firstStepId = learnings.orgs[0]?.projects[0]?.tasks[0]?.steps[0]?.id;
+    if (activityId !== firstStepId) return;
     const id = setTimeout(() => setTourStep(0), 400); // let the brief animate in first
     return () => clearTimeout(id);
-  }, [activity]);
+  }, [activity, learnings, activityId]);
 
   const closeTour = () => setTourStep(-1);
 
@@ -453,29 +456,34 @@ export default function ActivityWorkspace() {
   if (content?.objective) tourSteps.push({
     title: "Start with the objective",
     body: "This is the goal of the step — what a good deliverable must achieve. Read it first so everything else has context.",
+    icon: "target",
     getEl: () => objectiveRef.current,
     onEnter: () => setBriefShown(true),
   });
   if (content?.whatToDo && content.whatToDo.length > 0) tourSteps.push({
     title: "Follow what to do",
     body: "These are the concrete actions to work through. Tackle them in order — each one feeds your deliverable.",
+    icon: "list",
     getEl: () => whatToDoRef.current,
     onEnter: () => setBriefShown(true),
   });
   tourSteps.push({
     title: "Open the reference material",
     body: `The facts, rules and artefacts you need to do this step correctly${references.length ? ` — ${references.length} document${references.length > 1 ? "s" : ""} here` : ""}. Click it any time to read alongside your work.`,
+    icon: "book",
     getEl: () => referenceBtnRef.current,
   });
   if (hasChecklist) tourSteps.push({
     title: "Watch the checklist",
     body: "Every acceptance criterion the mentor grades against. It ticks off live as you type — aim for all green before submitting.",
+    icon: "checkSquare",
     getEl: () => (window.matchMedia("(min-width: 768px)").matches ? checklistHudRef.current : checklistInlineRef.current),
     onEnter: () => setCriteriaHidden(false),
   });
   tourSteps.push({
     title: "Fill in your deliverable",
     body: "Do your work here, then Submit for review. The AI mentor grades it and tells you what to improve. You can save a draft any time.",
+    icon: "send",
     getEl: () => deliverableRef.current,
   });
 
@@ -501,20 +509,31 @@ export default function ActivityWorkspace() {
           </div>
         </div>
 
-        {/* submission-feedback trigger — only after a graded submission */}
-        {hasFeedback && (
+        <div className="shrink-0 flex items-center gap-2">
+          {/* guide trigger — always available; blinks thrice on open to hint the walkthrough exists */}
           <button
-            onClick={() => setFeedbackOpen(true)}
-            className={`shrink-0 inline-flex items-center gap-2 h-9 px-3 rounded-lg ring-1 transition-colors ${passed ? "bg-emerald-50 ring-emerald-200/70 hover:bg-emerald-100/70 text-emerald-700" : "bg-amber-50 ring-amber-200/70 hover:bg-amber-100/70 text-amber-700"}`}
+            key={activityId}
+            onClick={() => setTourStep(0)}
+            className="guide-blink focus-ring inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 hover:bg-indigo-100 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
           >
-            <Icon name={passed ? "check" : "chat"} size={14} strokeWidth={passed ? 3 : 2} />
-            <span className="text-[12.5px] font-medium tracking-tight">Submission feedback</span>
-            <span className="text-[11.5px] font-semibold tabular-nums">
-              {review ? (passed ? `· ${review.overallScore.toFixed(1)}/5` : "· revise") : layer1 && !layer1.passed ? "· not met" : ""}
-            </span>
-            <Icon name="arrowRight" size={13} className="opacity-60" />
+            <Icon name="help" size={14} /> Guide
           </button>
-        )}
+
+          {/* submission-feedback trigger — only after a graded submission */}
+          {hasFeedback && (
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className={`inline-flex items-center gap-2 h-9 px-3 rounded-lg ring-1 transition-colors ${passed ? "bg-emerald-50 ring-emerald-200/70 hover:bg-emerald-100/70 text-emerald-700" : "bg-amber-50 ring-amber-200/70 hover:bg-amber-100/70 text-amber-700"}`}
+            >
+              <Icon name={passed ? "check" : "chat"} size={14} strokeWidth={passed ? 3 : 2} />
+              <span className="text-[12.5px] font-medium tracking-tight">Submission feedback</span>
+              <span className="text-[11.5px] font-semibold tabular-nums">
+                {review ? (passed ? `· ${review.overallScore.toFixed(1)}/5` : "· revise") : layer1 && !layer1.passed ? "· not met" : ""}
+              </span>
+              <Icon name="arrowRight" size={13} className="opacity-60" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* brief — objective + what-to-do side by side, collapsible to reclaim space */}
@@ -574,24 +593,16 @@ export default function ActivityWorkspace() {
               {verb ? `${verb.label} — ${verb.when}` : "Capture your work for this step."}
             </p>
           </div>
-          <div className="shrink-0 flex items-center gap-2">
-            <button
-              onClick={() => setTourStep(0)}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
-            >
-              <Icon name="help" size={14} /> Guide
-            </button>
-            <button
-              ref={referenceBtnRef}
-              onClick={() => setBriefOpen(true)}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
-            >
-              <Icon name="book" size={14} /> Reference material
-              {references.length > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{references.length}</span>
-              )}
-            </button>
-          </div>
+          <button
+            ref={referenceBtnRef}
+            onClick={() => setBriefOpen(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-600 hover:bg-slate-100 text-[12px] font-medium tracking-tight transition-colors"
+          >
+            <Icon name="book" size={14} /> Reference material
+            {references.length > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{references.length}</span>
+            )}
+          </button>
         </div>
 
         <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />

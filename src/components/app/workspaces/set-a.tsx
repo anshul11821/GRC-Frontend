@@ -16,6 +16,7 @@ import { getApplyTask, type ApplyTask } from "@/lib/apply-tasks";
 import { getReviewTask, type ReviewTask } from "@/lib/review-tasks";
 import { getConductTask, type ConductTask, type ConductOption, type ConductOpening } from "@/lib/conduct-tasks";
 import { getPresentTask } from "@/lib/present-tasks";
+import { getRecordTask, type RecordTask, type RecCol } from "@/lib/record-tasks";
 
 const CLASS = ["Public", "Internal", "Confidential"];
 
@@ -603,7 +604,121 @@ function LegacyConductWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
 
 /* ============================ RECORD ============================ */
 type RegRow = { name: string; type: string; owner: string; c: string; i: string; a: string; loc: string; rationale: string };
-export function RecordWorkspace({ value, onChange }: WorkspaceProps) {
+// Data-driven Record: enter rows into an authoritative register, gated on Layer-1 deterministic
+// validation (mandatory · ID format · controlled vocab · owner-is-a-role · no dup IDs · pass↔score).
+export function RecordWorkspace({ value, onChange, taskCode, activityCode }: WorkspaceProps) {
+  const task = useMemo(() => getRecordTask(taskCode, activityCode), [taskCode, activityCode]);
+  if (task) return <ScriptedRecordFlow task={task} value={value} onChange={onChange} />;
+  return <LegacyRecordWorkspace value={value} onChange={onChange} />;
+}
+
+type RecRow = Record<string, string>;
+function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const blank = (): RecRow => Object.fromEntries(task.columns.map((c) => [c.key, ""]));
+  const [rows, setRows] = useState<RecRow[]>(() => seed(value, "rows", Array.from({ length: task.requiredRows }, blank)));
+  const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
+
+  const started = (r: RecRow) => task.columns.some((c) => (r[c.key] ?? "").trim());
+  const DEPT = /\b(department|dept|team|division|unit|group|function)\b/i;
+  const colError = (r: RecRow, c: RecCol): string | null => {
+    const v = (r[c.key] ?? "").trim();
+    const req = c.required || (c.condReq && r[c.condReq.key] === c.condReq.equals);
+    if (req && !v) return "required";
+    if (!v) return null;
+    if (c.idFormat && !new RegExp(c.idFormat.pattern).test(v)) return `format ${c.idFormat.example}`;
+    if (c.notDepartment && DEPT.test(v)) return "must be a role, not a department/team";
+    return null;
+  };
+  const rowErrors = (r: RecRow): string[] => {
+    const errs = task.columns.map((c) => { const e = colError(r, c); return e ? `${c.label}: ${e}` : null; }).filter(Boolean) as string[];
+    if (task.passRule) {
+      const p = r[task.passRule.passKey], s = r[task.passRule.scoreKey];
+      if (p && s !== "" && s != null) {
+        const ok = (p === "Pass") === (Number(s) >= task.passRule.threshold);
+        if (!ok) errs.push(`Pass/Fail must match score (${task.passRule.threshold}%+ = Pass)`);
+      }
+    }
+    return errs;
+  };
+  const startedRows = rows.filter(started);
+  const dupCols = task.columns.filter((c) => c.unique);
+  const dupValues = (key: string) => { const counts: Record<string, number> = {}; startedRows.forEach((r) => { const v = (r[key] ?? "").trim(); if (v) counts[v] = (counts[v] ?? 0) + 1; }); return new Set(Object.entries(counts).filter(([, n]) => n > 1).map(([v]) => v)); };
+  const dupSets = Object.fromEntries(dupCols.map((c) => [c.key, dupValues(c.key)]));
+  const rowDup = (r: RecRow) => dupCols.some((c) => dupSets[c.key].has((r[c.key] ?? "").trim()));
+  const rowOk = (r: RecRow) => rowErrors(r).length === 0 && !rowDup(r);
+  const objectiveMet = startedRows.length >= task.requiredRows && startedRows.every(rowOk);
+  useLift({ register: task.registerName, rows, objectiveMet }, onChange);
+
+  const set = (i: number, k: string, v: string) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+  const addRow = () => setRows((rs) => [...rs, blank()]);
+  const delRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Record each entry into the <strong>{task.registerName}</strong>. Mandatory fields are marked *; IDs must match the format, owners must be a role (not a department), and no IDs may repeat. Submission unlocks at {task.requiredRows}+ valid rows.</GivenNote>
+      <SectionLabel hint={task.standard} action={
+        <button onClick={addRow} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add row</button>
+      }>{task.title} · {startedRows.filter(rowOk).length}/{task.requiredRows} valid</SectionLabel>
+
+      <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
+              {task.columns.map((c) => <th key={c.key} className="px-2 py-2 font-semibold">{c.label}{c.required ? <span className="text-rose-500"> *</span> : null}</th>)}
+              <th className="px-2 py-2 w-8" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => {
+              const bad = checked && started(r) && !rowOk(r);
+              return (
+                <tr key={i} className={`border-t border-slate-100 align-top ${bad ? "bg-rose-50/60" : ""}`}>
+                  {task.columns.map((c) => {
+                    const condHide = c.condReq && r[c.condReq.key] !== c.condReq.equals;
+                    return (
+                      <td key={c.key} className="px-2 py-1.5">
+                        {condHide ? <span className="text-[11px] text-slate-300 italic">—</span> : c.type === "select" ? (
+                          <select value={r[c.key] ?? ""} onChange={(e) => set(i, c.key, e.target.value)} className="w-full h-8 px-1.5 rounded-md bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/40 outline-none text-[11.5px]"><option value="">—</option>{c.options!.map((o) => <option key={o}>{o}</option>)}</select>
+                        ) : (
+                          <input type={c.type === "number" ? "number" : c.type === "date" ? "date" : "text"} value={r[c.key] ?? ""} onChange={(e) => set(i, c.key, e.target.value)} placeholder={c.idFormat?.example ?? ""}
+                            className="w-full h-8 px-2 rounded-md bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/40 outline-none text-[11.5px] min-w-[90px]" />
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td className="px-2 py-1.5">{rows.length > task.requiredRows && <button onClick={() => delRow(i)} className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><Icon name="x" size={13} /></button>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] text-slate-400">{objectiveMet ? "Register valid — ready to submit." : "Fill the mandatory fields; IDs/owners must follow the rules."}</p>
+        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check register</button>
+      </div>
+
+      {checked && !objectiveMet && (
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 text-[12px] space-y-1.5">
+          {startedRows.length < task.requiredRows && <div className="text-amber-700 font-medium flex items-center gap-1.5"><Icon name="info" size={13} /> Record at least {task.requiredRows} rows ({startedRows.length} so far).</div>}
+          {rows.map((r, i) => { if (!started(r) || rowOk(r)) return null; const errs = [...rowErrors(r), ...(rowDup(r) ? ["duplicate value"] : [])]; return (
+            <div key={i} className="flex items-start gap-1.5 text-rose-700"><Icon name="x" size={12} className="mt-0.5 shrink-0" /><span>Row {i + 1}: {errs.join(" · ")}</span></div>
+          ); })}
+        </div>
+      )}
+
+      {objectiveMet && (
+        <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Register valid</div>
+          <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">{startedRows.length} rows recorded, all schema-valid with no duplicates. {task.feedsNext}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LegacyRecordWorkspace({ value, onChange }: Pick<WorkspaceProps, "value" | "onChange">) {
   const [rows, setRows] = useState<RegRow[]>(() => seed(value, "register", [
     { name: "orders-db (RDS)", type: "Database", owner: "Data Platform Lead", c: "High", i: "High", a: "High", loc: "AWS us-east-1", rationale: "Primary order PII + payment refs." },
     { name: "Production K8s", type: "Infra", owner: "Head of Platform", c: "High", i: "High", a: "High", loc: "AWS us-east-1", rationale: "Runs all customer-facing services." },

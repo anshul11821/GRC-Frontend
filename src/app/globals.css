@@ -76,6 +76,27 @@ body {
   }
 }
 
+/* Guide button attention pulse — a soft indigo ripple, thrice, when an activity opens, then rests. */
+@keyframes guideBlink {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(217, 70, 239, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 70, 239, 0);
+  }
+}
+.guide-blink {
+  animation: guideBlink 1s ease-out 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-blink {
+    animation: none;
+  }
+}
+
 /* Print / "Download as PDF" — strip app chrome and toolbars, let the document flow across pages. */
 @media print {
   .cv-noprint,

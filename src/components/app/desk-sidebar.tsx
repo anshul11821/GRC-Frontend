@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { DVerb } from "@/components/ui/dverb";
-import { VERB_TONES, LRN_AVATAR } from "@/lib/tones";
+import { VERB_TONES } from "@/lib/tones";
+import { OrgLogo } from "@/components/app/org-logo";
 import { TASK_META, METHOD_CATEGORY_ORDER } from "@/lib/taskmeta";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "./desk-context";
@@ -132,12 +133,14 @@ function orgDisplayState(org: LearningOrg): OrgState {
 }
 
 /** A whole placement (organisation): a rich header + its category→task→step tree. Locked placements
- *  are disabled until the previous one is complete; completed ones collapse but stay open-able. */
-function OrgNode({ org, defaultOpen, activeId, activeTaskCode, lockedHint }: {
+ *  are disabled until the previous one is complete; completed ones collapse but stay open-able.
+ *  Clicking the header (non-locked) opens the org-context page; the chevron toggles the tree. */
+function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lockedHint }: {
   org: LearningOrg;
   defaultOpen: boolean;
   activeId?: string;
   activeTaskCode?: string;
+  contextActive: boolean;
   lockedHint: string;
 }) {
   const state = orgDisplayState(org);
@@ -166,25 +169,38 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, lockedHint }: {
   const pct = tasks.length ? (doneTasks / tasks.length) * 100 : 0;
   const expandable = !locked && tasks.length > 0;
 
-  return (
-    <div className={`rounded-xl ${state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
-      <button
-        onClick={() => expandable && setOpen((o) => !o)}
-        disabled={!expandable}
-        title={locked ? lockedHint : undefined}
-        className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-left transition-colors ${locked ? "cursor-not-allowed" : "hover:bg-slate-100/50"}`}
-      >
-        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${LRN_AVATAR[org.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[11px] font-semibold shrink-0 ${locked ? "grayscale opacity-50" : ""}`}>{org.initials}</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[12.5px] font-semibold tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-900"}`}>{org.name}</span>
-            {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
-            {locked && <Icon name="lock" size={11} className="text-slate-300 shrink-0" />}
-          </div>
-          <div className={`text-[10.5px] tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-500"}`}>{org.industry}</div>
+  const header = (
+    <>
+      <OrgLogo org={org} className="w-8 h-8 rounded-lg text-[11px]" iconSize={16} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[12.5px] font-semibold tracking-tight truncate ${locked ? "text-slate-400" : contextActive ? "text-indigo-700" : "text-slate-900"}`}>{org.name}</span>
+          {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
+          {locked && <Icon name="lock" size={11} className="text-slate-300 shrink-0" />}
         </div>
-        {expandable && <Icon name="chevronDown" size={13} className={`text-slate-400 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />}
-      </button>
+        <div className={`text-[10.5px] tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-500"}`}>{org.industry}</div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className={`rounded-xl ${contextActive ? "ring-1 ring-indigo-200 bg-indigo-50/60" : state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
+      <div className="flex items-center gap-1 pr-1.5">
+        {locked ? (
+          <div title={lockedHint} className="flex-1 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
+        ) : (
+          <Link href={`/app/desk/org/${org.id}`} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl no-underline hover:bg-slate-100/50 transition-colors">{header}</Link>
+        )}
+        {expandable && (
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle tasks"
+            className="shrink-0 w-6 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100/50"
+          >
+            <Icon name="chevronDown" size={13} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
+          </button>
+        )}
+      </div>
 
       {!locked && tasks.length > 0 && (
         <div className="px-2.5 pb-2 flex items-center gap-2">
@@ -218,7 +234,9 @@ export function DeskSidebar() {
   const pathname = usePathname();
   const taskM = pathname.match(/^\/app\/desk\/task\/([^/]+)/);
   const activeTaskCode = taskM ? decodeURIComponent(taskM[1]) : undefined;
-  const actM = !taskM ? pathname.match(/^\/app\/desk\/([^/]+)/) : null;
+  const orgM = pathname.match(/^\/app\/desk\/org\/([^/]+)/);
+  const activeOrgPageId = orgM ? decodeURIComponent(orgM[1]) : undefined;
+  const actM = !taskM && !orgM ? pathname.match(/^\/app\/desk\/([^/]+)/) : null;
   const activeId = actM ? actM[1] : undefined;
 
   if (loading && !learnings) {
@@ -269,6 +287,7 @@ export function DeskSidebar() {
             defaultOpen={org.id === activeOrgId}
             activeId={activeId}
             activeTaskCode={activeTaskCode}
+            contextActive={org.id === activeOrgPageId}
             lockedHint={i > 0 ? `Complete ${orgs[i - 1].name} to unlock` : "Locked"}
           />
         ))

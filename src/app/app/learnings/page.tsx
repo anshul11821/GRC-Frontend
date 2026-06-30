@@ -11,7 +11,8 @@ import { catalog, type Program } from "@/lib/catalog";
 import { learningsApi, type Learnings, type LearningOrg, type LearningTask } from "@/lib/learnings";
 import { ApiError } from "@/lib/api";
 import { useCachedQuery } from "@/lib/use-query";
-import { LRN_AVATAR, LRN_CHIP } from "@/lib/tones";
+import { LRN_CHIP } from "@/lib/tones";
+import { OrgLogo } from "@/components/app/org-logo";
 
 const STATUS_CHIP: Record<string, { label: string; cls: string }> = {
   "not-started": { label: "Not started", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
@@ -106,13 +107,10 @@ function LrnTask({ task, defaultOpen }: { task: LearningTask; defaultOpen?: bool
 }
 
 function LrnOrg({ org }: { org: LearningOrg }) {
-  const locked = org.status === "locked";
   return (
     <Card>
       <div className="flex items-start gap-3.5">
-        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${LRN_AVATAR[org.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white text-[15px] font-semibold shrink-0 ${locked ? "opacity-50 grayscale" : ""}`}>
-          {org.initials}
-        </div>
+        <OrgLogo org={org} className="w-11 h-11 rounded-xl text-[15px]" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{org.name}</h3>

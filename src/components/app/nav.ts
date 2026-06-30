@@ -17,11 +17,11 @@ export const DASH_NAV: NavItem[] = [
   { id: "standards", label: "Standards", icon: "shield", href: "/app/standards" },
   { id: "calendar", label: "Calendar", icon: "calendar", href: "/app/calendar" },
   { id: "learnings", label: "My Learnings", icon: "layers", href: "/app/learnings" },
+  { id: "badges", label: "Badges", icon: "star", href: "/app/badges" },
+  { id: "certificate", label: "Certificate", icon: "ribbon", href: "/app/certificate" },
   { id: "cv", label: "My CV", icon: "file", href: "/app/cv" },
   { id: "career", label: "Career", icon: "rocket", href: "/app/career" },
   { id: "reports", label: "Reports", icon: "chart", href: "/app/reports" },
-  { id: "badges", label: "Badges", icon: "star", href: "/app/badges" },
-  { id: "certificate", label: "Certificate", icon: "ribbon", href: "/app/certificate" },
   { id: "jobs", label: "Matching Jobs", icon: "briefcase", href: "/app/jobs" },
 ];
 

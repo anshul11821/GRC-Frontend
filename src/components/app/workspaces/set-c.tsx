@@ -6,6 +6,57 @@ import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextArea, WTextInput,
   GivenNote, RefBox, ScriptedExchange, SOFT, DOT, type Tone,
 } from "./kit";
+import { getFormTask } from "@/lib/form-tasks";
+import { getBriefTask, type BriefTask } from "@/lib/brief-tasks";
+import { FormFlow } from "./set-b";
+
+/* ===== Brief: define audience + explicit ask + ≤5 plain-language key messages ===== */
+function BriefFlow({ task, value, onChange }: { task: BriefTask } & Pick<WorkspaceProps, "value" | "onChange">) {
+  const [audience, setAudience] = useState(() => seed(value, "audience", ""));
+  const [ask, setAsk] = useState(() => seed(value, "ask", ""));
+  const [messages, setMessages] = useState<string[]>(() => seed(value, "messages", ["", "", ""]));
+  const filled = messages.filter((m) => m.trim());
+  const objectiveMet = audience.trim().length > 0 && ask.trim().length > 0 && filled.length >= 3 && filled.length <= 5;
+  useLift({ audience, ask, messages, objectiveMet }, onChange);
+  const setMsg = (i: number, v: string) => setMessages((m) => m.map((x, j) => (j === i ? v : x)));
+
+  return (
+    <div className="space-y-4">
+      <GivenNote>Write a plain-language brief for a non-technical audience. State who it&apos;s for and the one explicit ask, then 3–5 short key messages ({task.format}). Submission unlocks at audience + ask + ≥3 messages.</GivenNote>
+      <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
+      <div>
+        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Audience <span className="text-rose-500">*</span></div>
+        <WTextInput value={audience} onChange={setAudience} placeholder={task.audience} />
+      </div>
+      <div>
+        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Explicit ask of the audience <span className="text-rose-500">*</span></div>
+        <WTextInput value={ask} onChange={setAsk} placeholder={task.ask} />
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500">Key messages ({filled.length}/5, min 3)</div>
+          {messages.length < 5 && <button onClick={() => setMessages([...messages, ""])} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add</button>}
+        </div>
+        <div className="space-y-2">
+          {messages.map((m, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="w-6 h-9 flex items-center justify-center text-[11.5px] font-mono text-slate-400">{i + 1}.</span>
+              <input value={m} onChange={(e) => setMsg(i, e.target.value)} placeholder="A short, plain-language point…"
+                className="flex-1 h-9 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[13px]" />
+              {messages.length > 3 && <button onClick={() => setMessages(messages.filter((_, j) => j !== i))} className="w-9 h-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><Icon name="x" size={14} /></button>}
+            </div>
+          ))}
+        </div>
+      </div>
+      {objectiveMet && (
+        <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Brief complete</div>
+          <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">Audience, ask and key messages are set — ready to deliver.</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── shared radar/spider chart ── */
 function RadarChart({ values, labels, max, tone }: { values: number[]; labels: string[]; max: number; tone: string }) {
@@ -26,7 +77,12 @@ function RadarChart({ values, labels, max, tone }: { values: number[]; labels: s
 
 /* ============================ ASSESS ============================ */
 type Domain = { id: string; name: string; score: number; evidence: string; outlier: boolean };
-export function AssessWorkspace({ value, onChange }: WorkspaceProps) {
+export function AssessWorkspace(props: WorkspaceProps) {
+  const _ft = getFormTask(props.taskCode, props.activityCode);
+  if (_ft) return <FormFlow task={_ft} value={props.value} onChange={props.onChange} />;
+  return <LegacyAssessWorkspace {...props} />;
+}
+function LegacyAssessWorkspace({ value, onChange }: WorkspaceProps) {
   const scale = ["Initial", "Repeatable", "Defined", "Managed", "Optimising"];
   const [items, setItems] = useState<Domain[]>(() => seed(value, "domains", [
     { id: "ac", name: "Access Control", score: 3, evidence: "RBAC documented; access reviews quarterly with audit trail.", outlier: false },
@@ -64,7 +120,12 @@ export function AssessWorkspace({ value, onChange }: WorkspaceProps) {
 
 /* ============================ SCORE ============================ */
 type Dim = { id: string; label: string; weight: number; anchor0: string; anchor4: string };
-export function ScoreWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function ScoreWorkspace(props: WorkspaceProps) {
+  const _ft = getFormTask(props.taskCode, props.activityCode);
+  if (_ft) return <FormFlow task={_ft} value={props.value} onChange={props.onChange} />;
+  return <LegacyScoreWorkspace {...props} />;
+}
+function LegacyScoreWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const dims: Dim[] = [
     { id: "spec", label: "Specificity", weight: 0.25, anchor0: "Vague", anchor4: "Names assets, owners, dates" },
     { id: "stand", label: "Standards Alignment", weight: 0.25, anchor0: "No citations", anchor4: "All claims cite a control" },
@@ -104,7 +165,12 @@ export function ScoreWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ COMPILE ============================ */
-export function CompileWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function CompileWorkspace(props: WorkspaceProps) {
+  const _ft = getFormTask(props.taskCode, props.activityCode);
+  if (_ft) return <FormFlow task={_ft} value={props.value} onChange={props.onChange} />;
+  return <LegacyCompileWorkspace {...props} />;
+}
+function LegacyCompileWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const sources = [
     { id: "s1", title: "Asset Register v2", code: "A.iv" }, { id: "s2", title: "Classification Outcomes", code: "C.ii" },
     { id: "s3", title: "Regulatory Driver Map", code: "C.i" }, { id: "s4", title: "Scope Statement v0.4", code: "N.i" },
@@ -141,7 +207,12 @@ export function CompileWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 }
 
 /* ============================ BRIEF ============================ */
-export function BriefWorkspace({ value, onChange }: WorkspaceProps) {
+export function BriefWorkspace(props: WorkspaceProps) {
+  const _bt = getBriefTask(props.taskCode, props.activityCode);
+  if (_bt) return <BriefFlow task={_bt} value={props.value} onChange={props.onChange} />;
+  return <LegacyBriefWorkspace {...props} />;
+}
+function LegacyBriefWorkspace({ value, onChange }: WorkspaceProps) {
   const [format, setFormat] = useState(() => seed(value, "format", "page"));
   const [audience, setAudience] = useState(() => seed(value, "audience", "All engineering staff (~180 ICs + EMs)"));
   const [keyMessage, setKeyMessage] = useState(() => seed(value, "keyMessage", "From June 15, every in-scope repository requires a CODEOWNERS file and a Security review tag on PRs touching listed paths. The two-reviewer rule already applies — this makes ownership explicit.\n\nWhy: auditors flagged that PR approvals don't trace to a named owner role. ISO 27001 §A.8.2 requires named ownership of information assets."));
@@ -179,7 +250,12 @@ export function BriefWorkspace({ value, onChange }: WorkspaceProps) {
 }
 
 /* ============================ SIGN-OFF ============================ */
-export function SignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+export function SignoffWorkspace(props: WorkspaceProps) {
+  const _ft = getFormTask(props.taskCode, props.activityCode);
+  if (_ft) return <FormFlow task={_ft} value={props.value} onChange={props.onChange} />;
+  return <LegacySignoffWorkspace {...props} />;
+}
+function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [decision, setDecision] = useState(() => seed(value, "decision", "Approved with conditions"));
   const [conditions, setConditions] = useState(() => seed(value, "conditions", "Add a line on data-residency commitments; circulate to the DPO before publishing."));
   const [revisionPlan, setRevisionPlan] = useState(() => seed(value, "revisionPlan", ""));
@@ -261,7 +337,12 @@ export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
 
 /* ============================ DOCUMENT ============================ */
 type DocSec = { id: string; title: string; done: boolean; content: string };
-export function DocumentWorkspace({ value, onChange }: WorkspaceProps) {
+export function DocumentWorkspace(props: WorkspaceProps) {
+  const _ft = getFormTask(props.taskCode, props.activityCode);
+  if (_ft) return <FormFlow task={_ft} value={props.value} onChange={props.onChange} />;
+  return <LegacyDocumentWorkspace {...props} />;
+}
+function LegacyDocumentWorkspace({ value, onChange }: WorkspaceProps) {
   const [secs, setSecs] = useState<DocSec[]>(() => seed(value, "sectionList", [
     { id: "context", title: "1 · Context", done: true, content: "Following the May 2026 ISMS sprint, a written process was needed for how scope changes are proposed, reviewed, and recorded once the baseline is signed off." },
     { id: "decision", title: "2 · Decision", done: true, content: "Scope changes are proposed via a dated change request linked to the asset register. Reviewer is the Compliance Lead; final approver is the Department Head. Changes apply prospectively." },

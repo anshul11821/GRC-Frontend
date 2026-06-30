@@ -2,11 +2,13 @@
 // registers. Each is a per-item completeness form (gate = required fields filled; Layer-2 quality is
 // graded separately). `kind` selects the field schema in the workspace (FormFlow).
 
-export type FormKind = "recommend" | "validate" | "draft" | "schedule";
-export interface FormItem { id: number; label: string; options?: Record<string, string[]>; }
+export type FormKind = "recommend" | "validate" | "draft" | "schedule" | "compile" | "document" | "signoff" | "score" | "assess";
+export interface FormItem { id: number; label: string; options?: Record<string, string[]>; weight?: number; }
 export interface FormTask {
   kind: FormKind; title: string; standard: string; itemLabel: string;
   owners?: string[];
+  /** Assess only: the maturity/RAG scale (label → numeric value, for outlier detection). */
+  scale?: { label: string; value: number }[];
   items: FormItem[]; feedsNext: string;
 }
 
@@ -201,6 +203,189 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 2, label: "Facilities/Operations", options: { time: ["Thu 13:30", "Thu 14:00"] } },
       { id: 3, label: "Department heads", options: { time: ["Thu 14:00"] } },
       { id: 4, label: "IT (AV test)", options: { time: ["Thu 13:30", "Thu 13:45"] } },
+    ],
+  },
+  "AA-002/2.8": {
+    kind: "compile", title: "CIS Gap Analysis Report", standard: "CIS Controls v8 IG1", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Executive Summary" },
+      { id: 2, label: "Scope & Objectives" },
+      { id: 3, label: "Methodology" },
+      { id: 4, label: "Compliance Findings" },
+      { id: 5, label: "Top Gaps" },
+      { id: 6, label: "Remediation Plan" },
+      { id: 7, label: "Conclusion" },
+    ],
+  },
+  "TV-002/8": {
+    kind: "compile", title: "Spot-Check Report", standard: "ISO 27001 A.5.36; A.6.3", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Executive Summary" },
+      { id: 2, label: "Scope (3 policies)" },
+      { id: 3, label: "Method" },
+      { id: 4, label: "Compliance Rates" },
+      { id: 5, label: "Findings" },
+      { id: 6, label: "Recommendations" },
+      { id: 7, label: "Conclusion" },
+    ],
+  },
+  "CA-003/6": {
+    kind: "compile", title: "Stakeholder Needs Discovery Report", standard: "ISO 27001 Cl 4.2", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Executive Summary" },
+      { id: 2, label: "Interviews Conducted" },
+      { id: 3, label: "Method" },
+      { id: 4, label: "Common Themes" },
+      { id: 5, label: "Key Quotes" },
+      { id: 6, label: "Implications" },
+      { id: 7, label: "Recommendations" },
+    ],
+  },
+  "PE-002/6": {
+    kind: "compile", title: "Audit Evidence Pack", standard: "ISO 27001 Cl 7.5; A.5.35", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Cover / Index" },
+      { id: 2, label: "Controls Covered" },
+      { id: 3, label: "Evidence Items" },
+      { id: 4, label: "Validation Notes" },
+      { id: 5, label: "Gaps / Pending" },
+      { id: 6, label: "Self-Review" },
+      { id: 7, label: "Sign-off Block" },
+    ],
+  },
+  "QA-001/4": {
+    kind: "compile", title: "Quality Review Report", standard: "ISO 27001 Cl 7.5.2/7.5.3", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Executive Summary" },
+      { id: 2, label: "Documents Reviewed" },
+      { id: 3, label: "Method" },
+      { id: 4, label: "Correction Requests" },
+      { id: 5, label: "Major Deficiencies" },
+      { id: 6, label: "Minor Deficiencies" },
+      { id: 7, label: "Closure Status" },
+    ],
+  },
+  "KT-002/6": {
+    kind: "compile", title: "Mentee Portfolio Index", standard: "ISO 27001 (programme close)", itemLabel: "section",
+    feedsNext: "The assembled deliverable is the task's primary audit artefact.",
+    items: [
+      { id: 1, label: "Index Cover" },
+      { id: 2, label: "Deliverables Produced" },
+      { id: 3, label: "Verbs Practised" },
+      { id: 4, label: "Badges Earned" },
+      { id: 5, label: "Links / References" },
+      { id: 6, label: "Lessons Learned" },
+      { id: 7, label: "Sign-off" },
+    ],
+  },
+  "AA-003/3.6": {
+    kind: "document", title: "Data-Flow Findings", standard: "GDPR Art 30/35", itemLabel: "section",
+    feedsNext: "The documented artefact feeds future Compile / Review steps.",
+    items: [
+      { id: 1, label: "Process" },
+      { id: 2, label: "Data flow" },
+      { id: 3, label: "Lawful basis" },
+      { id: 4, label: "Gaps" },
+      { id: 5, label: "Disposition" },
+      { id: 6, label: "References" },
+    ],
+  },
+  "CRM-002/8.3": {
+    kind: "document", title: "Control Applicability Record", standard: "ISO 27001 Annex A", itemLabel: "section",
+    feedsNext: "The documented artefact feeds future Compile / Review steps.",
+    items: [
+      { id: 1, label: "Control" },
+      { id: 2, label: "Applicability rationale" },
+      { id: 3, label: "Status" },
+      { id: 4, label: "Evidence type" },
+      { id: 5, label: "Owner" },
+      { id: 6, label: "References" },
+    ],
+  },
+  "AA-003/3.8": {
+    kind: "signoff", title: "RoPA/DPIA (Process Owner)", standard: "GDPR Art 30/35", itemLabel: "decision",
+    feedsNext: "The Approval Record gates the next task.",
+    items: [
+      { id: 1, label: "RoPA entry — student enrolment" },
+      { id: 2, label: "DPIA screening disposition (required)" },
+      { id: 3, label: "Lawful-basis documentation" },
+    ],
+  },
+  "GRM-002/5.7": {
+    kind: "signoff", title: "InfoSec Policy (Management)", standard: "ISO 27001 Cl 5.2; A.5.1", itemLabel: "decision",
+    feedsNext: "The Approval Record gates the next task.",
+    items: [
+      { id: 1, label: "Acceptable Use Policy v1.0" },
+      { id: 2, label: "ISO control references" },
+      { id: 3, label: "Exceptions process" },
+    ],
+  },
+  "DD-003/8": {
+    kind: "signoff", title: "Retention Schedule (Legal/Owner)", standard: "GDPR Art 5(1)(e); Art 17", itemLabel: "decision",
+    feedsNext: "The Approval Record gates the next task.",
+    items: [
+      { id: 1, label: "Retention Schedule (employee records)" },
+      { id: 2, label: "Disposal Instruction" },
+      { id: 3, label: "Payroll retention (7-year)" },
+    ],
+  },
+  "LRC-001/8": {
+    kind: "signoff", title: "Privacy Notice (DPO/Legal)", standard: "GDPR Art 13/14", itemLabel: "decision",
+    feedsNext: "The Approval Record gates the next task.",
+    items: [
+      { id: 1, label: "Revised Privacy Notice draft" },
+      { id: 2, label: "Transfer safeguards (US email)" },
+      { id: 3, label: "Retention statements" },
+    ],
+  },
+  "PE-001/7": {
+    kind: "signoff", title: "Project Charter (Sponsor)", standard: "ISO 27001 Cl 6.2; 5.3", itemLabel: "decision",
+    feedsNext: "The Approval Record gates the next task.",
+    items: [
+      { id: 1, label: "Project Charter v1.0" },
+      { id: 2, label: "Scope & out-of-scope" },
+      { id: 3, label: "Resource plan" },
+    ],
+  },
+  "CA-001/7": {
+    kind: "score", title: "Knowledge-Check Rubric", standard: "ISO 27001 A.6.3", itemLabel: "dimension",
+    feedsNext: "The scored rubric feeds Prioritise / Compile.",
+    items: [
+      { id: 1, label: "Phishing recognition", weight: 1 },
+      { id: 2, label: "Passwords & MFA", weight: 1 },
+      { id: 3, label: "Clean desk / clear screen", weight: 1 },
+      { id: 4, label: "Data handling / classification", weight: 1 },
+      { id: 5, label: "Incident reporting", weight: 1 },
+    ],
+  },
+  "GRM-003/6.4": {
+    kind: "score", title: "CSF Maturity Rubric", standard: "NIST CSF 2.0", itemLabel: "dimension",
+    feedsNext: "The scored rubric feeds Prioritise / Compile.",
+    items: [
+      { id: 1, label: "Govern", weight: 2 },
+      { id: 2, label: "Identify", weight: 1 },
+      { id: 3, label: "Protect", weight: 2 },
+      { id: 4, label: "Detect", weight: 2 },
+      { id: 5, label: "Respond", weight: 1 },
+      { id: 6, label: "Recover", weight: 1 },
+    ],
+  },
+  "CRM-003/9.6": {
+    kind: "assess", title: "SOC 2 Readiness (RAG)", standard: "SOC 2 Type II (AICPA TSC)", itemLabel: "item",
+    scale: [{ label: "Red", value: 1 }, { label: "Amber", value: 2 }, { label: "Green", value: 3 }],
+    feedsNext: "The assessment feeds Prioritise / Recommend / Compile.",
+    items: [
+      { id: 1, label: "CC1 Control Environment" },
+      { id: 2, label: "CC2 Communication & Information" },
+      { id: 3, label: "CC3 Risk Assessment" },
+      { id: 4, label: "CC5 Control Activities" },
+      { id: 5, label: "CC6 Logical & Physical Access" },
+      { id: 6, label: "CC7 System Monitoring" },
     ],
   },
 };

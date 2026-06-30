@@ -40,20 +40,6 @@ export const CALC_TASKS: Record<string, CalcTask> = {
       { id: 5, instance: "Missing account", inputs: [{ label: "Count", value: "2" }, { label: "Total", value: "30" }], expected: 6.7 },
     ],
   },
-  "CA-001/7": {
-    title: "Knowledge-Check Pass Rate", standard: "ISO 27001 A.6.3", metric: "Knowledge-check pass rate",
-    formulaId: "F-PASS-RATE", formula: "Rate% = Correct (or Passed) ÷ Attendees × 100  (target ≥ 80%)", unit: "%",
-    inputCols: ["Correct/Passed", "Attendees"],
-    feedsNext: "Feeds the Training Completion Report.",
-    rows: [
-      { id: 1, instance: "Q1 — Phishing", inputs: [{ label: "Correct/Passed", value: "18" }, { label: "Attendees", value: "20" }], expected: 90.0 },
-      { id: 2, instance: "Q2 — Passwords/MFA", inputs: [{ label: "Correct/Passed", value: "15" }, { label: "Attendees", value: "20" }], expected: 75.0 },
-      { id: 3, instance: "Q3 — Clear desk", inputs: [{ label: "Correct/Passed", value: "19" }, { label: "Attendees", value: "20" }], expected: 95.0 },
-      { id: 4, instance: "Q4 — Data handling", inputs: [{ label: "Correct/Passed", value: "14" }, { label: "Attendees", value: "20" }], expected: 70.0 },
-      { id: 5, instance: "Q5 — Reporting", inputs: [{ label: "Correct/Passed", value: "17" }, { label: "Attendees", value: "20" }], expected: 85.0 },
-      { id: 6, instance: "Overall pass rate (≥80% scored)", inputs: [{ label: "Correct/Passed", value: "16" }, { label: "Attendees", value: "20" }], expected: 80.0 },
-    ],
-  },
   "TPRM-001/4": {
     title: "Composite Vendor Risk Score", standard: "ISO 27001 A.5.19/5.20/5.22", metric: "Composite vendor risk score → band",
     formulaId: "F-VEND-COMP", formula: "Composite = Data×2 + Sys×2 + Crit + Geo + NoCert ; High≥11 · Medium 6–10 · Low≤5", unit: "",
