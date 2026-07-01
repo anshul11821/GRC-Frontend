@@ -30,7 +30,6 @@ export interface TaskMeta {
   badge: string;
   mentorRole: string;
   persona: string;
-  duration: string;
   nistCrossRef: string;
   /** Clear, second-person statement of the goal ("You will …"). */
   objective?: string;
@@ -52,7 +51,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Process Mapping Specialist",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Analytical Sleuth",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — ID.AM-01 (Inventories of hardware maintained); ID.AM-02 (Inventories of software maintained); ID.AM-05 (Assets are prioritised)"
   },
   "AA-002": {
@@ -66,7 +64,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
     "persona": "Compliance Sentinel",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — ID.AM, PR.AA, PR.DS (Protect: Identity Management; Data Security)"
   },
   "AA-003": {
@@ -80,7 +77,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Compliance Readiness",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Compliance Sentinel",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC-05 (Legal, regulatory and contractual requirements are understood); ID.AM-08 (Systems/services involving external parties are inventoried)"
   },
   "GRM-001": {
@@ -94,7 +90,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Cyber Risk Manager",
     "persona": "Analytical Sleuth",
-    "duration": "3 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.RM-01 (Risk management objectives established); ID.RA-01 (Vulnerabilities identified); ID.RA-04 (Potential impacts and likelihoods determined)"
   },
   "GRM-002": {
@@ -108,7 +103,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Collaborative Coach",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO-01 (Policy for managing cybersecurity risks established); GV.PO-02 (Policy reviewed, updated, and communicated)"
   },
   "GRM-003": {
@@ -122,7 +116,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
     "persona": "Metrics Maven",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — All six Functions (Govern, Identify, Protect, Detect, Respond, Recover) assessed at Tier level; ISO 27001:2022 — Clause 9.1 (Monitoring, measurement, analysis and evaluation)"
   },
   "CRM-001": {
@@ -136,7 +129,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Compliance Readiness",
     "mentorRole": "Compliance Manager",
     "persona": "Compliance Sentinel",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC-03 (Legal, regulatory, and contractual requirements understood and managed); GV.OC-05 (Outcomes, capabilities, and services that the organisation depends on are understood)"
   },
   "CRM-002": {
@@ -150,7 +142,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
     "persona": "Analytical Sleuth",
-    "duration": "3 weeks",
     "nistCrossRef": "NIST CSF 2.0 — All Functions (cross-walk between ISO 27001 Annex A and NIST CSF Categories/Subcategories)"
   },
   "CRM-003": {
@@ -164,7 +155,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Control Framework Understanding",
     "mentorRole": "Information Security Auditor",
     "persona": "Guardian Watchdog",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO, PR.AA, PR.DS (Policy; Identity Management; Data Security) cross-walked to TSC Common Criteria"
   },
   "DD-001": {
@@ -178,7 +168,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Collaborative Coach",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — RS.CO-02 (Incidents reported); RS.MA-01 (Incident response activities aligned with plans); DE.AE-06 (Information on adverse events communicated)"
   },
   "DD-002": {
@@ -192,7 +181,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Security Awareness & Training Specialist",
     "persona": "Innovation Catalyst",
-    "duration": "3 weeks",
     "nistCrossRef": "NIST CSF 2.0 — PR.AT-01 (Personnel are provided awareness and training); PR.AT-02 (Individuals with elevated privileges are provided awareness and training); CIS Controls v8 — Control 14 (Security Awareness and Skills Training)"
   },
   "DD-003": {
@@ -206,7 +194,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Compliance Sentinel",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — PR.DS-01 (Data at rest protected); PR.DS-10 (Data in use protected); CIS Controls v8 — Control 3.11 (Encrypt Sensitive Data at Rest) complementary to retention lifecycle"
   },
   "SPA-001": {
@@ -220,7 +207,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation Discovery",
     "mentorRole": "Cybersecurity Program Manager",
     "persona": "Operational Maestro",
-    "duration": "3 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.RM-06 (Risk tolerance determined and communicated); GV.OC (Organisational Context understood and used to prioritise cybersecurity risk)"
   },
   "SPA-002": {
@@ -234,7 +220,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation Discovery",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Bridge Builder",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC-02 (Internal and external stakeholders identified); GV.SC-04 (Suppliers and third parties are informed of their roles)"
   },
   "IE-001": {
@@ -248,7 +233,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Control Framework Understanding",
     "mentorRole": "Compliance Manager",
     "persona": "Operational Maestro",
-    "duration": "3 weeks",
     "nistCrossRef": "NIST CSF 2.0 — PR.AA-01 (Identities managed); PR.DS-01 (Data at rest protected); PR.DS-02 (Data in transit protected)"
   },
   "IE-002": {
@@ -262,7 +246,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Operational Maestro",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated); GV.OC (Organisational context maintained through documented information)"
   },
   "TV-001": {
@@ -276,7 +259,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
     "persona": "Guardian Watchdog",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — PR.AA-01 (Identities and credentials managed); PR.AA-02 (Identities are proofed and bound to credentials); CIS Controls v8 — Control 5 (Account Management), Control 6 (Access Control Management)"
   },
   "TV-002": {
@@ -290,7 +272,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
     "persona": "Analytical Sleuth",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO-02 (Policy reviewed and communicated); PR.AT-01 (Personnel provided awareness and training); DE.CM (Monitoring performed)"
   },
   "MM-001": {
@@ -304,7 +285,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
     "persona": "Metrics Maven",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.RM-06 (Risk management outcomes communicated); DE.CM-09 (Computing hardware and software monitored); PR.PS-04 (Logs of events created)"
   },
   "MM-002": {
@@ -318,7 +298,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Cyber Risk Manager",
     "persona": "Metrics Maven",
-    "duration": "1 week (recurring monthly)",
     "nistCrossRef": "NIST CSF 2.0 — ID.RA-06 (Risks identified); GV.RM-07 (Risk responses managed); DE.CM (Adverse events monitored)"
   },
   "CA-001": {
@@ -332,7 +311,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Security Awareness & Training Specialist",
     "persona": "Collaborative Coach",
-    "duration": "1 week (includes scheduling and delivery)",
     "nistCrossRef": "NIST CSF 2.0 — PR.AT-01 (Personnel provided awareness and training); CIS Controls v8 — Control 14.2 (Training for all roles with security responsibilities) and 14.7 (Training for all users on identifying social engineering)"
   },
   "CA-002": {
@@ -346,7 +324,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Compliance Manager",
     "persona": "Bridge Builder",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.RM-06 (Risk management outcomes communicated); GV.OC-04 (Responsibilities are understood); ID.RA-09 (Third-party risk assessed — referenced in reporting)"
   },
   "CA-003": {
@@ -360,7 +337,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Bridge Builder",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC-02 (Internal and external stakeholders identified); GV.OC-03 (Legal, regulatory and contractual requirements understood)"
   },
   "RR-001": {
@@ -374,7 +350,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Audit Preparation Support",
     "mentorRole": "Incident Response & Crisis Manager",
     "persona": "Crisis Commander",
-    "duration": "1 week (including exercise day and write-up)",
     "nistCrossRef": "NIST CSF 2.0 — RS.MA-01 (Incident response activities aligned with plan); RS.CO-02 (Incidents reported); RC.RP-01 (Recovery plan executed); CIS Controls v8 — Control 17 (Incident Response Management)"
   },
   "BCRP-001": {
@@ -388,7 +363,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Business Continuity & Resilience Analyst",
     "persona": "Operational Maestro",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — RC.RP-01 (Recovery plan executed); RC.RP-03 (Recovery activities and progress communicated); CIS Controls v8 — Control 11 (Data Recovery)"
   },
   "BCRP-002": {
@@ -402,7 +376,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Control Framework Understanding",
     "mentorRole": "Business Continuity & Resilience Analyst",
     "persona": "Guardian Watchdog",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — RC.RP-02 (Recovery plan updated); PR.DS-11 (Data backups created); CIS Controls v8 — Control 11.1 (Establish and maintain a data recovery process) and 11.4 (Establish and maintain an isolated instance of recovery data)"
   },
   "TPRM-001": {
@@ -416,7 +389,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Vendor / Third-Party Risk Analyst",
     "persona": "Analytical Sleuth",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.SC-04 (Suppliers and third parties informed of their roles); GV.SC-06 (Planning and due diligence performed); CIS Controls v8 — Control 15 (Service Provider Management)"
   },
   "TPRM-002": {
@@ -430,7 +402,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Risk Assessment Specialist",
     "mentorRole": "Vendor / Third-Party Risk Analyst",
     "persona": "Guardian Watchdog",
-    "duration": "3 weeks (including vendor response wait)",
     "nistCrossRef": "NIST CSF 2.0 — GV.SC-06 (Planning and due diligence performed); GV.SC-07 (Risks posed by suppliers assessed); CIS Controls v8 — Control 15.2 (Establish and maintain a process to address weaknesses in third-party service provider security)"
   },
   "LRC-001": {
@@ -444,7 +415,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Compliance Readiness",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Compliance Sentinel",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC-05 (Legal, regulatory and contractual requirements understood); PR.DS-01 (Data at rest protected — contextual); CIS Controls v8 — Control 3.14 (Log sensitive data access — contextual)"
   },
   "PE-001": {
@@ -458,7 +428,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation Discovery",
     "mentorRole": "Cybersecurity Program Manager",
     "persona": "Operational Maestro",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.OC (Organisational Context); GV.RM-01 (Risk management objectives established)"
   },
   "PE-002": {
@@ -472,7 +441,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
     "persona": "Analytical Sleuth",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated and enforced); ID.RA-01 (Vulnerabilities in assets identified); DE.CM-09 (Computing hardware and software monitored)"
   },
   "QA-001": {
@@ -486,7 +454,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Compliance Manager",
     "persona": "Guardian Watchdog",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated); GV.OC (Organisational context maintained)"
   },
   "QA-002": {
@@ -500,7 +467,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Audit Preparation Support",
     "mentorRole": "Information Security Auditor",
     "persona": "Analytical Sleuth",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — DE.CM-09 (Computing hardware and software monitored); GV.PO-02 (Policy reviewed and enforced); CIS Controls v8 — Control 18 (Penetration Testing — awareness only at GRC 101 level)"
   },
   "KT-001": {
@@ -514,7 +480,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Documentation Excellence",
     "mentorRole": "Security Awareness & Training Specialist",
     "persona": "Collaborative Coach",
-    "duration": "2 weeks",
     "nistCrossRef": "NIST CSF 2.0 — PR.AT-01 (Personnel provided awareness and training); GV.PO-02 (Policy communicated); CIS Controls v8 — Control 14.1 (Establish and maintain a security awareness programme)"
   },
   "KT-002": {
@@ -528,7 +493,6 @@ export const TASK_META: Record<string, TaskMeta> = {
     "badge": "Foundation GRC Discovery",
     "mentorRole": "Policy & Governance Analyst",
     "persona": "Collaborative Coach",
-    "duration": "1 week",
     "nistCrossRef": "NIST CSF 2.0 — GV.RM-07 (Risk responses managed and outcomes communicated); RC.IM-01 (Recovery plan incorporates lessons learned); CIS Controls v8 — Control 17.8 (Conduct post-incident reviews)"
   }
 };

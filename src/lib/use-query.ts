@@ -22,6 +22,16 @@ export function useCachedQuery<T>(key: string | null, fetcher: () => Promise<T>)
   const [loading, setLoading] = useState<boolean>(() => (key ? !cache.has(key) : false));
   const [error, setError] = useState<unknown>(null);
 
+  // When the key changes (e.g. switching program tabs) reset synchronously during render to the
+  // new key's cached value, so we never flash the previous key's data before the effect runs.
+  const [prevKey, setPrevKey] = useState(key);
+  if (key !== prevKey) {
+    setPrevKey(key);
+    setData(key ? (cache.get(key) as T | undefined) : undefined);
+    setLoading(key ? !cache.has(key) : false);
+    setError(null);
+  }
+
   useEffect(() => {
     if (!key) return;
     let cancelled = false;

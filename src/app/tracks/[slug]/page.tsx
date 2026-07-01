@@ -18,7 +18,6 @@ interface Course {
   /** Short teaser shown on the "coming soon" screen for unreleased tracks. */
   teaser: string;
   overview?: string;
-  duration?: string;
   level?: string;
   learn?: string[];
   engagements?: Engagement[];
@@ -38,7 +37,6 @@ const COURSES: Record<string, Course> = {
     teaser: "",
     overview:
       "GRC 101 takes you from zero to job-ready through three simulated enterprise engagements. You don't watch lectures — you do the work an entry-level GRC analyst does: building an asset register, running a controls gap analysis, and mapping personal-data flows for GDPR. Every deliverable is graded by an AI mentor against a two-layer scheme and a five-dimension rubric, with Socratic feedback so you improve revision over revision.",
-    duration: "Self-paced · several weeks",
     level: "Beginner · no prior experience",
     learn: [
       "Inventory and classify information assets against ISO 27001 (Public / Internal / Confidential).",
@@ -185,11 +183,6 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                 <Link href="/signup" className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]">
                   Start {course.code} <Icon name="arrowRight" size={15} />
                 </Link>
-                {course.duration && (
-                  <span className="inline-flex items-center gap-2 h-11 px-4 rounded-xl bg-white/10 ring-1 ring-white/15 text-indigo-100 text-[13px] font-medium tracking-tight">
-                    <Icon name="calendar" size={15} /> {course.duration}
-                  </span>
-                )}
                 {course.level && (
                   <span className="inline-flex items-center gap-2 h-11 px-4 rounded-xl bg-white/10 ring-1 ring-white/15 text-indigo-100 text-[13px] font-medium tracking-tight">
                     <Icon name="user" size={15} /> {course.level}

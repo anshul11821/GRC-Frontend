@@ -1,23 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion, useMotionValue, animate } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Card, Bar, Ring } from "@/components/ui/primitives";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Drawer } from "@/components/ui/drawer";
 import { DVerb } from "@/components/ui/dverb";
 import { learningsApi, type Learnings, type LearningOrg } from "@/lib/learnings";
-import { catalog, type RubricDimension, type Standard } from "@/lib/catalog";
+import { catalog, type Program, type RubricDimension, type Standard } from "@/lib/catalog";
 import { useCachedQuery } from "@/lib/use-query";
 import { BADGES } from "@/lib/badges";
 import { OrgLogo } from "@/components/app/org-logo";
-import { OrgDetail } from "@/components/app/org-context";
-
-const PROGRAM = "grc101";
+import { ProgramTabs } from "@/components/app/program-tabs";
+import { VERB_TONES, LRN_CHIP } from "@/lib/tones";
+import { STANDARDS, buildTaskIndex, tasksForStandard, nistCrossRefTaskCodes } from "@/lib/standards";
+import { TRACK_PREVIEWS, type TrackPreview } from "@/lib/track-previews";
 
 /** Next openable step in an org — drives the card "Next up" line and the panel "Continue" CTA. */
 function nextStepOf(o: LearningOrg): { id: string; taskCode: string; stepCode: string; verb: string; title: string } | null {
@@ -195,21 +195,181 @@ function HeroStandards({ standards, engaged }: { standards: Standard[]; engaged:
   );
 }
 
+// Full-colour tone maps for the standard badge tile + hero gradient (Tailwind purges dynamic classes).
+const STD_SOLID: Record<string, string> = {
+  indigo: "bg-indigo-600", violet: "bg-violet-600", emerald: "bg-emerald-500", amber: "bg-amber-500", rose: "bg-rose-500",
+};
+const STD_GRAD: Record<string, string> = {
+  indigo: "from-indigo-50/70", violet: "from-violet-50/70", emerald: "from-emerald-50/70", amber: "from-amber-50/70", rose: "from-rose-50/70",
+};
+
+/**
+ * Standards card — segmented selector across the track's frameworks + an integrated detail panel.
+ * Ported from the v2 dashboard mockup; stats (tasks owned / activities / cross-refs) are computed
+ * live from the learnings tree so they always reflect real progress.
+ */
+function StandardsSection({ learnings }: { learnings: Learnings | null | undefined }) {
+  const [activeId, setActiveId] = useState(STANDARDS[0]?.id);
+  const taskIndex = useMemo(() => buildTaskIndex(learnings), [learnings]);
+  const active = STANDARDS.find((s) => s.id === activeId) ?? STANDARDS[0];
+  if (!active) return null;
+  const t = VERB_TONES[active.tone] ?? VERB_TONES.indigo;
+
+  const codes = tasksForStandard(active.id);
+  const activities = codes.reduce((a, c) => a + (taskIndex.get(c)?.total ?? 0), 0);
+  const crossRefs = active.crossCutting ? nistCrossRefTaskCodes().length : 0;
+  const stats = [
+    { label: "Tasks owned", value: codes.length, hint: "Live in this track" },
+    { label: "Activities", value: activities, hint: "Across all tasks" },
+    { label: "Cross-refs", value: crossRefs, hint: crossRefs > 0 ? "Cross-cutting tasks" : "None" },
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Standards</h2>
+          <span className="px-1.5 h-5 rounded-md bg-slate-100 ring-1 ring-slate-200/70 text-[10.5px] font-medium text-slate-600 flex items-center">{STANDARDS.length}</span>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 flex-wrap">
+          {STANDARDS.map((s) => {
+            const sel = s.id === active.id;
+            const st = VERB_TONES[s.tone] ?? VERB_TONES.indigo;
+            return (
+              <button key={s.id} onClick={() => setActiveId(s.id)}
+                className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[12px] font-medium tracking-tight transition-all ${sel ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70" : "text-slate-500 hover:text-slate-700"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${sel ? st.dot : "bg-slate-300"}`} />
+                {s.code}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={`rounded-2xl ring-1 ring-slate-200/70 overflow-hidden bg-gradient-to-br ${STD_GRAD[active.tone] ?? STD_GRAD.indigo} via-white to-white`}>
+        <div className="p-6 md:p-7">
+          <div className="flex items-start gap-5">
+            <div className={`shrink-0 w-20 h-20 rounded-2xl ${STD_SOLID[active.tone] ?? STD_SOLID.indigo} text-white flex flex-col items-center justify-center leading-none shadow-lg`}>
+              <span className="text-[17px] font-mono font-semibold tracking-[0.04em]">{active.short}</span>
+              <span className="text-[8px] font-mono opacity-75 mt-1.5 tracking-[0.08em]">STANDARD</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-2 py-0.5 rounded-md font-mono text-[11px] tracking-tight ${t.bg} ${t.text} ring-1 ${t.ring}`}>{active.code}</span>
+                {active.crossCutting && <span className={`px-2 py-0.5 rounded-md font-mono text-[10px] uppercase tracking-[0.08em] ${t.bg} ${t.text} ring-1 ${t.ring}`}>cross-cutting</span>}
+              </div>
+              <h3 className="mt-2 text-[24px] md:text-[27px] font-semibold tracking-[-0.025em] text-slate-900 leading-tight">{active.fullName}</h3>
+              <div className={`mt-1.5 text-[15px] font-semibold tracking-tight ${t.text}`}>{active.domain}</div>
+              <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{active.description}</p>
+              <p className={`mt-2.5 text-[12.5px] italic tracking-tight ${t.text}`}>{active.tagline}</p>
+            </div>
+          </div>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {stats.map((m) => (
+              <div key={m.label} className="rounded-xl bg-white/70 ring-1 ring-slate-200/70 px-4 py-3">
+                <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500">{m.label}</div>
+                <div className="mt-1 text-[26px] font-semibold tabular-nums tracking-[-0.02em] text-slate-900 leading-none">{m.value}</div>
+                <div className="mt-1.5 text-[10.5px] font-mono text-slate-400">{m.hint}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Locked-track preview — the industries + frameworks a mentee unlocks in GRC 301 / 501, shown
+ * instead of live engagements. Curated in lib/track-previews (ordered by increasing criticality).
+ */
+function TrackPreviewSection({ preview, code }: { preview: TrackPreview; code?: string }) {
+  return (
+    <Reveal delay={0.08}>
+    <div className="space-y-5">
+      {/* Frameworks introduced — trust signal for what the track teaches */}
+      <Card>
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Icon name="shield" size={15} className="text-indigo-500" />
+            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Frameworks you&apos;ll add in {code}</h2>
+          </div>
+          <span className="text-[11.5px] text-slate-500 font-medium">{preview.frameworks.length} frameworks</span>
+        </div>
+        <p className="text-[12.5px] text-slate-500 tracking-tight leading-relaxed mb-3.5 max-w-2xl" style={{ textWrap: "pretty" }}>{preview.summary}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {preview.frameworks.map((f) => (
+            <span key={f} className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-[11.5px] font-medium tracking-tight bg-slate-50 text-slate-700 ring-1 ring-slate-200/70">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />{f}
+            </span>
+          ))}
+        </div>
+      </Card>
+
+      {/* Industries preview */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Industries in this track</h2>
+          <span className="text-[11.5px] text-slate-500 font-medium">{preview.orgs.length} organisations</span>
+        </div>
+        <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {preview.orgs.map((o) => (
+            <StaggerItem key={o.id} className="h-full">
+              <div className="group flex h-full flex-col gap-3 rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60">
+                <div className="flex items-center gap-3">
+                  <OrgLogo org={o} className="w-11 h-11 rounded-xl text-[13px]" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-semibold tracking-tight text-slate-900 truncate">{o.name}</div>
+                    <div className="text-[11px] text-slate-500 tracking-tight truncate">{o.subIndustry}</div>
+                  </div>
+                  <span className="shrink-0 inline-flex items-center gap-1 px-2 h-5 rounded-full text-[10px] font-semibold tracking-tight ring-1 bg-slate-100 text-slate-500 ring-slate-200">
+                    <Icon name="lock" size={9} /> Locked
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-flex items-center gap-1 h-[19px] px-1.5 rounded-md text-[10px] font-medium tracking-tight ring-1 ${LRN_CHIP[o.tone] ?? LRN_CHIP.indigo}`}>
+                    <Icon name="briefcase" size={10} /> {o.industry}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10.5px] text-slate-400 tracking-tight truncate">
+                    <Icon name="mapPin" size={10} className="shrink-0" /> {o.hq}
+                  </span>
+                </div>
+                <p className="text-[12px] text-slate-500 tracking-tight leading-relaxed line-clamp-2" style={{ textWrap: "pretty" }}>{o.blurb}</p>
+                <div className="flex flex-wrap gap-1 pt-3 mt-auto border-t border-slate-200/60">
+                  {o.standards.map((s) => (
+                    <span key={s} className="inline-flex items-center px-1.5 h-[18px] rounded text-[10px] font-mono tracking-tight bg-white text-slate-600 ring-1 ring-slate-200/70">{s}</span>
+                  ))}
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </Card>
+    </div>
+    </Reveal>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [programId, setProgramId] = useState("grc101");
+  const { data: programsRaw } = useCachedQuery("programs", () => catalog.programs());
+  const programs: Program[] = useMemo(() => (programsRaw ? [...programsRaw].sort((a, b) => a.order - b.order) : []), [programsRaw]);
   // Shared, cached fetches — learnings/progress are reused across pages, so repeat visits are instant.
-  const { data: progress, loading: pLoad } = useCachedQuery(`progress:${PROGRAM}`, () => learningsApi.progress(PROGRAM));
-  const { data: learnings, loading: lLoad } = useCachedQuery(`learnings:${PROGRAM}`, () => learningsApi.get(PROGRAM));
+  const { data: progress, loading: pLoad } = useCachedQuery(`progress:${programId}`, () => learningsApi.progress(programId));
+  const { data: learnings, loading: lLoad } = useCachedQuery(`learnings:${programId}`, () => learningsApi.get(programId));
   const { data: rubricData } = useCachedQuery("rubric", () => catalog.rubric());
   const rubric = rubricData ?? [];
   const { data: standardsData } = useCachedQuery("standards", () => catalog.standards());
   const standards = standardsData ?? [];
   const loading = (pLoad || lLoad) && !progress && !learnings;
 
+  const program = programs.find((p) => p.id === programId);
+  const locked = learnings?.status === "locked" || program?.status === "locked";
+  const preview = locked ? TRACK_PREVIEWS[programId] : undefined;
   const first = user?.firstName || "there";
-  const cont = learnings ? deriveContinue(learnings) : null;
+  const cont = !locked && learnings ? deriveContinue(learnings) : null;
   const orgs = learnings?.orgs ?? [];
-  const [activeOrg, setActiveOrg] = useState<LearningOrg | null>(null);
 
   const rubricScoreMap = new Map<string, number>();
   progress?.rubricScores.forEach((s) => { rubricScoreMap.set(s.id, s.value); rubricScoreMap.set(s.label.toLowerCase(), s.value); });
@@ -243,24 +403,31 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
-      {/* Hero / continue */}
+      {/* Hero / continue — the track switcher lives in the header strip so there's no empty band up top */}
       <Reveal>
       <div className="bg-brand-gradient relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]">
         <div className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
         <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+
+        {/* Header strip: status eyebrow (left) + track switcher (right) */}
+        <div className="relative flex items-center justify-between gap-3 mb-6 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className={`w-1.5 h-1.5 rounded-full ${locked ? "bg-amber-300" : "bg-emerald-300 animate-pulse"}`} />
+            <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{locked ? `${program?.code ?? "Track"} · locked` : cont ? "Pick up where you left off" : "Welcome aboard"}</span>
+          </div>
+          {programs.length > 0 && <ProgramTabs programs={programs} value={programId} onChange={setProgramId} variant="dark" />}
+        </div>
+
         <div className="relative flex flex-col md:flex-row md:items-center gap-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-              <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{cont ? "Pick up where you left off" : "Welcome aboard"}</span>
-            </div>
             <h1 className="text-[24px] md:text-[27px] font-semibold tracking-[-0.02em] leading-tight">Good to see you, {first}.</h1>
             <p className="text-[13.5px] text-indigo-100/90 mt-1 mb-4 tracking-tight max-w-xl">
-              {cont ? <>Your next move is <span className="font-medium text-white">{cont.taskCode}</span> — step {cont.stepCode}.</> : <>You&apos;re enrolled in GRC 101. Open your first engagement to begin.</>}
+              {locked ? <>{program?.code} unlocks after you finish the previous track. Preview its engagements below.</> : cont ? <>Your next move is <span className="font-medium text-white">{cont.taskCode}</span> — step {cont.stepCode}.</> : <>You&apos;re enrolled in {program?.code ?? "GRC 101"}. Open your first engagement to begin.</>}
             </p>
+            {!locked && (
             <div className="flex flex-wrap items-center gap-3">
               <Link href={cont ? `/app/desk/${cont.activityId}` : "/app/desk"} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white text-indigo-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
-                <Icon name="play" size={13} /> {cont ? "Continue task" : "Start GRC 101"}
+                <Icon name="play" size={13} /> {cont ? "Continue task" : `Start ${program?.code ?? "GRC 101"}`}
               </Link>
               {cont && (
                 <div className="inline-flex items-center gap-2 h-10 px-3 rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
@@ -270,8 +437,9 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+            )}
           </div>
-          {learnings && (
+          {learnings && !locked && (
             <div className="shrink-0 md:w-[210px]">
               <div className="rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm p-4 flex items-center gap-3">
                 <Ring pct={certPct} size={64} stroke={8}>
@@ -287,12 +455,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Standards coverage — frameworks engaged across the track */}
-        <HeroStandards standards={standards} engaged={progress?.standardsEngaged ?? []} />
+        {!locked && <HeroStandards standards={standards} engaged={progress?.standardsEngaged ?? []} />}
       </div>
       </Reveal>
 
       {/* Stat strip */}
-      {progress && (
+      {!locked && progress && (
         <Reveal delay={0.08}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Stat icon="checkSquare" tone="indigo" value={progress.activitiesDone} sub={`/ ${progress.activitiesTotal}`} label="Activities completed" />
@@ -302,6 +470,12 @@ export default function DashboardPage() {
         </Reveal>
       )}
 
+      {/* Locked track (GRC 301 / 501): preview industries + frameworks instead of live engagements.
+          Keyed by program so switching 301↔501 remounts cleanly — otherwise the Stagger's whileInView
+          (once) doesn't re-run for the swapped cards and they stay stuck at opacity:0 (blank white). */}
+      {locked && preview && <TrackPreviewSection key={programId} preview={preview} code={program?.code} />}
+
+      {!locked && (
       <Reveal delay={0.16}>
       <div className="space-y-5">
         {/* Your organisations — click a card for the full engagement breakdown */}
@@ -321,11 +495,12 @@ export default function DashboardPage() {
                 const next = locked ? null : nextStepOf(o);
                 return (
                   <StaggerItem key={o.id} className="h-full">
-                    <button
-                      type="button"
-                      onClick={() => setActiveOrg(o)}
-                      aria-label={`Open ${o.name} engagement details`}
-                      className={`focus-ring group flex h-full w-full flex-col gap-3 text-left rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-card hover:ring-indigo-200/70 ${locked ? "opacity-60" : ""}`}
+                    <Link
+                      href={locked ? "#" : `/app/desk/org/${o.id}`}
+                      aria-disabled={locked}
+                      tabIndex={locked ? -1 : undefined}
+                      aria-label={`Open ${o.name} in the Working Desk`}
+                      className={`focus-ring group flex h-full w-full flex-col gap-3 text-left rounded-xl p-4 ring-1 bg-slate-50/60 ring-slate-200/60 no-underline transition-all duration-300 ${locked ? "opacity-60 pointer-events-none cursor-not-allowed" : "cursor-pointer hover:-translate-y-0.5 hover:bg-white hover:shadow-card hover:ring-indigo-200/70"}`}
                     >
                       <div className="flex items-center gap-3">
                         <OrgLogo org={o} className="w-11 h-11 rounded-xl text-[14px]" />
@@ -379,7 +554,7 @@ export default function DashboardPage() {
                         )}
                         <Icon name="arrowRight" size={14} className="text-slate-300 shrink-0 ml-auto transition-colors group-hover:text-indigo-500" />
                       </div>
-                    </button>
+                    </Link>
                   </StaggerItem>
                 );
               })}
@@ -387,6 +562,10 @@ export default function DashboardPage() {
           )}
         </Card>
 
+        {/* Standards — segmented selector + integrated detail (active track only) */}
+        {!locked && <StandardsSection learnings={learnings} />}
+
+        {!locked && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Skill rubric — radar */}
           <Card>
@@ -436,15 +615,12 @@ export default function DashboardPage() {
             </div>
           </Card>
         </div>
+        )}
       </div>
       </Reveal>
+      )}
 
-      {/* Org detail panel */}
-      <Drawer open={!!activeOrg} onClose={() => setActiveOrg(null)} eyebrow="Organisation context" title={activeOrg?.name} width="min(720px,100vw)">
-        {activeOrg && <OrgDetail org={activeOrg} />}
-      </Drawer>
-
-      <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · GRC 101 · Foundations</div>
+      <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · {program?.title ?? "GRC 101 · Foundations"}</div>
     </div>
   );
 }

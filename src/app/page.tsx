@@ -50,7 +50,7 @@ const FAQS: FaqEntry[] = [
   { q: "How does the mentorship actually work?", a: "You work through real, simulated enterprise engagements. An AI mentor reviews your work and grades your output against the same rubric used in industry." },
   { q: "Which standards and frameworks will I learn?", a: "ISO/IEC 27001:2022, NIST CSF 2.0, CIS Controls v8, SOC 2 and GDPR — applied across 35 structured, hands-on tasks." },
   { q: "Will this help me get hired?", a: "Yes. Your completed work compiles into a CV, credential badges and a verifiable certificate, and the platform matches you to live roles from LinkedIn and remote-work boards." },
-  { q: "How long does each track take?", a: "GRC 101 spans 16 method categories across several weeks, completed at your own pace as your schedule allows." },
+  { q: "How long does each track take?", a: "GRC 101 spans 16 method categories, completed entirely at your own pace as your schedule allows." },
 ];
 
 const NAV_LINKS: [string, string][] = [

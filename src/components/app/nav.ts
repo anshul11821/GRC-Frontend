@@ -14,7 +14,6 @@ export interface NavItem {
 export const DASH_NAV: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "home", href: "/app" },
   { id: "desk", label: "Working Desk", icon: "desk", href: "/app/desk" },
-  { id: "standards", label: "Standards", icon: "shield", href: "/app/standards" },
   { id: "calendar", label: "Calendar", icon: "calendar", href: "/app/calendar" },
   { id: "learnings", label: "My Learnings", icon: "layers", href: "/app/learnings" },
   { id: "badges", label: "Badges", icon: "star", href: "/app/badges" },

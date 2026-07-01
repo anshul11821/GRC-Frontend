@@ -1,8 +1,8 @@
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Bar } from "@/components/ui/primitives";
 import { DVerb } from "@/components/ui/dverb";
-import { SOFT_TONES } from "@/lib/tones";
 import { VERB_LIST } from "@/lib/verbs";
+import { SOFT_TONES } from "@/lib/tones";
 import { BADGES } from "@/lib/badges";
 import type { Cv } from "@/lib/cv";
 
@@ -71,7 +71,7 @@ export function CvSheet({ cv }: { cv: Cv }) {
             </div>
           </div>
         </div>
-        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-7">
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-7">
           {cv.metrics.map((m) => (
             <div key={m.label} className="rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm px-3.5 py-3">
               <div className="flex items-baseline gap-1">

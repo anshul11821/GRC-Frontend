@@ -81,8 +81,6 @@ export function TaskRowCard({ code, task, standard }: { code: string; task?: Lea
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className={`px-1.5 py-0.5 rounded text-[10.5px] font-mono font-medium tracking-tight ${t.bg} ${t.text} ring-1 ${t.ring}`}>{code}</span>
-              <span className="text-[10.5px] font-mono text-slate-400">{meta.duration}</span>
-              <span className="text-slate-300">·</span>
               <span className="text-[10.5px] font-mono text-slate-500">{total} activit{total === 1 ? "y" : "ies"}</span>
             </div>
             <h3 className="mt-1.5 text-[16px] font-semibold tracking-[-0.015em] text-slate-900">{meta.name}</h3>

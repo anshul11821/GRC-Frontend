@@ -51,7 +51,7 @@ export default function OrgContext() {
         <h1 className="text-[21px] font-semibold tracking-[-0.02em] text-slate-900">{org.name}</h1>
       </div>
       <Card>
-        <OrgDetail org={org} defaultOpen />
+        <OrgDetail org={org} />
       </Card>
     </div>
   );

@@ -1,244 +1,414 @@
 "use client";
 
+// My Learnings v2 — GRC mastery + a 16-domain / 35-task coverage explorer, each task pairing its
+// technical control with why it matters. All data is real: the live /me/learnings tree (status +
+// progress) and /me/progress (overall + rubric scores) joined by task code to TASK_META (the fixed
+// task catalogue: method category, standard, badge, description, deliverable, NIST cross-ref) and
+// the CONTROLS_BY_TASK register. No hardcoded task data.
+
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { Card } from "@/components/ui/primitives";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
-import { DVerb } from "@/components/ui/dverb";
-import { Bar } from "@/components/ui/primitives";
-import { catalog, type Program } from "@/lib/catalog";
-import { learningsApi, type Learnings, type LearningOrg, type LearningTask } from "@/lib/learnings";
-import { ApiError } from "@/lib/api";
+import { Card } from "@/components/ui/primitives";
 import { useCachedQuery } from "@/lib/use-query";
-import { LRN_CHIP } from "@/lib/tones";
-import { OrgLogo } from "@/components/app/org-logo";
+import { learningsApi, type TaskStatus } from "@/lib/learnings";
+import { buildTaskIndex } from "@/lib/standards";
+import { TASK_META, METHOD_CATEGORY_ORDER } from "@/lib/taskmeta";
+import { CONTROLS_BY_TASK } from "@/lib/controls";
+import { ApiError } from "@/lib/api";
+
+const PROGRAM = "grc101";
+
+type Tone = "indigo" | "violet" | "emerald" | "amber" | "rose";
+const LRN_TONE: Record<Tone, { soft: string; text: string; ring: string; bar: string; grad: string }> = {
+  indigo:  { soft: "bg-indigo-50",  text: "text-indigo-700",  ring: "ring-indigo-200/70", bar: "bg-indigo-500",  grad: "from-indigo-500 to-violet-600" },
+  violet:  { soft: "bg-violet-50",  text: "text-violet-700",  ring: "ring-violet-200/70", bar: "bg-violet-500",  grad: "from-violet-500 to-fuchsia-600" },
+  emerald: { soft: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-200/70", bar: "bg-emerald-500", grad: "from-emerald-500 to-teal-600" },
+  amber:   { soft: "bg-amber-50",   text: "text-amber-800",   ring: "ring-amber-200/70",  bar: "bg-amber-500",   grad: "from-amber-500 to-orange-600" },
+  rose:    { soft: "bg-rose-50",    text: "text-rose-700",    ring: "ring-rose-200/70",   bar: "bg-rose-500",    grad: "from-rose-500 to-pink-600" },
+};
+const asTone = (s?: string): Tone => (s && s in LRN_TONE ? (s as Tone) : "indigo");
+
+// Presentation-only icon/tone per method category (the data itself comes from TASK_META). Keyed by
+// the exact METHOD_CATEGORY_ORDER strings so it never drifts from the real catalogue.
+const DOMAIN_META: Record<string, { icon: IconName; tone: Tone }> = {
+  "Assessment and Analysis":                    { icon: "target",        tone: "violet"  },
+  "Governance and Risk Management":             { icon: "shield",        tone: "indigo"  },
+  "Compliance and Regulatory Management":       { icon: "checkSquare",   tone: "emerald" },
+  "Design and Development":                     { icon: "edit",          tone: "amber"   },
+  "Strategic Planning and Architecture":        { icon: "layers",        tone: "indigo"  },
+  "Implementation and Execution":               { icon: "bolt",          tone: "violet"  },
+  "Testing and Validation":                     { icon: "checkCircle",   tone: "emerald" },
+  "Monitoring and Management":                  { icon: "gauge",         tone: "indigo"  },
+  "Communication and Advisory":                 { icon: "chat",          tone: "amber"   },
+  "Response and Recovery":                      { icon: "alertTriangle", tone: "rose"    },
+  "Business Continuity and Resilience Planning":{ icon: "refresh",       tone: "emerald" },
+  "Third-Party Risk Management":                { icon: "handshake",     tone: "amber"   },
+  "Legal and Regulatory Coordination":          { icon: "book",          tone: "violet"  },
+  "Project Execution":                          { icon: "briefcase",     tone: "indigo"  },
+  "Quality Assurance":                          { icon: "star",          tone: "emerald" },
+  "Knowledge Transfer":                         { icon: "users",         tone: "amber"   },
+};
+const domainMeta = (cat: string) => DOMAIN_META[cat] ?? { icon: "layers" as IconName, tone: "indigo" as Tone };
+
+// A task joined from the fixed catalogue (TASK_META) with its live status/progress.
+type Row = {
+  code: string; name: string; category: string;
+  standardLabel: string; standardTone: Tone;
+  description: string; deliverable: string; badge: string; mentorRole: string;
+  nistCrossRef: string; objective?: string;
+  status: TaskStatus; done: number; total: number; org?: string;
+};
 
 const STATUS_CHIP: Record<string, { label: string; cls: string }> = {
   "not-started": { label: "Not started", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
-  pending: { label: "Not started", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
   "in-progress": { label: "In progress", cls: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
-  active: { label: "Active placement", cls: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
-  complete: { label: "Complete", cls: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
-  upcoming: { label: "Upcoming", cls: "bg-amber-50 text-amber-700 ring-amber-100" },
-  locked: { label: "Locked", cls: "bg-slate-100 text-slate-500 ring-slate-200/70" },
+  complete:      { label: "Complete",    cls: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
+  locked:        { label: "Locked",      cls: "bg-slate-100 text-slate-400 ring-slate-200/70" },
 };
-const chip = (s: string) => STATUS_CHIP[s] ?? STATUS_CHIP["not-started"];
+const statusChip = (s: string) => STATUS_CHIP[s] ?? STATUS_CHIP["not-started"];
+const isEngaged = (s: TaskStatus) => s === "in-progress" || s === "complete" || s === "active";
 
-function stepIcon(status?: string): { name: IconName; cls: string; sw: number } {
-  if (status === "complete") return { name: "check", cls: "bg-emerald-50 text-emerald-600 ring-emerald-100", sw: 3 };
-  if (status === "current" || status === "in-progress") return { name: "play", cls: "bg-indigo-50 text-indigo-600 ring-indigo-100", sw: 1.8 };
-  if (status === "locked") return { name: "lock", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2 };
-  return { name: "minus", cls: "bg-slate-50 text-slate-300 ring-slate-200/60", sw: 2 };
-}
-
-/** A step is openable only when it's complete or the current/in-progress one — not locked or pending. */
-function stepAccessible(status?: string): boolean {
-  return status === "complete" || status === "current" || status === "in-progress";
-}
-
-function LrnTask({ task, defaultOpen }: { task: LearningTask; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(!!defaultOpen);
-  const locked = task.status === "locked";
-  const active = task.status === "in-progress";
-  const pct = task.total ? Math.round((task.done / task.total) * 100) : 0;
-  const hasSteps = task.steps.length > 0 && !locked;
+// ---------- MASTERY DASHBOARD ----------
+function RubricCard({ label, value, out }: { label: string; value: number; out: number }) {
+  const pct = out ? Math.round((value / out) * 100) : 0;
+  const tone: Tone = pct >= 85 ? "emerald" : pct >= 70 ? "indigo" : "amber";
+  const t = LRN_TONE[tone];
   return (
-    <div className={`rounded-xl ring-1 transition-all ${active ? "bg-indigo-50/30 ring-indigo-200/70" : "bg-white ring-slate-200/70"}`}>
-      <button
-        onClick={() => hasSteps && setOpen((o) => !o)}
-        className={`w-full text-left p-3.5 flex items-center gap-3 ${hasSteps ? "cursor-pointer" : "cursor-default"}`}
-      >
-        <span className={`shrink-0 inline-flex items-center justify-center px-1.5 h-5 rounded-md text-[10.5px] font-mono font-medium ${active ? "bg-indigo-600 text-white" : locked ? "bg-slate-200 text-slate-400" : "bg-slate-200 text-slate-600"}`}>
-          {task.code}
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className={`text-[13px] font-medium tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-900"}`}>{task.title}</div>
-          <div className="text-[11px] text-slate-400 tracking-tight">{task.standards}</div>
+    <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-5 flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-[13px] font-semibold tracking-tight text-slate-800 leading-snug">{label}</div>
+        <span className={`inline-flex items-center h-6 px-2 rounded-full text-[10.5px] font-semibold ${t.soft} ${t.text} ring-1 ${t.ring} shrink-0`}>{pct}%</span>
+      </div>
+      <div className="mt-4">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[26px] font-semibold tabular-nums tracking-[-0.02em] text-slate-900 leading-none">{value.toFixed(1)}</span>
+          <span className="text-[12px] text-slate-400 font-medium">/ {out}</span>
         </div>
-        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10.5px] font-medium ring-1 tracking-tight ${chip(task.status).cls}`}>{chip(task.status).label}</span>
-        {!locked && (
-          <div className="hidden sm:flex items-center gap-2 w-[140px] shrink-0">
-            <Bar pct={pct || 2} tone={active ? "indigo" : "slate"} className="flex-1" />
-            <span className="text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{task.done}/{task.total}</span>
+        <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+          <div className={`h-full rounded-full bg-gradient-to-r ${t.grad}`} style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MasteryDashboard({
+  overallPct, level, engaged, total, rubric, out,
+}: {
+  overallPct: number; level: string; engaged: number; total: number;
+  rubric: { id: string; label: string; value: number }[]; out: number;
+}) {
+  const c = 2 * Math.PI * 52;
+  return (
+    <section>
+      <div className="mb-4">
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-slate-900">GRC mastery</h2>
+        <p className="text-[12.5px] text-slate-500 tracking-tight">Your overall progress, and how your graded work scores against the mentor rubric.</p>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
+        <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 flex flex-col items-center justify-center text-center">
+          <div className="relative w-[132px] h-[132px]">
+            <svg width="132" height="132" className="-rotate-90">
+              <circle cx="66" cy="66" r="52" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="11" />
+              <circle cx="66" cy="66" r="52" fill="none" stroke="url(#mg)" strokeWidth="11" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - overallPct / 100)} />
+              <defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#818cf8" /><stop offset="1" stopColor="#c084fc" /></linearGradient></defs>
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[32px] font-semibold tabular-nums tracking-[-0.02em] leading-none">{overallPct}%</span>
+              <span className="text-[10px] text-slate-400 tracking-[0.1em] uppercase mt-1">Overall</span>
+            </div>
+          </div>
+          <div className="mt-4 text-[13.5px] font-semibold tracking-tight">{level}</div>
+          <div className="mt-1 text-[11.5px] text-slate-400 tracking-tight">{engaged} of {total} tasks engaged</div>
+        </div>
+        {rubric.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {rubric.map((r) => <RubricCard key={r.id} label={r.label} value={r.value} out={out} />)}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 flex items-center justify-center shrink-0"><Icon name="star" size={18} /></div>
+            <div>
+              <div className="text-[13px] font-semibold tracking-tight text-slate-900">No rubric scores yet</div>
+              <div className="text-[12px] text-slate-500 tracking-tight">Your capability across the mentor rubric appears here once your first activity is reviewed.</div>
+            </div>
           </div>
         )}
-        {hasSteps ? (
-          <Icon name="chevronDown" size={15} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-        ) : (
-          <Icon name={locked ? "history" : "minus"} size={15} className="text-slate-300 shrink-0" />
-        )}
-      </button>
+      </div>
+    </section>
+  );
+}
 
-      {open && hasSteps && (
-        <div className="px-3.5 pb-3.5 pt-1">
-          <div className="rounded-lg bg-slate-50/70 ring-1 ring-slate-200/50 divide-y divide-slate-200/50">
-            {task.steps.map((s) => {
-              const si = stepIcon(s.status);
-              const open = stepAccessible(s.status);
-              const active = s.status === "current" || s.status === "in-progress";
-              const inner = (
-                <>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center ring-1 shrink-0 ${si.cls}`}>
-                    <Icon name={si.name} size={11} strokeWidth={si.sw} fill={si.name === "play" ? "currentColor" : "none"} />
-                  </span>
-                  <span className="font-mono text-[10.5px] text-slate-400 shrink-0 w-7">{s.code}</span>
-                  <DVerb verbId={s.verb} />
-                  <span className={`text-[12px] tracking-tight truncate flex-1 ${active ? "text-slate-700" : open ? "text-slate-600" : "text-slate-400"}`}>{s.title}</span>
-                  {open
-                    ? <Icon name="arrowRight" size={13} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
-                    : <Icon name="lock" size={12} className="text-slate-300 shrink-0" />}
-                </>
-              );
-              return open ? (
-                <Link key={s.id} href={`/app/desk/${s.id}`} className="flex items-center gap-2.5 px-3 py-2 no-underline hover:bg-white/70 transition-colors group">{inner}</Link>
-              ) : (
-                <div key={s.id} className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed opacity-70" title="Complete the previous step to unlock this one">{inner}</div>
-              );
-            })}
-            {task.total > task.steps.length && (
-              <div className="px-3 py-2 text-[11px] text-slate-400 tracking-tight">+ {task.total - task.steps.length} more steps unlock as you progress</div>
+function StdChip({ label, tone, title }: { label: string; tone: Tone; title?: string }) {
+  const t = LRN_TONE[tone];
+  return <span title={title} className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] font-medium tracking-tight ${t.soft} ${t.text} ring-1 ${t.ring}`}>
+    <span className={`w-1 h-1 rounded-full ${t.bar}`} />{label}
+  </span>;
+}
+
+// ---------- DOMAIN COVERAGE ----------
+function DomainCard({ cat, rows, active, onClick }: { cat: string; rows: Row[]; active: boolean; onClick: () => void }) {
+  const { icon, tone } = domainMeta(cat);
+  const t = LRN_TONE[tone];
+  const tones = [...new Set(rows.map((r) => r.standardTone))];
+  return (
+    <button onClick={onClick}
+      className={`text-left rounded-xl p-3 ring-1 transition-all ${active ? "bg-white ring-indigo-300 shadow-[0_4px_14px_-6px_rgba(99,102,241,0.3)]" : "bg-white/60 ring-slate-200/60 hover:bg-white hover:ring-slate-300"}`}>
+      <div className="flex items-center gap-2">
+        <div className={`w-7 h-7 rounded-lg ${t.soft} ${t.text} ring-1 ${t.ring} flex items-center justify-center shrink-0`}>
+          <Icon name={icon} size={13} />
+        </div>
+        <span className="text-[13px] font-semibold tabular-nums text-slate-900">{rows.length}</span>
+        <span className="text-[10px] text-slate-400">{rows.length === 1 ? "task" : "tasks"}</span>
+      </div>
+      <div className="mt-1.5 text-[11.5px] font-medium text-slate-700 tracking-tight leading-snug">{cat}</div>
+      <div className="mt-1.5 flex flex-wrap gap-1">
+        {tones.map((tn) => <span key={tn} className={`w-1.5 h-1.5 rounded-full ${LRN_TONE[tn].bar}`} />)}
+      </div>
+    </button>
+  );
+}
+
+// ---------- CONTROL LIST ITEM ----------
+function ControlListItem({ row, active, onClick }: { row: Row; active: boolean; onClick: () => void }) {
+  const { icon, tone } = domainMeta(row.category);
+  const t = LRN_TONE[tone];
+  const dot = row.status === "complete" ? "bg-emerald-500" : row.status === "in-progress" || row.status === "active" ? "bg-indigo-500" : "bg-slate-300";
+  return (
+    <button onClick={onClick}
+      className={`w-full text-left rounded-xl p-3 ring-1 transition-all ${active ? "bg-white ring-indigo-300 shadow-[0_4px_14px_-6px_rgba(99,102,241,0.3)]" : "bg-white/60 ring-slate-200/60 hover:bg-white hover:ring-slate-300"}`}>
+      <div className="flex items-start gap-2.5">
+        <div className={`mt-0.5 w-7 h-7 rounded-lg ${t.soft} ${t.text} ring-1 ${t.ring} flex items-center justify-center shrink-0`}>
+          <Icon name={icon} size={13} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono text-slate-400">{row.code}</span>
+            <span className={`w-1 h-1 rounded-full ${LRN_TONE[row.standardTone].bar}`} />
+            <span className={`text-[10px] font-medium ${LRN_TONE[row.standardTone].text}`}>{row.standardLabel}</span>
+            <span className={`ml-auto w-1.5 h-1.5 rounded-full ${dot}`} title={statusChip(row.status).label} />
+          </div>
+          <div className={`mt-0.5 text-[12.5px] font-medium tracking-tight leading-snug ${active ? "text-slate-900" : "text-slate-700"}`}>{row.name}</div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// Control-reference chips: the structured register when we have it, else the task's standard + any
+// NIST subcategory codes parsed out of its cross-reference string.
+function referenceChips(row: Row): { label: string; tone: Tone; title?: string }[] {
+  const reg = CONTROLS_BY_TASK[row.code];
+  if (reg) return reg.controls.map((c) => ({ label: c.num, tone: asTone(c.tone), title: `${c.standard} · ${c.name}` }));
+  const chips: { label: string; tone: Tone; title?: string }[] = [{ label: row.standardLabel, tone: row.standardTone }];
+  const codes = [...new Set(row.nistCrossRef.match(/\b[A-Z]{2}\.[A-Z]{2}(?:-\d+)?\b/g) ?? [])];
+  for (const code of codes) chips.push({ label: `NIST ${code}`, tone: "violet" });
+  return chips;
+}
+
+// ---------- CONTROL DETAIL — dual pane ----------
+function ControlDetail({ row }: { row: Row }) {
+  const { icon, tone } = domainMeta(row.category);
+  const t = LRN_TONE[tone];
+  const chips = referenceChips(row);
+  return (
+    <div>
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <span className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] font-medium ${t.soft} ${t.text} ring-1 ${t.ring}`}>
+            <Icon name={icon} size={12} />{row.category}
+          </span>
+          <span className="font-mono text-[11px] text-slate-400">{row.code}</span>
+          {row.org && <span className="text-[11px] text-slate-400 tracking-tight">· {row.org}</span>}
+          <span className={`ml-auto px-2 py-0.5 rounded-full text-[10.5px] font-medium ring-1 tracking-tight ${statusChip(row.status).cls}`}>{statusChip(row.status).label}</span>
+        </div>
+        <h3 className="text-[21px] font-semibold tracking-[-0.02em] text-slate-900 leading-tight">{row.name}</h3>
+        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-[11px] text-slate-500">
+          <span className="inline-flex items-center gap-1"><Icon name="ribbon" size={12} className="text-slate-400" />{row.badge}</span>
+          <span className="text-slate-300">·</span>
+          <span className="inline-flex items-center gap-1"><Icon name="user" size={12} className="text-slate-400" />{row.mentorRole}</span>
+          {row.total > 0 && (<><span className="text-slate-300">·</span>
+            <span className="inline-flex items-center gap-1 tabular-nums"><Icon name="checkSquare" size={12} className="text-slate-400" />{row.done}/{row.total} steps</span></>)}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* LEFT — technical control */}
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-md bg-slate-900 text-white flex items-center justify-center"><Icon name="shield" size={12} /></div>
+            <span className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500">Technical control</span>
+          </div>
+          <p className="text-[13px] leading-relaxed text-slate-700 tracking-tight">{row.description}</p>
+
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2">Control references</div>
+            <div className="flex flex-wrap gap-1.5">
+              {chips.map((chip) => <StdChip key={chip.label} label={chip.label} tone={chip.tone} title={chip.title} />)}
+            </div>
+            {row.nistCrossRef && (
+              <p className="mt-3 text-[11.5px] leading-relaxed text-slate-500 tracking-tight">{row.nistCrossRef}</p>
             )}
           </div>
         </div>
-      )}
-    </div>
-  );
-}
 
-function LrnOrg({ org }: { org: LearningOrg }) {
-  return (
-    <Card>
-      <div className="flex items-start gap-3.5">
-        <OrgLogo org={org} className="w-11 h-11 rounded-xl text-[15px]" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{org.name}</h3>
-            <span className={`inline-flex items-center gap-1.5 h-[20px] px-2 rounded-md text-[10.5px] font-medium tracking-tight ring-1 ${LRN_CHIP[org.tone] ?? LRN_CHIP.indigo}`}>
-              <Icon name="briefcase" size={11} /> {org.industry}
-            </span>
-            <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-medium ring-1 tracking-tight ${chip(org.status).cls}`}>{chip(org.status).label}</span>
+        {/* RIGHT — why it matters */}
+        <div className="rounded-2xl ring-1 ring-indigo-200/70 p-5 flex flex-col bg-gradient-to-br from-indigo-50 via-violet-50/40 to-white">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center"><Icon name="target" size={12} /></div>
+            <span className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-indigo-700">Why this matters</span>
           </div>
-          <p className="text-[12px] text-slate-500 tracking-tight mt-1 leading-relaxed" style={{ textWrap: "pretty" }}>{org.context}</p>
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-4">
-        {org.projects.map((proj) => {
-          const done = proj.tasks.filter((t) => t.status === "complete").length;
-          return (
-            <div key={proj.id}>
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 text-white text-[10.5px] font-mono font-semibold shrink-0">{proj.code}</span>
-                <div className="min-w-0">
-                  <div className="text-[13px] font-semibold tracking-tight text-slate-900">{proj.title}</div>
-                  <div className="text-[10.5px] text-slate-400 tracking-tight">{proj.standards}</div>
-                </div>
-                <span className="ml-auto text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{done}/{proj.tasks.length} tasks</span>
-              </div>
-              <div className="space-y-2">
-                {proj.tasks.map((t) => (
-                  <LrnTask key={t.id} task={t} defaultOpen={t.status === "in-progress"} />
-                ))}
+          <p className="text-[13px] leading-relaxed text-slate-700 tracking-tight">{row.objective || row.description}</p>
+          <div className="mt-4 space-y-2.5">
+            <div className="flex items-start gap-3 rounded-xl bg-white/70 ring-1 ring-slate-200/60 p-3">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200/70 flex items-center justify-center shrink-0"><Icon name="file" size={14} /></div>
+              <div>
+                <div className="text-[10.5px] font-semibold tracking-[0.08em] uppercase text-slate-400">What you produce</div>
+                <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug mt-0.5">{row.deliverable}</p>
               </div>
             </div>
-          );
+            <div className="flex items-start gap-3 rounded-xl bg-white/70 ring-1 ring-slate-200/60 p-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-200/70 flex items-center justify-center shrink-0"><Icon name="ribbon" size={14} /></div>
+              <div>
+                <div className="text-[10.5px] font-semibold tracking-[0.08em] uppercase text-slate-400">Credential earned</div>
+                <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug mt-0.5">{row.badge}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- FULL EXPLORER ----------
+function LearningsExplorer({ rows }: { rows: Row[] }) {
+  const [filter, setFilter] = useState("all");
+  const [sel, setSel] = useState(rows[0]?.code ?? "");
+
+  const byCategory = useMemo(() => {
+    const m = new Map<string, Row[]>();
+    for (const cat of METHOD_CATEGORY_ORDER) m.set(cat, []);
+    for (const r of rows) (m.get(r.category) ?? m.set(r.category, []).get(r.category)!).push(r);
+    return m;
+  }, [rows]);
+
+  const shownCats = filter === "all" ? METHOD_CATEGORY_ORDER : [filter];
+  const ctrl = rows.find((r) => r.code === sel) ?? rows[0];
+
+  return (
+    <section>
+      <div className="mb-4">
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-slate-900">GRC 101 coverage · {METHOD_CATEGORY_ORDER.length} domains · {rows.length} tasks</h2>
+        <p className="text-[12.5px] text-slate-500 tracking-tight">Every method category and task, each pairing its technical control with the reason it exists.</p>
+      </div>
+
+      {/* domain coverage grid — doubles as filter */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 mb-4">
+        {METHOD_CATEGORY_ORDER.map((cat) => {
+          const items = byCategory.get(cat) ?? [];
+          if (!items.length) return null;
+          return <DomainCard key={cat} cat={cat} rows={items} active={filter === cat} onClick={() => setFilter(filter === cat ? "all" : cat)} />;
         })}
       </div>
-    </Card>
-  );
-}
 
-function LrnSummary({ learnings }: { learnings: Learnings }) {
-  const orgs = learnings.orgs;
-  const industries = new Set(orgs.map((o) => o.industry)).size;
-  const projects = orgs.reduce((n, o) => n + o.projects.length, 0);
-  const tasks = orgs.reduce((n, o) => n + o.projects.reduce((m, p) => m + p.tasks.length, 0), 0);
-  const items: { icon: IconName; tone: string; value: number; label: string }[] = [
-    { icon: "briefcase", tone: "indigo", value: industries, label: "Industries" },
-    { icon: "grid", tone: "violet", value: orgs.length, label: "Organisations" },
-    { icon: "layers", tone: "emerald", value: projects, label: "Projects" },
-    { icon: "checkSquare", tone: "amber", value: tasks, label: "Tasks" },
-  ];
-  const tones: Record<string, string> = {
-    indigo: "bg-indigo-50 text-indigo-600 ring-indigo-100",
-    violet: "bg-violet-50 text-violet-600 ring-violet-100",
-    emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-    amber: "bg-amber-50 text-amber-700 ring-amber-100",
-  };
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {items.map((s) => (
-        <Card key={s.label} className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ring-1 ${tones[s.tone]}`}>
-            <Icon name={s.icon} size={17} />
-          </div>
-          <div>
-            <div className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900 leading-none">{s.value}</div>
-            <div className="text-[11.5px] text-slate-500 tracking-tight mt-1">{s.label}</div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function ProgramTabs({ programs, value, onChange }: { programs: Program[]; value: string; onChange: (id: string) => void }) {
-  return (
-    <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 w-fit">
-      {programs.map((p) => {
-        const sel = p.id === value;
-        const locked = p.status === "locked";
-        return (
-          <button
-            key={p.id}
-            onClick={() => onChange(p.id)}
-            className={`inline-flex items-center gap-1.5 px-4 h-9 rounded-lg text-[13px] font-medium tracking-tight transition-all ${sel ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70" : "text-slate-500 hover:text-slate-700"}`}
-          >
-            {locked && <Icon name="history" size={13} className={sel ? "text-slate-400" : "text-slate-300"} />}
-            {p.code}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11.5px] text-slate-500 tracking-tight">
+          {filter === "all" ? `Showing all ${METHOD_CATEGORY_ORDER.length} domains` : `Filtered · ${filter}`}
+        </span>
+        {filter !== "all" && (
+          <button onClick={() => setFilter("all")} className="text-[11.5px] font-medium text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+            <Icon name="x" size={12} />Clear filter
           </button>
-        );
-      })}
-    </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 items-start">
+        {/* grouped list */}
+        <div className="space-y-4 lg:max-h-[720px] lg:overflow-y-auto lg:pr-1">
+          {shownCats.map((cat) => {
+            const items = byCategory.get(cat) ?? [];
+            if (!items.length) return null;
+            const { icon, tone } = domainMeta(cat);
+            return (
+              <div key={cat}>
+                <div className="flex items-center gap-2 mb-1.5 px-1">
+                  <Icon name={icon} size={12} className={LRN_TONE[tone].text} />
+                  <span className="text-[10.5px] font-semibold tracking-[0.08em] uppercase text-slate-500">{cat}</span>
+                  <span className="text-[10px] text-slate-400">{items.length}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {items.map((r) => <ControlListItem key={r.code} row={r} active={r.code === sel} onClick={() => setSel(r.code)} />)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* detail */}
+        <div className="rounded-3xl bg-slate-50/40 ring-1 ring-slate-200/60 p-5 lg:sticky lg:top-4">
+          {ctrl && <ControlDetail row={ctrl} />}
+        </div>
+      </div>
+    </section>
   );
 }
 
 export default function LearningsPage() {
-  const [programId, setProgramId] = useState("grc101");
-  const { data: programsRaw } = useCachedQuery("programs", () => catalog.programs());
-  const programs: Program[] = useMemo(() => (programsRaw ? [...programsRaw].sort((a, b) => a.order - b.order) : []), [programsRaw]);
-  const { data: learnings, loading, error: loadErr } = useCachedQuery(`learnings:${programId}`, () => learningsApi.get(programId));
-  const error = loadErr ? (loadErr instanceof ApiError ? loadErr.message : "Couldn't load learnings.") : null;
+  const { data: learnings, loading: lLoad, error: lErr } = useCachedQuery(`learnings:${PROGRAM}`, () => learningsApi.get(PROGRAM));
+  const { data: progress, loading: pLoad } = useCachedQuery(`progress:${PROGRAM}`, () => learningsApi.progress(PROGRAM));
 
-  const program = programs.find((p) => p.id === programId);
-  const locked = learnings?.status === "locked" || program?.status === "locked";
+  // Join the fixed catalogue (TASK_META) with the live tree by task code — keeping each code's
+  // most-progressed placement, with its real org, status and step progress.
+  const rows = useMemo<Row[]>(() => {
+    const index = buildTaskIndex(learnings);
+    // Org of each code's most-progressed placement (buildTaskIndex keeps that task; match on done).
+    const orgByCode = new Map<string, string>();
+    for (const org of learnings?.orgs ?? []) {
+      for (const proj of org.projects) {
+        for (const task of proj.tasks) {
+          const kept = index.get(task.code);
+          if (kept && kept.done === task.done && !orgByCode.has(task.code)) orgByCode.set(task.code, org.name);
+        }
+      }
+    }
+    return Object.entries(TASK_META).map(([code, m]) => {
+      const live = index.get(code);
+      return {
+        code, name: m.name, category: m.methodCategory,
+        standardLabel: m.standardLabel, standardTone: asTone(m.standardTone),
+        description: m.description, deliverable: m.deliverable, badge: m.badge, mentorRole: m.mentorRole,
+        nistCrossRef: m.nistCrossRef, objective: m.objective,
+        status: live?.status ?? "not-started", done: live?.done ?? 0, total: live?.total ?? 0,
+        org: orgByCode.get(code),
+      };
+    });
+  }, [learnings]);
+
+  const total = rows.length;
+  const engaged = rows.filter((r) => isEngaged(r.status)).length;
+  const overallPct = progress?.overallPct ?? (total ? Math.round((engaged / total) * 100) : 0);
+  const level = overallPct >= 75 ? "Advanced Practitioner" : overallPct >= 50 ? "Practitioner" : overallPct >= 20 ? "Developing Practitioner" : "Foundational";
+  const rubric = progress?.reviewsCount ? progress.rubricScores : [];
+  const scoreOut = progress?.scoreOutOf ?? 5;
+
+  const loading = (lLoad || pLoad) && !learnings && !progress;
+  const error = lErr ? (lErr instanceof ApiError ? lErr.message : "Couldn't load learnings.") : null;
 
   return (
-    <div className="max-w-[1100px] mx-auto px-6 py-6 space-y-5">
+    <div className="max-w-[1140px] mx-auto px-6 py-6 space-y-7">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-start gap-3.5">
-          <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
-            <Icon name="book" size={20} />
-          </span>
-          <div>
-            <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900">My Learnings</h1>
-            <p className="text-[13px] text-slate-500 tracking-tight mt-0.5 max-w-xl" style={{ textWrap: "pretty" }}>
-              Your projects and tasks, organised by the organisation and industry you practise in — across each program track.
-            </p>
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900">My Learnings</h1>
+            <span className="inline-flex items-center h-6 px-2 rounded-md bg-indigo-600 text-white text-[11px] font-mono font-semibold">GRC 101</span>
           </div>
+          <p className="text-[13px] text-slate-500 tracking-tight mt-1 max-w-xl" style={{ textWrap: "pretty" }}>
+            What you&apos;ve actually learned — your mastery, and every control paired with the business reason it matters.
+          </p>
         </div>
-        {programs.length > 0 && <ProgramTabs programs={programs} value={programId} onChange={setProgramId} />}
       </div>
-
-      {program && (
-        <div className="flex items-center gap-3 text-[12.5px] text-slate-500 tracking-tight">
-          <span className="inline-flex items-center justify-center px-2 h-6 rounded-md bg-indigo-600 text-white text-[11px] font-mono font-semibold">{program.code}</span>
-          <span className="font-medium text-slate-700">{program.title}</span>
-          <span className="hidden sm:inline text-slate-300">·</span>
-          <span className="hidden sm:inline">{program.blurb}</span>
-        </div>
-      )}
 
       {loading ? (
         <SkeletonCardGrid cards={6} className="grid grid-cols-1 lg:grid-cols-2 gap-4" />
@@ -247,29 +417,12 @@ export default function LearningsPage() {
           <div className="w-11 h-11 mx-auto rounded-xl bg-rose-50 ring-1 ring-rose-100 flex items-center justify-center text-rose-500 mb-3"><Icon name="info" size={20} /></div>
           <div className="text-[13px] font-medium text-slate-700">{error}</div>
         </Card>
-      ) : learnings ? (
+      ) : (
         <>
-          {locked ? (
-            <div className="rounded-2xl ring-1 ring-slate-200/70 bg-white p-5 flex items-center gap-4">
-              <div className="w-11 h-11 rounded-xl bg-slate-100 ring-1 ring-slate-200/70 flex items-center justify-center text-slate-400 shrink-0">
-                <Icon name="history" size={20} />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13.5px] font-semibold tracking-tight text-slate-900">{program?.code} is locked</div>
-                <div className="text-[12px] text-slate-500 tracking-tight">Preview the engagements you&apos;ll unlock below.</div>
-              </div>
-            </div>
-          ) : (
-            <LrnSummary learnings={learnings} />
-          )}
-
-          <div className="space-y-4">
-            {learnings.orgs.map((org) => (
-              <LrnOrg key={org.id} org={org} />
-            ))}
-          </div>
+          <MasteryDashboard overallPct={overallPct} level={level} engaged={engaged} total={total} rubric={rubric} out={scoreOut} />
+          <LearningsExplorer rows={rows} />
         </>
-      ) : null}
+      )}
 
       <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">
         grcmentor · learnings update automatically as you complete tasks
