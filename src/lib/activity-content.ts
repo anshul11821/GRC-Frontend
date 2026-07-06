@@ -4,6 +4,7 @@
 import type { TaskReference } from "./taskmeta";
 import { isGateVerb } from "./verbs";
 import { RUA_TASKS } from "./rua-tasks";
+import { RUA_REFS } from "./rua-refs";
 
 export interface ActivityContent {
   objective: string;
@@ -2949,11 +2950,13 @@ export function getActivityContent(taskCode: string, activityCode: string, verbI
     return {
       objective: `You will prove you understand this task — the governing controls, the templates, the key concepts and the contract for ${deliverable} — before any real work begins. No passed gate, no first step.`,
       whatToDo: [
-        "Study each governing control and note in a line what it requires of this task.",
-        "Inspect the provided templates and confirm the prerequisites are in hand.",
+        "Read the reference material handed to you for each step — control extracts, templates, briefs and concept primers.",
+        "Study each governing control and pass its comprehension check; inspect every template.",
         "Explain every key concept in your own words — the mentor grades these, not copied definitions.",
         "Answer the readiness questions, accept the deliverable contract, and attest your readiness.",
       ],
+      // the programme-provided RUA reference artifacts (view-only, rendered in-app)
+      references: RUA_REFS[taskCode],
     };
   }
   return {

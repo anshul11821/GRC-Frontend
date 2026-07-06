@@ -99,7 +99,7 @@ export default function TaskOverview() {
                 <span className="font-mono text-[10.5px] text-slate-400 w-7 shrink-0">{s.code}</span>
                 <DVerb verbId={s.verb} />
                 <span className="text-[12.5px] text-slate-700 tracking-tight truncate flex-1">{s.title}</span>
-                {gate && <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-violet-50 ring-1 ring-violet-200 text-violet-600 text-[9px] font-semibold tracking-[0.08em] shrink-0">GATE</span>}
+                {gate && <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-violet-50 ring-1 ring-violet-200 text-violet-600 text-[9px] font-semibold tracking-[0.08em] shrink-0">{s.verb === "rua" ? "RUA" : "RESEARCH"}</span>}
                 <Icon name="arrowRight" size={14} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
               </Link>
             );
