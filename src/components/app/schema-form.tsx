@@ -12,7 +12,7 @@ const asRows = (v: unknown): Row[] => (Array.isArray(v) ? (v as Row[]) : []);
 
 /**
  * Renders a verb's tailored field-spec into a controlled form. Values flow up via onChange and
- * become the submission payload.fields. A free-text "Additional notes" field is always appended.
+ * become the submission payload.fields.
  */
 export function SchemaForm({
   spec,
@@ -36,17 +36,6 @@ export function SchemaForm({
           <Field f={f} value={value[f.key]} onChange={(v) => set(f.key, v)} />
         </div>
       ))}
-
-      <div>
-        <div className="text-[12px] font-medium text-slate-700 tracking-tight mb-1.5">Additional notes</div>
-        <textarea
-          value={String(value.notes ?? "")}
-          onChange={(e) => set("notes", e.target.value)}
-          rows={4}
-          placeholder="Anything else for the mentor to consider…"
-          className="w-full rounded-lg bg-white ring-1 ring-slate-200/80 p-3 text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-y"
-        />
-      </div>
     </div>
   );
 }

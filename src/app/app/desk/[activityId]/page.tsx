@@ -256,7 +256,6 @@ export default function ActivityWorkspace() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [values, setValues] = useState<Record<string, unknown>>({});
-  const [notesVal, setNotesVal] = useState("");
   const [focusRefId, setFocusRefId] = useState<string | null>(null);
   // reference documents opened as draggable floating windows
   const fw = useFloatingDocs();
@@ -270,7 +269,8 @@ export default function ActivityWorkspace() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [briefShown, setBriefShown] = useState(true);
   // The criteria HUD stays closed until the user scrolls the deliverable into view (see observer below).
-  const [criteriaHidden, setCriteriaHidden] = useState(true);
+  const [criteriaHidden, setCriteriaHidden] = useState(false); // user dismissed it
+  const [atDeliverable, setAtDeliverable] = useState(false);   // deliverable card is on screen
   // When a passed activity is reopened, lets the user choose to edit and submit again.
   const [resubmit, setResubmit] = useState(false);
   const deliverableRef = useRef<HTMLDivElement>(null);
@@ -294,23 +294,24 @@ export default function ActivityWorkspace() {
         // Restore from the saved draft, or — for an already-submitted task — the latest submission,
         // so a completed activity opens already filled in.
         const restore = a.draft ?? h[0]?.submission.payload ?? null;
-        if (restore) {
-          setValues(restore.fields ?? {});
-          setNotesVal(restore.notes ?? "");
-        }
+        if (restore) setValues(restore.fields ?? {});
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [activityId]);
 
-  // Reveal the criteria HUD once the deliverable scrolls into view; keep it closed (chip) before then.
+  // Nothing floats over the page until the deliverable scrolls into view — then the HUD opens
+  // itself, and a manual dismiss is forgotten once you leave the deliverable again.
   // Re-attaches when the deliverable card mounts (after the activity loads).
   useEffect(() => {
     const el = deliverableRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
-      ([entry]) => setCriteriaHidden(!entry.isIntersecting),
+      ([entry]) => {
+        setAtDeliverable(entry.isIntersecting);
+        if (!entry.isIntersecting) setCriteriaHidden(false);
+      },
       // Thin band right under the sticky header: fires once the "Your deliverable"
       // heading scrolls up to the top of the screen, and stays open while the (tall)
       // card still overlaps the band — i.e. for the rest of the activity.
@@ -332,9 +333,9 @@ export default function ActivityWorkspace() {
 
   const closeTour = () => setTourStep(-1);
 
-  const payload = (): ActivityPayload => ({ fields: values, notes: notesVal, attachments: [] });
+  const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
-  const hasContent = notesVal.trim() !== "" || Object.entries(values).some(([, v]) =>
+  const hasContent = Object.entries(values).some(([, v]) =>
     Array.isArray(v) ? v.some((x) => (typeof x === "string" ? x.trim() : Object.values(x ?? {}).some(Boolean))) : String(v ?? "").trim() !== "",
   );
   // Workspaces with a guided objective (e.g. the Request conversation) lift `objectiveMet`.
@@ -481,8 +482,8 @@ export default function ActivityWorkspace() {
     title: "Watch the checklist",
     body: "Every acceptance criterion the mentor grades against. It ticks off live as you type — aim for all green before submitting.",
     icon: "checkSquare",
-    getEl: () => (window.matchMedia("(min-width: 768px)").matches ? checklistHudRef.current : checklistInlineRef.current),
-    onEnter: () => setCriteriaHidden(false),
+    getEl: () => (window.matchMedia("(min-width: 1280px)").matches ? checklistHudRef.current : checklistInlineRef.current),
+    onEnter: () => { setAtDeliverable(true); setCriteriaHidden(false); }, // force it visible for the tour; the observer re-syncs on scroll
   });
   tourSteps.push({
     title: "Fill in your deliverable",
@@ -618,18 +619,7 @@ export default function ActivityWorkspace() {
 
         <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
 
-        <div className="mt-5">
-          <div className="text-[12px] font-medium text-slate-700 tracking-tight mb-1.5">Additional notes</div>
-          <textarea
-            value={notesVal}
-            onChange={(e) => setNotesVal(e.target.value)}
-            rows={3}
-            placeholder="Anything else for the mentor to consider…"
-            className="w-full rounded-lg bg-white ring-1 ring-slate-200/80 p-3 text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-y"
-          />
-        </div>
-
-        {error && <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
+        {error &&<div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
         <div className="mt-5">
           {passed && !busy && !resubmit ? (
@@ -682,19 +672,19 @@ export default function ActivityWorkspace() {
         </div>
       )}
 
-      {/* md+: translucent glass HUD fixed to the top-right so the full checklist stays in view
-          throughout the activity (anchored top+right → no sidebar math, no layout reflow).
-          Dismissable — cross-fades to a small "Criteria" chip that brings it back. Both elements
-          stay mounted so the swap can fade rather than pop. */}
+      {/* md+: translucent glass HUD fixed to the top-right. Nothing floats until the deliverable
+          scrolls into view — before that both the HUD and the chip are gone, so neither covers the
+          brief. Inside the deliverable the HUD opens itself; dismissing it leaves the chip to
+          bring it back. Both stay mounted so the swaps fade rather than pop. */}
       {hasChecklist && (
         <>
-          <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${criteriaHidden ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"}`}>
+          <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
             <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
             onClick={() => setCriteriaHidden(false)}
-            aria-hidden={!criteriaHidden}
-            className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+            aria-hidden={!(atDeliverable && criteriaHidden)}
+            className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-gradient-to-b from-white/85 to-indigo-50/85 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-indigo-200/70 shadow-[0_12px_40px_-14px_rgba(79,70,229,0.4)] text-indigo-700 hover:to-indigo-100/85 text-[12px] font-semibold tracking-tight transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${atDeliverable && criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
           >
             <Icon name="checkSquare" size={14} className="text-indigo-600" /> Checklist
           </button>

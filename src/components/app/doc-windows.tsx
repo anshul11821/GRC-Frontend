@@ -93,14 +93,14 @@ function DocWindow({ doc, index, z, onClose, onFocus }: {
           <Icon name="x" size={14} />
         </button>
       </div>
-      <div className="px-4 py-3 overflow-y-auto overscroll-contain flex-1 min-h-0">
+      <div className="px-4 py-3 pb-6 overflow-y-auto overscroll-contain flex-1 min-h-0 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgb(100_116_139/0.35)_transparent]">
         <RefBody text={doc.body} />
       </div>
-      {/* corner resize grip */}
+      {/* corner resize grip — z-10 + opaque note-coloured corner keeps it above the body's scrollbar */}
       <div onPointerDown={startResize} aria-hidden
-        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize touch-none flex items-end justify-end p-1">
-        <svg width="10" height="10" viewBox="0 0 10 10" className="text-slate-500/60">
-          <path d="M9 1v8H1M9 5v4H5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        className="group absolute z-10 bottom-0 right-0 w-6 h-6 cursor-se-resize touch-none flex items-end justify-end p-1.5 rounded-br-xl bg-inherit">
+        <svg width="9" height="9" viewBox="0 0 10 10" className="text-slate-500/50 transition-colors duration-200 group-hover:text-slate-800">
+          <path d="M9 1v8H1M9 5v4H5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     </div>

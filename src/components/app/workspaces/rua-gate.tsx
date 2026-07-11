@@ -91,6 +91,24 @@ interface PaneProps {
   openDoc: (d: TaskReference) => void;
 }
 
+/** Refs with no `item` belong to the whole tab; the rest document one item each. */
+const tabRefs = (refs: RuaRef[]) => refs.filter((r) => r.item === undefined);
+const itemRef = (refs: RuaRef[], i: number) => refs.find((r) => r.item === i);
+
+/** "Open the reference for this item" button — every RUA item has exactly one. */
+function ItemDoc({ refs, idx, openDoc, label = "Open the reference for this step" }: {
+  refs: RuaRef[]; idx: number; openDoc: (d: TaskReference) => void; label?: string;
+}) {
+  const r = itemRef(refs, idx);
+  if (!r) return null;
+  return (
+    <button onClick={() => openDoc(r)} title={r.title}
+      className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 cursor-pointer focus-ring transition-colors">
+      <Icon name="book" size={12} /> {label}
+    </button>
+  );
+}
+
 /* ================= R1 · Study ================= */
 
 function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProps) {
@@ -104,7 +122,7 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
       <ScreenHead v="R1" name="Study" title="Study the governing controls & cross-walk"
         subtitle={`Work through each ${task.standard} reference for its intent, then pass the comprehension check. Controls unlock in order.`}
         ring={{ value: passedCount / Math.max(1, task.controls.length), label: `${passedCount}/${task.controls.length}` }} />
-      <DocOpenStrip docs={refs} onOpen={openDoc} tone="violet" className="mb-4" />
+      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Reference material for this step" className="mb-4" />
       <div className="space-y-2.5">
         {task.controls.map((c, i) => {
           const done = !!p.study[i]?.passed;
@@ -137,6 +155,7 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
                       Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.
                     </p>
                   </div>
+                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open the control extract for this reference" />
                   <MicroCheckBox task={task} taskCode={taskCode} idx={i} passed={done} attempts={p.study[i]?.attempts ?? 0}
                     onPass={() => patch((n) => { n.study[i] = { passed: true, attempts: n.study[i]?.attempts ?? 0 }; })}
                     onFail={() => patch((n) => { n.study[i] = { passed: false, attempts: (n.study[i]?.attempts ?? 0) + 1 }; })} />
@@ -217,7 +236,7 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
       <ScreenHead v="R2" name="Inspect" title="Open every provided template"
         subtitle="Prove you know each template's structure and purpose before you use it in anger. Open a card, study its fields, then pass the field-purpose exercise."
         ring={{ value: passedCount / Math.max(1, task.templates.length), label: `${passedCount}/${task.templates.length}` }} />
-      <DocOpenStrip docs={refs} onOpen={openDoc} tone="violet" label="Template reference documents" className="mb-4" />
+      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Template reference documents" className="mb-4" />
       <div className="space-y-2.5">
         {task.templates.map((tpl, i) => {
           const done = !!p.inspect[i];
@@ -253,6 +272,7 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
                   ) : (
                     <div className="rounded-xl ring-1 ring-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{tpl.purpose || "Structured document — review its sections before use."}</div>
                   )}
+                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open this template" />
                   <InspectExerciseBox task={task} taskCode={taskCode} idx={i} passed={done}
                     onPass={() => patch((n) => { n.inspect[i] = true; })} />
                 </div>
@@ -370,7 +390,7 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
       <ScreenHead v="R3" name="Acquire" title="Retrieve prerequisite inputs & access"
         subtitle="Pull prior-task artefacts, acknowledge the organisation context, and confirm the access this task needs — before any work begins."
         ring={{ value: resolved / Math.max(1, task.acquire.length), label: `${resolved}/${task.acquire.length}` }} />
-      <DocOpenStrip docs={refs} onOpen={openDoc} tone="violet" label="Prerequisite briefs" className="mb-4" />
+      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Prerequisite briefs" className="mb-4" />
 
       <div className="space-y-2.5">
         {task.acquire.map((a, i) => {
@@ -384,6 +404,7 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
               <div className="flex-1 min-w-0">
                 <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full ring-1 text-[10px] font-semibold ${m.chip}`}>{m.label}</span>
                 <p className="mt-1 text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{a.label}</p>
+                <div className="mt-1.5"><ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open the brief for this input" /></div>
               </div>
               <div className="shrink-0 self-center">
                 {done
@@ -438,7 +459,7 @@ function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
       <ScreenHead v="R4" name="Clarify" title={`Walk the ${task.steps.length} activity steps`}
         subtitle="For each step of the task, either paraphrase it in your own words or raise a query. Every open query must be resolved before the gate."
         ring={{ value: understood / Math.max(1, task.steps.length), label: `${understood}/${task.steps.length}` }} />
-      <DocOpenStrip docs={refs} onOpen={openDoc} tone="violet" label="Task description & activity steps" className="mb-4" />
+      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Task description & activity steps" className="mb-4" />
       {openQ > 0 && (
         <div className="rounded-xl ring-1 ring-amber-200 bg-amber-50 px-4 py-2.5 mb-4 flex items-center gap-2 text-[12.5px] text-amber-800">
           <Icon name="alertTriangle" size={15} /> {openQ} open quer{openQ > 1 ? "ies" : "y"} — resolve to clear the Part D gate.
@@ -446,7 +467,7 @@ function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
       )}
       <div className="space-y-2.5">
         {task.steps.map((s, i) => (
-          <StepRow key={i} step={s} idx={i} rec={p.clarify[i]} patch={patch}
+          <StepRow key={i} step={s} idx={i} rec={p.clarify[i]} patch={patch} refs={refs} openDoc={openDoc}
             prevDone={i === 0 || p.clarify[i - 1]?.state === "understood"} />
         ))}
       </div>
@@ -455,8 +476,9 @@ function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
   );
 }
 
-function StepRow({ step, idx, rec, patch, prevDone }: {
+function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
   step: { verb: string; text: string }; idx: number; rec: RuaProgress["clarify"][number]; patch: Patch; prevDone: boolean;
+  refs: RuaRef[]; openDoc: (d: TaskReference) => void;
 }) {
   const state = rec?.state ?? "pending";
   const [mode, setMode] = useState<"para" | "query" | null>(null);
@@ -499,6 +521,7 @@ function StepRow({ step, idx, rec, patch, prevDone }: {
             {state === "query" && <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold">query open</span>}
           </div>
           <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{step.text}</p>
+          <div className="mt-1.5"><ItemDoc refs={refs} idx={idx} openDoc={openDoc} label="Open the brief for this step" /></div>
 
           {mode === null && state === "pending" && (
             <div className="mt-2.5 flex flex-wrap gap-2">
@@ -740,14 +763,9 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
             </div>
             <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{task.concepts[idx]}</h4>
           </div>
-          {refs[idx] && (
-            <div className="px-4 pt-3">
-              <button onClick={() => openDoc(refs[idx])}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 cursor-pointer focus-ring transition-colors">
-                <Icon name="book" size={12} /> Open the study primer for this concept
-              </button>
-            </div>
-          )}
+          <div className="px-4 pt-3">
+            <ItemDoc refs={refs} idx={idx} openDoc={openDoc} label="Open the study primer for this concept" />
+          </div>
 
           {!result ? (
             <div className="px-4 py-3.5 space-y-3">

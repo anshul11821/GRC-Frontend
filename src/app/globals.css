@@ -76,6 +76,35 @@ body {
   }
 }
 
+/* Coach-mark cursor: drifts toward the sidebar toggle and taps it, over and over. */
+@keyframes cursorTap {
+  0%,
+  100% {
+    transform: translate(20px, 20px) scale(1);
+  }
+  45% {
+    transform: translate(3px, 3px) scale(1);
+  }
+  55% {
+    transform: translate(3px, 3px) scale(0.86);
+  }
+  65% {
+    transform: translate(3px, 3px) scale(1);
+  }
+}
+
+/* Indigo halo rippling out of the spotlit toggle. The second shadow is the dim over the rest of
+   the app — it stays constant across keyframes so the backdrop never flickers. */
+@keyframes spotlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.65), 0 0 0 9999px rgba(2, 6, 23, 0.62);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px rgba(129, 140, 248, 0), 0 0 0 9999px rgba(2, 6, 23, 0.62);
+  }
+}
+
 /* Guide button attention pulse — a soft indigo ripple, thrice, when an activity opens, then rests. */
 @keyframes guideBlink {
   0% {

@@ -94,9 +94,15 @@ export function TaskRowCard({ code, task, standard }: { code: string; task?: Lea
         </div>
       </Link>
       {task && task.steps.length > 0 && (
-        <div className="px-5 pb-4">
-          <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Activities · method applied per step</div>
-          <div className="space-y-0.5">
+        <details className="group/act border-t border-slate-100/80">
+          <summary className="flex items-center justify-between gap-3 px-5 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden hover:bg-slate-50/60 transition-colors">
+            <span className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-500">Activities · method applied per step</span>
+            <span className="flex items-center gap-1.5 shrink-0 text-[10.5px] font-mono text-slate-400">
+              {task.steps.length}
+              <Icon name="chevronDown" size={13} className="transition-transform duration-200 group-open/act:rotate-180 motion-reduce:transition-none" />
+            </span>
+          </summary>
+          <div className="px-5 pb-4 pt-1 space-y-0.5">
             {task.steps.map((s) => {
               const locked = !s.status || s.status === "locked" || s.status === "pending";
               const inner = (
@@ -115,7 +121,7 @@ export function TaskRowCard({ code, task, standard }: { code: string; task?: Lea
               );
             })}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
@@ -232,33 +238,39 @@ export function StandardBanner({ taskCode, activityId }: { taskCode: string; act
   return (
     <div className="mb-4 rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_2px_8px_-2px_rgba(15,23,42,0.04)]">
       <div className="flex items-stretch">
-        <div className={`w-1.5 ${SOLID[standard.tone]}`} />
-        <div className="flex-1 flex items-center gap-4 px-4 py-3 flex-wrap">
-          <Link href={`/app/standards/${standard.id}${fromQuery}`} className="flex items-center gap-3 min-w-0 no-underline group">
+        <div className={`w-1.5 shrink-0 ${SOLID[standard.tone]}`} />
+        {/* Every cell is a label(16px)/value(20px) stack, so the label rows line up across cells. */}
+        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-3 px-3 sm:px-4 py-3">
+          <Link href={`/app/standards/${standard.id}${fromQuery}`} className="flex items-center gap-3 min-w-0 basis-full sm:basis-auto sm:flex-1 no-underline group">
             <span className={`shrink-0 w-10 h-10 rounded-xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none`}>
               <span className="text-[10px] font-mono font-semibold tracking-[0.06em]">{standard.short}</span>
               <span className="text-[8px] font-mono opacity-70 mt-0.5">STD</span>
             </span>
             <span className="min-w-0">
-              <span className={`block text-[9.5px] font-semibold tracking-[0.14em] uppercase ${t.text}`}>Standard / Framework</span>
-              <span className="block text-[14px] font-semibold tracking-[-0.01em] text-slate-900 truncate group-hover:text-indigo-700">{standard.fullName}</span>
+              <span className={`block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase ${t.text}`}>Standard / Framework</span>
+              <span className="block h-5 text-[13.5px] leading-5 font-semibold tracking-[-0.01em] text-slate-900 truncate group-hover:text-indigo-700">{standard.fullName}</span>
             </span>
           </Link>
-          <div className="hidden md:block h-9 w-px bg-slate-200/80" />
-          <div className="hidden md:block min-w-0">
-            <span className="block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-500">Domain</span>
-            <span className="block text-[13px] font-medium tracking-tight text-slate-800 truncate">{standard.domain}</span>
+
+          <div className="hidden md:block h-9 w-px shrink-0 bg-slate-200/80" />
+
+          <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
+            <span className="block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase text-slate-500">Domain</span>
+            <span className="block h-5 text-[13.5px] leading-5 font-medium tracking-tight text-slate-800 truncate">{standard.domain}</span>
           </div>
+
           {alsoNist && (
-            <div className="hidden lg:flex items-center gap-2 shrink-0">
-              <span className="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400">Also applies</span>
-              <Link href={`/app/standards/${alsoNist.id}${fromQuery}`} className={`inline-flex items-center gap-1 h-6 px-2 rounded-md ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring} text-[10.5px] font-medium no-underline hover:opacity-80`}>
+            <div className="shrink-0">
+              <span className="block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase text-slate-400">Also applies</span>
+              <Link href={`/app/standards/${alsoNist.id}${fromQuery}`} className={`h-5 inline-flex items-center gap-1.5 px-1.5 rounded-md ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring} text-[10.5px] leading-5 font-medium no-underline hover:opacity-80`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${tone(alsoNist.tone).dot}`} />{alsoNist.code}
               </Link>
             </div>
           )}
-          <Link href={`/app/standards/${standard.id}${fromQuery}`} className={`ml-auto shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-medium tracking-tight ${t.text} hover:${t.bg} transition-colors no-underline`}>
-            Standard overview <Icon name="arrowUpRight" size={12} />
+
+          <Link href={`/app/standards/${standard.id}${fromQuery}`} className={`shrink-0 ml-auto self-center inline-flex items-center gap-1.5 h-8 px-2.5 -mr-1 rounded-lg text-[11.5px] font-medium tracking-tight ${t.text} hover:bg-slate-50 transition-colors no-underline`}>
+            <span className="hidden sm:inline">Standard mapping</span><span className="sm:hidden">Mapping</span>
+            <Icon name="arrowUpRight" size={12} />
           </Link>
         </div>
       </div>

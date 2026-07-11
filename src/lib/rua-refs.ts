@@ -1,14 +1,18 @@
 // Per-task RUA reference artifacts — the reference material the programme hands the mentee for
-// Parts A & B of every RUA gate (control extracts, cross-walk sheets, template docs, prerequisite
-// briefs, task description, deliverable spec, and one study primer per key concept). Built from
-// the GRC101 RUA Reference Artifact Register v2 (rows carried verbatim) using the same page
-// templates as the manager's RUA_Reference_Artifacts pages. View-only, rendered in-app.
-// Generated — regenerate rather than hand-editing (scratchpad/generate_rua_refs.py).
+// Parts A & B of every RUA gate. Every item of every step carries its own document: `item` is the
+// index of the control / template / prerequisite / activity step / concept it belongs to, within
+// its tab. Refs with no `item` are tab-level (the cross-walk sheet, the task description, the
+// deliverable spec) and show in the tab's reference strip.
+// Built from the GRC101 RUA Reference Artifact Register v2 (rows carried verbatim) plus per-item
+// briefs derived from the RUA task catalog. View-only, rendered in-app.
+// Generated — regenerate rather than hand-editing (scratchpad/generate_rua_refs.py, then item_rua_refs.py).
 import type { TaskReference } from "./taskmeta";
 
-/** A reference artifact plus the RUA tab it belongs to. */
+/** A reference artifact, the RUA tab it belongs to, and the item within that tab it documents. */
 export interface RuaRef extends TaskReference {
   tab: "study" | "inspect" | "acquire" | "clarify" | "confirm" | "explain";
+  /** Index of the control / template / prerequisite / step / concept this documents. Absent = tab-level. */
+  item?: number;
 }
 
 export const RUA_REFS: Record<string, RuaRef[]> = {
@@ -30,12 +34,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-aa-001-study-01",
+      "title": "Annex A 5.9 — Inventory of information and other associated assets",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.9: Inventory of information and other associated assets",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.9.\n\n## What it requires\nInventory of information and other associated assets.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.AM-01 | Inventories of hardware maintained |\n\n## How it lands in this task\nA gap against Annex A 5.9 is a line you must record inside your information asset register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-001-study-02",
+      "title": "Annex A 5.12 — Classification of information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.12: Classification of information",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.12.\n\n## What it requires\nClassification of information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.AM-02 | Inventories of software maintained |\n\n## How it lands in this task\nA gap against Annex A 5.12 is a line you must record inside your information asset register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-001-study-03",
+      "title": "Annex A 8.1 — User endpoint devices",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.1: User endpoint devices",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 8.1.\n\n## What it requires\nUser endpoint devices.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.AM-05 | Assets are prioritised |\n\n## How it lands in this task\nA gap against Annex A 8.1 is a line you must record inside your information asset register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-aa-001-ref-003",
       "title": "Information Asset Register Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet with columns: Asset ID, Asset Name, Asset Type, Owner, Location, Format, CIA Classification, Custodian, Review Date, Notes",
       "body": "Working template you obtain and review: Information Asset Register Template. spreadsheet with columns: Asset ID, Asset Name, Asset Type, Owner, Location, Format, CIA Classification, Custodian, Review Date, Notes\n\n## Structure\n| Asset ID | Asset Name | Asset Type | Owner | Location | Format | CIA Classification | Custodian | Review Date | Notes\n\nBlank template — one row per item. Populate during the task.",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-aa-001-ref-004",
@@ -43,7 +75,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "structured question set",
       "body": "Working template you obtain and review: Asset Discovery Interview Guide. structured question set\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-aa-001-ref-005",
@@ -51,7 +84,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Organisation and business-unit context for CloudTech Solutions Enterprise or Apex Software Development Group",
       "body": "Organisation and business-unit context for CloudTech Solutions Enterprise or Apex Software Development Group\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-aa-001-ref-006",
@@ -59,7 +93,17 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Confirmed IT/Operations contact for the initial systems list",
       "body": "Confirmed IT/Operations contact for the initial systems list\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-001-prereq-03",
+      "title": "No prior GRC 101 task outputs required — this is a foundation task",
+      "kind": "Prerequisite Input — Artefact",
+      "summary": "No prior GRC 101 task outputs required — this is a foundation task",
+      "body": "No prior GRC 101 task outputs required — this is a foundation task\n\n## Why this is required\nBrings forward the output of an earlier task as an input, so this work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided = N and escalate to the mentor — the task cannot pass the RUA gate.",
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-aa-001-ref-007",
@@ -68,6 +112,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-AA-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what an information asset is, why classification matters, and how the register will be built and signed off, before any interviews or data gathering begin.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.9 — Inventory of information and other associated assets; Annex A 5.12 — Classification of information; Annex A 8.1 — User endpoint devices.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — ID.AM-01 (Inventories of hardware maintained); ID.AM-02 (Inventories of software maintained); ID.AM-05 (Assets are prioritised).\n3. Obtain and review every provided template and document: Information Asset Register Template (spreadsheet with columns: Asset ID, Asset Name, Asset Type, Owner, Location, Format, CIA Classification, Custodian, Review Date, Notes); Asset Discovery Interview Guide (structured question set).\n4. Secure prerequisite inputs: Organisation and business-unit context for CloudTech Solutions Enterprise or Apex Software Development Group; Confirmed IT/Operations contact for the initial systems list; No prior GRC 101 task outputs required — this is a foundation task.\n5. Re-read the task description and all activity steps of GRC101-AA-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Information Asset Register — a signed-off spreadsheet listing all identified assets with classification, owner, location, and residual gaps.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-aa-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Information Asset Inventory &…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Information Asset Inventory & Classification with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Information Asset Inventory & Classification with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-aa-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Information Asset Register.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Information Asset Register.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-aa-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-aa-001-step-06",
+      "title": "Step 6 · Draft — Draft Information Asset Register in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Information Asset Register in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Information Asset Register in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-aa-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-aa-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Information Asset Register and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Information Asset Register and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Information Asset Register and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Information Asset Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-aa-001-ref-008",
@@ -83,7 +199,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Information asset types: data, software, hardware, services, people and…",
       "body": "A study primer that enables you to explain, in your own words: Information asset types: data, software, hardware, services, people and intangibles.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-aa-001-ref-010",
@@ -91,7 +208,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The CIA triad (Confidentiality, Integrity, Availability) as the basis…",
       "body": "A study primer that enables you to explain, in your own words: The CIA triad (Confidentiality, Integrity, Availability) as the basis for classification.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-aa-001-ref-011",
@@ -99,7 +217,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Asset ownership versus custodianship — why every asset needs a named owner",
       "body": "A study primer that enables you to explain, in your own words: Asset ownership versus custodianship — why every asset needs a named owner.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-aa-001-ref-012",
@@ -107,7 +226,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The three-tier classification scheme (Public / Internal / Confidential)…",
       "body": "A study primer that enables you to explain, in your own words: The three-tier classification scheme (Public / Internal / Confidential) under ISO/IEC 27001:2022 Annex A 5.12.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-aa-001-ref-013",
@@ -115,7 +235,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Intent of Annex A 5.9 (asset inventory) and A 8.1 (user endpoint devices)",
       "body": "A study primer that enables you to explain, in your own words: Intent of Annex A 5.9 (asset inventory) and A 8.1 (user endpoint devices).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "AA-002": [
@@ -136,12 +257,67 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-aa-002-study-01",
+      "title": "CIS 1 — Inventory and Control of Enterprise Assets",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 1: Inventory and Control of Enterprise Assets",
+      "body": "The single governing reference behind comprehension check 1: CIS Controls v8 CIS 1.\n\n## What it requires\nInventory and Control of Enterprise Assets.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS | Protect: Identity Management; Data Security |\n\n## How it lands in this task\nA gap against CIS 1 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-002-study-02",
+      "title": "CIS 2 — Inventory and Control of Software Assets",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 2: Inventory and Control of Software Assets",
+      "body": "The single governing reference behind comprehension check 2: CIS Controls v8 CIS 2.\n\n## What it requires\nInventory and Control of Software Assets.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 2 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-002-study-03",
+      "title": "CIS 3 — Data Protection",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 3: Data Protection",
+      "body": "The single governing reference behind comprehension check 3: CIS Controls v8 CIS 3.\n\n## What it requires\nData Protection.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 3 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-aa-002-study-04",
+      "title": "CIS 4 — Secure Configuration of Enterprise Assets and Software",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 4: Secure Configuration of Enterprise Assets and Software",
+      "body": "The single governing reference behind comprehension check 4: CIS Controls v8 CIS 4.\n\n## What it requires\nSecure Configuration of Enterprise Assets and Software.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 4 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
+      "id": "rua-aa-002-study-05",
+      "title": "CIS 5 — Account Management",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 5: Account Management",
+      "body": "The single governing reference behind comprehension check 5: CIS Controls v8 CIS 5.\n\n## What it requires\nAccount Management.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 5 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 4
+    },
+    {
+      "id": "rua-aa-002-study-06",
+      "title": "CIS 6 — Access Control Management (IG1 sub-controls only)",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 6: Access Control Management (IG1 sub-controls only)",
+      "body": "The single governing reference behind comprehension check 6: CIS Controls v8 CIS 6.\n\n## What it requires\nAccess Control Management (IG1 sub-controls only).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 6 is a line you must record inside your cis controls v8 ig1 gap analysis report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 5
+    },
+    {
       "id": "rua-aa-002-ref-016",
       "title": "CIS Controls v8 IG1 Assessment Worksheet",
       "kind": "Template / Working Document",
       "summary": "pre-built spreadsheet with all 56 IG1 Safeguards, status dropdowns, evidence columns, and auto-scoring",
       "body": "Working template you obtain and review: CIS Controls v8 IG1 Assessment Worksheet. pre-built spreadsheet with all 56 IG1 Safeguards, status dropdowns, evidence columns, and auto-scoring\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-aa-002-ref-017",
@@ -149,7 +325,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word with executive summary, findings table, and remediation roadmap sections",
       "body": "Working template you obtain and review: Gap Analysis Report Template. Word with executive summary, findings table, and remediation roadmap sections\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-aa-002-ref-018",
@@ -157,7 +334,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "CIS Controls v8 IG1 Assessment Worksheet reviewed end to end",
       "body": "CIS Controls v8 IG1 Assessment Worksheet reviewed end to end\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-aa-002-ref-019",
@@ -165,7 +343,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Evidence-request list understood before approaching IT/operations staff",
       "body": "Evidence-request list understood before approaching IT/operations staff\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-aa-002-ref-020",
@@ -173,7 +352,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Walkthrough access to IT and operations staff confirmed",
       "body": "Walkthrough access to IT and operations staff confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-aa-002-ref-021",
@@ -182,6 +362,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-AA-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the CIS Controls v8 structure, the meaning of Implementation Group 1, and evidence-based gap assessment before scheduling any walkthroughs.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references:  — Controls 1–6: Inventory of Enterprise Assets;  — Inventory of Software Assets;  — Data Protection;  — Secure Configuration;  — Account Management;  — Access Control Management (Implementation Group 1 sub-controls only).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.DS (Protect: Identity Management; Data Security).\n3. Obtain and review every provided template and document: CIS Controls v8 IG1 Assessment Worksheet (pre-built spreadsheet with all 56 IG1 Safeguards, status dropdowns, evidence columns, and auto-scoring); Gap Analysis Report Template (Word with executive summary, findings table, and remediation roadmap sections).\n4. Secure prerequisite inputs: CIS Controls v8 IG1 Assessment Worksheet reviewed end to end; Evidence-request list understood before approaching IT/operations staff; Walkthrough access to IT and operations staff confirmed.\n5. Re-read the task description and all activity steps of GRC101-AA-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: CIS Controls v8 IG1 Gap Analysis Report — scored assessment per Control group, gap list with remediation priorities, and an executive summary.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-aa-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Security Controls Gap Analysis —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Security Controls Gap Analysis — CIS Controls v8 IG1 with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Security Controls Gap Analysis — CIS Controls v8 IG1 with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-002-step-03",
+      "title": "Step 3 · Study — Study the governing CIS Controls v8 control references and the NIST…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing CIS Controls v8 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing CIS Controls v8 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-aa-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate CIS Controls v8 IG1 Gap…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate CIS Controls v8 IG1 Gap Analysis Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-aa-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-aa-002-step-06",
+      "title": "Step 6 · Draft — Draft CIS Controls v8 IG1 Gap Analysis Report in the provided…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft CIS Controls v8 IG1 Gap Analysis Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft CIS Controls v8 IG1 Gap Analysis Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-aa-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-aa-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise CIS Controls v8 IG1 Gap Analysis Report and obtain the…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise CIS Controls v8 IG1 Gap Analysis Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise CIS Controls v8 IG1 Gap Analysis Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward CIS Controls v8 IG1 Gap Analysis Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-aa-002-ref-022",
@@ -197,7 +449,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: CIS Controls v8 structure: 18 Controls, safeguards, and Implementation…",
       "body": "A study primer that enables you to explain, in your own words: CIS Controls v8 structure: 18 Controls, safeguards, and Implementation Groups (IG1/IG2/IG3).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-aa-002-ref-024",
@@ -205,7 +458,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Why IG1's 56 Safeguards represent essential cyber hygiene",
       "body": "A study primer that enables you to explain, in your own words: Why IG1's 56 Safeguards represent essential cyber hygiene.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-aa-002-ref-025",
@@ -213,7 +467,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Assessment statuses: Implemented / Partial / Not Implemented / Not…",
       "body": "A study primer that enables you to explain, in your own words: Assessment statuses: Implemented / Partial / Not Implemented / Not Applicable.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-aa-002-ref-026",
@@ -221,7 +476,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Evidence-based assessment versus self-attestation",
       "body": "A study primer that enables you to explain, in your own words: Evidence-based assessment versus self-attestation.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-aa-002-ref-027",
@@ -229,7 +485,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Compliance percentage scoring per Control group and gap prioritisation…",
       "body": "A study primer that enables you to explain, in your own words: Compliance percentage scoring per Control group and gap prioritisation by risk exposure.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "AA-003": [
@@ -250,12 +507,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-aa-003-study-01",
+      "title": "Article 4 — Definitions (personal data, processing, controller, processor)",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 4: Definitions (personal data, processing, controller, processor)",
+      "body": "The single governing reference behind comprehension check 1: GDPR (EU) 2016/679 Article 4.\n\n## What it requires\nDefinitions (personal data, processing, controller, processor).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-05 | Legal, regulatory and contractual requirements are understood |\n\n## How it lands in this task\nA gap against Article 4 is a line you must record inside your completed ropa entry (for one process) + dpia screening form with disposition (full dpia required / not required) and supporting data-flow diagram.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-003-study-02",
+      "title": "Article 13 & 14 — Information to be provided to data subjects",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 13 & 14: Information to be provided to data subjects",
+      "body": "The single governing reference behind comprehension check 2: GDPR (EU) 2016/679 Article 13 & 14.\n\n## What it requires\nInformation to be provided to data subjects.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.AM-08 | Systems/services involving external parties are inventoried |\n\n## How it lands in this task\nA gap against Article 13 & 14 is a line you must record inside your completed ropa entry (for one process) + dpia screening form with disposition (full dpia required / not required) and supporting data-flow diagram.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-003-study-03",
+      "title": "Article 30 — Records of processing activities (RoPA)",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 30: Records of processing activities (RoPA)",
+      "body": "The single governing reference behind comprehension check 3: GDPR (EU) 2016/679 Article 30.\n\n## What it requires\nRecords of processing activities (RoPA).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Article 30 is a line you must record inside your completed ropa entry (for one process) + dpia screening form with disposition (full dpia required / not required) and supporting data-flow diagram.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-aa-003-study-04",
+      "title": "Article 35 — Data protection impact assessment screening",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 35: Data protection impact assessment screening",
+      "body": "The single governing reference behind comprehension check 4: GDPR (EU) 2016/679 Article 35.\n\n## What it requires\nData protection impact assessment screening.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Article 35 is a line you must record inside your completed ropa entry (for one process) + dpia screening form with disposition (full dpia required / not required) and supporting data-flow diagram.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-aa-003-ref-030",
       "title": "RoPA Template",
       "kind": "Template / Working Document",
       "summary": "Article 30-compliant spreadsheet: processing activity, purposes, legal basis, data categories, data subjects, recipients, retention,…",
       "body": "Working template you obtain and review: RoPA Template. Article 30-compliant spreadsheet: processing activity, purposes, legal basis, data categories, data subjects, recipients, retention, transfers, security measures\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-aa-003-ref-031",
@@ -263,7 +557,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "nine-criteria Word form",
       "body": "Working template you obtain and review: DPIA Screening Checklist. nine-criteria Word form\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-aa-003-ref-032",
@@ -271,7 +566,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Visio/draw.io swimlane template",
       "body": "Working template you obtain and review: Data Flow Diagram Template. Visio/draw.io swimlane template\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-aa-003-ref-033",
@@ -279,7 +575,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Candidate data-heavy processes identified (e.g. student registration, account sign-up)",
       "body": "Candidate data-heavy processes identified (e.g. student registration, account sign-up)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-aa-003-ref-034",
@@ -287,7 +584,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "RoPA Template, DPIA Screening Checklist and Data Flow Diagram Template reviewed",
       "body": "RoPA Template, DPIA Screening Checklist and Data Flow Diagram Template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-aa-003-ref-035",
@@ -295,7 +593,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Process-owner access confirmed via the mentor",
       "body": "Process-owner access confirmed via the mentor\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-aa-003-ref-036",
@@ -304,6 +603,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-AA-003. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand core GDPR definitions, lawful bases, and the purpose of RoPA and DPIA screening before selecting a process or interviewing its owner.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Article 4 (Definitions — personal data, processing, controller, processor);  — Article 13 & 14 (Information to be provided); Article 30 (Records of processing activities — RoPA);  — Article 35 (Data protection impact assessment screening).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC-05 (Legal, regulatory and contractual requirements are understood); ID.AM-08 (Systems/services involving external parties are inventoried).\n3. Obtain and review every provided template and document: RoPA Template (Article 30-compliant spreadsheet: processing activity, purposes, legal basis, data categories, data subjects, recipients, retention, transfers, security measures); DPIA Screening Checklist (nine-criteria Word form); Data Flow Diagram Template (Visio/draw.io swimlane template).\n4. Secure prerequisite inputs: Candidate data-heavy processes identified (e.g. student registration, account sign-up); RoPA Template, DPIA Screening Checklist and Data Flow Diagram Template reviewed; Process-owner access confirmed via the mentor.\n5. Re-read the task description and all activity steps of GRC101-AA-003; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-aa-003-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Privacy Data-Flow Mapping & GDPR…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Privacy Data-Flow Mapping & GDPR Applicability Assessment with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Privacy Data-Flow Mapping & GDPR Applicability Assessment with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-aa-003-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-aa-003-step-03",
+      "title": "Step 3 · Study — Study the governing GDPR (EU) 2016/679 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-aa-003-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Completed RoPA Entry + DPIA…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Completed RoPA Entry  + DPIA Screening Form with disposition  and supporting data-flow diagram..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-aa-003-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-aa-003-step-06",
+      "title": "Step 6 · Draft — Draft Completed RoPA Entry + DPIA Screening Form with disposition…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Completed RoPA Entry + DPIA Screening Form with disposition and supporting data-flow diagram. in the provided…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Completed RoPA Entry  + DPIA Screening Form with disposition  and supporting data-flow diagram. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-aa-003-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-aa-003-step-08",
+      "title": "Step 8 · Sign-off — Finalise Completed RoPA Entry + DPIA Screening Form with disposition…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Completed RoPA Entry + DPIA Screening Form with disposition and supporting data-flow diagram. and obtain the…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Completed RoPA Entry  + DPIA Screening Form with disposition  and supporting data-flow diagram. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Completed RoPA Entry (for one process) + DPIA Screening Form with disposition (full DPIA required / not required) and supporting data-flow diagram. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-aa-003-ref-037",
@@ -319,7 +690,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: GDPR Article 4 definitions: personal data, processing, controller, processor",
       "body": "A study primer that enables you to explain, in your own words: GDPR Article 4 definitions: personal data, processing, controller, processor.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-aa-003-ref-039",
@@ -327,7 +699,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The six lawful bases for processing under Article 6",
       "body": "A study primer that enables you to explain, in your own words: The six lawful bases for processing under Article 6.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-aa-003-ref-040",
@@ -335,7 +708,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Records of Processing Activities (RoPA) under Article 30 — purpose and…",
       "body": "A study primer that enables you to explain, in your own words: Records of Processing Activities (RoPA) under Article 30 — purpose and mandatory fields.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-aa-003-ref-041",
@@ -343,7 +717,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: DPIA screening: the nine-criteria test per EDPB guidelines (Article 35)",
       "body": "A study primer that enables you to explain, in your own words: DPIA screening: the nine-criteria test per EDPB guidelines (Article 35).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-aa-003-ref-042",
@@ -351,7 +726,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Cross-border transfer basics and third-party recipients",
       "body": "A study primer that enables you to explain, in your own words: Cross-border transfer basics and third-party recipients.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "GRM-001": [
@@ -372,12 +748,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-grm-001-study-01",
+      "title": "Clause 6.1.2 — Information security risk assessment",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 6.1.2: Information security risk assessment",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 6.1.2.\n\n## What it requires\nInformation security risk assessment.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-01 | Risk management objectives established |\n\n## How it lands in this task\nA gap against Clause 6.1.2 is a line you must record inside your basic risk register. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-001-study-02",
+      "title": "Clause 6.1.3 — Information security risk treatment",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 6.1.3: Information security risk treatment",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 6.1.3.\n\n## What it requires\nInformation security risk treatment.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.RA-01 | Vulnerabilities identified |\n\n## How it lands in this task\nA gap against Clause 6.1.3 is a line you must record inside your basic risk register. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-001-study-03",
+      "title": "Annex A 5.9 — Inventory of information and other associated assets",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.9: Inventory of information and other associated assets",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.9.\n\n## What it requires\nInventory of information and other associated assets.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.RA-04 | Potential impacts and likelihoods determined |\n\n## How it lands in this task\nA gap against Annex A 5.9 is a line you must record inside your basic risk register. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-grm-001-ref-045",
       "title": "Risk Register Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Risk ID, Description, Threat Source, Asset Affected, Existing Controls, Likelihood, Impact, Inherent Score, Risk Category,…",
       "body": "Working template you obtain and review: Risk Register Template. spreadsheet: Risk ID, Description, Threat Source, Asset Affected, Existing Controls, Likelihood, Impact, Inherent Score, Risk Category, Treatment Option, Risk Owner, Target Residual Score, Review Date\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-grm-001-ref-046",
@@ -385,7 +789,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "5×5 Risk Matrix Reference Card",
       "body": "Working template you obtain and review: 5×5 Risk Matrix Reference Card.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-grm-001-ref-047",
@@ -393,7 +798,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Risk Identification Workshop Guide",
       "body": "Working template you obtain and review: Risk Identification Workshop Guide.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-grm-001-ref-048",
@@ -401,7 +807,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Asset register from GRC101-AA-001 (or the provided equivalent) reviewed to understand the risk surface",
       "body": "Asset register from GRC101-AA-001 (or the provided equivalent) reviewed to understand the risk surface\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-grm-001-ref-049",
@@ -409,7 +816,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Risk Identification Workshop Guide and 5×5 Risk Matrix Reference Card studied",
       "body": "Risk Identification Workshop Guide and 5×5 Risk Matrix Reference Card studied\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-grm-001-ref-050",
@@ -417,7 +825,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Workshop access to two business-unit managers confirmed",
       "body": "Workshop access to two business-unit managers confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-grm-001-ref-051",
@@ -426,6 +835,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-GRM-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you can think in risk terms — threat, likelihood, impact, inherent versus residual — and understands the 5×5 matrix and treatment options before facilitating any workshop.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 6.1.2 — Information security risk assessment; Clause 6.1.3 — Information security risk treatment; Annex A 5.9 — Inventory of information and other associated assets.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.RM-01 (Risk management objectives established); ID.RA-01 (Vulnerabilities identified); ID.RA-04 (Potential impacts and likelihoods determined).\n3. Obtain and review every provided template and document: Risk Register Template (spreadsheet: Risk ID, Description, Threat Source, Asset Affected, Existing Controls, Likelihood, Impact, Inherent Score, Risk Category, Treatment Option, Risk Owner, Target Residual Score, Review Date); 5×5 Risk Matrix Reference Card; Risk Identification Workshop Guide.\n4. Secure prerequisite inputs: Asset register from GRC101-AA-001 (or the provided equivalent) reviewed to understand the risk surface; Risk Identification Workshop Guide and 5×5 Risk Matrix Reference Card studied; Workshop access to two business-unit managers confirmed.\n5. Re-read the task description and all activity steps of GRC101-GRM-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Basic Risk Register — spreadsheet with all identified risks scored on a 5×5 matrix, ISO 27001 control domain mapping, risk treatment options, and a one-page management summary.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-grm-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Operational Risk Identification &…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Operational Risk Identification & Basic Risk Register with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Operational Risk Identification & Basic Risk Register with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-grm-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Basic Risk Register.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Basic Risk Register.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-grm-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-grm-001-step-06",
+      "title": "Step 6 · Draft — Draft Basic Risk Register in the provided template to the acceptance…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Basic Risk Register in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Basic Risk Register in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-grm-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-grm-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Basic Risk Register and obtain the required sign-off,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Basic Risk Register and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Basic Risk Register and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Basic Risk Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-grm-001-ref-052",
@@ -441,7 +922,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Threat, vulnerability, likelihood and impact, and how they combine into…",
       "body": "A study primer that enables you to explain, in your own words: Threat, vulnerability, likelihood and impact, and how they combine into a risk score.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-grm-001-ref-054",
@@ -449,7 +931,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Inherent versus residual risk and the effect of existing controls",
       "body": "A study primer that enables you to explain, in your own words: Inherent versus residual risk and the effect of existing controls.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-grm-001-ref-055",
@@ -457,7 +940,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The 5×5 risk matrix and Critical / High / Medium / Low categorisation",
       "body": "A study primer that enables you to explain, in your own words: The 5×5 risk matrix and Critical / High / Medium / Low categorisation.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-grm-001-ref-056",
@@ -465,7 +949,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: STRIDE-lite prompt categories for structured risk identification",
       "body": "A study primer that enables you to explain, in your own words: STRIDE-lite prompt categories for structured risk identification.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-grm-001-ref-057",
@@ -473,7 +958,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Risk treatment options: accept, mitigate, transfer, avoid (ISO 27001…",
       "body": "A study primer that enables you to explain, in your own words: Risk treatment options: accept, mitigate, transfer, avoid (ISO 27001 Clauses 6.1.2 and 6.1.3).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "GRM-002": [
@@ -494,12 +980,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-grm-002-study-01",
+      "title": "Clause 5.2 — Policy",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 5.2: Policy",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 5.2.\n\n## What it requires\nPolicy.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-01 | Policy for managing cybersecurity risks established |\n\n## How it lands in this task\nA gap against Clause 5.2 is a line you must record inside your approved information security policy (aup or remote working policy). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-002-study-02",
+      "title": "Annex A 5.1 — Policies for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.1: Policies for information security",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.1.\n\n## What it requires\nPolicies for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed, updated, and communicated |\n\n## How it lands in this task\nA gap against Annex A 5.1 is a line you must record inside your approved information security policy (aup or remote working policy). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-002-study-03",
+      "title": "Annex A 6.7 — Remote working",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.7: Remote working",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 6.7.\n\n## What it requires\nRemote working.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 6.7 is a line you must record inside your approved information security policy (aup or remote working policy). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-grm-002-study-04",
+      "title": "Annex A 8.1 — User endpoint devices",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.1: User endpoint devices",
+      "body": "The single governing reference behind comprehension check 4: ISO/IEC 27001:2022 Annex A 8.1.\n\n## What it requires\nUser endpoint devices.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 8.1 is a line you must record inside your approved information security policy (aup or remote working policy). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-grm-002-ref-060",
       "title": "Policy Template",
       "kind": "Template / Working Document",
       "summary": "Word document with standard headers: Document Control, Purpose, Scope, Definitions, Policy Statements, Roles and Responsibilities,…",
       "body": "Working template you obtain and review: Policy Template. Word document with standard headers: Document Control, Purpose, Scope, Definitions, Policy Statements, Roles and Responsibilities, Exceptions, Related Documents, Review History\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-grm-002-ref-061",
@@ -507,7 +1030,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Policy Review Comment Sheet",
       "body": "Working template you obtain and review: Policy Review Comment Sheet.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-grm-002-ref-062",
@@ -515,7 +1039,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Policy Approval and Sign-Off Form",
       "body": "Working template you obtain and review: Policy Approval and Sign-Off Form.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-grm-002-ref-063",
@@ -523,7 +1048,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet",
       "body": "Working template you obtain and review: Policy Register. spreadsheet\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-grm-002-ref-064",
@@ -531,7 +1057,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Two existing policies from the organisation's document library read for tone and structure",
       "body": "Two existing policies from the organisation's document library read for tone and structure\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-grm-002-ref-065",
@@ -539,7 +1066,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Policy Template, Policy Review Comment Sheet, Approval Form and Policy Register reviewed",
       "body": "Policy Template, Policy Review Comment Sheet, Approval Form and Policy Register reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-grm-002-ref-066",
@@ -547,7 +1075,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Policy type shortlist (AUP or Remote Working) discussed with the mentor",
       "body": "Policy type shortlist (AUP or Remote Working) discussed with the mentor\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-grm-002-ref-067",
@@ -556,6 +1085,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-GRM-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what a policy is (and is not), what ISO 27001 Clause 5.2 requires of it, and how the review-and-approval cycle works before drafting begins.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 5.2 — Policy; Annex A 5.1 — Policies for information security; Annex A 6.7 — Remote working; Annex A 8.1 — User endpoint devices.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.PO-01 (Policy for managing cybersecurity risks established); GV.PO-02 (Policy reviewed, updated, and communicated).\n3. Obtain and review every provided template and document: Policy Template (Word document with standard headers: Document Control, Purpose, Scope, Definitions, Policy Statements, Roles and Responsibilities, Exceptions, Related Documents, Review History); Policy Review Comment Sheet; Policy Approval and Sign-Off Form; Policy Register (spreadsheet).\n4. Secure prerequisite inputs: Two existing policies from the organisation's document library read for tone and structure; Policy Template, Policy Review Comment Sheet, Approval Form and Policy Register reviewed; Policy type shortlist (AUP or Remote Working) discussed with the mentor.\n5. Re-read the task description and all activity steps of GRC101-GRM-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Approved Information Security Policy (AUP or Remote Working Policy) — final version with ISO 27001 control references, management signature, and Policy Register entry.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-grm-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Information Security Policy…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Information Security Policy Drafting with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Information Security Policy Drafting with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-grm-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Approved Information…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Approved Information Security Policy.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-grm-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-grm-002-step-06",
+      "title": "Step 6 · Draft — Draft Approved Information Security Policy in the provided template…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Approved Information Security Policy in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Approved Information Security Policy in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-grm-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-grm-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Approved Information Security Policy and obtain the…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Approved Information Security Policy and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Approved Information Security Policy and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Approved Information Security Policy (AUP or Remote Working Policy) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-grm-002-ref-068",
@@ -571,7 +1172,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Policy versus procedure versus standard versus guideline",
       "body": "A study primer that enables you to explain, in your own words: Policy versus procedure versus standard versus guideline.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-grm-002-ref-070",
@@ -579,7 +1181,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001:2022 Clause 5.2 requirements for an information security policy",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001:2022 Clause 5.2 requirements for an information security policy.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-grm-002-ref-071",
@@ -587,7 +1190,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Mapping policy statements to Annex A controls (A 5.1, A 6.7, A 8.1)",
       "body": "A study primer that enables you to explain, in your own words: Mapping policy statements to Annex A controls (A 5.1, A 6.7, A 8.1).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-grm-002-ref-072",
@@ -595,7 +1199,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Document control basics: versioning, review cycles, the Policy Register",
       "body": "A study primer that enables you to explain, in your own words: Document control basics: versioning, review cycles, the Policy Register.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-grm-002-ref-073",
@@ -603,7 +1208,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The structured review cycle: reviewer roles, comment sheets, approval…",
       "body": "A study primer that enables you to explain, in your own words: The structured review cycle: reviewer roles, comment sheets, approval and sign-off.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "GRM-003": [
@@ -624,12 +1230,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-grm-003-study-01",
+      "title": "Tiers 1–4 — Implementation Tier definitions (Partial → Adaptive)",
+      "kind": "Control Reference Extract",
+      "summary": "NIST CSF 2.0 Tiers 1–4: Implementation Tier definitions (Partial → Adaptive)",
+      "body": "The single governing reference behind comprehension check 1: NIST CSF 2.0 Tiers 1–4.\n\n## What it requires\nImplementation Tier definitions (Partial → Adaptive).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Functions | Govern, Identify, Protect, Detect, Respond, Recover |\n\n## How it lands in this task\nA gap against Tiers 1–4 is a line you must record inside your grc maturity assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-003-study-02",
+      "title": "GV.OC — Organizational Context",
+      "kind": "Control Reference Extract",
+      "summary": "NIST CSF 2.0 GV.OC: Organizational Context",
+      "body": "The single governing reference behind comprehension check 2: NIST CSF 2.0 GV.OC.\n\n## What it requires\nOrganizational Context.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Clause 9.1 | Monitoring, measurement, analysis and evaluation |\n\n## How it lands in this task\nA gap against GV.OC is a line you must record inside your grc maturity assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-003-study-03",
+      "title": "GV.RM — Risk Management Strategy",
+      "kind": "Control Reference Extract",
+      "summary": "NIST CSF 2.0 GV.RM: Risk Management Strategy",
+      "body": "The single governing reference behind comprehension check 3: NIST CSF 2.0 GV.RM.\n\n## What it requires\nRisk Management Strategy.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against GV.RM is a line you must record inside your grc maturity assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-grm-003-study-04",
+      "title": "GV.PO — Policy",
+      "kind": "Control Reference Extract",
+      "summary": "NIST CSF 2.0 GV.PO: Policy",
+      "body": "The single governing reference behind comprehension check 4: NIST CSF 2.0 GV.PO.\n\n## What it requires\nPolicy.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against GV.PO is a line you must record inside your grc maturity assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-grm-003-ref-076",
       "title": "NIST CSF 2.0 Maturity Assessment Questionnaire",
       "kind": "Template / Working Document",
       "summary": "Word — 6 Function tabs, 10–15 questions each with Tier anchors",
       "body": "Working template you obtain and review: NIST CSF 2.0 Maturity Assessment Questionnaire. Word — 6 Function tabs, 10–15 questions each with Tier anchors\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-grm-003-ref-077",
@@ -637,7 +1280,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel — auto-plots from scores",
       "body": "Working template you obtain and review: CSF Maturity Spider Diagram. Excel — auto-plots from scores\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-grm-003-ref-078",
@@ -645,7 +1289,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word with cover page, scoring table, diagram placeholder, and roadmap section",
       "body": "Working template you obtain and review: Maturity Assessment Report Template. Word with cover page, scoring table, diagram placeholder, and roadmap section\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-grm-003-ref-079",
@@ -653,7 +1298,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "NIST CSF 2.0 Maturity Assessment Questionnaire reviewed across all six Function tabs",
       "body": "NIST CSF 2.0 Maturity Assessment Questionnaire reviewed across all six Function tabs\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-grm-003-ref-080",
@@ -661,7 +1307,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "CSF Maturity Spider Diagram tool tested with dummy scores",
       "body": "CSF Maturity Spider Diagram tool tested with dummy scores\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-grm-003-ref-081",
@@ -669,7 +1316,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "90-minute interview slot with the department head and IT lead confirmed",
       "body": "90-minute interview slot with the department head and IT lead confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-grm-003-ref-082",
@@ -678,6 +1326,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-GRM-003. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the NIST CSF 2.0 Functions and Tier model, and the difference between maturity and compliance, before adapting the questionnaire or booking interviews.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references:  — Tier Definitions (Tier 1 Partial → Tier 4 Adaptive); GV.OC — Organizational Context; GV.RM — Risk Management Strategy; GV.PO — Policy.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — Functions (Govern, Identify, Protect, Detect, Respond, Recover); Clause 9.1 (Monitoring, measurement, analysis and evaluation).\n3. Obtain and review every provided template and document: NIST CSF 2.0 Maturity Assessment Questionnaire (Word — 6 Function tabs, 10–15 questions each with Tier anchors); CSF Maturity Spider Diagram (Excel — auto-plots from scores); Maturity Assessment Report Template (Word with cover page, scoring table, diagram placeholder, and roadmap section).\n4. Secure prerequisite inputs: NIST CSF 2.0 Maturity Assessment Questionnaire reviewed across all six Function tabs; CSF Maturity Spider Diagram tool tested with dummy scores; 90-minute interview slot with the department head and IT lead confirmed.\n5. Re-read the task description and all activity steps of GRC101-GRM-003; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: GRC Maturity Assessment Report — CSF Tier scoring per Function, spider diagram (current vs. target state), top-three gap narrative, and a prioritised improvement roadmap.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-grm-003-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC Maturity Assessment —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC Maturity Assessment — Departmental Level with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC Maturity Assessment — Departmental Level with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-grm-003-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-grm-003-step-03",
+      "title": "Step 3 · Study — Study the governing NIST CSF 2.0 control references and the NIST CSF…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing NIST CSF 2.0 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing NIST CSF 2.0 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-grm-003-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC Maturity Assessment…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC Maturity Assessment Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-grm-003-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-grm-003-step-06",
+      "title": "Step 6 · Draft — Draft GRC Maturity Assessment Report in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft GRC Maturity Assessment Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft GRC Maturity Assessment Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-grm-003-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-grm-003-step-08",
+      "title": "Step 8 · Sign-off — Finalise GRC Maturity Assessment Report and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise GRC Maturity Assessment Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise GRC Maturity Assessment Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward GRC Maturity Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-grm-003-ref-083",
@@ -693,7 +1413,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The six NIST CSF 2.0 Functions: Govern, Identify, Protect, Detect,…",
       "body": "A study primer that enables you to explain, in your own words: The six NIST CSF 2.0 Functions: Govern, Identify, Protect, Detect, Respond, Recover.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-grm-003-ref-085",
@@ -701,7 +1422,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Tier definitions: 1 Partial, 2 Risk-Informed, 3 Repeatable, 4 Adaptive",
       "body": "A study primer that enables you to explain, in your own words: Tier definitions: 1 Partial, 2 Risk-Informed, 3 Repeatable, 4 Adaptive.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-grm-003-ref-086",
@@ -709,7 +1431,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Maturity versus compliance — why they are different measurements",
       "body": "A study primer that enables you to explain, in your own words: Maturity versus compliance — why they are different measurements.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-grm-003-ref-087",
@@ -717,7 +1440,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Interview-based scoring with Tier anchors and justification notes",
       "body": "A study primer that enables you to explain, in your own words: Interview-based scoring with Tier anchors and justification notes.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-grm-003-ref-088",
@@ -725,7 +1449,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Current-state versus target-state profiling and the spider diagram",
       "body": "A study primer that enables you to explain, in your own words: Current-state versus target-state profiling and the spider diagram.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CRM-001": [
@@ -746,12 +1471,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-crm-001-study-01",
+      "title": "Clause 4.1 — Understanding the organisation and its context",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 4.1: Understanding the organisation and its context",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 4.1.\n\n## What it requires\nUnderstanding the organisation and its context.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-03 | Legal, regulatory, and contractual requirements understood and managed |\n\n## How it lands in this task\nA gap against Clause 4.1 is a line you must record inside your regulatory obligations register. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-crm-001-study-02",
+      "title": "Clause 4.2 — Understanding the needs and expectations of interested parties",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 4.2: Understanding the needs and expectations of interested parties",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 4.2.\n\n## What it requires\nUnderstanding the needs and expectations of interested parties.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-05 | Outcomes, capabilities, and services that the organisation depends on are understood |\n\n## How it lands in this task\nA gap against Clause 4.2 is a line you must record inside your regulatory obligations register. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-crm-001-study-03",
+      "title": "Annex A 5.31 — Legal, statutory, regulatory and contractual requirements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.31: Legal, statutory, regulatory and contractual requirements",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.31.\n\n## What it requires\nLegal, statutory, regulatory and contractual requirements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 5.31 is a line you must record inside your regulatory obligations register. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-crm-001-ref-091",
       "title": "Regulatory Obligations Register Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Obligation ID, Source/Regulation, Specific Requirement, Jurisdiction, Applicability Rationale, ISO 27001 Mapping, Control…",
       "body": "Working template you obtain and review: Regulatory Obligations Register Template. spreadsheet: Obligation ID, Source/Regulation, Specific Requirement, Jurisdiction, Applicability Rationale, ISO 27001 Mapping, Control Owner, Compliance Status, Evidence Reference, Gap Flag, Next Review Date\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-crm-001-ref-092",
@@ -759,7 +1512,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word",
       "body": "Working template you obtain and review: Regulatory Scoping Interview Guide. Word\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-crm-001-ref-093",
@@ -767,7 +1521,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Organisation's jurisdiction(s) and sector regulatory landscape researched at a high level",
       "body": "Organisation's jurisdiction(s) and sector regulatory landscape researched at a high level\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-crm-001-ref-094",
@@ -775,7 +1530,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Regulatory Scoping Interview Guide reviewed",
       "body": "Regulatory Scoping Interview Guide reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-crm-001-ref-095",
@@ -783,7 +1539,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Legal/Compliance contact and IT Manager interview slots confirmed",
       "body": "Legal/Compliance contact and IT Manager interview slots confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-crm-001-ref-096",
@@ -792,6 +1549,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CRM-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the four categories of obligations, how applicability is determined, and why the register anchors all later compliance work, before any scoping interviews.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 4.1 — Understanding the organisation and its context; Clause 4.2 — Understanding the needs and expectations of interested parties; Annex A 5.31 — Legal, statutory, regulatory and contractual requirements.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC-03 (Legal, regulatory, and contractual requirements understood and managed); GV.OC-05 (Outcomes, capabilities, and services that the organisation depends on are understood).\n3. Obtain and review every provided template and document: Regulatory Obligations Register Template (spreadsheet: Obligation ID, Source/Regulation, Specific Requirement, Jurisdiction, Applicability Rationale, ISO 27001 Mapping, Control Owner, Compliance Status, Evidence Reference, Gap Flag, Next Review Date); Regulatory Scoping Interview Guide (Word).\n4. Secure prerequisite inputs: Organisation's jurisdiction(s) and sector regulatory landscape researched at a high level; Regulatory Scoping Interview Guide reviewed; Legal/Compliance contact and IT Manager interview slots confirmed.\n5. Re-read the task description and all activity steps of GRC101-CRM-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Regulatory Obligations Register — a signed-off spreadsheet listing all applicable requirements with control mapping, compliance status, owner, and gap flags.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-crm-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Regulatory Requirements Inventory &…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Regulatory Requirements Inventory & Obligations Register with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Regulatory Requirements Inventory & Obligations Register with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-crm-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-crm-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-crm-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Regulatory Obligations…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Regulatory Obligations Register.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-crm-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-crm-001-step-06",
+      "title": "Step 6 · Draft — Draft Regulatory Obligations Register in the provided template to…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Regulatory Obligations Register in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Regulatory Obligations Register in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-crm-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-crm-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Regulatory Obligations Register and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Regulatory Obligations Register and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Regulatory Obligations Register and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Regulatory Obligations Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-crm-001-ref-097",
@@ -807,7 +1636,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Four obligation categories: legislation, sector-specific regulation,…",
       "body": "A study primer that enables you to explain, in your own words: Four obligation categories: legislation, sector-specific regulation, contractual obligations, voluntary standards.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-crm-001-ref-099",
@@ -815,7 +1645,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001 Clauses 4.1 and 4.2 — organisational context and interested…",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001 Clauses 4.1 and 4.2 — organisational context and interested parties.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-crm-001-ref-100",
@@ -823,7 +1654,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Annex A 5.31 — legal, statutory, regulatory and contractual requirements",
       "body": "A study primer that enables you to explain, in your own words: Annex A 5.31 — legal, statutory, regulatory and contractual requirements.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-crm-001-ref-101",
@@ -831,7 +1663,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Applicability rationale — documenting why an obligation applies",
       "body": "A study primer that enables you to explain, in your own words: Applicability rationale — documenting why an obligation applies.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-crm-001-ref-102",
@@ -839,7 +1672,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Compliance status ratings (Met / Partial / Gap) and review scheduling",
       "body": "A study primer that enables you to explain, in your own words: Compliance status ratings (Met / Partial / Gap) and review scheduling.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CRM-002": [
@@ -860,12 +1694,22 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-crm-002-study-01",
+      "title": "Annex A — All 93 controls across 4 Themes: Organisational (37), People (8), Physical…",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A: All 93 controls across 4 Themes: Organisational (37), People (8), Physical (14),…",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A.\n\n## What it requires\nAll 93 controls across 4 Themes: Organisational (37), People (8), Physical (14), Technological (34).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Functions | cross-walk between ISO 27001 Annex A and NIST CSF Categories/Subcategories |\n\n## How it lands in this task\nA gap against Annex A is a line you must record inside your iso 27001 control matrix (process-to-control mapping). Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
       "id": "rua-crm-002-ref-105",
       "title": "ISO 27001 Control Applicability Matrix Template",
       "kind": "Template / Working Document",
       "summary": "Excel — 93 Annex A controls as rows, business processes as columns, with status dropdowns and auto-gap count",
       "body": "Working template you obtain and review: ISO 27001 Control Applicability Matrix Template. Excel — 93 Annex A controls as rows, business processes as columns, with status dropdowns and auto-gap count\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-crm-002-ref-106",
@@ -873,7 +1717,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — per-process question prompts",
       "body": "Working template you obtain and review: Control Applicability Worksheet. Word — per-process question prompts\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-crm-002-ref-107",
@@ -881,7 +1726,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "NIST CSF to ISO 27001 Cross-Walk Reference Sheet",
       "body": "Working template you obtain and review: NIST CSF to ISO 27001 Cross-Walk Reference Sheet.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-crm-002-ref-108",
@@ -889,7 +1735,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Candidate business processes discussed with the mentor (onboarding, release, backup, vendor contracting, incident logging)",
       "body": "Candidate business processes discussed with the mentor (onboarding, release, backup, vendor contracting, incident logging)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-crm-002-ref-109",
@@ -897,7 +1744,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Control Applicability Matrix Template and per-process Worksheet reviewed",
       "body": "Control Applicability Matrix Template and per-process Worksheet reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-crm-002-ref-110",
@@ -905,7 +1753,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "NIST CSF to ISO 27001 Cross-Walk Reference Sheet skimmed for orientation",
       "body": "NIST CSF to ISO 27001 Cross-Walk Reference Sheet skimmed for orientation\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-crm-002-ref-111",
@@ -914,6 +1763,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CRM-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you know the Annex A control structure and can reason about control applicability per business process before selecting processes or building the matrix.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A — All 93 controls across 4 Themes: Organisational (37), People (8), Physical (14), Technological (34).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — Functions (cross-walk between ISO 27001 Annex A and NIST CSF Categories/Subcategories).\n3. Obtain and review every provided template and document: ISO 27001 Control Applicability Matrix Template (Excel — 93 Annex A controls as rows, business processes as columns, with status dropdowns and auto-gap count); Control Applicability Worksheet (Word — per-process question prompts); NIST CSF to ISO 27001 Cross-Walk Reference Sheet.\n4. Secure prerequisite inputs: Candidate business processes discussed with the mentor (onboarding, release, backup, vendor contracting, incident logging); Control Applicability Matrix Template and per-process Worksheet reviewed; NIST CSF to ISO 27001 Cross-Walk Reference Sheet skimmed for orientation.\n5. Re-read the task description and all activity steps of GRC101-CRM-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: ISO 27001 Control Matrix (Process-to-Control Mapping) — a spreadsheet mapping 5 business processes × 93 Annex A controls with applicability, implementation status, control owner, and gap summary.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-crm-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for ISO 27001 Control Framework Mapping…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for ISO 27001 Control Framework Mapping to Business Processes with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for ISO 27001 Control Framework Mapping to Business Processes with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-crm-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-crm-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-crm-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate ISO 27001 Control Matrix.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate ISO 27001 Control Matrix.\n\n## Purpose\nThis is a “Collect” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-crm-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-crm-002-step-06",
+      "title": "Step 6 · Draft — Draft ISO 27001 Control Matrix in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft ISO 27001 Control Matrix in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft ISO 27001 Control Matrix in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-crm-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-crm-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise ISO 27001 Control Matrix and obtain the required sign-off,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise ISO 27001 Control Matrix and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise ISO 27001 Control Matrix and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward ISO 27001 Control Matrix (Process-to-Control Mapping) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-crm-002-ref-112",
@@ -929,7 +1850,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001:2022 Annex A structure: 93 controls across Organisational…",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001:2022 Annex A structure: 93 controls across Organisational (37), People (8), Physical (14), Technological (34) themes.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-crm-002-ref-114",
@@ -937,7 +1859,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Control applicability rationale: applicable / not applicable / partially…",
       "body": "A study primer that enables you to explain, in your own words: Control applicability rationale: applicable / not applicable / partially applicable.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-crm-002-ref-115",
@@ -945,7 +1868,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Process view versus control view of an organisation",
       "body": "A study primer that enables you to explain, in your own words: Process view versus control view of an organisation.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-crm-002-ref-116",
@@ -953,7 +1877,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The control matrix as a process × control grid and its relationship to…",
       "body": "A study primer that enables you to explain, in your own words: The control matrix as a process × control grid and its relationship to the Statement of Applicability.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-crm-002-ref-117",
@@ -961,7 +1886,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Implementation status evidence and control ownership",
       "body": "A study primer that enables you to explain, in your own words: Implementation status evidence and control ownership.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CRM-003": [
@@ -982,12 +1908,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-crm-003-study-01",
+      "title": "CC1–CC9 — Common Criteria (Security)",
+      "kind": "Control Reference Extract",
+      "summary": "SOC 2 Type II (AICPA Trust Services Criteria) CC1–CC9: Common Criteria (Security)",
+      "body": "The single governing reference behind comprehension check 1: SOC 2 Type II (AICPA Trust Services Criteria) CC1–CC9.\n\n## What it requires\nCommon Criteria (Security).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS | Policy; Identity Management; Data Security |\n\n## How it lands in this task\nA gap against CC1–CC9 is a line you must record inside your soc 2 control awareness summary. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-crm-003-study-02",
+      "title": "A1 — Availability (awareness)",
+      "kind": "Control Reference Extract",
+      "summary": "SOC 2 Type II (AICPA Trust Services Criteria) A1: Availability (awareness)",
+      "body": "The single governing reference behind comprehension check 2: SOC 2 Type II (AICPA Trust Services Criteria) A1.\n\n## What it requires\nAvailability (awareness).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## How it lands in this task\nA gap against A1 is a line you must record inside your soc 2 control awareness summary. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-crm-003-study-03",
+      "title": "C1 — Confidentiality (awareness)",
+      "kind": "Control Reference Extract",
+      "summary": "SOC 2 Type II (AICPA Trust Services Criteria) C1: Confidentiality (awareness)",
+      "body": "The single governing reference behind comprehension check 3: SOC 2 Type II (AICPA Trust Services Criteria) C1.\n\n## What it requires\nConfidentiality (awareness).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## How it lands in this task\nA gap against C1 is a line you must record inside your soc 2 control awareness summary. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-crm-003-ref-120",
       "title": "SOC 2 Common Criteria Mapping Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: CC ID, Criterion Description, Example Audit Test, Internal Control Reference, Evidence Type, Gap Flag, RAG Status",
       "body": "Working template you obtain and review: SOC 2 Common Criteria Mapping Template. spreadsheet: CC ID, Criterion Description, Example Audit Test, Internal Control Reference, Evidence Type, Gap Flag, RAG Status\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-crm-003-ref-121",
@@ -995,7 +1949,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word, 2-page format",
       "body": "Working template you obtain and review: SOC 2 Awareness Briefing Template. Word, 2-page format\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-crm-003-ref-122",
@@ -1003,7 +1958,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "provided by mentor for learning purposes",
       "body": "Working template you obtain and review: Sample anonymised SOC 2 Type II report. provided by mentor for learning purposes\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-crm-003-ref-123",
@@ -1011,7 +1967,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Sample anonymised SOC 2 Type II report obtained from the mentor",
       "body": "Sample anonymised SOC 2 Type II report obtained from the mentor\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-crm-003-ref-124",
@@ -1019,7 +1976,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "CC Mapping worksheet template reviewed",
       "body": "CC Mapping worksheet template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-crm-003-ref-125",
@@ -1027,7 +1985,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "ISO 27001 Control Matrix from GRC101-CRM-002 obtained where available for cross-reference",
       "body": "ISO 27001 Control Matrix from GRC101-CRM-002 obtained where available for cross-reference\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-crm-003-ref-126",
@@ -1036,6 +1995,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CRM-003. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what a SOC 2 Type II report is, how the Trust Services Criteria are organised, and how audit evidence works before annotating the sample report.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: CC1–CC9 (Common Criteria — Security); A1 (Availability — awareness); C1 (Confidentiality — awareness).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.DS (Policy; Identity Management; Data Security).\n3. Obtain and review every provided template and document: SOC 2 Common Criteria Mapping Template (spreadsheet: CC ID, Criterion Description, Example Audit Test, Internal Control Reference, Evidence Type, Gap Flag, RAG Status); SOC 2 Awareness Briefing Template (Word, 2-page format); Sample anonymised SOC 2 Type II report (provided by mentor for learning purposes).\n4. Secure prerequisite inputs: Sample anonymised SOC 2 Type II report obtained from the mentor; CC Mapping worksheet template reviewed; ISO 27001 Control Matrix from GRC101-CRM-002 obtained where available for cross-reference.\n5. Re-read the task description and all activity steps of GRC101-CRM-003; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: SOC 2 Control Awareness Summary — traffic-light dashboard per Common Criteria cluster, control-gap list, and a two-page IT-team briefing document.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-crm-003-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for SOC 2 Awareness — Trust Services…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for SOC 2 Awareness — Trust Services Criteria Mapping with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for SOC 2 Awareness — Trust Services Criteria Mapping with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-crm-003-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-crm-003-step-03",
+      "title": "Step 3 · Study — Study the governing SOC 2 Type II (AICPA Trust Services Criteria)…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing SOC 2 Type II (AICPA Trust Services Criteria) control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing SOC 2 Type II (AICPA Trust Services Criteria) control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-crm-003-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate SOC 2 Control Awareness…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate SOC 2 Control Awareness Summary.\n\n## Purpose\nThis is a “Collect” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-crm-003-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-crm-003-step-06",
+      "title": "Step 6 · Draft — Draft SOC 2 Control Awareness Summary in the provided template to…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft SOC 2 Control Awareness Summary in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft SOC 2 Control Awareness Summary in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-crm-003-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-crm-003-step-08",
+      "title": "Step 8 · Sign-off — Finalise SOC 2 Control Awareness Summary and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise SOC 2 Control Awareness Summary and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise SOC 2 Control Awareness Summary and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward SOC 2 Control Awareness Summary — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-crm-003-ref-127",
@@ -1051,7 +2082,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: SOC 1 versus SOC 2 versus SOC 3, and Type I versus Type II",
       "body": "A study primer that enables you to explain, in your own words: SOC 1 versus SOC 2 versus SOC 3, and Type I versus Type II.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-crm-003-ref-129",
@@ -1059,7 +2091,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Trust Services Criteria categories; Security (Common Criteria) as the…",
       "body": "A study primer that enables you to explain, in your own words: Trust Services Criteria categories; Security (Common Criteria) as the mandatory category.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-crm-003-ref-130",
@@ -1067,7 +2100,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Common Criteria CC1–CC9 and their COSO Framework foundation",
       "body": "A study primer that enables you to explain, in your own words: Common Criteria CC1–CC9 and their COSO Framework foundation.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-crm-003-ref-131",
@@ -1075,7 +2109,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Auditor opinions, exceptions and what they signal",
       "body": "A study primer that enables you to explain, in your own words: Auditor opinions, exceptions and what they signal.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-crm-003-ref-132",
@@ -1083,7 +2118,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Mapping criteria to internal controls and RAG readiness summaries",
       "body": "A study primer that enables you to explain, in your own words: Mapping criteria to internal controls and RAG readiness summaries.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "DD-001": [
@@ -1104,12 +2140,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-dd-001-study-01",
+      "title": "Annex A 6.8 — Information security event reporting",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.8: Information security event reporting",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 6.8.\n\n## What it requires\nInformation security event reporting.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RS.CO-02 | Incidents reported |\n\n## How it lands in this task\nA gap against Annex A 6.8 is a line you must record inside your incident reporting procedure (full document) + incident reporting quick reference card (one-page pdf-ready) + staff communication draft.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-001-study-02",
+      "title": "Annex A 5.26 — Response to information security incidents",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.26: Response to information security incidents",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.26.\n\n## What it requires\nResponse to information security incidents.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RS.MA-01 | Incident response activities aligned with plans |\n\n## How it lands in this task\nA gap against Annex A 5.26 is a line you must record inside your incident reporting procedure (full document) + incident reporting quick reference card (one-page pdf-ready) + staff communication draft.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-001-study-03",
+      "title": "Annex A 5.28 — Collection of evidence",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.28: Collection of evidence",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.28.\n\n## What it requires\nCollection of evidence.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.AE-06 | Information on adverse events communicated |\n\n## How it lands in this task\nA gap against Annex A 5.28 is a line you must record inside your incident reporting procedure (full document) + incident reporting quick reference card (one-page pdf-ready) + staff communication draft.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-dd-001-ref-135",
       "title": "Procedure Template",
       "kind": "Template / Working Document",
       "summary": "Word — with standard headers: Purpose, Scope, Definitions, Procedure Steps, Responsibilities, Related Documents, Document Control",
       "body": "Working template you obtain and review: Procedure Template. Word — with standard headers: Purpose, Scope, Definitions, Procedure Steps, Responsibilities, Related Documents, Document Control\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-dd-001-ref-136",
@@ -1117,7 +2181,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "A5 Word layout",
       "body": "Working template you obtain and review: Incident Reporting Quick Reference Card Template. A5 Word layout\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-dd-001-ref-137",
@@ -1125,7 +2190,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "50-word email announcement",
       "body": "Working template you obtain and review: Staff Communication Template. 50-word email announcement\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-dd-001-ref-138",
@@ -1133,7 +2199,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Existing incident-related documentation gathered (helpdesk tickets, email chains, informal guidance)",
       "body": "Existing incident-related documentation gathered (helpdesk tickets, email chains, informal guidance)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-dd-001-ref-139",
@@ -1141,7 +2208,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Procedure Template and Quick Reference Card Template reviewed",
       "body": "Procedure Template and Quick Reference Card Template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-dd-001-ref-140",
@@ -1149,7 +2217,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Interview slots with the IT Manager and one front-line staff member confirmed",
       "body": "Interview slots with the IT Manager and one front-line staff member confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-dd-001-ref-141",
@@ -1158,6 +2227,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-DD-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the difference between events and incidents, what Annex A 6.8 requires of staff reporting, and how a usable procedure is structured, before drafting.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 6.8 — Information security event reporting; Annex A 5.26 — Response to information security incidents; Annex A 5.28 — Collection of evidence.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — RS.CO-02 (Incidents reported); RS.MA-01 (Incident response activities aligned with plans); DE.AE-06 (Information on adverse events communicated).\n3. Obtain and review every provided template and document: Procedure Template (Word — with standard headers: Purpose, Scope, Definitions, Procedure Steps, Responsibilities, Related Documents, Document Control); Incident Reporting Quick Reference Card Template (A5 Word layout); Staff Communication Template (50-word email announcement).\n4. Secure prerequisite inputs: Existing incident-related documentation gathered (helpdesk tickets, email chains, informal guidance); Procedure Template and Quick Reference Card Template reviewed; Interview slots with the IT Manager and one front-line staff member confirmed.\n5. Re-read the task description and all activity steps of GRC101-DD-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-dd-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Procedure Development — Incident…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Procedure Development — Incident Reporting Procedure with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Procedure Development — Incident Reporting Procedure with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-dd-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Incident Reporting Procedure…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Incident Reporting Procedure  + Incident Reporting Quick Reference Card  + Staff Communication Draft..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-dd-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-dd-001-step-06",
+      "title": "Step 6 · Draft — Draft Incident Reporting Procedure + Incident Reporting Quick…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Incident Reporting Procedure + Incident Reporting Quick Reference Card + Staff Communication Draft. in the…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Incident Reporting Procedure  + Incident Reporting Quick Reference Card  + Staff Communication Draft. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-dd-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-dd-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Incident Reporting Procedure + Incident Reporting Quick…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Incident Reporting Procedure + Incident Reporting Quick Reference Card + Staff Communication Draft. and…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Incident Reporting Procedure  + Incident Reporting Quick Reference Card  + Staff Communication Draft. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Incident Reporting Procedure (full document) + Incident Reporting Quick Reference Card (one-page PDF-ready) + Staff Communication Draft. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-dd-001-ref-142",
@@ -1173,7 +2314,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Security event versus security incident — definitions and examples",
       "body": "A study primer that enables you to explain, in your own words: Security event versus security incident — definitions and examples.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-dd-001-ref-144",
@@ -1181,7 +2323,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Annex A 6.8 (event reporting), A 5.26 (incident response) and A 5.28…",
       "body": "A study primer that enables you to explain, in your own words: Annex A 6.8 (event reporting), A 5.26 (incident response) and A 5.28 (evidence collection) intent.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-dd-001-ref-145",
@@ -1189,7 +2332,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Procedure structure: purpose, scope, definitions, steps,…",
       "body": "A study primer that enables you to explain, in your own words: Procedure structure: purpose, scope, definitions, steps, responsibilities, document control.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-dd-001-ref-146",
@@ -1197,7 +2341,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Reporting channels and escalation timelines",
       "body": "A study primer that enables you to explain, in your own words: Reporting channels and escalation timelines.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-dd-001-ref-147",
@@ -1205,7 +2350,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Writing for all staff: plain language and the one-page quick reference…",
       "body": "A study primer that enables you to explain, in your own words: Writing for all staff: plain language and the one-page quick reference discipline.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "DD-002": [
@@ -1226,12 +2372,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-dd-002-study-01",
+      "title": "Annex A 6.3 — Information security awareness, education and training",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.3: Information security awareness, education and training",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 6.3.\n\n## What it requires\nInformation security awareness, education and training.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AT-01 | Personnel are provided awareness and training |\n\n## How it lands in this task\nA gap against Annex A 6.3 is a line you must record inside your security awareness training module. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-002-study-02",
+      "title": "Annex A 6.6 — Confidentiality or non-disclosure agreements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.6: Confidentiality or non-disclosure agreements",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 6.6.\n\n## What it requires\nConfidentiality or non-disclosure agreements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AT-02 | Individuals with elevated privileges are provided awareness and training |\n\n## How it lands in this task\nA gap against Annex A 6.6 is a line you must record inside your security awareness training module. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-002-study-03",
+      "title": "Annex A 5.1 — Policies for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.1: Policies for information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.1.\n\n## What it requires\nPolicies for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 14 | Security Awareness and Skills Training |\n\n## How it lands in this task\nA gap against Annex A 5.1 is a line you must record inside your security awareness training module. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-dd-002-ref-150",
       "title": "Training Content Outline Template",
       "kind": "Template / Working Document",
       "summary": "Word — with topic, learning objective, key messages, and timing per section",
       "body": "Working template you obtain and review: Training Content Outline Template. Word — with topic, learning objective, key messages, and timing per section\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-dd-002-ref-151",
@@ -1239,7 +2413,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "PowerPoint — branded, 12-slide structure",
       "body": "Working template you obtain and review: Security Awareness Slide Deck Template. PowerPoint — branded, 12-slide structure\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-dd-002-ref-152",
@@ -1247,7 +2422,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — 5-question MCQ with answer key",
       "body": "Working template you obtain and review: Knowledge Check Template. Word — 5-question MCQ with answer key\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-dd-002-ref-153",
@@ -1255,7 +2431,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — A4 one-pager",
       "body": "Working template you obtain and review: Facilitator Guide Template. Word — A4 one-pager\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-dd-002-ref-154",
@@ -1263,7 +2440,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet",
       "body": "Working template you obtain and review: Training Attendance Register Template. spreadsheet\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 4
     },
     {
       "id": "rua-dd-002-ref-155",
@@ -1271,7 +2449,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Existing HR onboarding materials and current security guidance reviewed",
       "body": "Existing HR onboarding materials and current security guidance reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-dd-002-ref-156",
@@ -1279,7 +2458,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Training Content Outline, Slide Deck, Knowledge Check and Facilitator Guide templates reviewed",
       "body": "Training Content Outline, Slide Deck, Knowledge Check and Facilitator Guide templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-dd-002-ref-157",
@@ -1287,7 +2467,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Two colleagues identified for the pilot session",
       "body": "Two colleagues identified for the pilot session\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-dd-002-ref-158",
@@ -1296,6 +2477,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-DD-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand learning-objective design, the three core topics, and how knowledge checks measure learning, before outlining any content.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 6.3 — Information security awareness, education and training; Annex A 6.6 — Confidentiality or non-disclosure agreements; Annex A 5.1 — Policies for information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.AT-01 (Personnel are provided awareness and training); PR.AT-02 (Individuals with elevated privileges are provided awareness and training); Control 14 (Security Awareness and Skills Training).\n3. Obtain and review every provided template and document: Training Content Outline Template (Word — with topic, learning objective, key messages, and timing per section); Security Awareness Slide Deck Template (PowerPoint — branded, 12-slide structure); Knowledge Check Template (Word — 5-question MCQ with answer key); Facilitator Guide Template (Word — A4 one-pager); Training Attendance Register Template (spreadsheet).\n4. Secure prerequisite inputs: Existing HR onboarding materials and current security guidance reviewed; Training Content Outline, Slide Deck, Knowledge Check and Facilitator Guide templates reviewed; Two colleagues identified for the pilot session.\n5. Re-read the task description and all activity steps of GRC101-DD-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Security Awareness Training Module — 10–12 slide deck, five-question knowledge check, one-page Facilitator Guide, and a training attendance register template.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-dd-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Security Awareness Training Content…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Security Awareness Training Content Development with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Security Awareness Training Content Development with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-dd-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Security Awareness Training…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Security Awareness Training Module.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-dd-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-dd-002-step-06",
+      "title": "Step 6 · Draft — Draft Security Awareness Training Module in the provided template to…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Security Awareness Training Module in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Security Awareness Training Module in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-dd-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-dd-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Security Awareness Training Module and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Security Awareness Training Module and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Security Awareness Training Module and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Security Awareness Training Module — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-dd-002-ref-159",
@@ -1311,7 +2564,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Measurable learning objectives and how they drive content design",
       "body": "A study primer that enables you to explain, in your own words: Measurable learning objectives and how they drive content design.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-dd-002-ref-161",
@@ -1319,7 +2573,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Adult-learning basics: relevance, brevity, plain language, engagement",
       "body": "A study primer that enables you to explain, in your own words: Adult-learning basics: relevance, brevity, plain language, engagement.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-dd-002-ref-162",
@@ -1327,7 +2582,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Core messages for phishing recognition, password hygiene and data handling",
       "body": "A study primer that enables you to explain, in your own words: Core messages for phishing recognition, password hygiene and data handling.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-dd-002-ref-163",
@@ -1335,7 +2591,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Knowledge-check design: aligned questions, plausible distractors, answer…",
       "body": "A study primer that enables you to explain, in your own words: Knowledge-check design: aligned questions, plausible distractors, answer keys.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-dd-002-ref-164",
@@ -1343,7 +2600,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Annex A 6.3 awareness and training obligations",
       "body": "A study primer that enables you to explain, in your own words: Annex A 6.3 awareness and training obligations.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "DD-003": [
@@ -1364,12 +2622,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-dd-003-study-01",
+      "title": "Article 5(1)(e) — Storage limitation principle",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 5(1)(e): Storage limitation principle",
+      "body": "The single governing reference behind comprehension check 1: GDPR (EU) 2016/679 Article 5(1)(e).\n\n## What it requires\nStorage limitation principle.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-01 | Data at rest protected |\n\n## How it lands in this task\nA gap against Article 5(1)(e) is a line you must record inside your data retention schedule (for one data category). Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-003-study-02",
+      "title": "Article 17 — Right to erasure",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 17: Right to erasure",
+      "body": "The single governing reference behind comprehension check 2: GDPR (EU) 2016/679 Article 17.\n\n## What it requires\nRight to erasure.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-10 | Data in use protected |\n\n## How it lands in this task\nA gap against Article 17 is a line you must record inside your data retention schedule (for one data category). Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-003-study-03",
+      "title": "Recital 39 — Data kept no longer than necessary",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Recital 39: Data kept no longer than necessary",
+      "body": "The single governing reference behind comprehension check 3: GDPR (EU) 2016/679 Recital 39.\n\n## What it requires\nData kept no longer than necessary.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 3.11 | Encrypt Sensitive Data at Rest |\n\n## How it lands in this task\nA gap against Recital 39 is a line you must record inside your data retention schedule (for one data category). Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-dd-003-ref-167",
       "title": "Data Retention Schedule Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Data Element, Data Category, System/Location, Retention Trigger, Retention Period, Legal Basis, Disposal Method, Disposal…",
       "body": "Working template you obtain and review: Data Retention Schedule Template. spreadsheet: Data Element, Data Category, System/Location, Retention Trigger, Retention Period, Legal Basis, Disposal Method, Disposal Responsible, Last Review, Next Review, Notes\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-dd-003-ref-168",
@@ -1377,7 +2663,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-pager per disposal method",
       "body": "Working template you obtain and review: Data Disposal Instruction Template. Word — one-pager per disposal method\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-dd-003-ref-169",
@@ -1385,7 +2672,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "jurisdiction-specific summary — provided by mentor",
       "body": "Working template you obtain and review: Legal Retention Reference Sheet. jurisdiction-specific summary — provided by mentor\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-dd-003-ref-170",
@@ -1393,7 +2681,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Target data category agreed with the mentor (e.g. employee records, client contacts)",
       "body": "Target data category agreed with the mentor (e.g. employee records, client contacts)\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-dd-003-ref-171",
@@ -1401,7 +2690,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Data Retention Schedule Template and Disposal Instruction Template reviewed",
       "body": "Data Retention Schedule Template and Disposal Instruction Template reviewed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-dd-003-ref-172",
@@ -1409,7 +2699,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Data owner and IT/system owner interview slots confirmed",
       "body": "Data owner and IT/system owner interview slots confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-dd-003-ref-173",
@@ -1418,6 +2709,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-DD-003. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the storage-limitation principle, retention triggers versus periods, and disposal methods before researching legal requirements or interviewing data owners.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Article 5(1)(e) — Storage limitation principle; Article 17 — Right to erasure; Recital 39 — Data kept no longer than necessary.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.DS-01 (Data at rest protected); PR.DS-10 (Data in use protected); Control 3.11 (Encrypt Sensitive Data at Rest).\n3. Obtain and review every provided template and document: Data Retention Schedule Template (spreadsheet: Data Element, Data Category, System/Location, Retention Trigger, Retention Period, Legal Basis, Disposal Method, Disposal Responsible, Last Review, Next Review, Notes); Data Disposal Instruction Template (Word — one-pager per disposal method); Legal Retention Reference Sheet (jurisdiction-specific summary — provided by mentor).\n4. Secure prerequisite inputs: Target data category agreed with the mentor (e.g. employee records, client contacts); Data Retention Schedule Template and Disposal Instruction Template reviewed; Data owner and IT/system owner interview slots confirmed.\n5. Re-read the task description and all activity steps of GRC101-DD-003; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Data Retention Schedule (for one data category) — approved spreadsheet with retention triggers, periods, legal basis, disposal method, and responsible owner; plus a Data Disposal Instruction document.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-dd-003-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Data Retention Schedule Development…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Data Retention Schedule Development with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Data Retention Schedule Development with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-dd-003-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-dd-003-step-03",
+      "title": "Step 3 · Study — Study the governing GDPR (EU) 2016/679 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-dd-003-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Data Retention Schedule.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Data Retention Schedule.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-dd-003-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-dd-003-step-06",
+      "title": "Step 6 · Draft — Draft Data Retention Schedule in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Data Retention Schedule in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Data Retention Schedule in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-dd-003-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-dd-003-step-08",
+      "title": "Step 8 · Sign-off — Finalise Data Retention Schedule and obtain the required sign-off,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Data Retention Schedule and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Data Retention Schedule and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Data Retention Schedule (for one data category) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-dd-003-ref-174",
@@ -1433,7 +2796,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: GDPR Article 5(1)(e) storage limitation and Recital 39",
       "body": "A study primer that enables you to explain, in your own words: GDPR Article 5(1)(e) storage limitation and Recital 39.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-dd-003-ref-176",
@@ -1441,7 +2805,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Retention trigger versus retention period (e.g. end of employment + 6 years)",
       "body": "A study primer that enables you to explain, in your own words: Retention trigger versus retention period (e.g. end of employment + 6 years).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-dd-003-ref-177",
@@ -1449,7 +2814,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Sources of legal retention minimums: employment, tax and sector-specific law",
       "body": "A study primer that enables you to explain, in your own words: Sources of legal retention minimums: employment, tax and sector-specific law.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-dd-003-ref-178",
@@ -1457,7 +2823,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Disposal methods per medium and documented disposal instructions",
       "body": "A study primer that enables you to explain, in your own words: Disposal methods per medium and documented disposal instructions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-dd-003-ref-179",
@@ -1465,7 +2832,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Interplay with Article 17 right to erasure and its exemptions",
       "body": "A study primer that enables you to explain, in your own words: Interplay with Article 17 right to erasure and its exemptions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "SPA-001": [
@@ -1486,12 +2854,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-spa-001-study-01",
+      "title": "Clause 6.2 — Information security objectives and planning to achieve them",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 6.2: Information security objectives and planning to achieve them",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 6.2.\n\n## What it requires\nInformation security objectives and planning to achieve them.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-06 | Risk tolerance determined and communicated |\n\n## How it lands in this task\nA gap against Clause 6.2 is a line you must record inside your 12-month grc improvement roadmap. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-spa-001-study-02",
+      "title": "Clause 9.3 — Management review",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.3: Management review",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 9.3.\n\n## What it requires\nManagement review.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC | Organisational Context understood and used to prioritise cybersecurity risk |\n\n## How it lands in this task\nA gap against Clause 9.3 is a line you must record inside your 12-month grc improvement roadmap. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-spa-001-study-03",
+      "title": "Annex A 5.35 — Independent review of information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.35: Independent review of information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.35.\n\n## What it requires\nIndependent review of information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 5.35 is a line you must record inside your 12-month grc improvement roadmap. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-spa-001-ref-182",
       "title": "GRC Roadmap Template",
       "kind": "Template / Working Document",
       "summary": "Excel — Gantt chart with action IDs, descriptions, phase, owner, control reference, start/end dates, status, and estimated effort",
       "body": "Working template you obtain and review: GRC Roadmap Template. Excel — Gantt chart with action IDs, descriptions, phase, owner, control reference, start/end dates, status, and estimated effort\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-spa-001-ref-183",
@@ -1499,7 +2895,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page format: context, priorities, investment summary, next steps",
       "body": "Working template you obtain and review: Management Briefing Template. Word — one-page format: context, priorities, investment summary, next steps\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-spa-001-ref-184",
@@ -1507,7 +2904,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet supporting the Gantt",
       "body": "Working template you obtain and review: GRC Action Detail Sheet. spreadsheet supporting the Gantt\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-spa-001-ref-185",
@@ -1515,7 +2913,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Gap Analysis (GRC101-AA-002), Risk Register (GRC101-GRM-001) and Maturity Assessment (GRC101-GRM-003) outputs obtained and read",
       "body": "Gap Analysis (GRC101-AA-002), Risk Register (GRC101-GRM-001) and Maturity Assessment (GRC101-GRM-003) outputs obtained and read\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-spa-001-ref-186",
@@ -1523,7 +2922,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "GRC Roadmap Gantt Template and Management Briefing Template reviewed",
       "body": "GRC Roadmap Gantt Template and Management Briefing Template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-spa-001-ref-187",
@@ -1532,6 +2932,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-SPA-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you have absorbed the gap, risk and maturity findings that feed the roadmap, and understands phased planning and prioritisation, before consolidating anything.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 6.2 — Information security objectives and planning to achieve them; Clause 9.3 — Management review; Annex A 5.35 — Independent review of information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.RM-06 (Risk tolerance determined and communicated); GV.OC (Organisational Context understood and used to prioritise cybersecurity risk).\n3. Obtain and review every provided template and document: GRC Roadmap Template (Excel — Gantt chart with action IDs, descriptions, phase, owner, control reference, start/end dates, status, and estimated effort); Management Briefing Template (Word — one-page format: context, priorities, investment summary, next steps); GRC Action Detail Sheet (spreadsheet supporting the Gantt).\n4. Secure prerequisite inputs: Gap Analysis (GRC101-AA-002), Risk Register (GRC101-GRM-001) and Maturity Assessment (GRC101-GRM-003) outputs obtained and read; GRC Roadmap Gantt Template and Management Briefing Template reviewed.\n5. Re-read the task description and all activity steps of GRC101-SPA-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: 12-Month GRC Improvement Roadmap — phased action plan (Gantt chart), per-action detail spreadsheet, and a one-page Management Briefing.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-spa-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC Programme Roadmap — 12-Month…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC Programme Roadmap — 12-Month Plan for One Organisation with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC Programme Roadmap — 12-Month Plan for One Organisation with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-spa-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-spa-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-spa-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate 12-Month GRC Improvement…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate 12-Month GRC Improvement Roadmap.\n\n## Purpose\nThis is a “Collect” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-spa-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-spa-001-step-06",
+      "title": "Step 6 · Draft — Draft 12-Month GRC Improvement Roadmap in the provided template to…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft 12-Month GRC Improvement Roadmap in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft 12-Month GRC Improvement Roadmap in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-spa-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-spa-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise 12-Month GRC Improvement Roadmap and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise 12-Month GRC Improvement Roadmap and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise 12-Month GRC Improvement Roadmap and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward 12-Month GRC Improvement Roadmap — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-spa-001-ref-188",
@@ -1547,7 +3019,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Phased planning: Quick Wins (0–3 months), Medium-Term (3–6), Longer-Term…",
       "body": "A study primer that enables you to explain, in your own words: Phased planning: Quick Wins (0–3 months), Medium-Term (3–6), Longer-Term (6–12).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-spa-001-ref-190",
@@ -1555,7 +3028,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001 Clause 6.2 — objectives and planning to achieve them",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001 Clause 6.2 — objectives and planning to achieve them.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-spa-001-ref-191",
@@ -1563,7 +3037,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Effort-versus-impact prioritisation and dependency sequencing",
       "body": "A study primer that enables you to explain, in your own words: Effort-versus-impact prioritisation and dependency sequencing.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-spa-001-ref-192",
@@ -1571,7 +3046,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Gantt basics: milestones, owners, phases, status",
       "body": "A study primer that enables you to explain, in your own words: Gantt basics: milestones, owners, phases, status.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-spa-001-ref-193",
@@ -1579,7 +3055,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Estimating compliance uplift and writing an investment rationale for…",
       "body": "A study primer that enables you to explain, in your own words: Estimating compliance uplift and writing an investment rationale for management.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "SPA-002": [
@@ -1600,12 +3077,31 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-spa-002-study-01",
+      "title": "Clause 4.2 — Understanding the needs and expectations of interested parties",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 4.2: Understanding the needs and expectations of interested parties",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 4.2.\n\n## What it requires\nUnderstanding the needs and expectations of interested parties.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-02 | Internal and external stakeholders identified |\n\n## How it lands in this task\nA gap against Clause 4.2 is a line you must record inside your stakeholder register + influence-interest matrix + stakeholder communication plan for the selected grc initiative.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-spa-002-study-02",
+      "title": "Clause 5.3 — Organisational roles, responsibilities and authorities",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 5.3: Organisational roles, responsibilities and authorities",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 5.3.\n\n## What it requires\nOrganisational roles, responsibilities and authorities.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.SC-04 | Suppliers and third parties are informed of their roles |\n\n## How it lands in this task\nA gap against Clause 5.3 is a line you must record inside your stakeholder register + influence-interest matrix + stakeholder communication plan for the selected grc initiative.. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
       "id": "rua-spa-002-ref-196",
       "title": "Stakeholder Register Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Stakeholder ID, Name/Group, Role, Interest Area, Influence Level 1–5, Interest Level 1–5, Quadrant, Engagement Strategy,…",
       "body": "Working template you obtain and review: Stakeholder Register Template. spreadsheet: Stakeholder ID, Name/Group, Role, Interest Area, Influence Level 1–5, Interest Level 1–5, Quadrant, Engagement Strategy, Communication Channel, Frequency, Owner\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-spa-002-ref-197",
@@ -1613,7 +3109,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "PowerPoint 2×2 diagram",
       "body": "Working template you obtain and review: Influence-Interest Matrix Template. PowerPoint 2×2 diagram\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-spa-002-ref-198",
@@ -1621,7 +3118,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word table format",
       "body": "Working template you obtain and review: Stakeholder Communication Plan Template. Word table format\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-spa-002-ref-199",
@@ -1629,7 +3127,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "A GRC initiative selected from the 12-month roadmap (GRC101-SPA-001)",
       "body": "A GRC initiative selected from the 12-month roadmap (GRC101-SPA-001)\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-spa-002-ref-200",
@@ -1637,7 +3136,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Stakeholder Register, Influence-Interest Matrix and Communication Plan templates reviewed",
       "body": "Stakeholder Register, Influence-Interest Matrix and Communication Plan templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-spa-002-ref-201",
@@ -1646,6 +3146,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-SPA-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand stakeholder analysis mechanics — influence, interest, quadrants and engagement strategies — and has a confirmed initiative in scope, before brainstorming stakeholders.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 4.2 — Understanding the needs and expectations of interested parties; Clause 5.3 — Organisational roles, responsibilities and authorities.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC-02 (Internal and external stakeholders identified); GV.SC-04 (Suppliers and third parties are informed of their roles).\n3. Obtain and review every provided template and document: Stakeholder Register Template (spreadsheet: Stakeholder ID, Name/Group, Role, Interest Area, Influence Level 1–5, Interest Level 1–5, Quadrant, Engagement Strategy, Communication Channel, Frequency, Owner); Influence-Interest Matrix Template (PowerPoint 2×2 diagram); Stakeholder Communication Plan Template (Word table format).\n4. Secure prerequisite inputs: A GRC initiative selected from the 12-month roadmap (GRC101-SPA-001); Stakeholder Register, Influence-Interest Matrix and Communication Plan templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-SPA-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-spa-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Stakeholder Mapping for a GRC…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Stakeholder Mapping for a GRC Initiative with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Stakeholder Mapping for a GRC Initiative with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-spa-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-spa-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-spa-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Stakeholder Register +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-spa-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-spa-002-step-06",
+      "title": "Step 6 · Draft — Draft Stakeholder Register + Influence-Interest Matrix + Stakeholder…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-spa-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-spa-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Stakeholder Register + Influence-Interest Matrix +…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Stakeholder Register + Influence-Interest Matrix + Stakeholder Communication Plan for the selected GRC initiative. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-spa-002-ref-202",
@@ -1661,7 +3233,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Interested parties under ISO 27001 Clause 4.2 and roles under Clause 5.3",
       "body": "A study primer that enables you to explain, in your own words: Interested parties under ISO 27001 Clause 4.2 and roles under Clause 5.3.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-spa-002-ref-204",
@@ -1669,7 +3242,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Influence versus interest and the 2×2 Influence-Interest Matrix",
       "body": "A study primer that enables you to explain, in your own words: Influence versus interest and the 2×2 Influence-Interest Matrix.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-spa-002-ref-205",
@@ -1677,7 +3251,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Quadrant strategies: Manage Closely / Keep Satisfied / Keep Informed /…",
       "body": "A study primer that enables you to explain, in your own words: Quadrant strategies: Manage Closely / Keep Satisfied / Keep Informed / Monitor.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-spa-002-ref-206",
@@ -1685,7 +3260,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Stakeholder registers and communication planning (what, how often, which…",
       "body": "A study primer that enables you to explain, in your own words: Stakeholder registers and communication planning (what, how often, which channel).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-spa-002-ref-207",
@@ -1693,7 +3269,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Internal versus external stakeholder identification",
       "body": "A study primer that enables you to explain, in your own words: Internal versus external stakeholder identification.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "IE-001": [
@@ -1714,12 +3291,58 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-ie-001-study-01",
+      "title": "CIS 1.1 — Establish and maintain detailed enterprise asset inventory",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 1.1: Establish and maintain detailed enterprise asset inventory",
+      "body": "The single governing reference behind comprehension check 1: CIS Controls v8 CIS 1.1.\n\n## What it requires\nEstablish and maintain detailed enterprise asset inventory.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AA-01 | Identities managed |\n\n## How it lands in this task\nA gap against CIS 1.1 is a line you must record inside your control implementation tracker (updated with evidence references) + evidence repository (filed artefacts) + implementation progress report.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-ie-001-study-02",
+      "title": "CIS 3.3 — Configure data access control lists",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 3.3: Configure data access control lists",
+      "body": "The single governing reference behind comprehension check 2: CIS Controls v8 CIS 3.3.\n\n## What it requires\nConfigure data access control lists.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-01 | Data at rest protected |\n\n## How it lands in this task\nA gap against CIS 3.3 is a line you must record inside your control implementation tracker (updated with evidence references) + evidence repository (filed artefacts) + implementation progress report.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-ie-001-study-03",
+      "title": "CIS 5.2 — Use unique passwords",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 5.2: Use unique passwords",
+      "body": "The single governing reference behind comprehension check 3: CIS Controls v8 CIS 5.2.\n\n## What it requires\nUse unique passwords.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-02 | Data in transit protected |\n\n## How it lands in this task\nA gap against CIS 5.2 is a line you must record inside your control implementation tracker (updated with evidence references) + evidence repository (filed artefacts) + implementation progress report.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-ie-001-study-04",
+      "title": "CIS 5.3 — Disable dormant accounts",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 5.3: Disable dormant accounts",
+      "body": "The single governing reference behind comprehension check 4: CIS Controls v8 CIS 5.3.\n\n## What it requires\nDisable dormant accounts.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 5.3 is a line you must record inside your control implementation tracker (updated with evidence references) + evidence repository (filed artefacts) + implementation progress report.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
+      "id": "rua-ie-001-study-05",
+      "title": "CIS 6.1 — Establish an access-granting process",
+      "kind": "Control Reference Extract",
+      "summary": "CIS Controls v8 CIS 6.1: Establish an access-granting process",
+      "body": "The single governing reference behind comprehension check 5: CIS Controls v8 CIS 6.1.\n\n## What it requires\nEstablish an access-granting process.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against CIS 6.1 is a line you must record inside your control implementation tracker (updated with evidence references) + evidence repository (filed artefacts) + implementation progress report.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 4
+    },
+    {
       "id": "rua-ie-001-ref-210",
       "title": "Control Implementation Tracker Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Safeguard ID, Description, IT Owner, Target Date, Status, Evidence Reference, Acceptance Criteria, Pass/Fail, Notes",
       "body": "Working template you obtain and review: Control Implementation Tracker Template. spreadsheet: Safeguard ID, Description, IT Owner, Target Date, Status, Evidence Reference, Acceptance Criteria, Pass/Fail, Notes\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-ie-001-ref-211",
@@ -1727,7 +3350,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one card per control",
       "body": "Working template you obtain and review: Implementation Task Card Template. Word — one card per control\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-ie-001-ref-212",
@@ -1735,7 +3359,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "naming conventions and filing instructions",
       "body": "Working template you obtain and review: Evidence Repository Folder Structure Guide. naming conventions and filing instructions\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-ie-001-ref-213",
@@ -1743,7 +3368,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "CIS gap analysis from GRC101-AA-002 obtained and the candidate safeguards reviewed",
       "body": "CIS gap analysis from GRC101-AA-002 obtained and the candidate safeguards reviewed\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-ie-001-ref-214",
@@ -1751,7 +3377,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Implementation Tracker and Task Card templates reviewed",
       "body": "Implementation Tracker and Task Card templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-ie-001-ref-215",
@@ -1759,7 +3386,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "IT Manager commitment to the implementation window confirmed",
       "body": "IT Manager commitment to the implementation window confirmed\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-ie-001-ref-216",
@@ -1768,6 +3396,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-IE-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the remediation lifecycle, acceptance criteria and evidence expectations for the five selected safeguards before creating task cards or tracking anything.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references:  — Control 1.1 (Establish and maintain detailed enterprise asset inventory);  — Control 3.3 (Configure data access control lists);  — Control 5.2 (Use unique passwords);  — Control 5.3 (Disable dormant accounts);  — Control 6.1 (Establish access-granting process).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.AA-01 (Identities managed); PR.DS-01 (Data at rest protected); PR.DS-02 (Data in transit protected).\n3. Obtain and review every provided template and document: Control Implementation Tracker Template (spreadsheet: Safeguard ID, Description, IT Owner, Target Date, Status, Evidence Reference, Acceptance Criteria, Pass/Fail, Notes); Implementation Task Card Template (Word — one card per control); Evidence Repository Folder Structure Guide (naming conventions and filing instructions).\n4. Secure prerequisite inputs: CIS gap analysis from GRC101-AA-002 obtained and the candidate safeguards reviewed; Implementation Tracker and Task Card templates reviewed; IT Manager commitment to the implementation window confirmed.\n5. Re-read the task description and all activity steps of GRC101-IE-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-ie-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for CIS Controls IG1 Remediation —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for CIS Controls IG1 Remediation — Basic Implementation Tracking with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for CIS Controls IG1 Remediation — Basic Implementation Tracking with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-ie-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-ie-001-step-03",
+      "title": "Step 3 · Study — Study the governing CIS Controls v8 control references and the NIST…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing CIS Controls v8 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing CIS Controls v8 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-ie-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Control Implementation…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Control Implementation Tracker  + Evidence Repository  + Implementation Progress Report..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-ie-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-ie-001-step-06",
+      "title": "Step 6 · Draft — Draft Control Implementation Tracker + Evidence Repository +…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Control Implementation Tracker + Evidence Repository + Implementation Progress Report. in the provided template…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Control Implementation Tracker  + Evidence Repository  + Implementation Progress Report. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-ie-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-ie-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Control Implementation Tracker + Evidence Repository +…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Control Implementation Tracker + Evidence Repository + Implementation Progress Report. and obtain the…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Control Implementation Tracker  + Evidence Repository  + Implementation Progress Report. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Control Implementation Tracker (updated with evidence references) + Evidence Repository (filed artefacts) + Implementation Progress Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-ie-001-ref-217",
@@ -1783,7 +3483,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The remediation lifecycle: select, plan, implement, evidence, verify, close",
       "body": "A study primer that enables you to explain, in your own words: The remediation lifecycle: select, plan, implement, evidence, verify, close.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-ie-001-ref-219",
@@ -1791,7 +3492,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Acceptance criteria — defining done before work starts",
       "body": "A study primer that enables you to explain, in your own words: Acceptance criteria — defining done before work starts.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-ie-001-ref-220",
@@ -1799,7 +3501,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Implementation evidence types: screenshots, configuration exports,…",
       "body": "A study primer that enables you to explain, in your own words: Implementation evidence types: screenshots, configuration exports, policy documents.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-ie-001-ref-221",
@@ -1807,7 +3510,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Raising and escalating remediation issues when acceptance fails",
       "body": "A study primer that enables you to explain, in your own words: Raising and escalating remediation issues when acceptance fails.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-ie-001-ref-222",
@@ -1815,7 +3519,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Keeping the tracker current and updating the AA-002 gap analysis on…",
       "body": "A study primer that enables you to explain, in your own words: Keeping the tracker current and updating the AA-002 gap analysis on completion.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "IE-002": [
@@ -1836,12 +3541,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-ie-002-study-01",
+      "title": "Clause 7.5 — Documented information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 7.5: Documented information",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 7.5.\n\n## What it requires\nDocumented information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed, updated, communicated |\n\n## How it lands in this task\nA gap against Clause 7.5 is a line you must record inside your document control policy (approved) + document register (populated) + implemented folder structure on the shared drive + training summary note.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-ie-002-study-02",
+      "title": "Clause 7.5.3 — Control of documented information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 7.5.3: Control of documented information",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 7.5.3.\n\n## What it requires\nControl of documented information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC | Organisational context maintained through documented information |\n\n## How it lands in this task\nA gap against Clause 7.5.3 is a line you must record inside your document control policy (approved) + document register (populated) + implemented folder structure on the shared drive + training summary note.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-ie-002-study-03",
+      "title": "Annex A 5.1 — Policies for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.1: Policies for information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.1.\n\n## What it requires\nPolicies for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 5.1 is a line you must record inside your document control policy (approved) + document register (populated) + implemented folder structure on the shared drive + training summary note.. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-ie-002-ref-225",
       "title": "Document Control Policy Template",
       "kind": "Template / Working Document",
       "summary": "Word",
       "body": "Working template you obtain and review: Document Control Policy Template. Word\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-ie-002-ref-226",
@@ -1849,7 +3582,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Doc ID, Title, Version, Status, Owner, Approver, Date Approved, Next Review Date, Location Link",
       "body": "Working template you obtain and review: Document Register Template. spreadsheet: Doc ID, Title, Version, Status, Owner, Approver, Date Approved, Next Review Date, Location Link\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-ie-002-ref-227",
@@ -1857,7 +3591,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — recommended hierarchy and naming conventions",
       "body": "Working template you obtain and review: GRC Folder Structure Guide. Word — recommended hierarchy and naming conventions\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-ie-002-ref-228",
@@ -1865,7 +3600,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "reference card",
       "body": "Working template you obtain and review: Version Numbering Guide. reference card\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-ie-002-ref-229",
@@ -1873,7 +3609,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Inventory of existing GRC documents and their current storage locations gathered",
       "body": "Inventory of existing GRC documents and their current storage locations gathered\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-ie-002-ref-230",
@@ -1881,7 +3618,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Document Control Policy, Document Register, Folder Structure and Version Numbering templates reviewed",
       "body": "Document Control Policy, Document Register, Folder Structure and Version Numbering templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-ie-002-ref-231",
@@ -1889,7 +3627,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Approved policy artefacts from GRC101-GRM-002 identified for migration where available",
       "body": "Approved policy artefacts from GRC101-GRM-002 identified for migration where available\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-ie-002-ref-232",
@@ -1898,6 +3637,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-IE-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand ISO 27001 Clause 7.5 documented-information requirements, version numbering and document lifecycles before auditing the current state or designing the structure.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 7.5 — Documented information; Clause 7.5.3 — Control of documented information; Annex A 5.1 — Policies for information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated); GV.OC (Organisational context maintained through documented information).\n3. Obtain and review every provided template and document: Document Control Policy Template (Word); Document Register Template (spreadsheet: Doc ID, Title, Version, Status, Owner, Approver, Date Approved, Next Review Date, Location Link); GRC Folder Structure Guide (Word — recommended hierarchy and naming conventions); Version Numbering Guide (reference card).\n4. Secure prerequisite inputs: Inventory of existing GRC documents and their current storage locations gathered; Document Control Policy, Document Register, Folder Structure and Version Numbering templates reviewed; Approved policy artefacts from GRC101-GRM-002 identified for migration where available.\n5. Re-read the task description and all activity steps of GRC101-IE-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-ie-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Policy Roll-Out — Version Control…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Policy Roll-Out — Version Control and Document Control Setup with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Policy Roll-Out — Version Control and Document Control Setup with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-ie-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-ie-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-ie-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Document Control Policy +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Document Control Policy  + Document Register  + Implemented folder structure on the shared drive + Training summary note..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-ie-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-ie-002-step-06",
+      "title": "Step 6 · Draft — Draft Document Control Policy + Document Register + Implemented…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Document Control Policy + Document Register + Implemented folder structure on the shared drive + Training…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Document Control Policy  + Document Register  + Implemented folder structure on the shared drive + Training summary note. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-ie-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-ie-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Document Control Policy + Document Register + Implemented…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Document Control Policy + Document Register + Implemented folder structure on the shared drive + Training…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Document Control Policy  + Document Register  + Implemented folder structure on the shared drive + Training summary note. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Document Control Policy (approved) + Document Register (populated) + Implemented folder structure on the shared drive + Training summary note. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-ie-002-ref-233",
@@ -1913,7 +3724,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Clause 7.5 / 7.5.3 — creating, updating and controlling documented…",
       "body": "A study primer that enables you to explain, in your own words: Clause 7.5 / 7.5.3 — creating, updating and controlling documented information.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-ie-002-ref-235",
@@ -1921,7 +3733,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Version numbering schemes: major versus minor versions",
       "body": "A study primer that enables you to explain, in your own words: Version numbering schemes: major versus minor versions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-ie-002-ref-236",
@@ -1929,7 +3742,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Naming conventions and folder hierarchy design",
       "body": "A study primer that enables you to explain, in your own words: Naming conventions and folder hierarchy design.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-ie-002-ref-237",
@@ -1937,7 +3751,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Document lifecycle: draft, review, approved, published, retired",
       "body": "A study primer that enables you to explain, in your own words: Document lifecycle: draft, review, approved, published, retired.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-ie-002-ref-238",
@@ -1945,7 +3760,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Document Register as the master index with owners and review dates",
       "body": "A study primer that enables you to explain, in your own words: The Document Register as the master index with owners and review dates.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "TV-001": [
@@ -1966,12 +3782,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-tv-001-study-01",
+      "title": "Annex A 8.2 — Privileged access rights",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.2: Privileged access rights",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 8.2.\n\n## What it requires\nPrivileged access rights.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AA-01 | Identities and credentials managed |\n\n## How it lands in this task\nA gap against Annex A 8.2 is a line you must record inside your access control testing report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-tv-001-study-02",
+      "title": "Annex A 8.3 — Information access restriction",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.3: Information access restriction",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 8.3.\n\n## What it requires\nInformation access restriction.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AA-02 | Identities are proofed and bound to credentials |\n\n## How it lands in this task\nA gap against Annex A 8.3 is a line you must record inside your access control testing report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-tv-001-study-03",
+      "title": "Annex A 8.5 — Secure authentication",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.5: Secure authentication",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 8.5.\n\n## What it requires\nSecure authentication.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 5 | Account Management |\n\n## How it lands in this task\nA gap against Annex A 8.5 is a line you must record inside your access control testing report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-tv-001-study-04",
+      "title": "Annex A 5.18 — Access rights",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.18: Access rights",
+      "body": "The single governing reference behind comprehension check 4: ISO/IEC 27001:2022 Annex A 5.18.\n\n## What it requires\nAccess rights.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 6 | Access Control Management |\n\n## How it lands in this task\nA gap against Annex A 5.18 is a line you must record inside your access control testing report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-tv-001-ref-241",
       "title": "Access Review Worksheet",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Account ID, Username, System, Role/Permission Level, Last Login Date, HR Status, Finding Type, Recommended Action,…",
       "body": "Working template you obtain and review: Access Review Worksheet. spreadsheet: Account ID, Username, System, Role/Permission Level, Last Login Date, HR Status, Finding Type, Recommended Action, Priority, IT Owner Action\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-tv-001-ref-242",
@@ -1979,7 +3832,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — executive summary, findings table, remediation recommendations, sign-off block",
       "body": "Working template you obtain and review: Access Control Testing Report Template. Word — executive summary, findings table, remediation recommendations, sign-off block\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-tv-001-ref-243",
@@ -1987,7 +3841,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Cross-Reference Methodology Guide",
       "body": "Working template you obtain and review: Cross-Reference Methodology Guide.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-tv-001-ref-244",
@@ -1995,7 +3850,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "System owner and HR contact identified and extract requests understood",
       "body": "System owner and HR contact identified and extract requests understood\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-tv-001-ref-245",
@@ -2003,7 +3859,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Access Review Worksheet and Testing Report templates reviewed",
       "body": "Access Review Worksheet and Testing Report templates reviewed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-tv-001-ref-246",
@@ -2012,6 +3869,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-TV-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand least privilege, account states and finding types — and the sensitivity of the data being handled — before requesting any account extract.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 8.2 — Privileged access rights; Annex A 8.3 — Information access restriction; Annex A 8.5 — Secure authentication; Annex A 5.18 — Access rights.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.AA-01 (Identities and credentials managed); PR.AA-02 (Identities are proofed and bound to credentials); Control 5 (Account Management); Control 6 (Access Control Management).\n3. Obtain and review every provided template and document: Access Review Worksheet (spreadsheet: Account ID, Username, System, Role/Permission Level, Last Login Date, HR Status, Finding Type, Recommended Action, Priority, IT Owner Action); Access Control Testing Report Template (Word — executive summary, findings table, remediation recommendations, sign-off block); Cross-Reference Methodology Guide.\n4. Secure prerequisite inputs: System owner and HR contact identified and extract requests understood; Access Review Worksheet and Testing Report templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-TV-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Access Control Testing Report — findings table (account status, issue type, recommendation), executive summary with remediation priority, and a signed remediation acknowledgement from the IT Manager.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-tv-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Access Control Review — User…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Access Control Review — User Account Validation with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Access Control Review — User Account Validation with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-tv-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-tv-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-tv-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Access Control Testing Report.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Access Control Testing Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-tv-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-tv-001-step-06",
+      "title": "Step 6 · Draft — Draft Access Control Testing Report in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Access Control Testing Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Access Control Testing Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-tv-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-tv-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Access Control Testing Report and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Access Control Testing Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Access Control Testing Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Access Control Testing Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-tv-001-ref-247",
@@ -2027,7 +3956,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Least privilege and role-based access (Annex A 5.18, 8.2, 8.3, 8.5)",
       "body": "A study primer that enables you to explain, in your own words: Least privilege and role-based access (Annex A 5.18, 8.2, 8.3, 8.5).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-tv-001-ref-249",
@@ -2035,7 +3965,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Joiner–mover–leaver lifecycle and where access errors creep in",
       "body": "A study primer that enables you to explain, in your own words: Joiner–mover–leaver lifecycle and where access errors creep in.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-tv-001-ref-250",
@@ -2043,7 +3974,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Orphaned versus dormant versus mismatched accounts",
       "body": "A study primer that enables you to explain, in your own words: Orphaned versus dormant versus mismatched accounts.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-tv-001-ref-251",
@@ -2051,7 +3983,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Independent data sources: system extract cross-referenced against HR records",
       "body": "A study primer that enables you to explain, in your own words: Independent data sources: system extract cross-referenced against HR records.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-tv-001-ref-252",
@@ -2059,7 +3992,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Finding types, priorities and remediation deadlines",
       "body": "A study primer that enables you to explain, in your own words: Finding types, priorities and remediation deadlines.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "TV-002": [
@@ -2080,12 +4014,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-tv-002-study-01",
+      "title": "Annex A 5.36 — Compliance with policies, rules and standards for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.36: Compliance with policies, rules and standards for information security",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.36.\n\n## What it requires\nCompliance with policies, rules and standards for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed and communicated |\n\n## How it lands in this task\nA gap against Annex A 5.36 is a line you must record inside your policy compliance spot-check report. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-tv-002-study-02",
+      "title": "Annex A 6.3 — Information security awareness, education and training",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.3: Information security awareness, education and training",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 6.3.\n\n## What it requires\nInformation security awareness, education and training.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AT-01 | Personnel provided awareness and training |\n\n## How it lands in this task\nA gap against Annex A 6.3 is a line you must record inside your policy compliance spot-check report. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-tv-002-study-03",
+      "title": "Annex A 8.1 — User endpoint devices",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.1: User endpoint devices",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 8.1.\n\n## What it requires\nUser endpoint devices.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.CM | Monitoring performed |\n\n## How it lands in this task\nA gap against Annex A 8.1 is a line you must record inside your policy compliance spot-check report. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-tv-002-ref-255",
       "title": "Control Testing Workpaper Template",
       "kind": "Template / Working Document",
       "summary": "Word — Control ID, Control Statement, Test Procedure, Evidence Requested, Evidence Received, Result, Finding Narrative, Recommendation",
       "body": "Working template you obtain and review: Control Testing Workpaper Template. Word — Control ID, Control Statement, Test Procedure, Evidence Requested, Evidence Received, Result, Finding Narrative, Recommendation\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-tv-002-ref-256",
@@ -2093,7 +4055,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — cover page, scope, methodology, findings summary table, recommendations, appendix",
       "body": "Working template you obtain and review: Spot-Check Report Template. Word — cover page, scope, methodology, findings summary table, recommendations, appendix\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-tv-002-ref-257",
@@ -2101,7 +4064,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel formula sheet",
       "body": "Working template you obtain and review: Compliance Rate Calculator. Excel formula sheet\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-tv-002-ref-258",
@@ -2109,7 +4073,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Three candidate policies identified (e.g. from GRC101-GRM-002 or the document library)",
       "body": "Three candidate policies identified (e.g. from GRC101-GRM-002 or the document library)\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-tv-002-ref-259",
@@ -2117,7 +4082,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Control Testing Workpaper and Spot-Check Report templates reviewed",
       "body": "Control Testing Workpaper and Spot-Check Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-tv-002-ref-260",
@@ -2126,6 +4092,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-TV-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you can turn a policy clause into a testable control statement and understands evidence sampling before selecting policies or requesting evidence.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.36 — Compliance with policies, rules and standards for information security; Annex A 6.3 — Information security awareness, education and training; Annex A 8.1 — User endpoint devices.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.PO-02 (Policy reviewed and communicated); PR.AT-01 (Personnel provided awareness and training); DE.CM (Monitoring performed).\n3. Obtain and review every provided template and document: Control Testing Workpaper Template (Word — Control ID, Control Statement, Test Procedure, Evidence Requested, Evidence Received, Result, Finding Narrative, Recommendation); Spot-Check Report Template (Word — cover page, scope, methodology, findings summary table, recommendations, appendix); Compliance Rate Calculator (Excel formula sheet).\n4. Secure prerequisite inputs: Three candidate policies identified (e.g. from GRC101-GRM-002 or the document library); Control Testing Workpaper and Spot-Check Report templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-TV-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Policy Compliance Spot-Check Report — control testing workpapers (one per policy), compliance rate summary, findings table, and remediation recommendations.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-tv-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Policy Compliance Spot-Check —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Policy Compliance Spot-Check — Desk-Based Control Testing with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Policy Compliance Spot-Check — Desk-Based Control Testing with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-tv-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-tv-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-tv-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Policy Compliance Spot-Check…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Policy Compliance Spot-Check Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-tv-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-tv-002-step-06",
+      "title": "Step 6 · Draft — Draft Policy Compliance Spot-Check Report in the provided template…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Policy Compliance Spot-Check Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Policy Compliance Spot-Check Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-tv-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-tv-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Policy Compliance Spot-Check Report and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Policy Compliance Spot-Check Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Policy Compliance Spot-Check Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Policy Compliance Spot-Check Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-tv-002-ref-261",
@@ -2141,7 +4179,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Control statements: specific, observable, testable assertions derived…",
       "body": "A study primer that enables you to explain, in your own words: Control statements: specific, observable, testable assertions derived from policy text.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-tv-002-ref-263",
@@ -2149,7 +4188,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Evidence sampling: what to request, sample size, and period covered",
       "body": "A study primer that enables you to explain, in your own words: Evidence sampling: what to request, sample size, and period covered.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-tv-002-ref-264",
@@ -2157,7 +4197,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Test techniques: inquiry versus inspection of evidence",
       "body": "A study primer that enables you to explain, in your own words: Test techniques: inquiry versus inspection of evidence.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-tv-002-ref-265",
@@ -2165,7 +4206,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Result categories: compliant / partially compliant / non-compliant",
       "body": "A study primer that enables you to explain, in your own words: Result categories: compliant / partially compliant / non-compliant.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-tv-002-ref-266",
@@ -2173,7 +4215,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Compliance rate calculation and remediation recommendations (Annex A 5.36)",
       "body": "A study primer that enables you to explain, in your own words: Compliance rate calculation and remediation recommendations (Annex A 5.36).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "MM-001": [
@@ -2194,12 +4237,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-mm-001-study-01",
+      "title": "Clause 9.1 — Monitoring, measurement, analysis and evaluation",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.1: Monitoring, measurement, analysis and evaluation",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 9.1.\n\n## What it requires\nMonitoring, measurement, analysis and evaluation.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-06 | Risk management outcomes communicated |\n\n## How it lands in this task\nA gap against Clause 9.1 is a line you must record inside your grc kpi definition pack (five kpi definition cards) + monthly grc metrics tracking spreadsheet + month 1 grc metrics report (one-page).. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-mm-001-study-02",
+      "title": "Clause 9.3 — Management review",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.3: Management review",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 9.3.\n\n## What it requires\nManagement review.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.CM-09 | Computing hardware and software monitored |\n\n## How it lands in this task\nA gap against Clause 9.3 is a line you must record inside your grc kpi definition pack (five kpi definition cards) + monthly grc metrics tracking spreadsheet + month 1 grc metrics report (one-page).. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-mm-001-study-03",
+      "title": "Annex A 5.35 — Independent review of information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.35: Independent review of information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.35.\n\n## What it requires\nIndependent review of information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.PS-04 | Logs of events created |\n\n## How it lands in this task\nA gap against Annex A 5.35 is a line you must record inside your grc kpi definition pack (five kpi definition cards) + monthly grc metrics tracking spreadsheet + month 1 grc metrics report (one-page).. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-mm-001-ref-269",
       "title": "KPI Definition Card Template",
       "kind": "Template / Working Document",
       "summary": "Word — one card per KPI: name, formula, data source, frequency, owner, target, RAG thresholds, chart type",
       "body": "Working template you obtain and review: KPI Definition Card Template. Word — one card per KPI: name, formula, data source, frequency, owner, target, RAG thresholds, chart type\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-mm-001-ref-270",
@@ -2207,7 +4278,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel — auto-RAG, 12-month rolling, trend sparklines",
       "body": "Working template you obtain and review: Monthly GRC Metrics Tracking Spreadsheet Template. Excel — auto-RAG, 12-month rolling, trend sparklines\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-mm-001-ref-271",
@@ -2215,7 +4287,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page: RAG dashboard, commentary, actions required",
       "body": "Working template you obtain and review: GRC Metrics Report Template. Word — one-page: RAG dashboard, commentary, actions required\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-mm-001-ref-272",
@@ -2223,7 +4296,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Compliance status outputs from earlier tasks for this organisation reviewed as the baseline",
       "body": "Compliance status outputs from earlier tasks for this organisation reviewed as the baseline\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-mm-001-ref-273",
@@ -2231,7 +4305,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "KPI Definition Card, Tracking Spreadsheet and Metrics Report templates reviewed",
       "body": "KPI Definition Card, Tracking Spreadsheet and Metrics Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-mm-001-ref-274",
@@ -2239,7 +4314,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "IT and HR data owners identified for month-1 collection",
       "body": "IT and HR data owners identified for month-1 collection\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-mm-001-ref-275",
@@ -2248,6 +4324,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-MM-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what makes a good GRC KPI, how RAG thresholds work, and what Clause 9.1 requires, before defining any metric or building the tracker.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 9.1 — Monitoring, measurement, analysis and evaluation; Clause 9.3 — Management review; Annex A 5.35 — Independent review of information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.RM-06 (Risk management outcomes communicated); DE.CM-09 (Computing hardware and software monitored); PR.PS-04 (Logs of events created).\n3. Obtain and review every provided template and document: KPI Definition Card Template (Word — one card per KPI: name, formula, data source, frequency, owner, target, RAG thresholds, chart type); Monthly GRC Metrics Tracking Spreadsheet Template (Excel — auto-RAG, 12-month rolling, trend sparklines); GRC Metrics Report Template (Word — one-page: RAG dashboard, commentary, actions required).\n4. Secure prerequisite inputs: Compliance status outputs from earlier tasks for this organisation reviewed as the baseline; KPI Definition Card, Tracking Spreadsheet and Metrics Report templates reviewed; IT and HR data owners identified for month-1 collection.\n5. Re-read the task description and all activity steps of GRC101-MM-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page).",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-mm-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC KPI Definition and Basic…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC KPI Definition and Basic Metrics Tracking Setup with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC KPI Definition and Basic Metrics Tracking Setup with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-mm-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-mm-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-mm-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC KPI Definition Pack +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC KPI Definition Pack  + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report ..\n\n## Purpose\nThis is a “Collect” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-mm-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-mm-001-step-06",
+      "title": "Step 6 · Draft — Draft GRC KPI Definition Pack + Monthly GRC Metrics Tracking…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft GRC KPI Definition Pack + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report . in the…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft GRC KPI Definition Pack  + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report . in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-mm-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-mm-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise GRC KPI Definition Pack + Monthly GRC Metrics Tracking…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise GRC KPI Definition Pack + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report . and obtain…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise GRC KPI Definition Pack  + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report . and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward GRC KPI Definition Pack (five KPI Definition Cards) + Monthly GRC Metrics Tracking Spreadsheet + Month 1 GRC Metrics Report (one-page). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-mm-001-ref-276",
@@ -2263,7 +4411,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: KPI versus KRI, and leading versus lagging indicators",
       "body": "A study primer that enables you to explain, in your own words: KPI versus KRI, and leading versus lagging indicators.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-mm-001-ref-278",
@@ -2271,7 +4420,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: KPI anatomy: name, formula, data source, frequency, owner, target, RAG…",
       "body": "A study primer that enables you to explain, in your own words: KPI anatomy: name, formula, data source, frequency, owner, target, RAG thresholds.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-mm-001-ref-279",
@@ -2279,7 +4429,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Data source reliability and collection effort",
       "body": "A study primer that enables you to explain, in your own words: Data source reliability and collection effort.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-mm-001-ref-280",
@@ -2287,7 +4438,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001 Clause 9.1 monitoring and measurement requirements",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001 Clause 9.1 monitoring and measurement requirements.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-mm-001-ref-281",
@@ -2295,7 +4447,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Interpreting RAG status into management commentary",
       "body": "A study primer that enables you to explain, in your own words: Interpreting RAG status into management commentary.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "MM-002": [
@@ -2316,12 +4469,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-mm-002-study-01",
+      "title": "Clause 6.1.2 — Information security risk assessment (ongoing)",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 6.1.2: Information security risk assessment (ongoing)",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 6.1.2.\n\n## What it requires\nInformation security risk assessment (ongoing).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.RA-06 | Risks identified |\n\n## How it lands in this task\nA gap against Clause 6.1.2 is a line you must record inside your updated risk register (version 2) + monthly risk summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + meeting minutes.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-mm-002-study-02",
+      "title": "Clause 9.1 — Monitoring, measurement, analysis and evaluation",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.1: Monitoring, measurement, analysis and evaluation",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 9.1.\n\n## What it requires\nMonitoring, measurement, analysis and evaluation.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-07 | Risk responses managed |\n\n## How it lands in this task\nA gap against Clause 9.1 is a line you must record inside your updated risk register (version 2) + monthly risk summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + meeting minutes.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-mm-002-study-03",
+      "title": "Annex A 5.9 — Inventory of information and other associated assets (maintained)",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.9: Inventory of information and other associated assets (maintained)",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.9.\n\n## What it requires\nInventory of information and other associated assets (maintained).\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.CM | Adverse events monitored |\n\n## How it lands in this task\nA gap against Annex A 5.9 is a line you must record inside your updated risk register (version 2) + monthly risk summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + meeting minutes.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-mm-002-ref-284",
       "title": "Risk Register Review Meeting Agenda Template",
       "kind": "Template / Working Document",
       "summary": "Word",
       "body": "Working template you obtain and review: Risk Register Review Meeting Agenda Template. Word\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-mm-002-ref-285",
@@ -2329,7 +4510,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "reuse from GRM-001 template — version controlled",
       "body": "Working template you obtain and review: Risk Register. reuse from GRM-001 template — version controlled\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-mm-002-ref-286",
@@ -2337,7 +4519,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page: portfolio table, RAG movement arrows, narrative commentary",
       "body": "Working template you obtain and review: Monthly Risk Summary Template. Word — one-page: portfolio table, RAG movement arrows, narrative commentary\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-mm-002-ref-287",
@@ -2345,7 +4528,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet tab",
       "body": "Working template you obtain and review: Risk Register Version Control Log. spreadsheet tab\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-mm-002-ref-288",
@@ -2353,7 +4537,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Risk Register from GRC101-GRM-001 obtained, current version confirmed",
       "body": "Risk Register from GRC101-GRM-001 obtained, current version confirmed\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-mm-002-ref-289",
@@ -2361,7 +4546,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Both risk owners identified and availability checked",
       "body": "Both risk owners identified and availability checked\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-mm-002-ref-290",
@@ -2369,7 +4555,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Review Meeting Agenda and Monthly Risk Summary templates reviewed",
       "body": "Review Meeting Agenda and Monthly Risk Summary templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-mm-002-ref-291",
@@ -2378,6 +4565,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-MM-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand the risk register as a living document and can facilitate a structured review meeting before scheduling it with the risk owners.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 6.1.2 — Information security risk assessment (ongoing); Clause 9.1 — Monitoring, measurement, analysis and evaluation; Annex A 5.9 — Inventory of information and other associated assets (maintained).\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — ID.RA-06 (Risks identified); GV.RM-07 (Risk responses managed); DE.CM (Adverse events monitored).\n3. Obtain and review every provided template and document: Risk Register Review Meeting Agenda Template (Word); Risk Register (reuse from GRM-001 template — version controlled); Monthly Risk Summary Template (Word — one-page: portfolio table, RAG movement arrows, narrative commentary); Risk Register Version Control Log (spreadsheet tab).\n4. Secure prerequisite inputs: Risk Register from GRC101-GRM-001 obtained, current version confirmed; Both risk owners identified and availability checked; Review Meeting Agenda and Monthly Risk Summary templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-MM-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-mm-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Risk Register Maintenance — Monthly…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Risk Register Maintenance — Monthly Review Cycle with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Risk Register Maintenance — Monthly Review Cycle with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-mm-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-mm-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-mm-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Updated Risk Register +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Updated Risk Register  + Monthly Risk Summary  + Meeting Minutes..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-mm-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-mm-002-step-06",
+      "title": "Step 6 · Draft — Draft Updated Risk Register + Monthly Risk Summary + Meeting…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Updated Risk Register + Monthly Risk Summary + Meeting Minutes. in the provided template to the acceptance…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Updated Risk Register  + Monthly Risk Summary  + Meeting Minutes. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-mm-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-mm-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Updated Risk Register + Monthly Risk Summary + Meeting…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Updated Risk Register + Monthly Risk Summary + Meeting Minutes. and obtain the required sign-off, filing it…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Updated Risk Register  + Monthly Risk Summary  + Meeting Minutes. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Updated Risk Register (version 2) + Monthly Risk Summary (one-page: portfolio overview, score movements, new risks, overdue treatments) + Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-mm-002-ref-292",
@@ -2393,7 +4652,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Risk registers as live artefacts: re-scoring triggers and treatment progress",
       "body": "A study primer that enables you to explain, in your own words: Risk registers as live artefacts: re-scoring triggers and treatment progress.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-mm-002-ref-294",
@@ -2401,7 +4661,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Residual risk movement and portfolio-level interpretation",
       "body": "A study primer that enables you to explain, in your own words: Residual risk movement and portfolio-level interpretation.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-mm-002-ref-295",
@@ -2409,7 +4670,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Meeting facilitation: agenda discipline, pre-reading, real-time capture",
       "body": "A study primer that enables you to explain, in your own words: Meeting facilitation: agenda discipline, pre-reading, real-time capture.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-mm-002-ref-296",
@@ -2417,7 +4679,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Consistent entry format for newly identified risks",
       "body": "A study primer that enables you to explain, in your own words: Consistent entry format for newly identified risks.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-mm-002-ref-297",
@@ -2425,7 +4688,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Version control of the register and evidence filing",
       "body": "A study primer that enables you to explain, in your own words: Version control of the register and evidence filing.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CA-001": [
@@ -2446,12 +4710,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-ca-001-study-01",
+      "title": "Annex A 6.3 — Information security awareness, education and training",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.3: Information security awareness, education and training",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 6.3.\n\n## What it requires\nInformation security awareness, education and training.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AT-01 | Personnel provided awareness and training |\n\n## How it lands in this task\nA gap against Annex A 6.3 is a line you must record inside your training completion report. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-001-study-02",
+      "title": "Annex A 6.6 — Confidentiality or non-disclosure agreements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.6: Confidentiality or non-disclosure agreements",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 6.6.\n\n## What it requires\nConfidentiality or non-disclosure agreements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 14.2 | Training for all roles with security responsibilities |\n\n## How it lands in this task\nA gap against Annex A 6.6 is a line you must record inside your training completion report. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-001-study-03",
+      "title": "Annex A 5.1 — Policies for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.1: Policies for information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.1.\n\n## What it requires\nPolicies for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| and 14.7 | Training for all users on identifying social engineering |\n\n## How it lands in this task\nA gap against Annex A 5.1 is a line you must record inside your training completion report. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-ca-001-ref-300",
       "title": "Pre-Session Communication Template",
       "kind": "Template / Working Document",
       "summary": "email — 3-paragraph format",
       "body": "Working template you obtain and review: Pre-Session Communication Template. email — 3-paragraph format\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-ca-001-ref-301",
@@ -2459,7 +4751,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet",
       "body": "Working template you obtain and review: Training Attendance Register Template. spreadsheet\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-ca-001-ref-302",
@@ -2467,7 +4760,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — participant copy",
       "body": "Working template you obtain and review: Knowledge Check Answer Sheet. Word — participant copy\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-ca-001-ref-303",
@@ -2475,7 +4769,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "mentor copy with answers",
       "body": "Working template you obtain and review: Knowledge Check Marking Sheet. mentor copy with answers\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-ca-001-ref-304",
@@ -2483,7 +4778,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page: date, attendees, pass rate, findings, recommendations",
       "body": "Working template you obtain and review: Training Completion Report Template. Word — one-page: date, attendees, pass rate, findings, recommendations\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 4
     },
     {
       "id": "rua-ca-001-ref-305",
@@ -2491,7 +4787,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Finalised training module from GRC101-DD-002 obtained and rehearsed at least once",
       "body": "Finalised training module from GRC101-DD-002 obtained and rehearsed at least once\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-ca-001-ref-306",
@@ -2499,7 +4796,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "HR/Operations scheduling contact confirmed",
       "body": "HR/Operations scheduling contact confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-ca-001-ref-307",
@@ -2507,7 +4805,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Attendance Register, Answer/Marking Sheets and Completion Report templates reviewed",
       "body": "Attendance Register, Answer/Marking Sheets and Completion Report templates reviewed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-ca-001-ref-308",
@@ -2516,6 +4815,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CA-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you know the DD-002 material thoroughly, understands delivery logistics and knowledge-check administration, and why completion records matter, before booking the session.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 6.3 — Information security awareness, education and training; Annex A 6.6 — Confidentiality or non-disclosure agreements; Annex A 5.1 — Policies for information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.AT-01 (Personnel provided awareness and training); Control 14.2 (Training for all roles with security responsibilities); and 14.7 (Training for all users on identifying social engineering).\n3. Obtain and review every provided template and document: Pre-Session Communication Template (email — 3-paragraph format); Training Attendance Register Template (spreadsheet); Knowledge Check Answer Sheet (Word — participant copy); Knowledge Check Marking Sheet (mentor copy with answers); Training Completion Report Template (Word — one-page: date, attendees, pass rate, findings, recommendations).\n4. Secure prerequisite inputs: Finalised training module from GRC101-DD-002 obtained and rehearsed at least once; HR/Operations scheduling contact confirmed; Attendance Register, Answer/Marking Sheets and Completion Report templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-CA-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Training Completion Report — attendance list, knowledge-check score summary, pass rate, qualitative observations, and recommendations for any staff requiring remedial guidance.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-ca-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Security Awareness Briefing — Staff…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Security Awareness Briefing — Staff Presentation Delivery with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Security Awareness Briefing — Staff Presentation Delivery with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-ca-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Training Completion Report.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Training Completion Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-ca-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-ca-001-step-06",
+      "title": "Step 6 · Draft — Draft Training Completion Report in the provided template to the…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Training Completion Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Training Completion Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-ca-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-ca-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Training Completion Report and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Training Completion Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Training Completion Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Training Completion Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-ca-001-ref-309",
@@ -2531,7 +4902,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Presenting technical content to a non-technical audience",
       "body": "A study primer that enables you to explain, in your own words: Presenting technical content to a non-technical audience.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-ca-001-ref-311",
@@ -2539,7 +4911,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Session logistics: room/video setup, equipment testing, timing to 30 minutes",
       "body": "A study primer that enables you to explain, in your own words: Session logistics: room/video setup, equipment testing, timing to 30 minutes.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-ca-001-ref-312",
@@ -2547,7 +4920,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Administering and scoring the five-question knowledge check (target ≥80%…",
       "body": "A study primer that enables you to explain, in your own words: Administering and scoring the five-question knowledge check (target ≥80% pass).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-ca-001-ref-313",
@@ -2555,7 +4929,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Attendance registers and training completion records as audit evidence…",
       "body": "A study primer that enables you to explain, in your own words: Attendance registers and training completion records as audit evidence under Annex A 6.3.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-ca-001-ref-314",
@@ -2563,7 +4938,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Handling questions and unexpected disruptions gracefully",
       "body": "A study primer that enables you to explain, in your own words: Handling questions and unexpected disruptions gracefully.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CA-002": [
@@ -2584,12 +4960,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-ca-002-study-01",
+      "title": "Clause 9.3 — Management review",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.3: Management review",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 9.3.\n\n## What it requires\nManagement review.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-06 | Risk management outcomes communicated |\n\n## How it lands in this task\nA gap against Clause 9.3 is a line you must record inside your executive compliance status report (one-page, management-ready) covering: rag status, top risks, achievements, open decisions, and 30-day outlook.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-002-study-02",
+      "title": "Clause 9.1 — Monitoring, measurement, analysis and evaluation",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.1: Monitoring, measurement, analysis and evaluation",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 9.1.\n\n## What it requires\nMonitoring, measurement, analysis and evaluation.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-04 | Responsibilities are understood |\n\n## How it lands in this task\nA gap against Clause 9.1 is a line you must record inside your executive compliance status report (one-page, management-ready) covering: rag status, top risks, achievements, open decisions, and 30-day outlook.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-002-study-03",
+      "title": "Annex A 5.35 — Independent review of information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.35: Independent review of information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.35.\n\n## What it requires\nIndependent review of information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.RA-09 | Third-party risk assessed — referenced in reporting |\n\n## How it lands in this task\nA gap against Annex A 5.35 is a line you must record inside your executive compliance status report (one-page, management-ready) covering: rag status, top risks, achievements, open decisions, and 30-day outlook.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-ca-002-ref-317",
       "title": "Executive Compliance Status Report Template",
       "kind": "Template / Working Document",
       "summary": "Word — one-page with: header RAG indicator, top-3 risks table, top-3 achievements, open decisions table, 30-day outlook text box",
       "body": "Working template you obtain and review: Executive Compliance Status Report Template. Word — one-page with: header RAG indicator, top-3 risks table, top-3 achievements, open decisions table, 30-day outlook text box\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-ca-002-ref-318",
@@ -2597,7 +5001,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "reference card — 10 rules for writing for non-technical audiences",
       "body": "Working template you obtain and review: Plain-English GRC Writing Guide. reference card — 10 rules for writing for non-technical audiences\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-ca-002-ref-319",
@@ -2605,7 +5010,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Outputs from all completed tasks for the organisation gathered (gap analysis, risk register, maturity, metrics)",
       "body": "Outputs from all completed tasks for the organisation gathered (gap analysis, risk register, maturity, metrics)\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-ca-002-ref-320",
@@ -2613,7 +5019,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Executive Report Template and Plain-English GRC Writing Guide reviewed",
       "body": "Executive Report Template and Plain-English GRC Writing Guide reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-ca-002-ref-321",
@@ -2622,6 +5029,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CA-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you have synthesised all completed task outputs for the organisation and understands executive communication principles before drafting the one-pager.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 9.3 — Management review; Clause 9.1 — Monitoring, measurement, analysis and evaluation; Annex A 5.35 — Independent review of information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.RM-06 (Risk management outcomes communicated); GV.OC-04 (Responsibilities are understood); ID.RA-09 (Third-party risk assessed — referenced in reporting).\n3. Obtain and review every provided template and document: Executive Compliance Status Report Template (Word — one-page with: header RAG indicator, top-3 risks table, top-3 achievements, open decisions table, 30-day outlook text box); Plain-English GRC Writing Guide (reference card — 10 rules for writing for non-technical audiences).\n4. Secure prerequisite inputs: Outputs from all completed tasks for the organisation gathered (gap analysis, risk register, maturity, metrics); Executive Report Template and Plain-English GRC Writing Guide reviewed.\n5. Re-read the task description and all activity steps of GRC101-CA-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-ca-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Management Compliance Status Report…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Management Compliance Status Report with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Management Compliance Status Report with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-ca-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Executive Compliance Status…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Executive Compliance Status Report  covering: RAG status, top risks, achievements, open decisions, and 30-day outlook..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-ca-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-ca-002-step-06",
+      "title": "Step 6 · Draft — Draft Executive Compliance Status Report covering: RAG status, top…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Executive Compliance Status Report covering: RAG status, top risks, achievements, open decisions, and 30-day…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Executive Compliance Status Report  covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-ca-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-ca-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Executive Compliance Status Report covering: RAG status,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Executive Compliance Status Report covering: RAG status, top risks, achievements, open decisions, and 30-day…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Executive Compliance Status Report  covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Executive Compliance Status Report (one-page, management-ready) covering: RAG status, top risks, achievements, open decisions, and 30-day outlook. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-ca-002-ref-322",
@@ -2637,7 +5116,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Synthesis versus detail: choosing the five messages that matter to…",
       "body": "A study primer that enables you to explain, in your own words: Synthesis versus detail: choosing the five messages that matter to management.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-ca-002-ref-324",
@@ -2645,7 +5125,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Overall RAG status and how it is justified",
       "body": "A study primer that enables you to explain, in your own words: Overall RAG status and how it is justified.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-ca-002-ref-325",
@@ -2653,7 +5134,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Plain-English writing: concrete numbers, no jargon",
       "body": "A study primer that enables you to explain, in your own words: Plain-English writing: concrete numbers, no jargon.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-ca-002-ref-326",
@@ -2661,7 +5143,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Structure of the one-page report: risks, achievements, open decisions,…",
       "body": "A study primer that enables you to explain, in your own words: Structure of the one-page report: risks, achievements, open decisions, 30-day outlook.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-ca-002-ref-327",
@@ -2669,7 +5152,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001 Clause 9.3 management review inputs",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001 Clause 9.3 management review inputs.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "CA-003": [
@@ -2690,12 +5174,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-ca-003-study-01",
+      "title": "Clause 4.2 — Understanding the needs and expectations of interested parties",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 4.2: Understanding the needs and expectations of interested parties",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 4.2.\n\n## What it requires\nUnderstanding the needs and expectations of interested parties.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-02 | Internal and external stakeholders identified |\n\n## How it lands in this task\nA gap against Clause 4.2 is a line you must record inside your stakeholder needs discovery report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-003-study-02",
+      "title": "Clause 5.3 — Organisational roles, responsibilities and authorities",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 5.3: Organisational roles, responsibilities and authorities",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 5.3.\n\n## What it requires\nOrganisational roles, responsibilities and authorities.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-03 | Legal, regulatory and contractual requirements understood |\n\n## How it lands in this task\nA gap against Clause 5.3 is a line you must record inside your stakeholder needs discovery report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-003-study-03",
+      "title": "Annex A 5.1 — Policies for information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.1: Policies for information security",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.1.\n\n## What it requires\nPolicies for information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 5.1 is a line you must record inside your stakeholder needs discovery report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-ca-003-ref-330",
       "title": "Stakeholder Interview Guide Template",
       "kind": "Template / Working Document",
       "summary": "Word — with interview purpose, rapport-building opener, 8–10 structured questions per role type, and closing prompt",
       "body": "Working template you obtain and review: Stakeholder Interview Guide Template. Word — with interview purpose, rapport-building opener, 8–10 structured questions per role type, and closing prompt\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-ca-003-ref-331",
@@ -2703,7 +5215,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page per interview: key quotes, concerns, knowledge gaps, priorities",
       "body": "Working template you obtain and review: Stakeholder Interview Summary Template. Word — one-page per interview: key quotes, concerns, knowledge gaps, priorities\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-ca-003-ref-332",
@@ -2711,7 +5224,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — themes table, implications, recommendations",
       "body": "Working template you obtain and review: Stakeholder Needs Discovery Report Template. Word — themes table, implications, recommendations\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-ca-003-ref-333",
@@ -2719,7 +5233,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Three stakeholders identified: IT Manager, HR Manager, business-unit lead",
       "body": "Three stakeholders identified: IT Manager, HR Manager, business-unit lead\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-ca-003-ref-334",
@@ -2727,7 +5242,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Stakeholder Interview Guide, Summary and Discovery Report templates reviewed",
       "body": "Stakeholder Interview Guide, Summary and Discovery Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-ca-003-ref-335",
@@ -2735,7 +5251,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Advance briefing note for interviewees drafted",
       "body": "Advance briefing note for interviewees drafted\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-ca-003-ref-336",
@@ -2744,6 +5261,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-CA-003. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand structured interviewing — open questions, probing, active listening and thematic analysis — before approaching any stakeholder.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 4.2 — Understanding the needs and expectations of interested parties; Clause 5.3 — Organisational roles, responsibilities and authorities; Annex A 5.1 — Policies for information security.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC-02 (Internal and external stakeholders identified); GV.OC-03 (Legal, regulatory and contractual requirements understood).\n3. Obtain and review every provided template and document: Stakeholder Interview Guide Template (Word — with interview purpose, rapport-building opener, 8–10 structured questions per role type, and closing prompt); Stakeholder Interview Summary Template (Word — one-page per interview: key quotes, concerns, knowledge gaps, priorities); Stakeholder Needs Discovery Report Template (Word — themes table, implications, recommendations).\n4. Secure prerequisite inputs: Three stakeholders identified: IT Manager, HR Manager, business-unit lead; Stakeholder Interview Guide, Summary and Discovery Report templates reviewed; Advance briefing note for interviewees drafted.\n5. Re-read the task description and all activity steps of GRC101-CA-003; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Stakeholder Needs Discovery Report — cross-interview theme analysis, key quotes, stakeholder-specific recommendations, and implications for GRC programme design.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-ca-003-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Stakeholder Interview — GRC Needs…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Stakeholder Interview — GRC Needs Discovery with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Stakeholder Interview — GRC Needs Discovery with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-ca-003-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-ca-003-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-ca-003-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Stakeholder Needs Discovery…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Stakeholder Needs Discovery Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-ca-003-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-ca-003-step-06",
+      "title": "Step 6 · Draft — Draft Stakeholder Needs Discovery Report in the provided template to…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Stakeholder Needs Discovery Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Stakeholder Needs Discovery Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-ca-003-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-ca-003-step-08",
+      "title": "Step 8 · Sign-off — Finalise Stakeholder Needs Discovery Report and obtain the required…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Stakeholder Needs Discovery Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Stakeholder Needs Discovery Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Stakeholder Needs Discovery Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-ca-003-ref-337",
@@ -2759,7 +5348,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Structured versus unstructured interviews and why structure aids comparison",
       "body": "A study primer that enables you to explain, in your own words: Structured versus unstructured interviews and why structure aids comparison.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-ca-003-ref-339",
@@ -2767,7 +5357,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Open questions, follow-up probes and avoiding leading questions",
       "body": "A study primer that enables you to explain, in your own words: Open questions, follow-up probes and avoiding leading questions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-ca-003-ref-340",
@@ -2775,7 +5366,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Active listening and structured note-taking",
       "body": "A study primer that enables you to explain, in your own words: Active listening and structured note-taking.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-ca-003-ref-341",
@@ -2783,7 +5375,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Thematic analysis across multiple interviews: concerns, gaps, priorities",
       "body": "A study primer that enables you to explain, in your own words: Thematic analysis across multiple interviews: concerns, gaps, priorities.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-ca-003-ref-342",
@@ -2791,7 +5384,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Interviewer neutrality and building rapport",
       "body": "A study primer that enables you to explain, in your own words: Interviewer neutrality and building rapport.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "RR-001": [
@@ -2812,12 +5406,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-rr-001-study-01",
+      "title": "Annex A 5.26 — Response to information security incidents",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.26: Response to information security incidents",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.26.\n\n## What it requires\nResponse to information security incidents.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RS.MA-01 | Incident response activities aligned with plan |\n\n## How it lands in this task\nA gap against Annex A 5.26 is a line you must record inside your post-exercise lessons learned report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-rr-001-study-02",
+      "title": "Annex A 5.27 — Learning from information security incidents",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.27: Learning from information security incidents",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.27.\n\n## What it requires\nLearning from information security incidents.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RS.CO-02 | Incidents reported |\n\n## How it lands in this task\nA gap against Annex A 5.27 is a line you must record inside your post-exercise lessons learned report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-rr-001-study-03",
+      "title": "Annex A 5.28 — Collection of evidence",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.28: Collection of evidence",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.28.\n\n## What it requires\nCollection of evidence.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RC.RP-01 | Recovery plan executed |\n\n## How it lands in this task\nA gap against Annex A 5.28 is a line you must record inside your post-exercise lessons learned report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-rr-001-study-04",
+      "title": "Annex A 6.8 — Information security event reporting",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.8: Information security event reporting",
+      "body": "The single governing reference behind comprehension check 4: ISO/IEC 27001:2022 Annex A 6.8.\n\n## What it requires\nInformation security event reporting.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 17 | Incident Response Management |\n\n## How it lands in this task\nA gap against Annex A 6.8 is a line you must record inside your post-exercise lessons learned report. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-rr-001-ref-345",
       "title": "Tabletop Observation Sheet",
       "kind": "Template / Working Document",
       "summary": "Word — with sections: timeline log, decision log, escalation log, communication gaps, resource gaps, deviations from procedure",
       "body": "Working template you obtain and review: Tabletop Observation Sheet. Word — with sections: timeline log, decision log, escalation log, communication gaps, resource gaps, deviations from procedure\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-rr-001-ref-346",
@@ -2825,7 +5456,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — exercise summary, observations, top-3 improvements, procedure amendment proposals, sign-off",
       "body": "Working template you obtain and review: Post-Exercise Lessons Learned Report Template. Word — exercise summary, observations, top-3 improvements, procedure amendment proposals, sign-off\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-rr-001-ref-347",
@@ -2833,7 +5465,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "provided by Incident Response & Crisis Manager mentor",
       "body": "Working template you obtain and review: Tabletop Scenario Brief Template. provided by Incident Response & Crisis Manager mentor\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-rr-001-ref-348",
@@ -2841,7 +5474,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Incident Reporting Procedure from GRC101-DD-001 read and understood",
       "body": "Incident Reporting Procedure from GRC101-DD-001 read and understood\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-rr-001-ref-349",
@@ -2849,7 +5483,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Tabletop scenario brief read before exercise day",
       "body": "Tabletop scenario brief read before exercise day\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-rr-001-ref-350",
@@ -2857,7 +5492,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Observation Sheet and Lessons Learned Report templates reviewed",
       "body": "Observation Sheet and Lessons Learned Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-rr-001-ref-351",
@@ -2866,6 +5502,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-RR-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you have studied the incident reporting procedure and scenario brief and understands the observer's discipline before exercise day.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.26 — Response to information security incidents; Annex A 5.27 — Learning from information security incidents; Annex A 5.28 — Collection of evidence; Annex A 6.8 — Information security event reporting.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — RS.MA-01 (Incident response activities aligned with plan); RS.CO-02 (Incidents reported); RC.RP-01 (Recovery plan executed); Control 17 (Incident Response Management).\n3. Obtain and review every provided template and document: Tabletop Observation Sheet (Word — with sections: timeline log, decision log, escalation log, communication gaps, resource gaps, deviations from procedure); Post-Exercise Lessons Learned Report Template (Word — exercise summary, observations, top-3 improvements, procedure amendment proposals, sign-off); Tabletop Scenario Brief Template (provided by Incident Response & Crisis Manager mentor).\n4. Secure prerequisite inputs: Incident Reporting Procedure from GRC101-DD-001 read and understood; Tabletop scenario brief read before exercise day; Observation Sheet and Lessons Learned Report templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-RR-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Post-Exercise Lessons Learned Report — timeline of the exercise, structured observations, top-three improvement recommendations with proposed procedure amendments.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-rr-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Tabletop Incident Simulation —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Tabletop Incident Simulation — Observer and Note-Taker Role with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Tabletop Incident Simulation — Observer and Note-Taker Role with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-rr-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-rr-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-rr-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Post-Exercise Lessons…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Post-Exercise Lessons Learned Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-rr-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-rr-001-step-06",
+      "title": "Step 6 · Draft — Draft Post-Exercise Lessons Learned Report in the provided template…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Post-Exercise Lessons Learned Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Post-Exercise Lessons Learned Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-rr-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-rr-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Post-Exercise Lessons Learned Report and obtain the…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Post-Exercise Lessons Learned Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Post-Exercise Lessons Learned Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Post-Exercise Lessons Learned Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-rr-001-ref-352",
@@ -2881,7 +5589,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Purpose of tabletop exercises: testing decisions and communication, not…",
       "body": "A study primer that enables you to explain, in your own words: Purpose of tabletop exercises: testing decisions and communication, not technology.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-rr-001-ref-354",
@@ -2889,7 +5598,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The observer role: capture, do not participate in decisions",
       "body": "A study primer that enables you to explain, in your own words: The observer role: capture, do not participate in decisions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-rr-001-ref-355",
@@ -2897,7 +5607,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Structured observation: timeline, decision, escalation and communication…",
       "body": "A study primer that enables you to explain, in your own words: Structured observation: timeline, decision, escalation and communication logs.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-rr-001-ref-356",
@@ -2905,7 +5616,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Lessons-learned discipline under Annex A 5.27 and the 48-hour write-up…",
       "body": "A study primer that enables you to explain, in your own words: Lessons-learned discipline under Annex A 5.27 and the 48-hour write-up window.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-rr-001-ref-357",
@@ -2913,7 +5625,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Turning observations into procedure amendment proposals",
       "body": "A study primer that enables you to explain, in your own words: Turning observations into procedure amendment proposals.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "BCRP-001": [
@@ -2934,12 +5647,31 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-bcrp-001-study-01",
+      "title": "Annex A 5.29 — Information security during disruption",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.29: Information security during disruption",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.29.\n\n## What it requires\nInformation security during disruption.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RC.RP-01 | Recovery plan executed |\n\n## How it lands in this task\nA gap against Annex A 5.29 is a line you must record inside your bia report (for one department). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-bcrp-001-study-02",
+      "title": "Annex A 5.30 — ICT readiness for business continuity",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.30: ICT readiness for business continuity",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.30.\n\n## What it requires\nICT readiness for business continuity.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RC.RP-03 | Recovery activities and progress communicated |\n\n## How it lands in this task\nA gap against Annex A 5.30 is a line you must record inside your bia report (for one department). Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
       "id": "rua-bcrp-001-ref-360",
       "title": "BIA Questionnaire Template",
       "kind": "Template / Working Document",
       "summary": "Word — structured questions: function identification, dependencies, financial impact, operational impact, RTO/RPO estimation,…",
       "body": "Working template you obtain and review: BIA Questionnaire Template. Word — structured questions: function identification, dependencies, financial impact, operational impact, RTO/RPO estimation, workarounds, IT systems required\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-bcrp-001-ref-361",
@@ -2947,7 +5679,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel — function, impact score, RTO, RPO, dependency, single point of failure, workaround",
       "body": "Working template you obtain and review: BIA Summary Table Template. Excel — function, impact score, RTO, RPO, dependency, single point of failure, workaround\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-bcrp-001-ref-362",
@@ -2955,7 +5688,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — standard BC report format",
       "body": "Working template you obtain and review: BIA Report Template. Word — standard BC report format\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-bcrp-001-ref-363",
@@ -2963,7 +5697,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "RTO/RPO Definition Reference Card",
       "body": "Working template you obtain and review: RTO/RPO Definition Reference Card.\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-bcrp-001-ref-364",
@@ -2971,7 +5706,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Department selected with the mentor",
       "body": "Department selected with the mentor\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-bcrp-001-ref-365",
@@ -2979,7 +5715,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "BIA Questionnaire, Summary Table and Report templates reviewed",
       "body": "BIA Questionnaire, Summary Table and Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-bcrp-001-ref-366",
@@ -2987,7 +5724,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "60-minute interview with the department manager scheduled",
       "body": "60-minute interview with the department manager scheduled\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-bcrp-001-ref-367",
@@ -2996,6 +5734,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-BCRP-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand critical functions, dependency mapping and the RTO/RPO vocabulary before conducting the BIA interview.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.29 — Information security during disruption; Annex A 5.30 — ICT readiness for business continuity.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — RC.RP-01 (Recovery plan executed); RC.RP-03 (Recovery activities and progress communicated); Control 11 (Data Recovery).\n3. Obtain and review every provided template and document: BIA Questionnaire Template (Word — structured questions: function identification, dependencies, financial impact, operational impact, RTO/RPO estimation, workarounds, IT systems required); BIA Summary Table Template (Excel — function, impact score, RTO, RPO, dependency, single point of failure, workaround); BIA Report Template (Word — standard BC report format); RTO/RPO Definition Reference Card.\n4. Secure prerequisite inputs: Department selected with the mentor; BIA Questionnaire, Summary Table and Report templates reviewed; 60-minute interview with the department manager scheduled.\n5. Re-read the task description and all activity steps of GRC101-BCRP-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: BIA Report (for one department) — critical functions list, impact scores, RTO/RPO table, single points of failure analysis, and recommended continuity measures.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-bcrp-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Business Impact Analysis (BIA) —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Business Impact Analysis (BIA) — Single Department with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Business Impact Analysis (BIA) — Single Department with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-bcrp-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-bcrp-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-bcrp-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate BIA Report.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate BIA Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-bcrp-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-bcrp-001-step-06",
+      "title": "Step 6 · Draft — Draft BIA Report in the provided template to the acceptance standard.",
+      "kind": "Activity Step Brief",
+      "summary": "Draft BIA Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft BIA Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-bcrp-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-bcrp-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise BIA Report and obtain the required sign-off, filing it to…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise BIA Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise BIA Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward BIA Report (for one department) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-bcrp-001-ref-368",
@@ -3011,7 +5821,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Critical functions and how criticality is determined",
       "body": "A study primer that enables you to explain, in your own words: Critical functions and how criticality is determined.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-bcrp-001-ref-370",
@@ -3019,7 +5830,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Dependency mapping: people, systems, data, suppliers",
       "body": "A study primer that enables you to explain, in your own words: Dependency mapping: people, systems, data, suppliers.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-bcrp-001-ref-371",
@@ -3027,7 +5839,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: RTO (Recovery Time Objective) versus RPO (Recovery Point Objective)…",
       "body": "A study primer that enables you to explain, in your own words: RTO (Recovery Time Objective) versus RPO (Recovery Point Objective) versus maximum tolerable downtime.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-bcrp-001-ref-372",
@@ -3035,7 +5848,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: How impact escalates over time (hours versus days)",
       "body": "A study primer that enables you to explain, in your own words: How impact escalates over time (hours versus days).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-bcrp-001-ref-373",
@@ -3043,7 +5857,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Single points of failure and credible workarounds (Annex A 5.29, 5.30)",
       "body": "A study primer that enables you to explain, in your own words: Single points of failure and credible workarounds (Annex A 5.29, 5.30).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "BCRP-002": [
@@ -3064,12 +5879,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-bcrp-002-study-01",
+      "title": "Annex A 5.30 — ICT readiness for business continuity",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.30: ICT readiness for business continuity",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.30.\n\n## What it requires\nICT readiness for business continuity.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RC.RP-02 | Recovery plan updated |\n\n## How it lands in this task\nA gap against Annex A 5.30 is a line you must record inside your ict dr checklist (for one system). Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-bcrp-002-study-02",
+      "title": "Annex A 8.13 — Information backup",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.13: Information backup",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 8.13.\n\n## What it requires\nInformation backup.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-11 | Data backups created |\n\n## How it lands in this task\nA gap against Annex A 8.13 is a line you must record inside your ict dr checklist (for one system). Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-bcrp-002-study-03",
+      "title": "Annex A 8.14 — Redundancy of information processing facilities",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 8.14: Redundancy of information processing facilities",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 8.14.\n\n## What it requires\nRedundancy of information processing facilities.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 11.1 | Establish and maintain a data recovery process |\n\n## How it lands in this task\nA gap against Annex A 8.14 is a line you must record inside your ict dr checklist (for one system). Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-bcrp-002-ref-376",
       "title": "ICT DR Checklist Template",
       "kind": "Template / Working Document",
       "summary": "Word — four sections: Preparation, Incident Declaration, Restoration Steps, Return to Normal; each step has: step number, action,…",
       "body": "Working template you obtain and review: ICT DR Checklist Template. Word — four sections: Preparation, Incident Declaration, Restoration Steps, Return to Normal; each step has: step number, action, responsible person, expected outcome, actual outcome, sign-off\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
+    },
+    {
+      "id": "rua-bcrp-002-tpl-02",
+      "title": "each step has: step number, action, responsible person, expected outcome, actual outcome, sign-off)",
+      "kind": "Template / Working Document",
+      "summary": "each step has: step number, action, responsible person, expected outcome, actual outcome, sign-off)",
+      "body": "Working template you obtain and review before use: each step has: step number, action, responsible person, expected outcome, actual outcome, sign-off).\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-bcrp-002-ref-377",
@@ -3077,7 +5929,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — where to store and version DR artefacts",
       "body": "Working template you obtain and review: DR Documentation Library Filing Guide. Word — where to store and version DR artefacts\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-bcrp-002-ref-378",
@@ -3085,7 +5938,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "RTO/RPO figures from GRC101-BCRP-001 obtained",
       "body": "RTO/RPO figures from GRC101-BCRP-001 obtained\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-bcrp-002-ref-379",
@@ -3093,7 +5947,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Target system selected with the IT Manager and mentor",
       "body": "Target system selected with the IT Manager and mentor\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-bcrp-002-ref-380",
@@ -3101,7 +5956,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "ICT DR Checklist Template and Filing Guide reviewed",
       "body": "ICT DR Checklist Template and Filing Guide reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-bcrp-002-ref-381",
@@ -3110,6 +5966,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-BCRP-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand backup and restoration concepts and how BIA-derived RTO/RPO figures become checklist success criteria, before drafting.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.30 — ICT readiness for business continuity; Annex A 8.13 — Information backup; Annex A 8.14 — Redundancy of information processing facilities.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — RC.RP-02 (Recovery plan updated); PR.DS-11 (Data backups created); Control 11.1 (Establish and maintain a data recovery process); and 11.4 (Establish and maintain an isolated instance of recovery data).\n3. Obtain and review every provided template and document: ICT DR Checklist Template (Word — four sections: Preparation, Incident Declaration, Restoration Steps, Return to Norma); each step has: step number, action, responsible person, expected outcome, actual outcome, sign-off); DR Documentation Library Filing Guide (Word — where to store and version DR artefacts).\n4. Secure prerequisite inputs: RTO/RPO figures from GRC101-BCRP-001 obtained; Target system selected with the IT Manager and mentor; ICT DR Checklist Template and Filing Guide reviewed.\n5. Re-read the task description and all activity steps of GRC101-BCRP-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: ICT DR Checklist (for one system) — step-by-step pre-incident, incident, restoration, and return-to-normal sections, with RTO/RPO success criteria and sign-off blocks.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-bcrp-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for ICT Disaster Recovery Checklist…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for ICT Disaster Recovery Checklist Development with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for ICT Disaster Recovery Checklist Development with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-bcrp-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-bcrp-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-bcrp-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate ICT DR Checklist.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate ICT DR Checklist.\n\n## Purpose\nThis is a “Collect” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-bcrp-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-bcrp-002-step-06",
+      "title": "Step 6 · Draft — Draft ICT DR Checklist in the provided template to the acceptance…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft ICT DR Checklist in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft ICT DR Checklist in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-bcrp-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-bcrp-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise ICT DR Checklist and obtain the required sign-off, filing…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise ICT DR Checklist and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise ICT DR Checklist and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward ICT DR Checklist (for one system) — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-bcrp-002-ref-382",
@@ -3125,7 +6053,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Backup types, schedules and verification — why an untested backup is a…",
       "body": "A study primer that enables you to explain, in your own words: Backup types, schedules and verification — why an untested backup is a hope, not a control.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-bcrp-002-ref-384",
@@ -3133,7 +6062,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Failover versus restoration",
       "body": "A study primer that enables you to explain, in your own words: Failover versus restoration.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-bcrp-002-ref-385",
@@ -3141,7 +6071,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: DR checklist structure: Preparation, Incident Declaration, Restoration,…",
       "body": "A study primer that enables you to explain, in your own words: DR checklist structure: Preparation, Incident Declaration, Restoration, Return to Normal.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-bcrp-002-ref-386",
@@ -3149,7 +6080,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: RTO/RPO from the BIA as measurable success criteria (Annex A 5.30, 8.13,…",
       "body": "A study primer that enables you to explain, in your own words: RTO/RPO from the BIA as measurable success criteria (Annex A 5.30, 8.13, 8.14).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-bcrp-002-ref-387",
@@ -3157,7 +6089,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Talk-through testing versus live restoration testing",
       "body": "A study primer that enables you to explain, in your own words: Talk-through testing versus live restoration testing.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "TPRM-001": [
@@ -3178,12 +6111,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-tprm-001-study-01",
+      "title": "Annex A 5.19 — Information security in supplier relationships",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.19: Information security in supplier relationships",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.19.\n\n## What it requires\nInformation security in supplier relationships.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.SC-04 | Suppliers and third parties informed of their roles |\n\n## How it lands in this task\nA gap against Annex A 5.19 is a line you must record inside your supplier register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-tprm-001-study-02",
+      "title": "Annex A 5.20 — Addressing information security within supplier agreements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.20: Addressing information security within supplier agreements",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.20.\n\n## What it requires\nAddressing information security within supplier agreements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.SC-06 | Planning and due diligence performed |\n\n## How it lands in this task\nA gap against Annex A 5.20 is a line you must record inside your supplier register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-tprm-001-study-03",
+      "title": "Annex A 5.22 — Monitoring, review and change management of supplier services",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.22: Monitoring, review and change management of supplier services",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.22.\n\n## What it requires\nMonitoring, review and change management of supplier services.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 15 | Service Provider Management |\n\n## How it lands in this task\nA gap against Annex A 5.22 is a line you must record inside your supplier register. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-tprm-001-ref-390",
       "title": "Supplier Register Template",
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Vendor ID, Vendor Name, Service, Data Access Type, System Access, Criticality Score, Location, Certification Held,…",
       "body": "Working template you obtain and review: Supplier Register Template. spreadsheet: Vendor ID, Vendor Name, Service, Data Access Type, System Access, Criticality Score, Location, Certification Held, Composite Risk Rating, DPA Status, Contract Expiry, Primary Contact, Notes\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-tprm-001-ref-391",
@@ -3191,7 +6152,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — criteria definitions and scoring anchors",
       "body": "Working template you obtain and review: Five-Criterion Risk Rating Guide. Word — criteria definitions and scoring anchors\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-tprm-001-ref-392",
@@ -3199,7 +6161,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page alert format",
       "body": "Working template you obtain and review: High-Risk Vendor Summary Template. Word — one-page alert format\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-tprm-001-ref-393",
@@ -3207,7 +6170,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Access to contract management, accounts payable and IT vendor records confirmed",
       "body": "Access to contract management, accounts payable and IT vendor records confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-tprm-001-ref-394",
@@ -3215,7 +6179,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Supplier Register Template and Five-Criterion Rating Guide reviewed",
       "body": "Supplier Register Template and Five-Criterion Rating Guide reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-tprm-001-ref-395",
@@ -3224,6 +6189,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-TPRM-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand third-party risk drivers, the five-criterion rating model and DPA obligations before gathering the vendor list.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.19 — Information security in supplier relationships; Annex A 5.20 — Addressing information security within supplier agreements; Annex A 5.22 — Monitoring, review and change management of supplier services.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.SC-04 (Suppliers and third parties informed of their roles); GV.SC-06 (Planning and due diligence performed); Control 15 (Service Provider Management).\n3. Obtain and review every provided template and document: Supplier Register Template (spreadsheet: Vendor ID, Vendor Name, Service, Data Access Type, System Access, Criticality Score, Location, Certification Held, Composite Risk Rating, DPA Status, Contract Expiry, Primary Contact, Notes); Five-Criterion Risk Rating Guide (Word — criteria definitions and scoring anchors); High-Risk Vendor Summary Template (Word — one-page alert format).\n4. Secure prerequisite inputs: Access to contract management, accounts payable and IT vendor records confirmed; Supplier Register Template and Five-Criterion Rating Guide reviewed.\n5. Re-read the task description and all activity steps of GRC101-TPRM-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Supplier Register — full vendor inventory with risk ratings, data-access type, contract status, and DPA gap flags; plus a High-Risk Vendor Summary.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-tprm-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Supplier / Vendor Inventory and…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Supplier / Vendor Inventory and Basic Security Risk Rating with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Supplier / Vendor Inventory and Basic Security Risk Rating with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-tprm-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-tprm-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-tprm-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Supplier Register.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Supplier Register.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-tprm-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-tprm-001-step-06",
+      "title": "Step 6 · Draft — Draft Supplier Register in the provided template to the acceptance…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Supplier Register in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Supplier Register in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-tprm-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-tprm-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Supplier Register and obtain the required sign-off, filing…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Supplier Register and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Supplier Register and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Supplier Register — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-tprm-001-ref-396",
@@ -3239,7 +6276,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Why third parties are a risk channel: data access, system access,…",
       "body": "A study primer that enables you to explain, in your own words: Why third parties are a risk channel: data access, system access, criticality.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-tprm-001-ref-398",
@@ -3247,7 +6285,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The five-criterion risk rating model and composite Low/Medium/High scoring",
       "body": "A study primer that enables you to explain, in your own words: The five-criterion risk rating model and composite Low/Medium/High scoring.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-tprm-001-ref-399",
@@ -3255,7 +6294,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Data access levels: none / view / process / store",
       "body": "A study primer that enables you to explain, in your own words: Data access levels: none / view / process / store.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-tprm-001-ref-400",
@@ -3263,7 +6303,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Data-processing agreements under GDPR Article 28 — when they are required",
       "body": "A study primer that enables you to explain, in your own words: Data-processing agreements under GDPR Article 28 — when they are required.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-tprm-001-ref-401",
@@ -3271,7 +6312,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Vendor discovery sources: contracts, accounts payable, IT records (Annex…",
       "body": "A study primer that enables you to explain, in your own words: Vendor discovery sources: contracts, accounts payable, IT records (Annex A 5.19–5.22).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "TPRM-002": [
@@ -3292,12 +6334,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-tprm-002-study-01",
+      "title": "Annex A 5.20 — Addressing information security within supplier agreements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.20: Addressing information security within supplier agreements",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 5.20.\n\n## What it requires\nAddressing information security within supplier agreements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.SC-06 | Planning and due diligence performed |\n\n## How it lands in this task\nA gap against Annex A 5.20 is a line you must record inside your vendor due-diligence assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-tprm-002-study-02",
+      "title": "Annex A 5.21 — Managing information security in the ICT supply chain",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.21: Managing information security in the ICT supply chain",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.21.\n\n## What it requires\nManaging information security in the ICT supply chain.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.SC-07 | Risks posed by suppliers assessed |\n\n## How it lands in this task\nA gap against Annex A 5.21 is a line you must record inside your vendor due-diligence assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-tprm-002-study-03",
+      "title": "Annex A 5.19 — Information security in supplier relationships",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.19: Information security in supplier relationships",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.19.\n\n## What it requires\nInformation security in supplier relationships.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at GlobalConnect Customer Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 15.2 | Establish and maintain a process to address weaknesses in third-party service provider security |\n\n## How it lands in this task\nA gap against Annex A 5.19 is a line you must record inside your vendor due-diligence assessment report. Before you move on, be able to say in one sentence what GlobalConnect Customer Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-tprm-002-ref-404",
       "title": "Vendor Security Questionnaire Template",
       "kind": "Template / Working Document",
       "summary": "Word — 25 questions covering: information security policy, access management, incident response, business continuity, subprocessors,…",
       "body": "Working template you obtain and review: Vendor Security Questionnaire Template. Word — 25 questions covering: information security policy, access management, incident response, business continuity, subprocessors, certifications, physical security, network security, encryption, data deletion\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-tprm-002-ref-405",
@@ -3305,7 +6375,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — vendor summary, questionnaire score, gap table, risk rating, recommended mitigations, sign-off",
       "body": "Working template you obtain and review: Due-Diligence Assessment Report Template. Word — vendor summary, questionnaire score, gap table, risk rating, recommended mitigations, sign-off\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-tprm-002-ref-406",
@@ -3313,7 +6384,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "reference card",
       "body": "Working template you obtain and review: Due-Diligence Scoring Guide. reference card\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-tprm-002-ref-407",
@@ -3321,7 +6393,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Supplier Register from GRC101-TPRM-001 obtained and a Medium-risk vendor selected with the mentor",
       "body": "Supplier Register from GRC101-TPRM-001 obtained and a Medium-risk vendor selected with the mentor\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-tprm-002-ref-408",
@@ -3329,7 +6402,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Vendor Security Questionnaire and Assessment Report templates reviewed",
       "body": "Vendor Security Questionnaire and Assessment Report templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-tprm-002-ref-409",
@@ -3337,7 +6411,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Vendor security/compliance contact identified",
       "body": "Vendor security/compliance contact identified\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-tprm-002-ref-410",
@@ -3346,6 +6421,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-TPRM-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand questionnaire-based due diligence — customisation, credibility assessment and scoring — before contacting the vendor.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 5.20 — Addressing information security within supplier agreements; Annex A 5.21 — Managing information security in the ICT supply chain; Annex A 5.19 — Information security in supplier relationships.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.SC-06 (Planning and due diligence performed); GV.SC-07 (Risks posed by suppliers assessed); Control 15.2 (Establish and maintain a process to address weaknesses in third-party service provider security).\n3. Obtain and review every provided template and document: Vendor Security Questionnaire Template (Word — 25 questions covering: information security policy, access management, incident response, business continuity, subprocessors, certifications, physical security, network security, encryption, data deletion); Due-Diligence Assessment Report Template (Word — vendor summary, questionnaire score, gap table, risk rating, recommended mitigations, sign-off); Due-Diligence Scoring Guide (reference card).\n4. Secure prerequisite inputs: Supplier Register from GRC101-TPRM-001 obtained and a Medium-risk vendor selected with the mentor; Vendor Security Questionnaire and Assessment Report templates reviewed; Vendor security/compliance contact identified.\n5. Re-read the task description and all activity steps of GRC101-TPRM-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Vendor Due-Diligence Assessment Report — completed questionnaire (with assessment annotations), Due-Diligence Score, gap list, risk rating confirmation, and recommended mitigations.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-tprm-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Vendor Due-Diligence Questionnaire…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Vendor Due-Diligence Questionnaire — Completion and Review with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Vendor Due-Diligence Questionnaire — Completion and Review with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-tprm-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-tprm-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-tprm-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Vendor Due-Diligence…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Vendor Due-Diligence Assessment Report.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-tprm-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-tprm-002-step-06",
+      "title": "Step 6 · Draft — Draft Vendor Due-Diligence Assessment Report in the provided…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Vendor Due-Diligence Assessment Report in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Vendor Due-Diligence Assessment Report in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-tprm-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-tprm-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Vendor Due-Diligence Assessment Report and obtain the…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Vendor Due-Diligence Assessment Report and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Vendor Due-Diligence Assessment Report and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Vendor Due-Diligence Assessment Report — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-tprm-002-ref-411",
@@ -3361,7 +6508,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Customising a standard questionnaire to the vendor's service and data…",
       "body": "A study primer that enables you to explain, in your own words: Customising a standard questionnaire to the vendor's service and data footprint.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-tprm-002-ref-413",
@@ -3369,7 +6517,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Assessing response credibility: specific, evidenced answers versus vague…",
       "body": "A study primer that enables you to explain, in your own words: Assessing response credibility: specific, evidenced answers versus vague assurances.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-tprm-002-ref-414",
@@ -3377,7 +6526,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Reliance on certifications (ISO 27001, SOC 2) and its limits",
       "body": "A study primer that enables you to explain, in your own words: Reliance on certifications (ISO 27001, SOC 2) and its limits.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-tprm-002-ref-415",
@@ -3385,7 +6535,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Mapping responses to Annex A controls and flagging gaps",
       "body": "A study primer that enables you to explain, in your own words: Mapping responses to Annex A controls and flagging gaps.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-tprm-002-ref-416",
@@ -3393,7 +6544,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Due-diligence scoring and professional vendor communication",
       "body": "A study primer that enables you to explain, in your own words: Due-diligence scoring and professional vendor communication.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "LRC-001": [
@@ -3414,12 +6566,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-lrc-001-study-01",
+      "title": "Article 13 — Information to be provided where personal data are collected from the data…",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 13: Information to be provided where personal data are collected from the data subject",
+      "body": "The single governing reference behind comprehension check 1: GDPR (EU) 2016/679 Article 13.\n\n## What it requires\nInformation to be provided where personal data are collected from the data subject.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC-05 | Legal, regulatory and contractual requirements understood |\n\n## How it lands in this task\nA gap against Article 13 is a line you must record inside your privacy notice gap-check report (checklist with gap findings) + revised privacy notice draft (ready for dpo/legal sign-off).. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-lrc-001-study-02",
+      "title": "Article 14 — Information to be provided where personal data have not been obtained from the…",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Article 14: Information to be provided where personal data have not been obtained from the data…",
+      "body": "The single governing reference behind comprehension check 2: GDPR (EU) 2016/679 Article 14.\n\n## What it requires\nInformation to be provided where personal data have not been obtained from the data subject.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.DS-01 | Data at rest protected — contextual |\n\n## How it lands in this task\nA gap against Article 14 is a line you must record inside your privacy notice gap-check report (checklist with gap findings) + revised privacy notice draft (ready for dpo/legal sign-off).. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-lrc-001-study-03",
+      "title": "Recital 39 — Principle of transparency",
+      "kind": "Control Reference Extract",
+      "summary": "GDPR (EU) 2016/679 Recital 39: Principle of transparency",
+      "body": "The single governing reference behind comprehension check 3: GDPR (EU) 2016/679 Recital 39.\n\n## What it requires\nPrinciple of transparency.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 3.14 | Log sensitive data access — contextual |\n\n## How it lands in this task\nA gap against Recital 39 is a line you must record inside your privacy notice gap-check report (checklist with gap findings) + revised privacy notice draft (ready for dpo/legal sign-off).. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-lrc-001-ref-419",
       "title": "Privacy Notice Gap-Check Checklist",
       "kind": "Template / Working Document",
       "summary": "Word — 14 mandatory elements with checklist column, notes column, and gap flag",
       "body": "Working template you obtain and review: Privacy Notice Gap-Check Checklist. Word — 14 mandatory elements with checklist column, notes column, and gap flag\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-lrc-001-ref-420",
@@ -3427,7 +6607,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — GDPR-compliant structure covering all Article 13/14 elements in plain language",
       "body": "Working template you obtain and review: Privacy Notice Template. Word — GDPR-compliant structure covering all Article 13/14 elements in plain language\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-lrc-001-ref-421",
@@ -3435,7 +6616,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "reference card — 10 rules for accessible legal drafting",
       "body": "Working template you obtain and review: Plain Language Writing Guide. reference card — 10 rules for accessible legal drafting\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-lrc-001-ref-422",
@@ -3443,7 +6625,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "anonymised example — provided by mentor",
       "body": "Working template you obtain and review: Sector Benchmark Privacy Notice. anonymised example — provided by mentor\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-lrc-001-ref-423",
@@ -3451,7 +6634,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Current public privacy notice obtained (website version)",
       "body": "Current public privacy notice obtained (website version)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-lrc-001-ref-424",
@@ -3459,7 +6643,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Gap-Check Checklist, Privacy Notice Template and Plain Language Guide reviewed",
       "body": "Gap-Check Checklist, Privacy Notice Template and Plain Language Guide reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-lrc-001-ref-425",
@@ -3467,7 +6652,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "Legal/DPO contact confirmed for review",
       "body": "Legal/DPO contact confirmed for review\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-lrc-001-ref-426",
@@ -3476,6 +6662,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-LRC-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you know the mandatory content of GDPR Articles 13 and 14 and plain-language drafting standards before reviewing the live notice.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Article 13 — Information to be provided where personal data are collected from the data subject; Article 14 — Information to be provided where personal data have not been obtained from the data subject; Recital 39 — Principle of transparency.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC-05 (Legal, regulatory and contractual requirements understood); PR.DS-01 (Data at rest protected — contextual); Control 3.14 (Log sensitive data access — contextual).\n3. Obtain and review every provided template and document: Privacy Notice Gap-Check Checklist (Word — 14 mandatory elements with checklist column, notes column, and gap flag); Privacy Notice Template (Word — GDPR-compliant structure covering all Article 13/14 elements in plain language); Plain Language Writing Guide (reference card — 10 rules for accessible legal drafting); Sector Benchmark Privacy Notice (anonymised example — provided by mentor).\n4. Secure prerequisite inputs: Current public privacy notice obtained (website version); Gap-Check Checklist, Privacy Notice Template and Plain Language Guide reviewed; Legal/DPO contact confirmed for review.\n5. Re-read the task description and all activity steps of GRC101-LRC-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off).",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-lrc-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Privacy Notice Review and Gap…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Privacy Notice Review and Gap Assessment with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Privacy Notice Review and Gap Assessment with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-lrc-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-lrc-001-step-03",
+      "title": "Step 3 · Study — Study the governing GDPR (EU) 2016/679 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing GDPR (EU) 2016/679 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-lrc-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Privacy Notice Gap-Check…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Privacy Notice Gap-Check Report  + Revised Privacy Notice Draft ..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-lrc-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-lrc-001-step-06",
+      "title": "Step 6 · Draft — Draft Privacy Notice Gap-Check Report + Revised Privacy Notice Draft…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Privacy Notice Gap-Check Report + Revised Privacy Notice Draft . in the provided template to the acceptance…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Privacy Notice Gap-Check Report  + Revised Privacy Notice Draft . in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-lrc-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-lrc-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Privacy Notice Gap-Check Report + Revised Privacy Notice…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Privacy Notice Gap-Check Report + Revised Privacy Notice Draft . and obtain the required sign-off, filing it…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Privacy Notice Gap-Check Report  + Revised Privacy Notice Draft . and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Privacy Notice Gap-Check Report (checklist with gap findings) + Revised Privacy Notice Draft (ready for DPO/Legal sign-off). — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-lrc-001-ref-427",
@@ -3491,7 +6749,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Article 13 (data collected from the subject) versus Article 14 (data…",
       "body": "A study primer that enables you to explain, in your own words: Article 13 (data collected from the subject) versus Article 14 (data obtained indirectly).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-lrc-001-ref-429",
@@ -3499,7 +6758,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The 14 mandatory privacy notice elements in the gap-check checklist",
       "body": "A study primer that enables you to explain, in your own words: The 14 mandatory privacy notice elements in the gap-check checklist.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-lrc-001-ref-430",
@@ -3507,7 +6767,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Plain language and readability: Flesch-Kincaid Grade 8 target",
       "body": "A study primer that enables you to explain, in your own words: Plain language and readability: Flesch-Kincaid Grade 8 target.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-lrc-001-ref-431",
@@ -3515,7 +6776,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Layered notice design and sector good practice",
       "body": "A study primer that enables you to explain, in your own words: Layered notice design and sector good practice.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-lrc-001-ref-432",
@@ -3523,7 +6785,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Legal/DPO review and sign-off role",
       "body": "A study primer that enables you to explain, in your own words: The Legal/DPO review and sign-off role.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "PE-001": [
@@ -3544,12 +6807,31 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-pe-001-study-01",
+      "title": "Clause 6.2 — Information security objectives and planning to achieve them",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 6.2: Information security objectives and planning to achieve them",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 6.2.\n\n## What it requires\nInformation security objectives and planning to achieve them.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC | Organisational Context |\n\n## How it lands in this task\nA gap against Clause 6.2 is a line you must record inside your signed project charter + milestone gantt (high-level) + kick-off meeting minutes.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-pe-001-study-02",
+      "title": "Clause 5.3 — Organisational roles, responsibilities and authorities",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 5.3: Organisational roles, responsibilities and authorities",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 5.3.\n\n## What it requires\nOrganisational roles, responsibilities and authorities.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-01 | Risk management objectives established |\n\n## How it lands in this task\nA gap against Clause 5.3 is a line you must record inside your signed project charter + milestone gantt (high-level) + kick-off meeting minutes.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
       "id": "rua-pe-001-ref-435",
       "title": "Project Charter Template",
       "kind": "Template / Working Document",
       "summary": "Word — background, objectives, success criteria, scope, out-of-scope, deliverables, team, governance, risks/assumptions, sign-off block",
       "body": "Working template you obtain and review: Project Charter Template. Word — background, objectives, success criteria, scope, out-of-scope, deliverables, team, governance, risks/assumptions, sign-off block\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-pe-001-ref-436",
@@ -3557,7 +6839,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel — 6-month view with milestone diamonds, owner, and status",
       "body": "Working template you obtain and review: Milestone Gantt Template. Excel — 6-month view with milestone diamonds, owner, and status\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-pe-001-ref-437",
@@ -3565,7 +6848,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — standard agenda with attendees, objectives, roles, questions, next steps",
       "body": "Working template you obtain and review: Kick-Off Meeting Agenda Template. Word — standard agenda with attendees, objectives, roles, questions, next steps\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-pe-001-ref-438",
@@ -3573,7 +6857,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel",
       "body": "Working template you obtain and review: RACI Matrix Template. Excel\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-pe-001-ref-439",
@@ -3581,7 +6866,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Initiative scope agreed with the mentor (e.g. the AA-002 gap-closure programme)",
       "body": "Initiative scope agreed with the mentor (e.g. the AA-002 gap-closure programme)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-pe-001-ref-440",
@@ -3589,7 +6875,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Project Charter, Milestone Gantt and Kick-Off Agenda templates reviewed",
       "body": "Project Charter, Milestone Gantt and Kick-Off Agenda templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-pe-001-ref-441",
@@ -3598,6 +6885,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-PE-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what a charter locks in — scope, success criteria, governance — and the sponsor's role before drafting or convening a kick-off.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 6.2 — Information security objectives and planning to achieve them; Clause 5.3 — Organisational roles, responsibilities and authorities.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.OC (Organisational Context); GV.RM-01 (Risk management objectives established).\n3. Obtain and review every provided template and document: Project Charter Template (Word — background, objectives, success criteria, scope, out-of-scope, deliverables, team, governance, risks/assumptions, sign-off block); Milestone Gantt Template (Excel — 6-month view with milestone diamonds, owner, and status); Kick-Off Meeting Agenda Template (Word — standard agenda with attendees, objectives, roles, questions, next steps); RACI Matrix Template (Excel).\n4. Secure prerequisite inputs: Initiative scope agreed with the mentor (e.g. the AA-002 gap-closure programme); Project Charter, Milestone Gantt and Kick-Off Agenda templates reviewed.\n5. Re-read the task description and all activity steps of GRC101-PE-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-pe-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC Project Charter — Compliance…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC Project Charter — Compliance Initiative Kick-Off with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC Project Charter — Compliance Initiative Kick-Off with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-pe-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-pe-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-pe-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Signed Project Charter +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Signed Project Charter + Milestone Gantt  + Kick-Off Meeting Minutes..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-pe-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-pe-001-step-06",
+      "title": "Step 6 · Draft — Draft Signed Project Charter + Milestone Gantt + Kick-Off Meeting…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Signed Project Charter + Milestone Gantt + Kick-Off Meeting Minutes. in the provided template to the acceptance…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Signed Project Charter + Milestone Gantt  + Kick-Off Meeting Minutes. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-pe-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-pe-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Signed Project Charter + Milestone Gantt + Kick-Off Meeting…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Signed Project Charter + Milestone Gantt + Kick-Off Meeting Minutes. and obtain the required sign-off, filing…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Signed Project Charter + Milestone Gantt  + Kick-Off Meeting Minutes. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Signed Project Charter + Milestone Gantt (high-level) + Kick-Off Meeting Minutes. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-pe-001-ref-442",
@@ -3613,7 +6972,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The project charter as the initiative's authorising document",
       "body": "A study primer that enables you to explain, in your own words: The project charter as the initiative's authorising document.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-pe-001-ref-444",
@@ -3621,7 +6981,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Scope and out-of-scope discipline — preventing scope creep at day one",
       "body": "A study primer that enables you to explain, in your own words: Scope and out-of-scope discipline — preventing scope creep at day one.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-pe-001-ref-445",
@@ -3629,7 +6990,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Success criteria versus deliverables",
       "body": "A study primer that enables you to explain, in your own words: Success criteria versus deliverables.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-pe-001-ref-446",
@@ -3637,7 +6999,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Governance roles: sponsor, project lead, workstream owners (Clause 5.3)",
       "body": "A study primer that enables you to explain, in your own words: Governance roles: sponsor, project lead, workstream owners (Clause 5.3).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-pe-001-ref-447",
@@ -3645,7 +7008,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Milestone-level planning versus task-level planning, and initial risk…",
       "body": "A study primer that enables you to explain, in your own words: Milestone-level planning versus task-level planning, and initial risk identification.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "PE-002": [
@@ -3666,12 +7030,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-pe-002-study-01",
+      "title": "Clause 7.5 — Documented information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 7.5: Documented information",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 7.5.\n\n## What it requires\nDocumented information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed, updated, communicated and enforced |\n\n## How it lands in this task\nA gap against Clause 7.5 is a line you must record inside your audit evidence pack. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-pe-002-study-02",
+      "title": "Annex A 5.35 — Independent review of information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.35: Independent review of information security",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.35.\n\n## What it requires\nIndependent review of information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| ID.RA-01 | Vulnerabilities in assets identified |\n\n## How it lands in this task\nA gap against Annex A 5.35 is a line you must record inside your audit evidence pack. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-pe-002-study-03",
+      "title": "Annex A 5.36 — Compliance with policies, rules and standards",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.36: Compliance with policies, rules and standards",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.36.\n\n## What it requires\nCompliance with policies, rules and standards.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.CM-09 | Computing hardware and software monitored |\n\n## How it lands in this task\nA gap against Annex A 5.36 is a line you must record inside your audit evidence pack. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-pe-002-ref-450",
       "title": "Audit Evidence Requirements List",
       "kind": "Template / Working Document",
       "summary": "Word — per ISO 27001 clause: control objective, expected evidence types, evidence quality criteria",
       "body": "Working template you obtain and review: Audit Evidence Requirements List. Word — per ISO 27001 clause: control objective, expected evidence types, evidence quality criteria\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-pe-002-ref-451",
@@ -3679,7 +7071,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — naming syntax and folder structure",
       "body": "Working template you obtain and review: Evidence Labelling Convention Guide. Word — naming syntax and folder structure\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-pe-002-ref-452",
@@ -3687,7 +7080,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Evidence ID, Control Reference, Evidence Description, Source, Date, Collected By, Quality Check Status, Location",
       "body": "Working template you obtain and review: Evidence Index Template. spreadsheet: Evidence ID, Control Reference, Evidence Description, Source, Date, Collected By, Quality Check Status, Location\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-pe-002-ref-453",
@@ -3695,7 +7089,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — quality-check criteria per evidence item",
       "body": "Working template you obtain and review: Audit Evidence Checklist. Word — quality-check criteria per evidence item\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-pe-002-ref-454",
@@ -3703,7 +7098,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "ISO 27001 clause or Annex A control set selected with the mentor",
       "body": "ISO 27001 clause or Annex A control set selected with the mentor\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-pe-002-ref-455",
@@ -3711,7 +7107,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Audit Evidence Requirements List, Labelling Convention Guide and Evidence Index Template reviewed",
       "body": "Audit Evidence Requirements List, Labelling Convention Guide and Evidence Index Template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-pe-002-ref-456",
@@ -3719,7 +7116,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "System owners holding the evidence identified",
       "body": "System owners holding the evidence identified\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-pe-002-ref-457",
@@ -3728,6 +7126,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-PE-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand audit evidence quality, labelling conventions and what an auditor looks for, before requesting any evidence items.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 7.5 — Documented information; Annex A 5.35 — Independent review of information security; Annex A 5.36 — Compliance with policies, rules and standards.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated and enforced); ID.RA-01 (Vulnerabilities in assets identified); DE.CM-09 (Computing hardware and software monitored).\n3. Obtain and review every provided template and document: Audit Evidence Requirements List (Word — per ISO 27001 clause: control objective, expected evidence types, evidence quality criteria); Evidence Labelling Convention Guide (Word — naming syntax and folder structure); Evidence Index Template (spreadsheet: Evidence ID, Control Reference, Evidence Description, Source, Date, Collected By, Quality Check Status, Location); Audit Evidence Checklist (Word — quality-check criteria per evidence item).\n4. Secure prerequisite inputs: ISO 27001 clause or Annex A control set selected with the mentor; Audit Evidence Requirements List, Labelling Convention Guide and Evidence Index Template reviewed; System owners holding the evidence identified.\n5. Re-read the task description and all activity steps of GRC101-PE-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Audit Evidence Pack — labelled evidence files, Evidence Index (spreadsheet), and a completed self-review Audit Evidence Checklist.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-pe-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Audit Evidence Preparation and…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Audit Evidence Preparation and Filing with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Audit Evidence Preparation and Filing with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-pe-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-pe-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-pe-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Audit Evidence Pack.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Audit Evidence Pack.\n\n## Purpose\nThis is a “Collect” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-pe-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-pe-002-step-06",
+      "title": "Step 6 · Draft — Draft Audit Evidence Pack in the provided template to the acceptance…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Audit Evidence Pack in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Audit Evidence Pack in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-pe-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-pe-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Audit Evidence Pack and obtain the required sign-off,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Audit Evidence Pack and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Audit Evidence Pack and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Audit Evidence Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-pe-002-ref-458",
@@ -3743,7 +7213,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Evidence quality: relevance, sufficiency, reliability, currency",
       "body": "A study primer that enables you to explain, in your own words: Evidence quality: relevance, sufficiency, reliability, currency.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-pe-002-ref-460",
@@ -3751,7 +7222,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Evidence types: records, configuration exports, meeting minutes, logs,…",
       "body": "A study primer that enables you to explain, in your own words: Evidence types: records, configuration exports, meeting minutes, logs, approvals.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-pe-002-ref-461",
@@ -3759,7 +7231,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Evidence Labelling Convention and folder structure",
       "body": "A study primer that enables you to explain, in your own words: The Evidence Labelling Convention and folder structure.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-pe-002-ref-462",
@@ -3767,7 +7240,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Evidence Index as the auditor's entry point",
       "body": "A study primer that enables you to explain, in your own words: The Evidence Index as the auditor's entry point.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-pe-002-ref-463",
@@ -3775,7 +7249,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Mock-audit thinking: what will the auditor ask about each item? (Clause…",
       "body": "A study primer that enables you to explain, in your own words: Mock-audit thinking: what will the auditor ask about each item? (Clause 7.5, Annex A 5.35, 5.36).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "QA-001": [
@@ -3796,12 +7271,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-qa-001-study-01",
+      "title": "Clause 7.5.2 — Creating and updating documented information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 7.5.2: Creating and updating documented information",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 7.5.2.\n\n## What it requires\nCreating and updating documented information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed, updated, communicated |\n\n## How it lands in this task\nA gap against Clause 7.5.2 is a line you must record inside your quality review report (deficiency list with severities and correction requests) + correction tracking log + quality review closure report.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-qa-001-study-02",
+      "title": "Clause 7.5.3 — Control of documented information",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 7.5.3: Control of documented information",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 7.5.3.\n\n## What it requires\nControl of documented information.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.OC | Organisational context maintained |\n\n## How it lands in this task\nA gap against Clause 7.5.3 is a line you must record inside your quality review report (deficiency list with severities and correction requests) + correction tracking log + quality review closure report.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-qa-001-study-03",
+      "title": "Annex A 5.36 — Compliance with policies, rules and standards",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.36: Compliance with policies, rules and standards",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.36.\n\n## What it requires\nCompliance with policies, rules and standards.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 5.36 is a line you must record inside your quality review report (deficiency list with severities and correction requests) + correction tracking log + quality review closure report.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-qa-001-ref-466",
       "title": "Document Quality Review Checklist",
       "kind": "Template / Working Document",
       "summary": "Word — criteria: document control completeness, version number, approval signatures, scope accuracy, policy statement completeness,…",
       "body": "Working template you obtain and review: Document Quality Review Checklist. Word — criteria: document control completeness, version number, approval signatures, scope accuracy, policy statement completeness, control references, plain language, review date currency\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-qa-001-ref-467",
@@ -3809,7 +7312,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — Correction ID, Document, Section, Deficiency Description, Severity, Recommended Action, Due Date, Resolved Y/N",
       "body": "Working template you obtain and review: Correction Request Form. Word — Correction ID, Document, Section, Deficiency Description, Severity, Recommended Action, Due Date, Resolved Y/N\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-qa-001-ref-468",
@@ -3817,7 +7321,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Excel — Correction ID, status, document owner, resolution date",
       "body": "Working template you obtain and review: Correction Tracking Log. Excel — Correction ID, status, document owner, resolution date\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-qa-001-ref-469",
@@ -3825,7 +7330,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — one-page summary",
       "body": "Working template you obtain and review: Quality Review Closure Report Template. Word — one-page summary\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 3
     },
     {
       "id": "rua-qa-001-ref-470",
@@ -3833,7 +7339,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "Three GRC documents selected with the mentor (e.g. outputs of GRM-002 or DD-001)",
       "body": "Three GRC documents selected with the mentor (e.g. outputs of GRM-002 or DD-001)\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-qa-001-ref-471",
@@ -3841,7 +7348,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Quality Review Checklist, Correction Request Form and Tracking Log reviewed",
       "body": "Quality Review Checklist, Correction Request Form and Tracking Log reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-qa-001-ref-472",
@@ -3850,6 +7358,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-QA-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand document quality criteria, deficiency severity and the correction workflow before reviewing any document or approaching its owner.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 7.5.2 — Creating and updating documented information; Clause 7.5.3 — Control of documented information; Annex A 5.36 — Compliance with policies, rules and standards.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.PO-02 (Policy reviewed, updated, communicated); GV.OC (Organisational context maintained).\n3. Obtain and review every provided template and document: Document Quality Review Checklist (Word — criteria: document control completeness, version number, approval signatures, scope accuracy, policy statement completeness, control references, plain language, review date currency); Correction Request Form (Word — Correction ID, Document, Section, Deficiency Description, Severity, Recommended Action, Due Date, Resolved Y/N); Correction Tracking Log (Excel — Correction ID, status, document owner, resolution date); Quality Review Closure Report Template (Word — one-page summary).\n4. Secure prerequisite inputs: Three GRC documents selected with the mentor (e.g. outputs of GRM-002 or DD-001); Quality Review Checklist, Correction Request Form and Tracking Log reviewed.\n5. Re-read the task description and all activity steps of GRC101-QA-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-qa-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC Document Quality Review with…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC Document Quality Review with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC Document Quality Review with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-qa-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-qa-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-qa-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Quality Review Report +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Quality Review Report  + Correction Tracking Log + Quality Review Closure Report..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-qa-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-qa-001-step-06",
+      "title": "Step 6 · Draft — Draft Quality Review Report + Correction Tracking Log + Quality…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Quality Review Report + Correction Tracking Log + Quality Review Closure Report. in the provided template to the…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Quality Review Report  + Correction Tracking Log + Quality Review Closure Report. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-qa-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-qa-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise Quality Review Report + Correction Tracking Log + Quality…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Quality Review Report + Correction Tracking Log + Quality Review Closure Report. and obtain the required…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Quality Review Report  + Correction Tracking Log + Quality Review Closure Report. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Quality Review Report (deficiency list with severities and correction requests) + Correction Tracking Log + Quality Review Closure Report. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-qa-001-ref-473",
@@ -3865,7 +7445,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Document quality criteria: document control completeness, versioning,…",
       "body": "A study primer that enables you to explain, in your own words: Document quality criteria: document control completeness, versioning, approvals, scope accuracy, control references, plain language, review currency.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-qa-001-ref-475",
@@ -3873,7 +7454,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Major versus Minor deficiency classification",
       "body": "A study primer that enables you to explain, in your own words: Major versus Minor deficiency classification.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-qa-001-ref-476",
@@ -3881,7 +7463,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Correction Request workflow: raise, discuss, track, re-check, close",
       "body": "A study primer that enables you to explain, in your own words: The Correction Request workflow: raise, discuss, track, re-check, close.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-qa-001-ref-477",
@@ -3889,7 +7472,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Reviewer objectivity and constructive feedback to document owners",
       "body": "A study primer that enables you to explain, in your own words: Reviewer objectivity and constructive feedback to document owners.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-qa-001-ref-478",
@@ -3897,7 +7481,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Clauses 7.5.2 / 7.5.3 as the quality baseline",
       "body": "A study primer that enables you to explain, in your own words: Clauses 7.5.2 / 7.5.3 as the quality baseline.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "QA-002": [
@@ -3918,12 +7503,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-qa-002-study-01",
+      "title": "Clause 9.1 — Monitoring, measurement, analysis and evaluation",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 9.1: Monitoring, measurement, analysis and evaluation",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 9.1.\n\n## What it requires\nMonitoring, measurement, analysis and evaluation.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| DE.CM-09 | Computing hardware and software monitored |\n\n## How it lands in this task\nA gap against Clause 9.1 is a line you must record inside your three control testing methodology sheets + testing methodology overview (one page) filed in the grc qa library.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-qa-002-study-02",
+      "title": "Annex A 5.35 — Independent review of information security",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.35: Independent review of information security",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 5.35.\n\n## What it requires\nIndependent review of information security.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy reviewed and enforced |\n\n## How it lands in this task\nA gap against Annex A 5.35 is a line you must record inside your three control testing methodology sheets + testing methodology overview (one page) filed in the grc qa library.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-qa-002-study-03",
+      "title": "Annex A 5.36 — Compliance with policies, rules and standards",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.36: Compliance with policies, rules and standards",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.36.\n\n## What it requires\nCompliance with policies, rules and standards.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at CloudTech Solutions Enterprise if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 18 | Penetration Testing — awareness only at GRC 101 level |\n\n## How it lands in this task\nA gap against Annex A 5.36 is a line you must record inside your three control testing methodology sheets + testing methodology overview (one page) filed in the grc qa library.. Before you move on, be able to say in one sentence what CloudTech Solutions Enterprise would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-qa-002-ref-481",
       "title": "Control Testing Methodology Sheet Template",
       "kind": "Template / Working Document",
       "summary": "Word — Control ID, Control Objective, Test Approach, Test Steps (numbered), Evidence Required, Evidence Quality Criteria, Pass/Fail…",
       "body": "Working template you obtain and review: Control Testing Methodology Sheet Template. Word — Control ID, Control Objective, Test Approach, Test Steps (numbered), Evidence Required, Evidence Quality Criteria, Pass/Fail Criteria, Frequency, Testing Owner\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-qa-002-ref-482",
@@ -3931,7 +7544,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — sampling rationale, frequency schedule, documentation standards, escalation path",
       "body": "Working template you obtain and review: Testing Methodology Overview Template. Word — sampling rationale, frequency schedule, documentation standards, escalation path\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-qa-002-ref-483",
@@ -3939,7 +7553,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "excerpts from ISAE 3000, IIA Standards — provided by mentor",
       "body": "Working template you obtain and review: Audit Standard Reference Extract. excerpts from ISAE 3000, IIA Standards — provided by mentor\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-qa-002-ref-484",
@@ -3947,7 +7562,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "ISO 27001 Control Matrix from GRC101-CRM-002 obtained and three controls shortlisted",
       "body": "ISO 27001 Control Matrix from GRC101-CRM-002 obtained and three controls shortlisted\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-qa-002-ref-485",
@@ -3955,7 +7571,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Methodology Sheet and Overview templates plus audit-standard reference materials reviewed",
       "body": "Methodology Sheet and Overview templates plus audit-standard reference materials reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-qa-002-ref-486",
@@ -3964,6 +7581,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-QA-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand audit test approaches, sampling and pass/fail definition before selecting controls or writing methodology sheets.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 9.1 — Monitoring, measurement, analysis and evaluation; Annex A 5.35 — Independent review of information security; Annex A 5.36 — Compliance with policies, rules and standards.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — DE.CM-09 (Computing hardware and software monitored); GV.PO-02 (Policy reviewed and enforced); Control 18 (Penetration Testing — awareness only at GRC 101 level).\n3. Obtain and review every provided template and document: Control Testing Methodology Sheet Template (Word — Control ID, Control Objective, Test Approach, Test Steps (numbered), Evidence Required, Evidence Quality Criteria, Pass/Fail Criteria, Frequency, Testing Owner); Testing Methodology Overview Template (Word — sampling rationale, frequency schedule, documentation standards, escalation path); Audit Standard Reference Extract (excerpts from ISAE 3000, IIA Standards — provided by mentor).\n4. Secure prerequisite inputs: ISO 27001 Control Matrix from GRC101-CRM-002 obtained and three controls shortlisted; Methodology Sheet and Overview templates plus audit-standard reference materials reviewed.\n5. Re-read the task description and all activity steps of GRC101-QA-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-qa-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Control Testing Methodology…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Control Testing Methodology Development with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Control Testing Methodology Development with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-qa-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-qa-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-qa-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Three Control Testing…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Three Control Testing Methodology Sheets + Testing Methodology Overview  filed in the GRC QA Library..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-qa-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-qa-002-step-06",
+      "title": "Step 6 · Draft — Draft Three Control Testing Methodology Sheets + Testing Methodology…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Three Control Testing Methodology Sheets + Testing Methodology Overview filed in the GRC QA Library. in the…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Three Control Testing Methodology Sheets + Testing Methodology Overview  filed in the GRC QA Library. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-qa-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-qa-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Three Control Testing Methodology Sheets + Testing…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Three Control Testing Methodology Sheets + Testing Methodology Overview filed in the GRC QA Library. and…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Three Control Testing Methodology Sheets + Testing Methodology Overview  filed in the GRC QA Library. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Three Control Testing Methodology Sheets + Testing Methodology Overview (one page) filed in the GRC QA Library. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-qa-002-ref-487",
@@ -3979,7 +7668,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Test approaches: inquiry, observation, inspection, re-performance — and…",
       "body": "A study primer that enables you to explain, in your own words: Test approaches: inquiry, observation, inspection, re-performance — and when each suffices.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-qa-002-ref-489",
@@ -3987,7 +7677,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Sampling: rationale, size and period",
       "body": "A study primer that enables you to explain, in your own words: Sampling: rationale, size and period.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-qa-002-ref-490",
@@ -3995,7 +7686,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Unambiguous pass/fail criteria",
       "body": "A study primer that enables you to explain, in your own words: Unambiguous pass/fail criteria.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-qa-002-ref-491",
@@ -4003,7 +7695,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Repeatability and defensibility — another tester must reach the same result",
       "body": "A study primer that enables you to explain, in your own words: Repeatability and defensibility — another tester must reach the same result.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-qa-002-ref-492",
@@ -4011,7 +7704,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: How professional audit firms document comparable tests (Clause 9.1,…",
       "body": "A study primer that enables you to explain, in your own words: How professional audit firms document comparable tests (Clause 9.1, Annex A 5.35, 5.36).\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "KT-001": [
@@ -4032,12 +7726,49 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-kt-001-study-01",
+      "title": "Annex A 6.1 — Screening",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.1: Screening",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Annex A 6.1.\n\n## What it requires\nScreening.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| PR.AT-01 | Personnel provided awareness and training |\n\n## How it lands in this task\nA gap against Annex A 6.1 is a line you must record inside your grc onboarding pack. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-kt-001-study-02",
+      "title": "Annex A 6.2 — Terms and conditions of employment",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.2: Terms and conditions of employment",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Annex A 6.2.\n\n## What it requires\nTerms and conditions of employment.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.PO-02 | Policy communicated |\n\n## How it lands in this task\nA gap against Annex A 6.2 is a line you must record inside your grc onboarding pack. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-kt-001-study-03",
+      "title": "Annex A 6.3 — Information security awareness, education and training",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.3: Information security awareness, education and training",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 6.3.\n\n## What it requires\nInformation security awareness, education and training.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 14.1 | Establish and maintain a security awareness programme |\n\n## How it lands in this task\nA gap against Annex A 6.3 is a line you must record inside your grc onboarding pack. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
+      "id": "rua-kt-001-study-04",
+      "title": "Annex A 6.6 — Confidentiality or non-disclosure agreements",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 6.6: Confidentiality or non-disclosure agreements",
+      "body": "The single governing reference behind comprehension check 4: ISO/IEC 27001:2022 Annex A 6.6.\n\n## What it requires\nConfidentiality or non-disclosure agreements.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at LearnTech Educational Solutions if it were genuinely working.\n\n## How it lands in this task\nA gap against Annex A 6.6 is a line you must record inside your grc onboarding pack. Before you move on, be able to say in one sentence what LearnTech Educational Solutions would have to show to evidence this control.",
+      "tab": "study",
+      "item": 3
+    },
+    {
       "id": "rua-kt-001-ref-495",
       "title": "New Joiner GRC Reference Guide Template",
       "kind": "Template / Working Document",
       "summary": "Word — 4-page, with visual icons, colour-coded sections, and plain language",
       "body": "Working template you obtain and review: New Joiner GRC Reference Guide Template. Word — 4-page, with visual icons, colour-coded sections, and plain language\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-kt-001-ref-496",
@@ -4045,7 +7776,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — Day 1/7/30 table format, with manager and employee columns",
       "body": "Working template you obtain and review: New Joiner GRC Checklist Template. Word — Day 1/7/30 table format, with manager and employee columns\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-kt-001-ref-497",
@@ -4053,7 +7785,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "PowerPoint — 5-slide structure: welcome, key policies, how to report, data rules, who to call",
       "body": "Working template you obtain and review: Day-1 Security Briefing Slide Deck Template. PowerPoint — 5-slide structure: welcome, key policies, how to report, data rules, who to call\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-kt-001-ref-498",
@@ -4061,7 +7794,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Organisation's key policies and procedures inventoried as source material",
       "body": "Organisation's key policies and procedures inventoried as source material\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-kt-001-ref-499",
@@ -4069,7 +7803,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Reference Guide, Checklist and Day-1 Slide Deck templates reviewed",
       "body": "Reference Guide, Checklist and Day-1 Slide Deck templates reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-kt-001-ref-500",
@@ -4077,7 +7812,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Access / Scheduling",
       "summary": "HR contact for the onboarding handover confirmed",
       "body": "HR contact for the onboarding handover confirmed\n\n## Why this is required\nConfirms the people, access and time you need are secured, so the task is not blocked mid-way.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-kt-001-ref-501",
@@ -4086,6 +7822,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-KT-001. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand what a new joiner actually needs in week one, and the design constraints of the pack, before curating any content.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Annex A 6.1 — Screening; Annex A 6.2 — Terms and conditions of employment; Annex A 6.3 — Information security awareness, education and training; Annex A 6.6 — Confidentiality or non-disclosure agreements.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — PR.AT-01 (Personnel provided awareness and training); GV.PO-02 (Policy communicated); Control 14.1 (Establish and maintain a security awareness programme).\n3. Obtain and review every provided template and document: New Joiner GRC Reference Guide Template (Word — 4-page, with visual icons, colour-coded sections, and plain language); New Joiner GRC Checklist Template (Word — Day 1/7/30 table format, with manager and employee columns); Day-1 Security Briefing Slide Deck Template (PowerPoint — 5-slide structure: welcome, key policies, how to report, data rules, who to call).\n4. Secure prerequisite inputs: Organisation's key policies and procedures inventoried as source material; Reference Guide, Checklist and Day-1 Slide Deck templates reviewed; HR contact for the onboarding handover confirmed.\n5. Re-read the task description and all activity steps of GRC101-KT-001; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: GRC Onboarding Pack — New Joiner GRC Reference Guide (4 pages), New Joiner GRC Checklist (Day 1/7/30), and Day-1 Security Briefing Slide Deck (5 slides); all handed over to HR.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-kt-001-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for GRC Onboarding Pack — New Joiner…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for GRC Onboarding Pack — New Joiner Reference Guide with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for GRC Onboarding Pack — New Joiner Reference Guide with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-kt-001-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-kt-001-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-kt-001-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC Onboarding Pack.",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate GRC Onboarding Pack.\n\n## Purpose\nThis is a “Collect” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-kt-001-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-kt-001-step-06",
+      "title": "Step 6 · Draft — Draft GRC Onboarding Pack in the provided template to the acceptance…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft GRC Onboarding Pack in the provided template to the acceptance standard.",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft GRC Onboarding Pack in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-kt-001-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-kt-001-step-08",
+      "title": "Step 8 · Sign-off — Finalise GRC Onboarding Pack and obtain the required sign-off,…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise GRC Onboarding Pack and obtain the required sign-off, filing it to the portfolio.",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise GRC Onboarding Pack and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward GRC Onboarding Pack — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-kt-001-ref-502",
@@ -4101,7 +7909,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Knowledge curation: the ten things every joiner must know",
       "body": "A study primer that enables you to explain, in your own words: Knowledge curation: the ten things every joiner must know.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-kt-001-ref-504",
@@ -4109,7 +7918,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Day-1 / Day-7 / Day-30 sequencing of GRC actions",
       "body": "A study primer that enables you to explain, in your own words: Day-1 / Day-7 / Day-30 sequencing of GRC actions.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-kt-001-ref-505",
@@ -4117,7 +7927,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Visual, plain-language design within a four-page limit",
       "body": "A study primer that enables you to explain, in your own words: Visual, plain-language design within a four-page limit.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-kt-001-ref-506",
@@ -4125,7 +7936,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Employment-lifecycle controls: Annex A 6.1, 6.2, 6.3, 6.6",
       "body": "A study primer that enables you to explain, in your own words: Employment-lifecycle controls: Annex A 6.1, 6.2, 6.3, 6.6.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-kt-001-ref-507",
@@ -4133,7 +7945,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Designing for handover: HR must be able to maintain the pack",
       "body": "A study primer that enables you to explain, in your own words: Designing for handover: HR must be able to maintain the pack.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ],
   "KT-002": [
@@ -4154,12 +7967,40 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "tab": "study"
     },
     {
+      "id": "rua-kt-002-study-01",
+      "title": "Clause 10.1 — Continual improvement",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 10.1: Continual improvement",
+      "body": "The single governing reference behind comprehension check 1: ISO/IEC 27001:2022 Clause 10.1.\n\n## What it requires\nContinual improvement.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| GV.RM-07 | Risk responses managed and outcomes communicated |\n\n## How it lands in this task\nA gap against Clause 10.1 is a line you must record inside your lessons learned report (2–3 pages) + mentee portfolio index (complete list of all grc 101 deliverables produced) + three programme improvement recommendations.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 0
+    },
+    {
+      "id": "rua-kt-002-study-02",
+      "title": "Clause 10.2 — Nonconformity and corrective action",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Clause 10.2: Nonconformity and corrective action",
+      "body": "The single governing reference behind comprehension check 2: ISO/IEC 27001:2022 Clause 10.2.\n\n## What it requires\nNonconformity and corrective action.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| RC.IM-01 | Recovery plan incorporates lessons learned |\n\n## How it lands in this task\nA gap against Clause 10.2 is a line you must record inside your lessons learned report (2–3 pages) + mentee portfolio index (complete list of all grc 101 deliverables produced) + three programme improvement recommendations.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 1
+    },
+    {
+      "id": "rua-kt-002-study-03",
+      "title": "Annex A 5.27 — Learning from information security incidents",
+      "kind": "Control Reference Extract",
+      "summary": "ISO/IEC 27001:2022 Annex A 5.27: Learning from information security incidents",
+      "body": "The single governing reference behind comprehension check 3: ISO/IEC 27001:2022 Annex A 5.27.\n\n## What it requires\nLearning from information security incidents.\n\nRead it for intent rather than wording. Ask what risk the reference removes, and what you would expect to see in place at Strategic Advisory Consultants if it were genuinely working.\n\n## Cross-walk\n| Mapped reference | Meaning |\n| Control 17.8 | Conduct post-incident reviews |\n\n## How it lands in this task\nA gap against Annex A 5.27 is a line you must record inside your lessons learned report (2–3 pages) + mentee portfolio index (complete list of all grc 101 deliverables produced) + three programme improvement recommendations.. Before you move on, be able to say in one sentence what Strategic Advisory Consultants would have to show to evidence this control.",
+      "tab": "study",
+      "item": 2
+    },
+    {
       "id": "rua-kt-002-ref-510",
       "title": "Lessons Learned Worksheet",
       "kind": "Template / Working Document",
       "summary": "Word — structured reflection questions: learning, successes, challenges, recommendations",
       "body": "Working template you obtain and review: Lessons Learned Worksheet. Word — structured reflection questions: learning, successes, challenges, recommendations\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 0
     },
     {
       "id": "rua-kt-002-ref-511",
@@ -4167,7 +8008,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "Word — introduction, key learnings table, programme improvement recommendations, portfolio index page",
       "body": "Working template you obtain and review: Lessons Learned Report Template. Word — introduction, key learnings table, programme improvement recommendations, portfolio index page\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 1
     },
     {
       "id": "rua-kt-002-ref-512",
@@ -4175,7 +8017,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Template / Working Document",
       "summary": "spreadsheet: Task ID, Task Name, Deliverable, File Location, Date Completed, Badge Earned",
       "body": "Working template you obtain and review: Mentee Portfolio Index Template. spreadsheet: Task ID, Task Name, Deliverable, File Location, Date Completed, Badge Earned\n\n## Typical structure\n- Purpose & scope — what the document is for and its boundary\n- Structured content — the fields / sections completed during the task\n- Owner & review — who maintains it and the review cadence",
-      "tab": "inspect"
+      "tab": "inspect",
+      "item": 2
     },
     {
       "id": "rua-kt-002-ref-513",
@@ -4183,7 +8026,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Prior Task Output",
       "summary": "All completed task deliverables and working documents from the rotation gathered",
       "body": "All completed task deliverables and working documents from the rotation gathered\n\n## Why this is required\nBrings forward the output of an earlier RUA task as an input, so work builds on what already exists.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 0
     },
     {
       "id": "rua-kt-002-ref-514",
@@ -4191,7 +8035,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Document / Tool Review",
       "summary": "Lessons Learned Worksheet, Report Template and Portfolio Index Template reviewed",
       "body": "Lessons Learned Worksheet, Report Template and Portfolio Index Template reviewed\n\n## Why this is required\nEnsures you have read and understood the supplied templates/tools end to end before using them.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 1
     },
     {
       "id": "rua-kt-002-ref-515",
@@ -4199,7 +8044,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Prerequisite Input — Organisational Context",
       "summary": "Peer mentee identified for the second-perspective interview (if in a cohort)",
       "body": "Peer mentee identified for the second-perspective interview (if in a cohort)\n\n## Why this is required\nGrounds the task in the organisation's real business, systems and regulatory footprint before any gathering begins.\n\n## Gate check\nIf this input is not secured, mark Provided (Y/N) = N and escalate to the mentor — the task cannot pass the RUA gate.",
-      "tab": "acquire"
+      "tab": "acquire",
+      "item": 2
     },
     {
       "id": "rua-kt-002-ref-516",
@@ -4208,6 +8054,78 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "summary": "Full task description and all eight activity steps; unclear steps to be raised with the mentor.",
       "body": "Full task description and activity steps for GRC101_Tasks_Activities.docx — section GRC101-KT-002. You re-reads these and raises any unclear step before the gate.\n\n## Objective\nConfirm you understand retrospective method and continual improvement, and has the full portfolio of rotation deliverables assembled, before writing any reflection.\n\n## Part A — what you must gather & confirm\n1. Study the governing control references: Clause 10.1 — Continual improvement; Clause 10.2 — Nonconformity and corrective action; Annex A 5.27 — Learning from information security incidents.\n2. Read the cross-referenced framework mapping: NIST CSF 2.0 — GV.RM-07 (Risk responses managed and outcomes communicated); RC.IM-01 (Recovery plan incorporates lessons learned); Control 17.8 (Conduct post-incident reviews).\n3. Obtain and review every provided template and document: Lessons Learned Worksheet (Word — structured reflection questions: learning, successes, challenges, recommendations); Lessons Learned Report Template (Word — introduction, key learnings table, programme improvement recommendations, portfolio index page); Mentee Portfolio Index Template (spreadsheet: Task ID, Task Name, Deliverable, File Location, Date Completed, Badge Earned).\n4. Secure prerequisite inputs: All completed task deliverables and working documents from the rotation gathered; Lessons Learned Worksheet, Report Template and Portfolio Index Template reviewed; Peer mentee identified for the second-perspective interview (if in a cohort).\n5. Re-read the task description and all activity steps of GRC101-KT-002; note any step whose purpose or method is unclear and raise it before the gate.\n6. Confirm the expected final deliverable and its acceptance standard: Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations.",
       "tab": "clarify"
+    },
+    {
+      "id": "rua-kt-002-step-01",
+      "title": "Step 1 · Confirm — Confirm scope and objectives for Lessons Learned Documentation —…",
+      "kind": "Activity Step Brief",
+      "summary": "Confirm scope and objectives for Lessons Learned Documentation — End-of-Rotation Retrospective with the reviewing role.",
+      "body": "Activity step 1 of 8 for this task, in full:\n\n> Confirm scope and objectives for Lessons Learned Documentation — End-of-Rotation Retrospective with the reviewing role.\n\n## Purpose\nThis is a “Confirm” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRestate the objective back in your own words, then check three things: what is in scope, what is deliberately out, and how the work will be judged.\n\n## Done when\nYou can state the scope boundary, the named deliverable and the acceptance standard without re-reading the brief — and the reviewing role agrees with your statement of it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 0
+    },
+    {
+      "id": "rua-kt-002-step-02",
+      "title": "Step 2 · Acquire — Gather the prerequisite inputs, organisation context and templates…",
+      "kind": "Activity Step Brief",
+      "summary": "Gather the prerequisite inputs, organisation context and templates the task depends on.",
+      "body": "Activity step 2 of 8 for this task, in full:\n\n> Gather the prerequisite inputs, organisation context and templates the task depends on.\n\n## Purpose\nThis is a “Acquire” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWork the prerequisite checklist item by item. Mark anything you cannot obtain as blocked — a missing input surfaced now costs minutes, discovered mid-task it costs the task.\n\n## Done when\nEvery prerequisite input, template and access this task depends on is in your hands, and anything missing has been escalated rather than assumed.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 1
+    },
+    {
+      "id": "rua-kt-002-step-03",
+      "title": "Step 3 · Study — Study the governing ISO/IEC 27001:2022 control references and the…",
+      "kind": "Activity Step Brief",
+      "summary": "Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.",
+      "body": "Activity step 3 of 8 for this task, in full:\n\n> Study the governing ISO/IEC 27001:2022 control references and the NIST CSF cross-walk.\n\n## Purpose\nThis is a “Study” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nRead for intent, not wording. For each reference ask: what risk does it remove, and what would I expect to see in place if it were working here?\n\n## Done when\nYou can explain each governing reference's intent in your own words, and say what evidence would show it working in this organisation.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 2
+    },
+    {
+      "id": "rua-kt-002-step-04",
+      "title": "Step 4 · Collect — Collect the raw material — records, extracts, interviews or evidence…",
+      "kind": "Activity Step Brief",
+      "summary": "Collect the raw material — records, extracts, interviews or evidence — needed to populate Lessons Learned Report +…",
+      "body": "Activity step 4 of 8 for this task, in full:\n\n> Collect the raw material — records, extracts, interviews or evidence — needed to populate Lessons Learned Report  + Mentee Portfolio Index  + Three Programme Improvement Recommendations..\n\n## Purpose\nThis is a “Collect” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nGo to the source rather than the summary. Record where each item came from — an unattributed fact cannot be evidence.\n\n## Done when\nThe raw material is gathered from real sources — records, extracts, interviews, evidence — with each item traceable back to where it came from and who provided it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 3
+    },
+    {
+      "id": "rua-kt-002-step-05",
+      "title": "Step 5 · Analyse — Analyse and structure the material against the template, applying…",
+      "kind": "Activity Step Brief",
+      "summary": "Analyse and structure the material against the template, applying the task's scoring or classification method.",
+      "body": "Activity step 5 of 8 for this task, in full:\n\n> Analyse and structure the material against the template, applying the task's scoring or classification method.\n\n## Purpose\nThis is a “Analyse” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nApply the task's method consistently. Where you exercise judgement, write down the reasoning so a reviewer can follow it.\n\n## Done when\nEvery collected item has been placed against the template and scored or classified by the task's stated method, with the reasoning behind each judgement recorded.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 4
+    },
+    {
+      "id": "rua-kt-002-step-06",
+      "title": "Step 6 · Draft — Draft Lessons Learned Report + Mentee Portfolio Index + Three…",
+      "kind": "Activity Step Brief",
+      "summary": "Draft Lessons Learned Report + Mentee Portfolio Index + Three Programme Improvement Recommendations. in the provided…",
+      "body": "Activity step 6 of 8 for this task, in full:\n\n> Draft Lessons Learned Report  + Mentee Portfolio Index  + Three Programme Improvement Recommendations. in the provided template to the acceptance standard.\n\n## Purpose\nThis is a “Draft” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nWrite into the provided template, not around it. Its structure encodes the acceptance criteria.\n\n## Done when\nThe deliverable exists in the provided template, complete against every acceptance criterion, with residual gaps written down rather than hidden.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 5
+    },
+    {
+      "id": "rua-kt-002-step-07",
+      "title": "Step 7 · Review — Review the draft with the process owner and reconcile gaps or…",
+      "kind": "Activity Step Brief",
+      "summary": "Review the draft with the process owner and reconcile gaps or corrections.",
+      "body": "Activity step 7 of 8 for this task, in full:\n\n> Review the draft with the process owner and reconcile gaps or corrections.\n\n## Purpose\nThis is a “Review” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nBring the draft and the acceptance criteria to the owner together. Ask them where it is wrong, not whether it is fine.\n\n## Done when\nThe process owner has walked the draft with you, every correction is either applied or explicitly declined with a reason, and no comment is left unanswered.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 6
+    },
+    {
+      "id": "rua-kt-002-step-08",
+      "title": "Step 8 · Sign-off — Finalise Lessons Learned Report + Mentee Portfolio Index + Three…",
+      "kind": "Activity Step Brief",
+      "summary": "Finalise Lessons Learned Report + Mentee Portfolio Index + Three Programme Improvement Recommendations. and obtain the…",
+      "body": "Activity step 8 of 8 for this task, in full:\n\n> Finalise Lessons Learned Report  + Mentee Portfolio Index  + Three Programme Improvement Recommendations. and obtain the required sign-off, filing it to the portfolio.\n\n## Purpose\nThis is a “Sign-off” action. It moves you toward Lessons Learned Report (2–3 pages) + Mentee Portfolio Index (complete list of all GRC 101 deliverables produced) + Three Programme Improvement Recommendations. — it is not the deliverable itself. Judge it by whether the next step becomes possible, not by how much of it you produced.\n\n## How to approach it\nDo not chase a signature on a document with open gaps. Close them, or record them as accepted residual risk with the owner's agreement.\n\n## Done when\nThe accountable owner has formally accepted the deliverable, and the signed artefact is filed to the portfolio where downstream tasks can consume it.\n\n## Raise a query if\nYou cannot say who you would approach, what input this step needs, or what its output feeds into. An unclear step raised now is a query; discovered later it is rework.",
+      "tab": "clarify",
+      "item": 7
     },
     {
       "id": "rua-kt-002-ref-517",
@@ -4223,7 +8141,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Retrospective structure: what was learned, what worked, what did not,…",
       "body": "A study primer that enables you to explain, in your own words: Retrospective structure: what was learned, what worked, what did not, what to recommend.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 0
     },
     {
       "id": "rua-kt-002-ref-519",
@@ -4231,7 +8150,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Lessons versus complaints — actionable, evidence-based reflection",
       "body": "A study primer that enables you to explain, in your own words: Lessons versus complaints — actionable, evidence-based reflection.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 1
     },
     {
       "id": "rua-kt-002-ref-520",
@@ -4239,7 +8159,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: ISO 27001 Clause 10.1 continual improvement applied to the programme itself",
       "body": "A study primer that enables you to explain, in your own words: ISO 27001 Clause 10.1 continual improvement applied to the programme itself.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 2
     },
     {
       "id": "rua-kt-002-ref-521",
@@ -4247,7 +8168,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: The Mentee Portfolio Index as evidence of capability",
       "body": "A study primer that enables you to explain, in your own words: The Mentee Portfolio Index as evidence of capability.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 3
     },
     {
       "id": "rua-kt-002-ref-522",
@@ -4255,7 +8177,8 @@ export const RUA_REFS: Record<string, RuaRef[]> = {
       "kind": "Concept Study Material",
       "summary": "Reading that enables you to explain, in your own words: Writing for the next cohort as the audience",
       "body": "A study primer that enables you to explain, in your own words: Writing for the next cohort as the audience.\n\n## In plain terms\nYou should be able to state what this concept means, why it matters to the task, and give a concrete example — rather than reciting a definition. Being able to teach it back in plain language is the test of understanding.\n\n## Watch out for\nReciting a textbook definition without being able to give a concrete, organisation-specific example.",
-      "tab": "explain"
+      "tab": "explain",
+      "item": 4
     }
   ]
 };

@@ -10,7 +10,7 @@ import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
 import { TASK_META } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
-import { CONTROLS_BY_TASK } from "@/lib/controls";
+import { CONTROLS_BY_TASK, type Control } from "@/lib/controls";
 import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
 
@@ -27,6 +27,12 @@ export default function TaskOverview() {
     }
     return null;
   }, [learnings, taskCode]);
+
+  const byStandard = useMemo(() => {
+    const m = new Map<string, Control[]>();
+    for (const c of reg?.controls ?? []) m.set(c.standard, [...(m.get(c.standard) ?? []), c]);
+    return [...m];
+  }, [reg]);
 
   const tone = meta ? VERB_TONES[meta.standardTone] ?? VERB_TONES.indigo : VERB_TONES.indigo;
   const nextStep = task?.steps.find((s) => s.status !== "complete") ?? task?.steps[0];
@@ -77,6 +83,50 @@ export default function TaskOverview() {
         </Card>
       )}
 
+      {/* controls register */}
+      {reg && reg.controls.length > 0 && (
+        <Card>
+          <div className="flex items-start justify-between gap-3 mb-3.5">
+            <div>
+              <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Control references</h2>
+              <p className="mt-1 text-[12px] text-slate-500 leading-relaxed tracking-tight max-w-prose" style={{ textWrap: "pretty" }}>
+                The clauses and controls this task is graded against. Read them before you start — your deliverable should
+                trace back to each one.
+              </p>
+            </div>
+            <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-slate-50 text-slate-500 ring-slate-200/70 shrink-0">
+              <Icon name="shield" size={12} /> {reg.controls.length}
+            </span>
+          </div>
+          <div className="space-y-4">
+            {byStandard.map(([standard, controls]) => {
+              const tone = VERB_TONES[controls[0].tone] ?? VERB_TONES.indigo;
+              return (
+                <div key={standard}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+                    <span className="text-[11.5px] font-semibold text-slate-700 tracking-tight">{standard}</span>
+                    <span className="h-px flex-1 bg-slate-200/60" />
+                  </div>
+                  <div className="space-y-1.5">
+                    {controls.map((c, i) => (
+                      <div key={i} className="flex items-start gap-3 rounded-xl bg-slate-50/50 ring-1 ring-slate-200/50 p-3">
+                        <span className={`font-mono text-[10.5px] font-semibold rounded px-1.5 py-1 shrink-0 whitespace-nowrap ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{c.num}</span>
+                        <div className="min-w-0">
+                          <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{c.name}</div>
+                          <div className="text-[11.5px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{c.purpose}</div>
+                          <div className="mt-1 text-[10.5px] uppercase tracking-[0.08em] text-slate-400">{c.domain}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* actions / verbs */}
       <Card>
         <div className="flex items-center justify-between mb-3">
@@ -106,24 +156,6 @@ export default function TaskOverview() {
           })}
         </div>
       </Card>
-
-      {/* controls register */}
-      {reg && reg.controls.length > 0 && (
-        <Card>
-          <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-3">Control references</h2>
-          <div className="space-y-2">
-            {reg.controls.map((c, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl bg-slate-50/60 ring-1 ring-slate-200/50 p-3">
-                <span className="font-mono text-[10.5px] text-slate-600 bg-white ring-1 ring-slate-200/70 rounded px-1.5 py-0.5 shrink-0 whitespace-nowrap">{c.num}</span>
-                <div className="min-w-0">
-                  <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{c.name}</div>
-                  <div className="text-[11.5px] text-slate-500 tracking-tight" style={{ textWrap: "pretty" }}>{c.purpose}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

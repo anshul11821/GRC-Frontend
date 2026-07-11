@@ -162,28 +162,28 @@ export const RUA_TASKS: Record<string, RuaTask> = {
     "objective": "Confirm the mentee understands the CIS Controls v8 structure, the meaning of Implementation Group 1, and evidence-based gap assessment before scheduling any walkthroughs.",
     "controls": [
       {
-        "ref": "",
-        "name": "Controls 1–6: Inventory of Enterprise Assets"
+        "ref": "CIS 1",
+        "name": "Inventory and Control of Enterprise Assets"
       },
       {
-        "ref": "",
-        "name": "Inventory of Software Assets"
+        "ref": "CIS 2",
+        "name": "Inventory and Control of Software Assets"
       },
       {
-        "ref": "",
+        "ref": "CIS 3",
         "name": "Data Protection"
       },
       {
-        "ref": "",
-        "name": "Secure Configuration"
+        "ref": "CIS 4",
+        "name": "Secure Configuration of Enterprise Assets and Software"
       },
       {
-        "ref": "",
+        "ref": "CIS 5",
         "name": "Account Management"
       },
       {
-        "ref": "",
-        "name": "Access Control Management (Implementation Group 1 sub-controls only)"
+        "ref": "CIS 6",
+        "name": "Access Control Management (IG1 sub-controls only)"
       }
     ],
     "crosswalk": [
@@ -276,20 +276,20 @@ export const RUA_TASKS: Record<string, RuaTask> = {
     "objective": "Confirm the mentee understands core GDPR definitions, lawful bases, and the purpose of RoPA and DPIA screening before selecting a process or interviewing its owner.",
     "controls": [
       {
-        "ref": "Article 4 (Definitions",
-        "name": "personal data, processing, controller, processor)"
+        "ref": "Article 4",
+        "name": "Definitions (personal data, processing, controller, processor)"
       },
       {
-        "ref": "",
-        "name": "Article 13 & 14 (Information to be provided)"
+        "ref": "Article 13 & 14",
+        "name": "Information to be provided to data subjects"
       },
       {
-        "ref": "Article 30 (Records of processing activities",
-        "name": "RoPA)"
+        "ref": "Article 30",
+        "name": "Records of processing activities (RoPA)"
       },
       {
-        "ref": "",
-        "name": "Article 35 (Data protection impact assessment screening)"
+        "ref": "Article 35",
+        "name": "Data protection impact assessment screening"
       }
     ],
     "crosswalk": [
@@ -1234,16 +1234,16 @@ export const RUA_TASKS: Record<string, RuaTask> = {
     "objective": "Confirm the mentee understands what a SOC 2 Type II report is, how the Trust Services Criteria are organised, and how audit evidence works before annotating the sample report.",
     "controls": [
       {
-        "ref": "CC1–CC9 (Common Criteria",
-        "name": "Security)"
+        "ref": "CC1–CC9",
+        "name": "Common Criteria (Security)"
       },
       {
-        "ref": "A1 (Availability",
-        "name": "awareness)"
+        "ref": "A1",
+        "name": "Availability (awareness)"
       },
       {
-        "ref": "C1 (Confidentiality",
-        "name": "awareness)"
+        "ref": "C1",
+        "name": "Confidentiality (awareness)"
       }
     ],
     "crosswalk": [
@@ -1992,8 +1992,8 @@ export const RUA_TASKS: Record<string, RuaTask> = {
     "objective": "Confirm the mentee understands the NIST CSF 2.0 Functions and Tier model, and the difference between maturity and compliance, before adapting the questionnaire or booking interviews.",
     "controls": [
       {
-        "ref": "",
-        "name": "Tier Definitions (Tier 1 Partial → Tier 4 Adaptive)"
+        "ref": "Tiers 1–4",
+        "name": "Implementation Tier definitions (Partial → Adaptive)"
       },
       {
         "ref": "GV.OC",
@@ -2108,24 +2108,24 @@ export const RUA_TASKS: Record<string, RuaTask> = {
     "objective": "Confirm the mentee understands the remediation lifecycle, acceptance criteria and evidence expectations for the five selected safeguards before creating task cards or tracking anything.",
     "controls": [
       {
-        "ref": "",
-        "name": "Control 1.1 (Establish and maintain detailed enterprise asset inventory)"
+        "ref": "CIS 1.1",
+        "name": "Establish and maintain detailed enterprise asset inventory"
       },
       {
-        "ref": "",
-        "name": "Control 3.3 (Configure data access control lists)"
+        "ref": "CIS 3.3",
+        "name": "Configure data access control lists"
       },
       {
-        "ref": "",
-        "name": "Control 5.2 (Use unique passwords)"
+        "ref": "CIS 5.2",
+        "name": "Use unique passwords"
       },
       {
-        "ref": "",
-        "name": "Control 5.3 (Disable dormant accounts)"
+        "ref": "CIS 5.3",
+        "name": "Disable dormant accounts"
       },
       {
-        "ref": "",
-        "name": "Control 6.1 (Establish access-granting process)"
+        "ref": "CIS 6.1",
+        "name": "Establish an access-granting process"
       }
     ],
     "crosswalk": [
