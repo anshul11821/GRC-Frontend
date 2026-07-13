@@ -7,6 +7,7 @@ import { useCachedQuery } from "@/lib/use-query";
 import { deskApi } from "@/lib/desk";
 import { calendarApi } from "@/lib/calendar";
 import { SOFT_TONES } from "@/lib/tones";
+import { DropdownPanel } from "@/components/ui/motion";
 
 const PROGRAM = "grc101";
 const SEEN_KEY = "grcmentor:notif-seen";
@@ -113,8 +114,7 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-[330px] rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-[0_8px_40px_-8px_rgba(15,23,42,0.22)] overflow-hidden z-50">
+      <DropdownPanel open={open} className="absolute right-0 mt-2 w-[330px]">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <span className="text-[13px] font-semibold text-slate-900 tracking-tight">Notifications</span>
             {notifs.length > 0 && <span className="text-[11px] text-slate-400 tabular-nums">{notifs.length}</span>}
@@ -139,8 +139,7 @@ export function NotificationBell() {
               ))}
             </div>
           )}
-        </div>
-      )}
+      </DropdownPanel>
     </div>
   );
 }

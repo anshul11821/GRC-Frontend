@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { FloatingMentor } from "./floating-mentor";
 import { NotificationBell } from "./notification-bell";
+import { DropdownPanel } from "@/components/ui/motion";
 
 function DashSidebar({
   collapsed,
@@ -138,8 +139,7 @@ function UserMenu() {
         <Icon name="chevronDown" size={14} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-[284px] rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-[0_8px_40px_-8px_rgba(15,23,42,0.22)] overflow-hidden z-50">
+      <DropdownPanel open={open} className="absolute right-0 mt-2 w-[284px]">
           <div className="flex items-center gap-3 p-3.5 bg-gradient-to-br from-indigo-50/80 to-violet-50/50 border-b border-slate-100">
             <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[15px] font-semibold ring-2 ring-white shadow-sm">
               {initials}
@@ -157,7 +157,7 @@ function UserMenu() {
             >
               <Icon name="settings" size={17} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
               <span className="text-[13px] tracking-tight">Account Settings</span>
-              <Icon name="chevronRight" size={14} className="ml-auto text-slate-300 group-hover:text-slate-400" />
+              <Icon name="chevronRight" size={14} className="ml-auto text-slate-300 group-hover:text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
           </div>
           <div className="p-1.5 border-t border-slate-100">
@@ -169,8 +169,7 @@ function UserMenu() {
               <span className="text-[13px] font-medium tracking-tight">Sign out</span>
             </button>
           </div>
-        </div>
-      )}
+      </DropdownPanel>
     </div>
   );
 }

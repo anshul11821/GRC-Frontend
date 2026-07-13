@@ -95,17 +95,22 @@ interface PaneProps {
 const tabRefs = (refs: RuaRef[]) => refs.filter((r) => r.item === undefined);
 const itemRef = (refs: RuaRef[], i: number) => refs.find((r) => r.item === i);
 
-/** "Open the reference for this item" button — every RUA item has exactly one. */
-function ItemDoc({ refs, idx, openDoc, label = "Open the reference for this step" }: {
-  refs: RuaRef[]; idx: number; openDoc: (d: TaskReference) => void; label?: string;
-}) {
+/** The reference document for one RUA item — a file row matching DocOpenStrip. */
+function ItemDoc({ refs, idx, openDoc }: { refs: RuaRef[]; idx: number; openDoc: (d: TaskReference) => void }) {
   const r = itemRef(refs, idx);
   if (!r) return null;
   return (
-    <button onClick={() => openDoc(r)} title={r.title}
-      className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 cursor-pointer focus-ring transition-colors">
-      <Icon name="book" size={12} /> {label}
-    </button>
+    <div className="rounded-xl bg-white ring-1 ring-slate-200/80 flex items-center gap-2.5 px-3.5 py-2">
+      <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 bg-violet-50 text-violet-600"><Icon name="file" size={12} /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12px] font-medium text-slate-800 tracking-tight truncate">{r.title}</span>
+        <span className="block text-[10px] text-slate-400 tracking-tight truncate">{r.kind}</span>
+      </span>
+      <button onClick={() => openDoc(r)}
+        className="shrink-0 h-7 px-2.5 rounded-md text-[11px] font-medium cursor-pointer focus-ring flex items-center gap-1 transition-colors text-violet-700 bg-violet-50 hover:bg-violet-100">
+        <Icon name="arrowUpRight" size={12} /> Open
+      </button>
+    </div>
   );
 }
 
@@ -155,7 +160,7 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
                       Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.
                     </p>
                   </div>
-                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open the control extract for this reference" />
+                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <MicroCheckBox task={task} taskCode={taskCode} idx={i} passed={done} attempts={p.study[i]?.attempts ?? 0}
                     onPass={() => patch((n) => { n.study[i] = { passed: true, attempts: n.study[i]?.attempts ?? 0 }; })}
                     onFail={() => patch((n) => { n.study[i] = { passed: false, attempts: (n.study[i]?.attempts ?? 0) + 1 }; })} />
@@ -272,7 +277,7 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
                   ) : (
                     <div className="rounded-xl ring-1 ring-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{tpl.purpose || "Structured document — review its sections before use."}</div>
                   )}
-                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open this template" />
+                  <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <InspectExerciseBox task={task} taskCode={taskCode} idx={i} passed={done}
                     onPass={() => patch((n) => { n.inspect[i] = true; })} />
                 </div>
@@ -404,7 +409,7 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
               <div className="flex-1 min-w-0">
                 <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full ring-1 text-[10px] font-semibold ${m.chip}`}>{m.label}</span>
                 <p className="mt-1 text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{a.label}</p>
-                <div className="mt-1.5"><ItemDoc refs={refs} idx={i} openDoc={openDoc} label="Open the brief for this input" /></div>
+                <div className="mt-1.5"><ItemDoc refs={refs} idx={i} openDoc={openDoc} /></div>
               </div>
               <div className="shrink-0 self-center">
                 {done
@@ -521,7 +526,7 @@ function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
             {state === "query" && <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold">query open</span>}
           </div>
           <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{step.text}</p>
-          <div className="mt-1.5"><ItemDoc refs={refs} idx={idx} openDoc={openDoc} label="Open the brief for this step" /></div>
+          <div className="mt-1.5"><ItemDoc refs={refs} idx={idx} openDoc={openDoc} /></div>
 
           {mode === null && state === "pending" && (
             <div className="mt-2.5 flex flex-wrap gap-2">
@@ -764,7 +769,7 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
             <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{task.concepts[idx]}</h4>
           </div>
           <div className="px-4 pt-3">
-            <ItemDoc refs={refs} idx={idx} openDoc={openDoc} label="Open the study primer for this concept" />
+            <ItemDoc refs={refs} idx={idx} openDoc={openDoc} />
           </div>
 
           {!result ? (

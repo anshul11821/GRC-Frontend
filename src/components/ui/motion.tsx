@@ -5,10 +5,57 @@
  * All respect `prefers-reduced-motion` — when set, they render a plain element
  * with no animation (and crucially no lingering opacity:0 state).
  */
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * Premium enter/exit for header dropdowns: a small scale + lift that grows from the
+ * anchor corner (default top-right, since header menus align right). AnimatePresence
+ * keeps the panel mounted through its exit so closing eases out instead of snapping.
+ * Reduced-motion collapses to a plain fade.
+ *
+ * The surface itself lives here so every header menu reads the same: frosted glass
+ * (translucent + backdrop-blur), a hairline top highlight (inset white) for the lit
+ * glass edge, and a *layered* shadow — a tight contact shadow under the panel plus a
+ * soft wide ambient — instead of one flat blur. Callers pass only position + width.
+ */
+const DROPDOWN_EASE = [0.16, 1, 0.3, 1] as const;
+
+const DROPDOWN_SURFACE =
+  "rounded-[18px] bg-white/85 backdrop-blur-2xl ring-1 ring-slate-900/[0.07] overflow-hidden z-50 " +
+  "shadow-[0_1px_1px_rgba(15,23,42,0.04),0_12px_24px_-10px_rgba(15,23,42,0.16),0_32px_60px_-18px_rgba(15,23,42,0.28),inset_0_1px_0_rgba(255,255,255,0.75)]";
+
+export function DropdownPanel({
+  open,
+  children,
+  className,
+  origin = "top right",
+}: {
+  open: boolean;
+  children: ReactNode;
+  className?: string;
+  origin?: string;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className={[DROPDOWN_SURFACE, className].filter(Boolean).join(" ")}
+          style={{ transformOrigin: origin, willChange: "transform, opacity" }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -8 }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -6 }}
+          transition={{ duration: 0.2, ease: DROPDOWN_EASE }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 /** Fade + slide up when the element scrolls into view. */
 export function Reveal({
