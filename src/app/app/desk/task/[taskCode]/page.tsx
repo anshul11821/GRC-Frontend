@@ -153,7 +153,7 @@ export default function TaskOverview() {
             );
           })}
         </div>
-      </Drawer>
+      </DraggablePanel>
 
       {/* actions / verbs */}
       <Card>
