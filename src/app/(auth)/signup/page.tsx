@@ -31,6 +31,10 @@ export default function SignUpPage() {
   const passOk = rules.every((r) => r.ok);
   const passwordsMatch = password.length > 0 && password === confirmPassword;
 
+  // terms
+  const [showTerms, setShowTerms] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
+
   // verify
   const [otp, setOtp] = useState("");
 
@@ -75,7 +79,7 @@ export default function SignUpPage() {
 
   const submitAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passOk || !passwordsMatch) return;
+    if (!passOk || !passwordsMatch || !agreedTerms) return;
     run(async () => {
       const captchaToken = await getCaptchaToken("signup_start");
       await authApi.signupStart({ email, password, captchaToken, accessCode: accessCode.trim() });
@@ -152,7 +156,28 @@ export default function SignUpPage() {
               <TextInput icon="lock" type="text" autoComplete="off" required value={accessCode} onChange={(e) => setAccessCode(e.target.value)} placeholder="Invite-only — enter your access code" />
               <span className="mt-1.5 block text-[11.5px] text-slate-400">grcmentor is invite-only during early access. Don&apos;t have a code? Ask whoever invited you.</span>
             </Field>
-            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch || !accessCode.trim()} className="w-full">
+            <div className="flex items-start gap-2">
+              <input
+                id="agree-terms"
+                type="checkbox"
+                checked={agreedTerms}
+                readOnly
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!agreedTerms) setShowTerms(true);
+                  else setAgreedTerms(false);
+                }}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/60 cursor-pointer"
+              />
+              <label htmlFor="agree-terms" className="text-[12.5px] text-slate-600 leading-snug">
+                I have read and accept the{" "}
+                <button type="button" onClick={() => setShowTerms(true)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                  Terms &amp; Conditions
+                </button>
+                .
+              </label>
+            </div>
+            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch || !accessCode.trim() || !agreedTerms} className="w-full">
               {busy ? "Sending code…" : "Continue"}
             </PrimaryBtn>
           </form>
@@ -184,6 +209,149 @@ export default function SignUpPage() {
       )}
 
       {step === "profile" && <ProfileForm />}
+
+      {showTerms && (
+        <TermsModal
+          onClose={() => setShowTerms(false)}
+          onAccept={() => {
+            setAgreedTerms(true);
+            setShowTerms(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const TERMS = [
+  {
+    title: "Training, not advice",
+    body: "grcmentor is a career-readiness platform. Its simulated engagements, grades, and certificates are for learning and do not constitute professional GRC, legal, or audit advice.",
+  },
+  {
+    title: "Your own work",
+    body: "Everything I submit is my own. AI-detected plagiarism or shared answers may void my badges and certificate.",
+  },
+  {
+    title: "AI grading",
+    body: "My submissions are reviewed and scored by an automated AI mentor. There is no human grader in the loop.",
+  },
+  {
+    title: "Personal access code",
+    body: "My access code is invite-only and tied to me. I won't share it or let anyone else use my account.",
+  },
+  {
+    title: "Data & privacy",
+    body: "grcmentor stores my profile and progress to run the program and compile my CV, badges, and certificate, as described in the Privacy Policy.",
+  },
+  {
+    title: "Fair use",
+    body: "I accept the Terms of Service and understand accounts may be suspended for abuse or misuse of the platform.",
+  },
+];
+
+function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () => void }) {
+  const [checked, setChecked] = useState<boolean[]>(() => TERMS.map(() => false));
+  const count = checked.filter(Boolean).length;
+  const allChecked = count === TERMS.length;
+
+  // Escape to close + lock background scroll while open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/40 backdrop-blur-[2px] p-0 sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="terms-title"
+    >
+      <div
+        className="w-full max-w-lg max-h-[92vh] sm:max-h-[85vh] flex flex-col bg-white rounded-t-2xl sm:rounded-2xl ring-1 ring-slate-200 shadow-[0_24px_70px_-20px_rgba(15,23,42,0.35)] motion-safe:animate-[popIn_.22s_ease-out]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-slate-100">
+          <div>
+            <h2 id="terms-title" className="text-[17px] font-semibold tracking-tight text-slate-900">
+              Terms &amp; Conditions
+            </h2>
+            <p className="mt-0.5 text-[12.5px] text-slate-500">Review and accept each clause to continue.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="shrink-0 -mr-1 -mt-0.5 grid place-items-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+
+        {/* Progress */}
+        <div className="px-6 pt-3.5 pb-3">
+          <div className="flex items-center justify-between text-[11.5px] font-medium">
+            <span className="text-slate-500">Accepted</span>
+            <span className={allChecked ? "text-emerald-600" : "text-slate-600"}>
+              {count} of {TERMS.length}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-[width] duration-300 ease-out ${allChecked ? "bg-emerald-500" : "bg-indigo-500"}`}
+              style={{ width: `${(count / TERMS.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Clauses */}
+        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-2">
+          {TERMS.map((t, i) => {
+            const on = checked[i];
+            return (
+              <button
+                key={i}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
+                className={`w-full text-left flex items-start gap-3 rounded-xl p-3 ring-1 transition-colors ${
+                  on
+                    ? "bg-indigo-50/60 ring-indigo-200"
+                    : "bg-white ring-slate-200 hover:bg-slate-50 hover:ring-slate-300"
+                }`}
+              >
+                <span
+                  className={`mt-0.5 shrink-0 grid place-items-center w-5 h-5 rounded-md text-[11px] font-semibold transition-colors ${
+                    on ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  {on ? <Icon name="check" size={12} strokeWidth={3} /> : i + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-medium tracking-tight text-slate-900">{t.title}</span>
+                  <span className="block mt-0.5 text-[12.5px] leading-snug text-slate-500">{t.body}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100">
+          <PrimaryBtn type="button" disabled={!allChecked} onClick={onAccept} className="w-full">
+            {allChecked ? "Accept & continue" : `Accept all ${TERMS.length} clauses to continue`}
+          </PrimaryBtn>
+        </div>
+      </div>
     </div>
   );
 }

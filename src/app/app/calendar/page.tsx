@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Card } from "@/components/ui/primitives";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { useCachedQuery } from "@/lib/use-query";
-import { calendarApi, type CalendarEvent } from "@/lib/calendar";
+import { useCachedQuery, carryQuery } from "@/lib/use-query";
+import { calendarApi, leaveApi, type CalendarEvent, type DeadlineStatus, type DeadlineStage } from "@/lib/calendar";
 
 const MotionLink = motion.create(Link);
 
@@ -18,11 +18,32 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const toISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parseISO = (iso: string) => new Date(`${iso}T00:00:00`);
 
+type Tone = { label: string; icon: IconName; dot: string; bar: string; avatar: string; accent: string };
+
 /** Visual tone per event type. */
-const TYPE: Record<CalendarEvent["type"], { label: string; icon: IconName; dot: string; bar: string; avatar: string; accent: string }> = {
+const TYPE: Record<CalendarEvent["type"], Tone> = {
+  deadline: { label: "Task stage", icon: "bolt", dot: "bg-indigo-500", bar: "bg-indigo-50 text-indigo-700 ring-indigo-100", avatar: "bg-indigo-50 text-indigo-600 ring-indigo-100", accent: "bg-indigo-500" },
+  leave: { label: "On leave", icon: "history", dot: "bg-slate-400", bar: "bg-slate-100 text-slate-600 ring-slate-200", avatar: "bg-slate-100 text-slate-500 ring-slate-200", accent: "bg-slate-400" },
   interaction: { label: "Scheduled interaction", icon: "calendar", dot: "bg-indigo-500", bar: "bg-indigo-50 text-indigo-700 ring-indigo-100", avatar: "bg-indigo-50 text-indigo-600 ring-indigo-100", accent: "bg-indigo-500" },
   reminder: { label: "Review reminder", icon: "refresh", dot: "bg-amber-500", bar: "bg-amber-50 text-amber-700 ring-amber-100", avatar: "bg-amber-50 text-amber-600 ring-amber-100", accent: "bg-amber-500" },
 };
+
+const STAGE_LABEL: Record<DeadlineStage, string> = { rua: "RUA", actions: "Actions", research: "Research" };
+
+/** Deadlines recolour by status: green done, red overdue, indigo upcoming. */
+const STATUS_TONE: Record<DeadlineStatus, Pick<Tone, "dot" | "bar" | "avatar" | "accent">> = {
+  done: { dot: "bg-emerald-500", accent: "bg-emerald-500", bar: "bg-emerald-50 text-emerald-700 ring-emerald-100", avatar: "bg-emerald-50 text-emerald-600 ring-emerald-100" },
+  overdue: { dot: "bg-rose-500", accent: "bg-rose-500", bar: "bg-rose-50 text-rose-700 ring-rose-100", avatar: "bg-rose-50 text-rose-600 ring-rose-100" },
+  upcoming: { dot: "bg-indigo-500", accent: "bg-indigo-500", bar: "bg-indigo-50 text-indigo-700 ring-indigo-100", avatar: "bg-indigo-50 text-indigo-600 ring-indigo-100" },
+};
+
+function eventVisual(e: CalendarEvent): Tone {
+  const base = TYPE[e.type];
+  if (e.type === "deadline" && e.status && e.stage) {
+    return { ...base, ...STATUS_TONE[e.status], label: `${STAGE_LABEL[e.stage]} · ${e.status}` };
+  }
+  return base;
+}
 
 const listV: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.045 } } };
 const itemV: Variants = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.26, ease: "easeOut" } } };
@@ -46,17 +67,10 @@ function relativeDay(iso: string, todayISO: string): string {
 }
 
 function EventCard({ e, dateLabel, onClick, reduce }: { e: CalendarEvent; dateLabel?: string; onClick?: () => void; reduce: boolean }) {
-  const t = TYPE[e.type];
-  return (
-    <MotionLink
-      href={`/app/desk/${e.activityId}`}
-      onClick={onClick}
-      variants={itemV}
-      whileHover={reduce ? undefined : { y: -2 }}
-      whileTap={reduce ? undefined : { scale: 0.985 }}
-      transition={{ type: "spring", stiffness: 420, damping: 30 }}
-      className="group relative flex gap-3 rounded-xl p-3 pl-4 ring-1 ring-slate-200/70 bg-white hover:ring-slate-300/90 hover:shadow-[0_10px_24px_-16px_rgba(15,23,42,0.4)] no-underline overflow-hidden"
-    >
+  const t = eventVisual(e);
+  const linkable = !!e.activityId;
+  const inner = (
+    <>
       <span className={`absolute left-0 top-0 bottom-0 w-1 ${t.accent}`} />
       <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ring-1 ${t.avatar}`}><Icon name={t.icon} size={15} /></span>
       <div className="min-w-0 flex-1">
@@ -66,22 +80,85 @@ function EventCard({ e, dateLabel, onClick, reduce }: { e: CalendarEvent; dateLa
         </div>
         <div className="text-[12.5px] font-medium text-slate-800 tracking-tight leading-snug mt-0.5 group-hover:text-slate-950">{e.title}</div>
         {e.detail && <div className="text-[11.5px] text-slate-500 tracking-tight mt-0.5 line-clamp-2" style={{ textWrap: "pretty" }}>{e.detail}</div>}
-        <div className="flex items-center gap-1.5 mt-1.5 text-slate-300">
-          <span className="font-mono text-[10px]">{e.taskCode}·{e.activityCode}</span>
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">Open<Icon name="arrowRight" size={11} /></span>
-        </div>
+        {linkable && (
+          <div className="flex items-center gap-1.5 mt-1.5 text-slate-300">
+            <span className="font-mono text-[10px]">{e.taskCode}·{e.activityCode}</span>
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">Open<Icon name="arrowRight" size={11} /></span>
+          </div>
+        )}
       </div>
+    </>
+  );
+  const cls = "group relative flex gap-3 rounded-xl p-3 pl-4 ring-1 ring-slate-200/70 bg-white no-underline overflow-hidden";
+  if (!linkable) {
+    return <motion.div variants={itemV} className={cls}>{inner}</motion.div>;
+  }
+  return (
+    <MotionLink
+      href={`/app/desk/${e.activityId}`}
+      onClick={onClick}
+      variants={itemV}
+      whileHover={reduce ? undefined : { y: -2 }}
+      whileTap={reduce ? undefined : { scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 420, damping: 30 }}
+      className={`${cls} hover:ring-slate-300/90 hover:shadow-[0_10px_24px_-16px_rgba(15,23,42,0.4)]`}
+    >
+      {inner}
     </MotionLink>
   );
 }
 
 export default function CalendarPage() {
-  const { data, loading } = useCachedQuery(`calendar:${PROGRAM}`, () => calendarApi.get(PROGRAM));
+  const [nonce, setNonce] = useState(0); // bump to refetch calendar + leave after a leave change
+  const { data, loading } = useCachedQuery(`calendar:${PROGRAM}:${nonce}`, () => calendarApi.get(PROGRAM));
+  const { data: leave } = useCachedQuery(`leave:${PROGRAM}:${nonce}`, () => leaveApi.get(PROGRAM));
   const events = useMemo(() => data ?? [], [data]);
   const reduce = !!useReducedMotion();
 
   const today = new Date();
   const todayISO = toISO(today);
+  const tomorrowISO = toISO(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+
+  const [leaveDate, setLeaveDate] = useState(tomorrowISO);
+  const [leaveBusy, setLeaveBusy] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [leaveWarn, setLeaveWarn] = useState<string | null>(null);
+  const [leaveOk, setLeaveOk] = useState<string | null>(null);
+  const mutateLeave = async (fn: () => Promise<unknown>, okMsg?: string) => {
+    setLeaveBusy(true);
+    setLeaveError(null);
+    setLeaveOk(null);
+    try {
+      await fn();
+      // carry current data to the next nonce's keys so the panel shows a loader, not a cold skeleton
+      carryQuery(`calendar:${PROGRAM}:${nonce}`, `calendar:${PROGRAM}:${nonce + 1}`);
+      carryQuery(`leave:${PROGRAM}:${nonce}`, `leave:${PROGRAM}:${nonce + 1}`);
+      setNonce((n) => n + 1);
+      if (okMsg) setLeaveOk(okMsg);
+      return true;
+    } catch (err) {
+      setLeaveError(err instanceof Error ? err.message : "Something went wrong.");
+      return false;
+    } finally {
+      setLeaveBusy(false);
+    }
+  };
+  // auto-hide the success banner
+  useEffect(() => {
+    if (!leaveOk) return;
+    const t = setTimeout(() => setLeaveOk(null), 4000);
+    return () => clearTimeout(t);
+  }, [leaveOk]);
+
+  const addLeave = () => {
+    if (!leaveDate || leaveDate <= todayISO) {
+      setLeaveWarn("Pick a date after today.");
+      return;
+    }
+    const label = parseISO(leaveDate).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    mutateLeave(() => leaveApi.add(leaveDate, PROGRAM), `Leave granted for ${label}.`)
+      .then((ok) => { if (ok) setLeaveDate(tomorrowISO); });
+  };
   const [cursor, setCursor] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const [dir, setDir] = useState(1);
   const [selected, setSelected] = useState<string | null>(todayISO);
@@ -98,10 +175,6 @@ export default function CalendarPage() {
   }, [events]);
 
   const undated = useMemo(() => events.filter((e) => !e.eventDate), [events]);
-  const upcoming = useMemo(
-    () => events.filter((e) => e.eventDate && e.eventDate >= todayISO).sort((a, b) => (a.eventDate! < b.eventDate! ? -1 : 1)),
-    [events, todayISO],
-  );
 
   const cells = useMemo(() => buildCells(cursor.y, cursor.m), [cursor]);
   const selectedEvents = selected ? byDate.get(selected) ?? [] : [];
@@ -121,7 +194,6 @@ export default function CalendarPage() {
     setCursor({ y: d.getFullYear(), m: d.getMonth() });
   };
   const goToday = () => { setMonth(today.getFullYear(), today.getMonth()); setSelected(todayISO); };
-  const jumpTo = (iso: string) => { const d = parseISO(iso); setMonth(d.getFullYear(), d.getMonth()); setSelected(iso); };
 
   if (loading && !data) {
     return (
@@ -159,12 +231,14 @@ export default function CalendarPage() {
           </span>
           <div>
             <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-slate-900">Calendar</h1>
-            <p className="text-[12.5px] text-slate-500 mt-0.5">Your scheduled stakeholder interactions and revision reminders.</p>
+            <p className="text-[12.5px] text-slate-500 mt-0.5">Your task timeline — one day each for RUA, Actions and Research.</p>
           </div>
         </div>
-        <div className="flex items-center gap-3.5 text-[11.5px]">
-          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Interaction</span>
-          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-amber-500" /> Reminder</span>
+        <div className="flex items-center gap-3.5 text-[11.5px] flex-wrap">
+          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Upcoming</span>
+          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Done</span>
+          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-rose-500" /> Overdue</span>
+          <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 rounded-full bg-slate-400" /> Leave</span>
         </div>
       </div>
 
@@ -226,7 +300,7 @@ export default function CalendarPage() {
                     </div>
                     <div className="mt-1 space-y-1">
                       {dayEvents.slice(0, 3).map((e, i) => {
-                        const t = TYPE[e.type];
+                        const t = eventVisual(e);
                         return (
                           <motion.div
                             key={e.id}
@@ -275,21 +349,57 @@ export default function CalendarPage() {
             )}
           </Card>
 
-          {/* Upcoming */}
-          {upcoming.length > 0 && (
-            <Card>
-              <div className="flex items-center gap-2 mb-3">
-                <Icon name="bolt" size={14} className="text-indigo-500" />
-                <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Upcoming</h2>
-                <span className="ml-auto text-[11px] font-medium text-slate-400">{upcoming.length}</span>
+          {/* Leave */}
+          <Card>
+            <div className="flex items-center gap-2 mb-1">
+              <Icon name="history" size={14} className="text-slate-400" />
+              <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Leave</h2>
+              {leave && <span className="ml-auto text-[11px] font-medium text-slate-500 tabular-nums">{leave.remaining} of {leave.allowance} left</span>}
+            </div>
+            <p className="text-[11.5px] text-slate-400 mb-3">Each day off pushes the rest of your plan out by a day.</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                min={tomorrowISO}
+                value={leaveDate}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (!v || v <= todayISO) { setLeaveWarn("Pick a date after today."); return; } // keep the existing value
+                  setLeaveWarn(null);
+                  setLeaveDate(v);
+                }}
+                className="flex-1 h-9 px-2.5 rounded-lg ring-1 ring-slate-200 text-[12.5px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              <button
+                onClick={addLeave}
+                disabled={!leaveDate || leaveBusy || (leave?.remaining ?? 1) <= 0}
+                className="h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-[12.5px] font-semibold tracking-tight hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+              >
+                {leaveBusy && <Icon name="refresh" size={13} className="animate-spin" />}
+                {leaveBusy ? "Adding…" : "Add"}
+              </button>
+            </div>
+            {leaveWarn && <div className="text-[11px] text-amber-600 mt-2">{leaveWarn}</div>}
+            {leaveError && <div className="text-[11px] text-rose-600 mt-2">{leaveError}</div>}
+            {leaveOk && (
+              <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-50 ring-1 ring-emerald-200/70 px-2.5 py-1.5 text-[11.5px] font-medium text-emerald-700">
+                <Icon name="check" size={13} /> {leaveOk}
               </div>
-              <motion.div variants={listV} initial="hidden" animate="show" className="space-y-2.5">
-                {upcoming.slice(0, 6).map((e) => (
-                  <EventCard key={e.id} e={e} dateLabel={relativeDay(e.eventDate!, todayISO)} onClick={() => jumpTo(e.eventDate!)} reduce={reduce} />
+            )}
+            {leave && leave.days.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {leave.days.map((d) => (
+                  <div key={d} className="flex items-center gap-2 px-2.5 h-8 rounded-lg bg-slate-50 ring-1 ring-slate-200/70">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                    <span className="text-[12px] text-slate-600">{parseISO(d).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span>
+                    <button onClick={() => mutateLeave(() => leaveApi.remove(d, PROGRAM))} disabled={leaveBusy} aria-label="Remove leave day" className="ml-auto text-slate-400 hover:text-rose-600 transition-colors disabled:opacity-40">
+                      <Icon name="x" size={13} />
+                    </button>
+                  </div>
                 ))}
-              </motion.div>
-            </Card>
-          )}
+              </div>
+            )}
+          </Card>
 
           {/* Proposed / unscheduled */}
           {undated.length > 0 && (

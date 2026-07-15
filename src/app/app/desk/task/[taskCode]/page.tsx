@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { Card } from "@/components/ui/primitives";
+import { DraggablePanel } from "@/components/ui/draggable-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
@@ -13,12 +14,14 @@ import { isGateVerb } from "@/lib/verbs";
 import { CONTROLS_BY_TASK, type Control } from "@/lib/controls";
 import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
+import { dueChip, fmtDue, type ScheduleItem } from "@/lib/schedule";
 
 export default function TaskOverview() {
   const { taskCode } = useParams<{ taskCode: string }>();
   const meta = TASK_META[taskCode];
   const reg = CONTROLS_BY_TASK[taskCode];
-  const { learnings, loading } = useDeskLearnings();
+  const { learnings, loading, scheduleByActivity } = useDeskLearnings();
+  const [controlsOpen, setControlsOpen] = useState(false);
   const task: LearningTask | null = useMemo(() => {
     if (!learnings) return null;
     for (const o of learnings.orgs) for (const p of o.projects) {
@@ -27,6 +30,21 @@ export default function TaskOverview() {
     }
     return null;
   }, [learnings, taskCode]);
+
+  // Task target = the latest planned day among its steps; status rolls up from the steps.
+  const taskDue = useMemo(() => {
+    const sched = (task?.steps ?? [])
+      .map((s) => scheduleByActivity.get(s.id))
+      .filter((x): x is ScheduleItem => !!x);
+    if (!sched.length) return null;
+    const latest = sched.reduce((a, b) => (a.date >= b.date ? a : b));
+    const status = sched.every((s) => s.status === "done")
+      ? "done"
+      : sched.some((s) => s.status === "overdue")
+        ? "overdue"
+        : "upcoming";
+    return { date: latest.date, status } as const;
+  }, [task, scheduleByActivity]);
 
   const byStandard = useMemo(() => {
     const m = new Map<string, Control[]>();
@@ -66,6 +84,11 @@ export default function TaskOverview() {
               <Icon name="ribbon" size={12} /> {meta.badge}
             </span>
           )}
+          {taskDue && (() => { const c = dueChip(taskDue); return (
+            <span className={`inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${c.cls}`} title={`Target completion — ${fmtDue(taskDue.date)}`}>
+              <Icon name="calendar" size={12} /> {c.text}
+            </span>
+          ); })()}
         </div>
       </div>
 
@@ -83,49 +106,54 @@ export default function TaskOverview() {
         </Card>
       )}
 
-      {/* controls register */}
+      {/* controls register — opens in a drawer */}
       {reg && reg.controls.length > 0 && (
-        <Card>
-          <div className="flex items-start justify-between gap-3 mb-3.5">
-            <div>
-              <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Control references</h2>
-              <p className="mt-1 text-[12px] text-slate-500 leading-relaxed tracking-tight max-w-prose" style={{ textWrap: "pretty" }}>
-                The clauses and controls this task is graded against. Read them before you start — your deliverable should
-                trace back to each one.
-              </p>
-            </div>
-            <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-slate-50 text-slate-500 ring-slate-200/70 shrink-0">
-              <Icon name="shield" size={12} /> {reg.controls.length}
+        <button
+          onClick={() => setControlsOpen(true)}
+          className="focus-ring w-full flex items-center gap-3 text-left rounded-xl ring-1 ring-slate-200/70 bg-white hover:bg-slate-50 px-3.5 py-3 transition-colors group"
+        >
+          <span className="w-9 h-9 rounded-lg bg-indigo-50 ring-1 ring-indigo-100 text-indigo-600 flex items-center justify-center shrink-0"><Icon name="shield" size={16} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="text-[13px] font-medium text-slate-900 tracking-tight">Control references</span>
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-semibold tabular-nums">{reg.controls.length}</span>
             </span>
-          </div>
-          <div className="space-y-4">
-            {byStandard.map(([standard, controls]) => {
-              const tone = VERB_TONES[controls[0].tone] ?? VERB_TONES.indigo;
-              return (
-                <div key={standard}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
-                    <span className="text-[11.5px] font-semibold text-slate-700 tracking-tight">{standard}</span>
-                    <span className="h-px flex-1 bg-slate-200/60" />
-                  </div>
-                  <div className="space-y-1.5">
-                    {controls.map((c, i) => (
-                      <div key={i} className="flex items-start gap-3 rounded-xl bg-slate-50/50 ring-1 ring-slate-200/50 p-3">
-                        <span className={`font-mono text-[10.5px] font-semibold rounded px-1.5 py-1 shrink-0 whitespace-nowrap ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{c.num}</span>
-                        <div className="min-w-0">
-                          <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{c.name}</div>
-                          <div className="text-[11.5px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{c.purpose}</div>
-                          <div className="mt-1 text-[10.5px] uppercase tracking-[0.08em] text-slate-400">{c.domain}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+            <span className="block text-[12px] text-slate-500 tracking-tight mt-0.5" style={{ textWrap: "pretty" }}>The clauses and controls this task is graded against — read them before you start.</span>
+          </span>
+          <Icon name="arrowRight" size={15} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
+        </button>
       )}
+      <DraggablePanel open={controlsOpen} onClose={() => setControlsOpen(false)} title="Control references" eyebrow={meta?.standardLabel}>
+        <p className="text-[12.5px] text-slate-500 leading-relaxed tracking-tight mb-4" style={{ textWrap: "pretty" }}>
+          The clauses and controls this task is graded against. Your deliverable should trace back to each one.
+        </p>
+        <div className="space-y-4">
+          {byStandard.map(([standard, controls]) => {
+            const tone = VERB_TONES[controls[0].tone] ?? VERB_TONES.indigo;
+            return (
+              <div key={standard}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+                  <span className="text-[11.5px] font-semibold text-slate-700 tracking-tight">{standard}</span>
+                  <span className="h-px flex-1 bg-slate-200/60" />
+                </div>
+                <div className="space-y-1.5">
+                  {controls.map((c, i) => (
+                    <div key={i} className="flex items-start gap-3 rounded-xl bg-slate-50/50 ring-1 ring-slate-200/50 p-3">
+                      <span className={`font-mono text-[10.5px] font-semibold rounded px-1.5 py-1 shrink-0 whitespace-nowrap ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{c.num}</span>
+                      <div className="min-w-0">
+                        <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{c.name}</div>
+                        <div className="text-[11.5px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{c.purpose}</div>
+                        <div className="mt-1 text-[10.5px] uppercase tracking-[0.08em] text-slate-400">{c.domain}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Drawer>
 
       {/* actions / verbs */}
       <Card>
@@ -141,6 +169,7 @@ export default function TaskOverview() {
           {task?.steps.map((s) => {
             const done = s.status === "complete";
             const gate = isGateVerb(s.verb);
+            const sd = scheduleByActivity.get(s.id);
             return (
               <Link key={s.id} href={`/app/desk/${s.id}`} className={`focus-ring flex items-center gap-3 px-3 py-2.5 rounded-xl ring-1 no-underline transition-all duration-200 group ${gate ? "ring-violet-200/70 bg-violet-50/40 hover:bg-violet-50" : "ring-slate-200/60 bg-white hover:bg-slate-50 hover:ring-indigo-200/70"}`}>
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center ring-1 shrink-0 ${done ? "bg-emerald-50 text-emerald-600 ring-emerald-100" : gate ? "bg-violet-50 text-violet-600 ring-violet-100" : s.status === "in-progress" ? "bg-indigo-50 text-indigo-600 ring-indigo-100" : "bg-slate-50 text-slate-300 ring-slate-200/60"}`}>
@@ -150,6 +179,9 @@ export default function TaskOverview() {
                 <DVerb verbId={s.verb} />
                 <span className="text-[12.5px] text-slate-700 tracking-tight truncate flex-1">{s.title}</span>
                 {gate && <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-violet-50 ring-1 ring-violet-200 text-violet-600 text-[9px] font-semibold tracking-[0.08em] shrink-0">{s.verb === "rua" ? "RUA" : "RESEARCH"}</span>}
+                {sd && !done && (() => { const c = dueChip(sd); return (
+                  <span className={`hidden sm:inline-flex items-center h-[16px] px-1.5 rounded text-[9.5px] font-medium ring-1 shrink-0 ${c.cls}`} title={fmtDue(sd.date)}>{c.text}</span>
+                ); })()}
                 <Icon name="arrowRight" size={14} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
               </Link>
             );

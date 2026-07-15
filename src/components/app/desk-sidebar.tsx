@@ -11,6 +11,7 @@ import { TASK_META, METHOD_CATEGORY_ORDER } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "./desk-context";
+import { dueChip } from "@/lib/schedule";
 
 type TaskState = "complete" | "current" | "locked";
 type StepState = "complete" | "current" | "locked";
@@ -36,7 +37,12 @@ const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "c
 
 function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTask; state: TaskState; activeId?: string; activeTaskCode?: string }) {
   const meta = TASK_META[task.code];
+  const { scheduleByActivity } = useDeskLearnings();
   const onThisTask = task.code === activeTaskCode || task.steps.some((s) => s.id === activeId);
+  // Next actionable deadline for the current task: the earliest not-yet-done step's planned day.
+  const nextDue = state === "current"
+    ? task.steps.filter((s) => stepState(s.status) !== "complete").map((s) => scheduleByActivity.get(s.id)).find(Boolean)
+    : undefined;
   // Only the active/current task is expanded by default; reactively open it as progress moves here.
   const shouldOpen = onThisTask || state === "current";
   const [open, setOpen] = useState(shouldOpen);
@@ -70,6 +76,11 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
           <div className={`text-[12px] tracking-tight truncate mt-0.5 ${onThisTask ? "text-indigo-700 font-medium" : locked ? "text-slate-400" : "text-slate-800"}`}>
             <span className="font-mono text-[10px] text-slate-400 mr-1">{task.code}</span>{meta?.name ?? task.title}
           </div>
+          {nextDue && (() => { const c = dueChip(nextDue); return (
+            <span className={`inline-flex items-center gap-1 h-[15px] px-1.5 mt-1 rounded text-[9px] font-medium ring-1 ${c.cls}`}>
+              <Icon name="calendar" size={9} /> {c.text}
+            </span>
+          ); })()}
         </Link>
       </div>
 

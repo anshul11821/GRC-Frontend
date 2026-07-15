@@ -17,6 +17,11 @@ export function invalidateQuery(key?: string) {
   else cache.clear();
 }
 
+/** Carry a cached value to another key so a key bump shows stale data (loader) not a cold skeleton. */
+export function carryQuery(from: string, to: string) {
+  if (cache.has(from)) cache.set(to, cache.get(from));
+}
+
 export function useCachedQuery<T>(key: string | null, fetcher: () => Promise<T>) {
   const [data, setData] = useState<T | undefined>(() => (key ? (cache.get(key) as T | undefined) : undefined));
   const [loading, setLoading] = useState<boolean>(() => (key ? !cache.has(key) : false));

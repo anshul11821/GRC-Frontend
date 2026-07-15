@@ -5,6 +5,11 @@
 // This is a PREVIEW gate: there's no real payment processing. Purchase state lives in
 // localStorage keyed by email, exposed as an external store so guards/pages react to it
 // without hydration mismatches. When real billing lands, swap these reads for /me/billing.
+//
+// ponytail: PRODUCTION TODO — this is client-side only, so it's trivially bypassable and the
+// backend enforces nothing (all content is reachable via the API regardless of payment).
+// Before charging money: add real billing + a server-side entitlement check on every
+// paid endpoint; treat this store as a UI hint only, never as the gate.
 
 import { useSyncExternalStore } from "react";
 

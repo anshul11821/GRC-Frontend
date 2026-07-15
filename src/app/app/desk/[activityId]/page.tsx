@@ -16,6 +16,7 @@ import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
 import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
+import { dueChip, fmtDue } from "@/lib/schedule";
 import { getActivityContent } from "@/lib/activity-content";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { StandardBanner } from "@/components/app/standards";
@@ -250,7 +251,8 @@ function AcceptanceChecklist({ criteria, spec, values, layer1, onClose }: {
 
 export default function ActivityWorkspace() {
   const { activityId } = useParams<{ activityId: string }>();
-  const { learnings, refresh: refreshTree } = useDeskLearnings();
+  const { learnings, refresh: refreshTree, scheduleByActivity } = useDeskLearnings();
+  const due = scheduleByActivity.get(activityId);
   const [activity, setActivity] = useState<ActivityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -510,7 +512,14 @@ export default function ActivityWorkspace() {
             <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold shrink-0 mt-0.5">{activity.code}</span>
             <div className="min-w-0 flex-1">
               <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900 leading-snug">{activity.title}</h1>
-              {verb && <div className="mt-1.5"><DVerb verbId={verb.id} /></div>}
+              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                {verb && <DVerb verbId={verb.id} />}
+                {due && (() => { const c = dueChip(due); return (
+                  <span className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${c.cls}`} title={fmtDue(due.date)}>
+                    <Icon name="calendar" size={12} /> {c.text}
+                  </span>
+                ); })()}
+              </div>
             </div>
           </div>
         </div>
