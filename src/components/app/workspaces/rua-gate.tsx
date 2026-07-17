@@ -162,7 +162,11 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
                   </div>
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <MicroCheckBox task={task} taskCode={taskCode} idx={i} passed={done} attempts={p.study[i]?.attempts ?? 0}
-                    onPass={() => patch((n) => { n.study[i] = { passed: true, attempts: n.study[i]?.attempts ?? 0 }; })}
+                    onPass={() => {
+                      patch((n) => { n.study[i] = { passed: true, attempts: n.study[i]?.attempts ?? 0 }; });
+                      // Controls unlock in order — auto-open the one this pass just unlocked.
+                      setOpen(i + 1 < task.controls.length ? i + 1 : -1);
+                    }}
                     onFail={() => patch((n) => { n.study[i] = { passed: false, attempts: (n.study[i]?.attempts ?? 0) + 1 }; })} />
                 </div>
               )}
@@ -279,7 +283,12 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
                   )}
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <InspectExerciseBox task={task} taskCode={taskCode} idx={i} passed={done}
-                    onPass={() => patch((n) => { n.inspect[i] = true; })} />
+                    onPass={() => {
+                      patch((n) => { n.inspect[i] = true; });
+                      // Advance to the next still-uninspected template (forward first), else collapse.
+                      const rest = task.templates.map((_, j) => j).filter((j) => j !== i && !p.inspect[j]);
+                      setOpen(rest.find((j) => j > i) ?? rest[0] ?? null);
+                    }} />
                 </div>
               )}
             </div>

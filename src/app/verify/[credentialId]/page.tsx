@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
-import { SkeletonSheet } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import { FauxQR } from "@/components/cert/certificate-sheet";
 import { certificateApi, type CertVerify } from "@/lib/certificate";
 
@@ -28,7 +28,7 @@ export default function VerifyPage({ params }: { params: Promise<{ credentialId:
           <span className="text-[15px] font-semibold tracking-[-0.02em] text-indigo-600">mentor</span>
         </Link>
 
-        {state === "loading" && <div className="py-8"><SkeletonSheet /></div>}
+        {state === "loading" && <Loader label="Verifying credential…" />}
 
         {state === "invalid" && (
           <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-8 text-center shadow-sm">

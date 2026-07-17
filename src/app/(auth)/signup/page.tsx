@@ -348,7 +348,7 @@ function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () =
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100">
           <PrimaryBtn type="button" disabled={!allChecked} onClick={onAccept} className="w-full">
-            {allChecked ? "Accept & continue" : `Accept all ${TERMS.length} clauses to continue`}
+            {allChecked ? "Accept & continue" : "Accept all terms to continue"}
           </PrimaryBtn>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { SkeletonSheet } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import { CvSheet } from "@/components/cv/cv-sheet";
 import { cvApi, type Cv } from "@/lib/cv";
 
@@ -102,7 +102,7 @@ export default function CvPage() {
       </div>
 
       {loading ? (
-        <SkeletonSheet />
+        <Loader label="Loading your CV…" />
       ) : cv ? (
         <>
           <CvSheet cv={cv} />

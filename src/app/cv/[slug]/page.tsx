@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { CvSheet } from "@/components/cv/cv-sheet";
-import { SkeletonSheet } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import { cvApi, type Cv } from "@/lib/cv";
 
 export default function PublicCvPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -30,7 +30,7 @@ export default function PublicCvPage({ params }: { params: Promise<{ slug: strin
           <span className="text-[11px] text-slate-400 tracking-tight">Verified GRC fieldwork</span>
         </div>
 
-        {state === "loading" && <div className="py-10"><SkeletonSheet /></div>}
+        {state === "loading" && <Loader />}
         {state === "missing" && (
           <div className="text-center py-32">
             <div className="text-[15px] font-semibold text-slate-900">CV not found</div>
