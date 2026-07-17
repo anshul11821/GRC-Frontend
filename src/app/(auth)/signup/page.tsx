@@ -285,7 +285,7 @@ function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () =
             <h2 id="terms-title" className="text-[17px] font-semibold tracking-tight text-slate-900">
               Terms &amp; Conditions
             </h2>
-            <p className="mt-0.5 text-[12.5px] text-slate-500">Review and accept each clause to continue.</p>
+            <p className="mt-0.5 text-[12.5px] text-slate-500">Review and accept each term to continue.</p>
           </div>
           <button
             type="button"
@@ -314,7 +314,7 @@ function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () =
         </div>
 
         {/* Clauses */}
-        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-2">
+        <div className="flex-1 overflow-y-auto px-6 pt-1 pb-4 space-y-2">
           {TERMS.map((t, i) => {
             const on = checked[i];
             return (
