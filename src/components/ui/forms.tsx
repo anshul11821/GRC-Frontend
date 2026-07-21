@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
 import { Icon, type IconName } from "./icon";
 
 export const inputCls =
@@ -40,6 +40,29 @@ export function TextInput({ icon, className = "", ...props }: InputProps) {
     );
   }
   return <input {...props} className={`${inputCls} ${className}`} />;
+}
+
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { icon?: IconName };
+
+export function Select({ icon, className = "", children, ...props }: SelectProps) {
+  const select = (
+    <select {...props} className={`${inputCls} appearance-none pr-8 ${icon ? "pl-9" : ""} ${className}`}>
+      {children}
+    </select>
+  );
+  return (
+    <div className="relative">
+      {icon && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <Icon name={icon} size={16} />
+        </span>
+      )}
+      {select}
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+        <Icon name="chevronDown" size={16} />
+      </span>
+    </div>
+  );
 }
 
 type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement>;

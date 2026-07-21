@@ -36,6 +36,7 @@ export function FloatingMentor() {
       )}
       <button
         onClick={() => setOpen((o) => !o)}
+        data-tour="mentor"
         className="focus-ring relative w-14 h-14 rounded-full shadow-[0_8px_24px_-6px_rgba(99,102,241,0.6)] ring-2 ring-white flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95"
         style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)" }}
         aria-label={open ? "Close AI mentor" : "Open AI mentor"}

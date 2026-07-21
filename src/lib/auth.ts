@@ -23,7 +23,6 @@ export interface User {
   university: string | null;
   qualification: string | null;
   bio: string | null;
-  headline: string | null;
   linkedin: string | null;
   timezone: string;
   language: string;
@@ -64,7 +63,6 @@ export interface SignupProfileRequest {
   university: string;
   qualification: string;
   bio?: string;
-  headline?: string | null;
   linkedin?: string | null;
   timezone: string;
   language: string;
@@ -83,7 +81,6 @@ export type MePatchRequest = Partial<
     | "university"
     | "qualification"
     | "bio"
-    | "headline"
     | "linkedin"
     | "timezone"
     | "language"

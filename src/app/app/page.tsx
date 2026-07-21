@@ -480,10 +480,14 @@ export default function DashboardPage() {
       <div className="space-y-5">
         {/* Your organisations — click a card for the full engagement breakdown */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Your organisations</h2>
-            <span className="text-[11.5px] text-slate-500 font-medium">{orgs.length} engagement{orgs.length === 1 ? "" : "s"}</span>
-          </div>
+          <details open className="group/orgs">
+            <summary className="focus-ring list-none cursor-pointer flex items-center justify-between mb-4 rounded-lg [&::-webkit-details-marker]:hidden">
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold tracking-tight text-slate-900">
+                <Icon name="chevronDown" size={14} className="text-slate-400 transition-transform duration-200 -rotate-90 group-open/orgs:rotate-0" />
+                Your organisations
+              </h2>
+              <span className="text-[11.5px] text-slate-500 font-medium">{orgs.length} engagement{orgs.length === 1 ? "" : "s"}</span>
+            </summary>
           {orgs.length === 0 ? (
             <p className="text-[13px] text-slate-500">No organisations assigned yet.</p>
           ) : (
@@ -560,6 +564,7 @@ export default function DashboardPage() {
               })}
             </Stagger>
           )}
+          </details>
         </Card>
 
         {/* Standards — segmented selector + integrated detail (active track only) */}

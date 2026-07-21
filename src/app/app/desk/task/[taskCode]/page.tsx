@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -14,6 +14,7 @@ import { isGateVerb } from "@/lib/verbs";
 import { CONTROLS_BY_TASK, type Control } from "@/lib/controls";
 import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
+import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { dueChip, fmtDue, type ScheduleItem } from "@/lib/schedule";
 
 export default function TaskOverview() {
@@ -22,6 +23,11 @@ export default function TaskOverview() {
   const reg = CONTROLS_BY_TASK[taskCode];
   const { learnings, loading, scheduleByActivity } = useDeskLearnings();
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(-1); // -1 = closed
+  const objectiveRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<HTMLButtonElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLAnchorElement>(null);
   const task: LearningTask | null = useMemo(() => {
     if (!learnings) return null;
     for (const o of learnings.orgs) for (const p of o.projects) {
@@ -68,12 +74,49 @@ export default function TaskOverview() {
     );
   }
 
+  // Guided walkthrough of the task brief, in reading order; skips anything this task doesn't have.
+  const tourSteps: TourStep[] = [];
+  if (meta?.objective || meta?.description) tourSteps.push({
+    title: "Read the objective",
+    body: "What this whole task has to achieve, and the final deliverable it builds toward. Everything below serves this.",
+    icon: "target",
+    getEl: () => objectiveRef.current,
+  });
+  if (reg && reg.controls.length > 0) tourSteps.push({
+    title: "Check the control references",
+    body: `The ${reg.controls.length} clauses and controls this task is graded against. Open it and read them before you start — your work should trace back to each one.`,
+    icon: "shield",
+    getEl: () => controlsRef.current,
+  });
+  tourSteps.push({
+    title: "Work through the actions",
+    body: "The task breaks into these steps, each one an action verb. Do them in order — the earlier ones produce what the later ones need.",
+    icon: "list",
+    getEl: () => actionsRef.current,
+  });
+  if (nextStep) tourSteps.push({
+    title: "Start when you're ready",
+    body: "This drops you into the working desk at your next unfinished step. Each step has its own Guide button if you need it there too.",
+    icon: "play",
+    getEl: () => startRef.current,
+  });
+
   return (
     <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5">
+      <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={() => setTourStep(-1)} />
+
       {/* header */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
-          {meta && <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-indigo-50 text-indigo-600 ring-indigo-100"><Icon name="layers" size={12} /> {meta.methodCategory}</span>}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          {meta ? <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-indigo-50 text-indigo-600 ring-indigo-100"><Icon name="layers" size={12} /> {meta.methodCategory}</span> : <span />}
+          {/* guide trigger — mirrors the one on each activity; blinks thrice to hint it exists */}
+          <button
+            key={taskCode}
+            onClick={() => setTourStep(0)}
+            className="guide-blink focus-ring shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 hover:bg-indigo-100 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
+          >
+            <Icon name="help" size={14} /> Guide
+          </button>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold">{taskCode}</span>
@@ -94,6 +137,7 @@ export default function TaskOverview() {
 
       {/* objective */}
       {(meta?.objective || meta?.description) && (
+        <div ref={objectiveRef}>
         <Card>
           <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Objective</h2>
           <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{meta?.objective ?? meta?.description}</p>
@@ -104,11 +148,13 @@ export default function TaskOverview() {
             </div>
           )}
         </Card>
+        </div>
       )}
 
       {/* controls register — opens in a drawer */}
       {reg && reg.controls.length > 0 && (
         <button
+          ref={controlsRef}
           onClick={() => setControlsOpen(true)}
           className="focus-ring w-full flex items-center gap-3 text-left rounded-xl ring-1 ring-slate-200/70 bg-white hover:bg-slate-50 px-3.5 py-3 transition-colors group"
         >
@@ -156,11 +202,12 @@ export default function TaskOverview() {
       </DraggablePanel>
 
       {/* actions / verbs */}
+      <div ref={actionsRef}>
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Actions</h2>
           {nextStep && (
-            <Link href={`/app/desk/${nextStep.id}`} className="focus-ring inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 transition-colors no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
+            <Link ref={startRef} href={`/app/desk/${nextStep.id}`} className="focus-ring inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 transition-colors no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
               <Icon name="play" size={13} /> {task?.done ? "Continue" : "Start task"}
             </Link>
           )}
@@ -188,6 +235,7 @@ export default function TaskOverview() {
           })}
         </div>
       </Card>
+      </div>
     </div>
   );
 }

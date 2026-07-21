@@ -156,28 +156,7 @@ export default function SignUpPage() {
               <TextInput icon="lock" type="text" autoComplete="off" required value={accessCode} onChange={(e) => setAccessCode(e.target.value)} placeholder="Invite-only — enter your access code" />
               <span className="mt-1.5 block text-[11.5px] text-slate-400">grcmentor is invite-only during early access. Don&apos;t have a code? Ask whoever invited you.</span>
             </Field>
-            <div className="flex items-start gap-2">
-              <input
-                id="agree-terms"
-                type="checkbox"
-                checked={agreedTerms}
-                readOnly
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!agreedTerms) setShowTerms(true);
-                  else setAgreedTerms(false);
-                }}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/60 cursor-pointer"
-              />
-              <label htmlFor="agree-terms" className="text-[12.5px] text-slate-600 leading-snug">
-                I have read and accept the{" "}
-                <button type="button" onClick={() => setShowTerms(true)} className="font-medium text-indigo-600 hover:text-indigo-700">
-                  Terms &amp; Conditions
-                </button>
-                .
-              </label>
-            </div>
-            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch || !accessCode.trim() || !agreedTerms} className="w-full">
+            <PrimaryBtn type="submit" disabled={busy || !passOk || !passwordsMatch || !accessCode.trim()} className="w-full">
               {busy ? "Sending code…" : "Continue"}
             </PrimaryBtn>
           </form>
@@ -208,7 +187,33 @@ export default function SignUpPage() {
         </>
       )}
 
-      {step === "profile" && <ProfileForm />}
+      {step === "profile" && (
+        <>
+          <ProfileForm disabled={!agreedTerms} footer={
+          <div className="flex items-start gap-2">
+            <input
+              id="agree-terms"
+              type="checkbox"
+              checked={agreedTerms}
+              readOnly
+              onClick={(e) => {
+                e.preventDefault();
+                if (!agreedTerms) setShowTerms(true);
+                else setAgreedTerms(false);
+              }}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/60 cursor-pointer"
+            />
+            <label htmlFor="agree-terms" className="text-[12.5px] text-slate-600 leading-snug">
+              I have read and accept the{" "}
+              <button type="button" onClick={() => setShowTerms(true)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                Terms &amp; Conditions
+              </button>
+              .
+            </label>
+          </div>
+          } />
+        </>
+      )}
 
       {showTerms && (
         <TermsModal

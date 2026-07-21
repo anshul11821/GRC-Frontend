@@ -24,7 +24,7 @@ function ShareMenu({ cv }: { cv: Cv }) {
   };
   const emailEmployer = () => {
     const subject = encodeURIComponent(`${cv.profile.name} — GRC CV`);
-    const body = encodeURIComponent(`${cv.profile.name} — ${cv.profile.headline}. Verified GRC fieldwork on grcmentor.\n\nView the live CV: ${publicUrl}`);
+    const body = encodeURIComponent(`${cv.profile.name} — verified GRC fieldwork on grcmentor.\n\nView the live CV: ${publicUrl}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     setOpen(false);
   };

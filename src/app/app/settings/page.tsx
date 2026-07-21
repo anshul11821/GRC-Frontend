@@ -6,7 +6,9 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { authApi, passwordRules, type MePatchRequest } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { Field, TextInput, PrimaryBtn } from "@/components/ui/forms";
+import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
+import { UniversitySelect } from "@/components/ui/university-select";
+import { COUNTRIES, DIAL_CODES, findCountry } from "@/lib/countries";
 import { CURRENT_PLAN, UPCOMING_PLANS, FOUNDATION_PRICE } from "@/lib/billing";
 import { usePaid, paidAt } from "@/lib/entitlement";
 
@@ -63,10 +65,10 @@ function ProfilePanel() {
   const [form, setForm] = useState<MePatchRequest>({
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
-    headline: user?.headline ?? "",
     phoneCountryCode: user?.phoneCountryCode ?? "",
     phoneNumber: user?.phoneNumber ?? "",
-    country: user?.country ?? "",
+    // Normalised so a legacy free-text value ("india", "IN") still preselects.
+    country: findCountry(user?.country)?.name ?? "",
     city: user?.city ?? "",
     linkedin: user?.linkedin ?? "",
     university: user?.university ?? "",
@@ -76,8 +78,19 @@ function ProfilePanel() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
-  const set = (k: keyof MePatchRequest) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: keyof MePatchRequest) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const pickCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const c = findCountry(e.target.value);
+    setForm((f) => ({
+      ...f,
+      country: c?.name ?? "",
+      phoneCountryCode: c?.dial ?? f.phoneCountryCode,
+    }));
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +118,6 @@ function ProfilePanel() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="First name"><TextInput value={form.firstName ?? ""} onChange={set("firstName")} /></Field>
           <Field label="Last name"><TextInput value={form.lastName ?? ""} onChange={set("lastName")} /></Field>
-          <Field label="Professional headline" className="sm:col-span-2"><TextInput value={form.headline ?? ""} onChange={set("headline")} /></Field>
           <Field label="Email address" hint="Verified">
             <div className="relative">
               <TextInput icon="mail" value={user?.email ?? ""} disabled />
@@ -113,13 +125,23 @@ function ProfilePanel() {
             </div>
           </Field>
           <Field label="LinkedIn"><TextInput icon="linkedin" value={form.linkedin ?? ""} onChange={set("linkedin")} /></Field>
-          <Field label="Phone code"><TextInput value={form.phoneCountryCode ?? ""} onChange={set("phoneCountryCode")} placeholder="+1" /></Field>
+          <Field label="Phone code">
+            <Select value={form.phoneCountryCode ?? ""} onChange={set("phoneCountryCode")}>
+              <option value="">Select a code</option>
+              {DIAL_CODES.map((d) => <option key={d.dial} value={d.dial}>{d.label}</option>)}
+            </Select>
+          </Field>
           <Field label="Phone number"><TextInput icon="phone" value={form.phoneNumber ?? ""} onChange={set("phoneNumber")} /></Field>
-          <Field label="Country"><TextInput icon="globe" value={form.country ?? ""} onChange={set("country")} /></Field>
+          <Field label="Country">
+            <Select icon="globe" value={form.country ?? ""} onChange={pickCountry}>
+              <option value="">Select a country</option>
+              {COUNTRIES.map((c) => <option key={c.iso} value={c.name}>{c.name}</option>)}
+            </Select>
+          </Field>
           <Field label="City"><TextInput icon="mapPin" value={form.city ?? ""} onChange={set("city")} /></Field>
-          <Field label="University"><TextInput icon="book" value={form.university ?? ""} onChange={set("university")} /></Field>
+          <Field label="University"><UniversitySelect value={form.university ?? ""} onChange={set("university")} /></Field>
           <Field label="Qualification"><TextInput value={form.qualification ?? ""} onChange={set("qualification")} /></Field>
-          <Field label="Short bio" className="sm:col-span-2"><TextInput value={form.bio ?? ""} onChange={set("bio")} /></Field>
+          <Field label="Short introduction" className="sm:col-span-2"><TextInput value={form.bio ?? ""} onChange={set("bio")} /></Field>
         </div>
       </SettingsCard>
     </form>

@@ -28,8 +28,14 @@ export interface Standard {
   tone: string;
 }
 
+export interface University {
+  id: number;
+  name: string;
+}
+
 export const catalog = {
   programs: () => api.get<Program[]>("/catalog/programs", { noAuth: true }),
   rubric: () => api.get<RubricDimension[]>("/catalog/rubric", { noAuth: true }),
   standards: () => api.get<Standard[]>("/catalog/standards", { noAuth: true }),
+  universities: () => api.get<University[]>("/catalog/universities", { noAuth: true }),
 };

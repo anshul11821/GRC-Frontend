@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./auth-provider";
 import { authApi } from "@/lib/auth";
-import { Field, TextInput, PrimaryBtn } from "@/components/ui/forms";
+import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
+import { UniversitySelect } from "@/components/ui/university-select";
+import { COUNTRIES, DIAL_CODES, findCountry } from "@/lib/countries";
 
 const defaultTimezone =
   typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
@@ -14,25 +16,41 @@ const defaultTimezone =
  * Used by signup step 3 and the /complete-profile gate. On success it refreshes the
  * user and lands on the dashboard. Required fields mirror the backend's mandatory set.
  */
-export function ProfileForm() {
+export function ProfileForm({
+  disabled = false,
+  footer,
+}: { disabled?: boolean; footer?: React.ReactNode } = {}) {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
 
   const [profile, setProfile] = useState({
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
-    country: user?.country ?? "",
+    // Normalised so a legacy free-text value ("india", "IN") still preselects.
+    country: findCountry(user?.country)?.name ?? "",
     city: user?.city ?? "",
     phoneCountryCode: user?.phoneCountryCode ?? "+1",
     phoneNumber: user?.phoneNumber ?? "",
     university: user?.university ?? "",
     qualification: user?.qualification ?? "",
-    headline: user?.headline ?? "",
     linkedin: user?.linkedin ?? "",
     bio: user?.bio ?? "",
   });
-  const setP = (k: keyof typeof profile) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setProfile((p) => ({ ...p, [k]: e.target.value }));
+  const setP =
+    (k: keyof typeof profile) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setProfile((p) => ({ ...p, [k]: e.target.value }));
+
+  // Picking a country prefills the dial code — still editable, for people whose number
+  // is registered elsewhere than where they live.
+  const pickCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const c = findCountry(e.target.value);
+    setProfile((p) => ({
+      ...p,
+      country: c?.name ?? "",
+      phoneCountryCode: c?.dial ?? p.phoneCountryCode,
+    }));
+  };
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,17 +83,29 @@ export function ProfileForm() {
       <form onSubmit={submit} className="mt-5 grid grid-cols-2 gap-4">
         <Field label="First name"><TextInput required value={profile.firstName} onChange={setP("firstName")} /></Field>
         <Field label="Last name"><TextInput required value={profile.lastName} onChange={setP("lastName")} /></Field>
-        <Field label="Country"><TextInput icon="globe" required value={profile.country} onChange={setP("country")} /></Field>
+        <Field label="Country">
+          <Select icon="globe" required value={profile.country} onChange={pickCountry}>
+            <option value="" disabled>Select a country</option>
+            {COUNTRIES.map((c) => <option key={c.iso} value={c.name}>{c.name}</option>)}
+          </Select>
+        </Field>
         <Field label="City"><TextInput icon="mapPin" value={profile.city} onChange={setP("city")} /></Field>
-        <Field label="Phone code"><TextInput required value={profile.phoneCountryCode} onChange={setP("phoneCountryCode")} placeholder="+1" /></Field>
+        <Field label="Phone code">
+          <Select required value={profile.phoneCountryCode} onChange={setP("phoneCountryCode")}>
+            <option value="" disabled>Select a code</option>
+            {DIAL_CODES.map((d) => <option key={d.dial} value={d.dial}>{d.label}</option>)}
+          </Select>
+        </Field>
         <Field label="Phone number"><TextInput icon="phone" required value={profile.phoneNumber} onChange={setP("phoneNumber")} /></Field>
-        <Field label="University" className="col-span-2"><TextInput icon="book" required value={profile.university} onChange={setP("university")} /></Field>
+        <Field label="University" className="col-span-2">
+          <UniversitySelect required value={profile.university} onChange={setP("university")} />
+        </Field>
         <Field label="Qualification" className="col-span-2"><TextInput required value={profile.qualification} onChange={setP("qualification")} placeholder="e.g. BSc Computer Science" /></Field>
-        <Field label="Professional headline" className="col-span-2"><TextInput value={profile.headline} onChange={setP("headline")} placeholder="Aspiring GRC Analyst" /></Field>
         <Field label="LinkedIn" className="col-span-2"><TextInput icon="linkedin" value={profile.linkedin} onChange={setP("linkedin")} placeholder="https://linkedin.com/in/…" /></Field>
-        <Field label="Short bio" className="col-span-2"><TextInput required value={profile.bio} onChange={setP("bio")} placeholder="A sentence about you" /></Field>
+        <Field label="Short introduction" className="col-span-2"><TextInput required value={profile.bio} onChange={setP("bio")} placeholder="A sentence about you" /></Field>
+        {footer && <div className="col-span-2">{footer}</div>}
         <div className="col-span-2">
-          <PrimaryBtn type="submit" disabled={busy} className="w-full">
+          <PrimaryBtn type="submit" disabled={busy || disabled} className="w-full">
             {busy ? "Finishing…" : "Finish & continue to enrolment"}
           </PrimaryBtn>
         </div>

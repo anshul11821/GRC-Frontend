@@ -63,7 +63,6 @@ export function CvSheet({ cv }: { cv: Cv }) {
                 </span>
               )}
             </div>
-            <p className="text-[14px] text-indigo-50/95 font-medium tracking-tight mt-2">{p.headline}</p>
             <div className="flex items-center gap-4 mt-3 text-[12px] text-indigo-100/90 flex-wrap">
               <span className="inline-flex items-center gap-1.5"><Icon name="user" size={13} /> {p.location}</span>
               <span className="inline-flex items-center gap-1.5"><Icon name="mail" size={13} /> {p.email}</span>

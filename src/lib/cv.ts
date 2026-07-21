@@ -7,7 +7,6 @@ import { api } from "./api";
 export interface CvProfile {
   initials: string;
   name: string;
-  headline: string;
   location: string;
   email: string;
   linkedin?: string | null;

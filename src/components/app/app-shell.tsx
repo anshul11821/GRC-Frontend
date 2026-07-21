@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { FloatingMentor } from "./floating-mentor";
+import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
 import { NotificationBell } from "./notification-bell";
 import { DropdownPanel } from "@/components/ui/motion";
 
@@ -64,7 +65,7 @@ function DashSidebar({
           <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-500 self-center mt-1" />
         </div>
       </div>
-      <nav className="flex-1 min-h-0 p-3 flex flex-col gap-0.5">
+      <nav data-tour="nav" className="flex-1 min-h-0 p-3 flex flex-col gap-0.5">
         {DASH_NAV.map((item) => {
           const active = isActive(item.href);
           return (
@@ -72,6 +73,7 @@ function DashSidebar({
               key={item.id}
               href={item.href}
               onClick={closeMobile}
+              data-tour={`nav-${item.id}`}
               title={item.soon ? `${item.label} — coming soon` : item.label}
               className={`focus-ring group w-full flex-1 min-h-0 max-h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
                 active ? "bg-indigo-50/80 text-indigo-700" : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
@@ -151,6 +153,25 @@ function UserMenu() {
           </div>
           <div className="p-1.5">
             <Link
+              href="/app/guide"
+              onClick={() => setOpen(false)}
+              className="focus-ring group w-full h-10 px-2.5 rounded-lg flex items-center gap-2.5 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors no-underline"
+            >
+              <Icon name="help" size={17} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
+              <span className="text-[13px] tracking-tight">User Guide</span>
+              <Icon name="chevronRight" size={14} className="ml-auto text-slate-300 group-hover:text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </Link>
+            <button
+              onClick={() => {
+                setOpen(false);
+                startWelcomeTour();
+              }}
+              className="focus-ring group w-full h-10 px-2.5 rounded-lg flex items-center gap-2.5 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              <Icon name="play" size={17} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
+              <span className="text-[13px] tracking-tight">Replay the tour</span>
+            </button>
+            <Link
               href="/app/settings"
               onClick={() => setOpen(false)}
               className="focus-ring group w-full h-10 px-2.5 rounded-lg flex items-center gap-2.5 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors no-underline"
@@ -193,8 +214,8 @@ function DashTopBar({ openMobile }: { openMobile: () => void }) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <NotificationBell />
-        <UserMenu />
+        <span data-tour="bell"><NotificationBell /></span>
+        <span data-tour="account"><UserMenu /></span>
       </div>
     </div>
   );
@@ -338,6 +359,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden print:overflow-visible print:h-auto">{children}</main>
       </div>
       <CollapseMenuHint collapsed={collapsed} />
+      <div className="print:hidden"><WelcomeTour openNav={() => setMobileOpen(true)} /></div>
       <div className="print:hidden"><FloatingMentor /></div>
     </div>
   );

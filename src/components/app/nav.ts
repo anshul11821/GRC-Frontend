@@ -22,7 +22,11 @@ export const DASH_NAV: NavItem[] = [
   { id: "career", label: "Career", icon: "rocket", href: "/app/career" },
   { id: "reports", label: "Reports", icon: "chart", href: "/app/reports" },
   { id: "jobs", label: "Matching Jobs", icon: "briefcase", href: "/app/jobs" },
+  { id: "guide", label: "User Guide", icon: "help", href: "/app/guide" },
 ];
+
+/** Set when the welcome tour is finished or skipped, so it only ambushes a mentee once. */
+export const TOUR_SEEN_KEY = "grc.tour.seen";
 
 export function initialsOf(first?: string | null, last?: string | null, email?: string): string {
   const a = (first || "").trim();
