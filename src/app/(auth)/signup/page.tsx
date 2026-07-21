@@ -79,7 +79,7 @@ export default function SignUpPage() {
 
   const submitAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passOk || !passwordsMatch || !agreedTerms) return;
+    if (!passOk || !passwordsMatch) return;
     run(async () => {
       const captchaToken = await getCaptchaToken("signup_start");
       await authApi.signupStart({ email, password, captchaToken, accessCode: accessCode.trim() });
