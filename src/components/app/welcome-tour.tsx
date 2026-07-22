@@ -67,10 +67,10 @@ function steps(showNav: () => void): TourStep[] {
       ...nav("nav"),
     },
     {
-      title: "Your AI mentor grades everything",
-      body: "Mechanical checks first — mandatory fields, owners named as roles not departments, arithmetic that re-computes. Pass those and it scores the substance on five rubric dimensions. Write decision + the rule you applied + who owns what happens next, and you'll score well.",
-      icon: "bot",
-      getEl: tag("mentor"),
+      title: "How your work is graded",
+      body: "Mechanical checks first — mandatory fields, owners named as roles not departments, arithmetic that re-computes. Pass those and an AI mentor scores the substance on five rubric dimensions, with Socratic feedback. Write decision + the rule you applied + who owns what happens next, and you'll score well.",
+      icon: "bullseye",
+      ...nav("nav-reports"),
     },
     {
       title: "Notifications and your account",

@@ -7,7 +7,6 @@ import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
-import { FloatingMentor } from "./floating-mentor";
 import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
 import { NotificationBell } from "./notification-bell";
 import { DropdownPanel } from "@/components/ui/motion";
@@ -360,7 +359,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <CollapseMenuHint collapsed={collapsed} />
       <div className="print:hidden"><WelcomeTour openNav={() => setMobileOpen(true)} /></div>
-      <div className="print:hidden"><FloatingMentor /></div>
     </div>
   );
 }

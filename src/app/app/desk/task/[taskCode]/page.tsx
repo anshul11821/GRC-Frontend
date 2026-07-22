@@ -58,7 +58,11 @@ export default function TaskOverview() {
     return [...m];
   }, [reg]);
 
-  const tone = meta ? VERB_TONES[meta.standardTone] ?? VERB_TONES.indigo : VERB_TONES.indigo;
+  // Header shows every standard the task is graded against (same set as the control references),
+  // not just the primary one — a task that cross-refs NIST CSF gets both chips.
+  const headerStandards = byStandard.length
+    ? byStandard.map(([label, controls]) => ({ label, tone: controls[0].tone }))
+    : meta ? [{ label: meta.standardLabel, tone: meta.standardTone }] : [];
   const nextStep = task?.steps.find((s) => s.status !== "complete") ?? task?.steps[0];
 
   if (loading) {
@@ -121,7 +125,9 @@ export default function TaskOverview() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold">{taskCode}</span>
           <h1 className="text-[21px] font-semibold tracking-[-0.02em] text-slate-900">{meta?.name ?? task?.title ?? taskCode}</h1>
-          {meta && <span className={`inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}><Icon name="shield" size={12} /> {meta.standardLabel}</span>}
+          {headerStandards.map((s) => { const st = VERB_TONES[s.tone] ?? VERB_TONES.indigo; return (
+            <span key={s.label} className={`inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${st.bg} ${st.text} ${st.ring}`}><Icon name="shield" size={12} /> {s.label}</span>
+          ); })}
           {meta?.badge && (
             <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium ring-1 bg-amber-50 text-amber-700 ring-amber-100" title="Badge earned on completion">
               <Icon name="ribbon" size={12} /> {meta.badge}

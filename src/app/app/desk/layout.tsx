@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DeskLearningsProvider, useDeskLearnings } from "@/components/app/desk-context";
 import { DeskSidebar } from "@/components/app/desk-sidebar";
+import { StartDateGate } from "@/components/app/start-date-gate";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 
 /** A slim status bar pinned to the bottom of the workspace column. On short tasks it anchors the
@@ -41,6 +43,7 @@ function DeskFooter() {
 }
 
 export default function DeskLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [treeOpen, setTreeOpen] = useState(false);
 
   // Close the drawer on Escape.
@@ -50,6 +53,17 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [treeOpen]);
+
+  // The Working Desk stays locked until the learner picks their timeline start date.
+  // The app shell (nav) still surrounds this, so they can keep exploring elsewhere.
+  // Gate AFTER all hooks so hook order stays stable across the locked/unlocked switch.
+  if (user && !user.startDate) {
+    return (
+      <div className="h-[calc(100dvh-68px)] overflow-y-auto">
+        <StartDateGate />
+      </div>
+    );
+  }
 
   return (
     <DeskLearningsProvider>

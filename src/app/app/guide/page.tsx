@@ -349,9 +349,10 @@ export default function GuidePage() {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[13.5px] font-semibold tracking-tight text-slate-900">Your AI mentor is always in reach</h4>
+                  <h4 className="text-[13.5px] font-semibold tracking-tight text-slate-900">The AI mentor grades on submit</h4>
                   <p className="text-[12.5px] text-slate-600 leading-relaxed tracking-tight mt-1">
-                    The bot button in the bottom-right corner opens your mentor from anywhere in the app.
+                    There is no chat to negotiate with — you submit, it grades, and its written feedback is
+                    where the guidance lives. Read it in full and act on it before you resubmit.
                   </p>
                 </div>
               </div>

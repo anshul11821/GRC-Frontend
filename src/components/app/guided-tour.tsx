@@ -226,12 +226,12 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
 
         {/* footer — progress dots left, controls right */}
         <div className="flex items-center justify-between gap-3 mt-4">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
             {steps.map((_, i) => (
-              <span key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? "w-4 bg-fuchsia-500" : i < step ? "w-1.5 bg-fuchsia-300" : "w-1.5 bg-slate-200"}`} />
+              <span key={i} className={`shrink-0 h-1.5 rounded-full transition-all duration-300 ${i === step ? "w-4 bg-fuchsia-500" : i < step ? "w-1.5 bg-fuchsia-300" : "w-1.5 bg-slate-200"}`} />
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {step > 0 ? (
               <button onClick={() => onStep(step - 1)} className="focus-ring h-8 px-2.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-[12px] font-medium tracking-tight inline-flex items-center gap-1 cursor-pointer transition-colors">
                 <Icon name="arrowLeft" size={13} /> Back

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextInput, WTextArea,
@@ -42,9 +42,30 @@ function Bubble({ who, initials, text }: { who: "you" | "stakeholder"; initials:
   const mine = who === "you";
   return (
     <div className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
-      {!mine && <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{initials}</div>}
+      {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-violet-200/70">{initials ? initials : <Icon name="user" size={14} />}</div>}
       <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[82%] leading-relaxed ring-1 whitespace-pre-line ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}>{text}</div>
-      {mine && <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{initials}</div>}
+      {mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-indigo-200/70">{initials}</div>}
+    </div>
+  );
+}
+
+/* A stakeholder reply that shows a "typing…" indicator for a beat before revealing the text,
+   so replies feel like a live conversation. Animates once on mount. */
+function TypingBubble({ initials, text, delay = 850, onDone }: { initials: string; text: string; delay?: number; onDone?: () => void }) {
+  const [typing, setTyping] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => { setTyping(false); onDone?.(); }, delay);
+    return () => clearTimeout(t);
+    // Fire once on mount; onDone intentionally excluded so a new inline arrow prop doesn't re-run it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [delay]);
+  if (!typing) return <Bubble who="stakeholder" initials={initials} text={text} />;
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-violet-200/70">{initials ? initials : <Icon name="user" size={14} />}</div>
+      <div className="rounded-2xl px-3.5 py-3 bg-white ring-1 ring-slate-200/70 flex items-center gap-1">
+        {[0, 1, 2].map((i) => <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />)}
+      </div>
     </div>
   );
 }
@@ -78,6 +99,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
   const [correctPicks, setCorrectPicks] = useState<ConvOption[]>(() => restored?.picks ?? []);
   const [terminal, setTerminal] = useState<"met" | "miss" | null>(() => restored ? "met" : null);
   const [missOption, setMissOption] = useState<ConvOption | null>(null);
+  const [waiting, setWaiting] = useState(false); // stakeholder reply is still "typing" — hold the next picker until it lands
   const [tried, setTried] = useState(false); // a send attempt with an incorrect item selection
 
   // The picker mixes correct items with plausible-but-wrong distractors, in a stable order.
@@ -85,7 +107,6 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
     () => [...conv.suggestedItems, ...conv.wrongItems].sort((a, b) => a.localeCompare(b)),
     [conv],
   );
-  const isSuggestion = (s: string) => conv.suggestedItems.includes(s) || conv.wrongItems.includes(s);
   const selected = (s: string) => items.includes(s);
   const toggle = (s: string) => setItems(selected(s) ? items.filter((i) => i !== s) : [...items, s]);
 
@@ -118,6 +139,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
     setCorrectPicks([]);
     setTerminal(null);
     setMissOption(null);
+    setWaiting(true); // opener types before the first picker appears
   };
 
   const reset = () => {
@@ -125,14 +147,17 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
     setCorrectPicks([]);
     setTerminal(null);
     setMissOption(null);
+    setWaiting(false);
   };
 
   const pick = (o: ConvOption, roundIdx: number) => {
     if (terminal || !thread) return;
-    if (!o.correct) { setMissOption(o); setTerminal("miss"); return; }
+    if (!o.correct) { setMissOption(o); return; } // soft miss — coach inline, keep this round open to retry
+    setMissOption(null);
     const next = [...correctPicks, o];
     setCorrectPicks(next);
     if (roundIdx >= thread.rounds.length - 1) setTerminal("met");
+    else if (thread.rounds[roundIdx].stakeholderNext) setWaiting(true); // hold next picker while the reply types
   };
 
   // ── Conversation view ──
@@ -179,23 +204,31 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
             </div>
 
             {/* Stakeholder opener */}
-            <Bubble who="stakeholder" initials={thread.initials} text={thread.opener} />
+            <TypingBubble initials={thread.initials} text={thread.opener} onDone={() => setWaiting(false)} />
 
             {/* Resolved rounds */}
             {correctPicks.map((p, i) => (
               <div key={`r${i}`} className="space-y-2.5">
                 <Bubble who="you" initials="ME" text={p.text} />
-                {thread.rounds[i].stakeholderNext && <Bubble who="stakeholder" initials={thread.initials} text={thread.rounds[i].stakeholderNext!} />}
+                {thread.rounds[i].stakeholderNext && <TypingBubble initials={thread.initials} text={thread.rounds[i].stakeholderNext!} onDone={() => setWaiting(false)} />}
               </div>
             ))}
 
-            {/* The wrong pick (miss) */}
-            {terminal === "miss" && missOption && <Bubble who="you" initials="ME" text={missOption.text} />}
+            {/* A wrong pick — coached inline so the mentee retries this step, not the whole conversation */}
+            {missOption && (
+              <>
+                <Bubble who="you" initials="ME" text={missOption.text} />
+                <div className="rounded-xl bg-rose-50 ring-1 ring-rose-200 p-3 text-[12px] text-rose-900/80 leading-relaxed flex items-start gap-2">
+                  <Icon name="x" size={14} className="text-rose-600 shrink-0 mt-px" />
+                  <span>{missOption.coaching} <span className="font-medium text-rose-700">Choose a different reply below.</span></span>
+                </div>
+              </>
+            )}
 
-            {/* Active decision: choose one reply */}
-            {activeRound >= 0 && thread.rounds[activeRound] && (
+            {/* Active decision: choose one reply — held until the stakeholder's reply finishes typing */}
+            {activeRound >= 0 && !waiting && thread.rounds[activeRound] && (
               <div className="pt-1.5">
-                <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your reply</div>
+                <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different reply" : "Choose your reply"}</div>
                 <div className="space-y-2">
                   {thread.rounds[activeRound].options.map((o) => (
                     <button key={o.id} onClick={() => pick(o, activeRound)}
@@ -209,16 +242,6 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
             )}
           </div>
         </div>
-
-        {/* Coaching on a wrong pick */}
-        {terminal === "miss" && missOption && (
-          <div className="rounded-2xl bg-rose-50 ring-1 ring-rose-200 p-4">
-            <div className="flex items-center gap-2 text-[12px] font-semibold text-rose-800 mb-1"><Icon name="x" size={14} /> Objective not met</div>
-            <p className="text-[12.5px] text-rose-900/80 leading-relaxed">{missOption.coaching}</p>
-            <p className="text-[12px] text-rose-900/70 leading-relaxed mt-2">{thread.missEnd}</p>
-            <button onClick={reset} className="mt-3 h-8 px-3 rounded-lg bg-rose-600 text-white text-[12px] font-medium hover:bg-rose-700 flex items-center gap-1.5"><Icon name="arrowRight" size={13} /> Try the request again</button>
-          </div>
-        )}
 
         {/* Success — show the captured deliverable, then confirm it feeds the next step */}
         {terminal === "met" && (
@@ -286,17 +309,6 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
             );
           })}
         </div>
-
-        {/* Custom items the mentee adds themselves (not part of the suggestion set) */}
-        {items.map((it, idx) => isSuggestion(it) ? null : (
-          <div key={`c${idx}`} className="flex items-start gap-2 mt-1.5">
-            <input value={it} onChange={(e) => { const n = [...items]; n[idx] = e.target.value; setItems(n); }}
-              placeholder="Your own item"
-              className="flex-1 h-9 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
-            <button onClick={() => setItems(items.filter((_, j) => j !== idx))} className="w-9 h-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><Icon name="x" size={14} /></button>
-          </div>
-        ))}
-        <button onClick={() => setItems([...items, ""])} className="mt-2 h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add your own item</button>
       </div>
 
       {/* Re-select prompt: a send attempt with a wrong/missing selection — must be fixed to continue */}
@@ -417,6 +429,7 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
   const [correctPicks, setCorrectPicks] = useState<ConductOption[]>(() => restored?.picks ?? []);
   const [terminal, setTerminal] = useState<"met" | "miss" | null>(() => restored ? "met" : null);
   const [missOption, setMissOption] = useState<ConductOption | null>(null);
+  const [waiting, setWaiting] = useState(false); // interviewee reply is still "typing" — hold the next picker until it lands
 
   const thread = opening ? task.threads[opening.routesTo] : null;
   const captured = terminal === "met" && thread
@@ -424,14 +437,16 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
     : [];
   useLift({ roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", captured: captured.join("\n\n") || undefined }, onChange);
 
-  const reset = () => { setOpening(null); setCorrectPicks([]); setTerminal(null); setMissOption(null); };
-  const pickOpening = (o: ConductOpening) => { setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); };
+  const reset = () => { setOpening(null); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(false); };
+  const pickOpening = (o: ConductOpening) => { setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(true); };
   const pick = (o: ConductOption, roundIdx: number) => {
     if (terminal || !thread) return;
-    if (!o.correct) { setMissOption(o); setTerminal("miss"); return; }
+    if (!o.correct) { setMissOption(o); return; } // soft miss — coach inline, keep this round open to retry
+    setMissOption(null);
     const next = [...correctPicks, o];
     setCorrectPicks(next);
     if (roundIdx >= thread.rounds.length - 1) setTerminal("met");
+    else if (thread.rounds[roundIdx].stakeholderNext) setWaiting(true); // hold next picker while the reply types
   };
 
   // ── Opening view ──
@@ -489,17 +504,25 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
         }>Interview · {thread!.speaker}</SectionLabel>
         <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
           <Bubble who="you" initials="ME" text={opening.text} />
-          <Bubble who="stakeholder" initials={thread!.initials} text={thread!.opener} />
+          <TypingBubble initials={thread!.initials} text={thread!.opener} onDone={() => setWaiting(false)} />
           {correctPicks.map((p, i) => (
             <div key={`r${i}`} className="space-y-2.5">
               <Bubble who="you" initials="ME" text={p.text} />
-              {thread!.rounds[i].stakeholderNext && <Bubble who="stakeholder" initials={thread!.initials} text={thread!.rounds[i].stakeholderNext!} />}
+              {thread!.rounds[i].stakeholderNext && <TypingBubble initials={thread!.initials} text={thread!.rounds[i].stakeholderNext!} onDone={() => setWaiting(false)} />}
             </div>
           ))}
-          {terminal === "miss" && missOption && <Bubble who="you" initials="ME" text={missOption.text} />}
-          {activeRound >= 0 && thread!.rounds[activeRound] && (
+          {missOption && (
+            <>
+              <Bubble who="you" initials="ME" text={missOption.text} />
+              <div className="rounded-xl bg-rose-50 ring-1 ring-rose-200 p-3 text-[12px] text-rose-900/80 leading-relaxed flex items-start gap-2">
+                <Icon name="x" size={14} className="text-rose-600 shrink-0 mt-px" />
+                <span>{missOption.coaching} <span className="font-medium text-rose-700">Choose a different probe below.</span></span>
+              </div>
+            </>
+          )}
+          {activeRound >= 0 && !waiting && thread!.rounds[activeRound] && (
             <div className="pt-1.5">
-              <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your probe</div>
+              <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different probe" : "Choose your probe"}</div>
               <div className="space-y-2">
                 {thread!.rounds[activeRound].options.map((o) => (
                   <button key={o.id} onClick={() => pick(o, activeRound)}
@@ -513,15 +536,6 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
           )}
         </div>
       </div>
-
-      {terminal === "miss" && missOption && (
-        <div className="rounded-2xl bg-rose-50 ring-1 ring-rose-200 p-4">
-          <div className="flex items-center gap-2 text-[12px] font-semibold text-rose-800 mb-1"><Icon name="x" size={14} /> Objective not met</div>
-          <p className="text-[12.5px] text-rose-900/80 leading-relaxed">{missOption.coaching}</p>
-          <p className="text-[12px] text-rose-900/70 leading-relaxed mt-2">{task.missEnd}</p>
-          <button onClick={reset} className="mt-3 h-8 px-3 rounded-lg bg-rose-600 text-white text-[12px] font-medium hover:bg-rose-700 flex items-center gap-1.5"><Icon name="arrowRight" size={13} /> Re-run the interview</button>
-        </div>
-      )}
 
       {terminal === "met" && (
         <>

@@ -26,6 +26,8 @@ export interface User {
   linkedin: string | null;
   timezone: string;
   language: string;
+  /** Chosen program start (day-0 anchor), ISO yyyy-mm-dd. Null until picked on first visit. */
+  startDate: string | null;
   createdAt: string;
 }
 
@@ -123,6 +125,7 @@ export const authApi = {
   logout: () => api.post<void>("/auth/logout"),
   me: () => api.get<User>("/me"),
   updateMe: (b: MePatchRequest) => api.patch<User>("/me", b),
+  setStartDate: (startDate: string) => api.patch<User>("/me/start-date", { startDate }),
   changePassword: (b: ChangePasswordRequest) => api.post<void>("/auth/password", b),
   passwordForgot: (b: PasswordForgotRequest) =>
     api.post<{ message: string }>("/auth/password/forgot", b, { noAuth: true }),
