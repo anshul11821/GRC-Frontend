@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { VERB_LIST, GATE_VERBS } from "@/lib/verbs";
 import { VERB_TONES } from "@/lib/tones";
 import { startWelcomeTour } from "@/components/app/welcome-tour";
+import { AccessChip } from "@/components/app/access-chip";
 
 /** The five rubric dimensions, derived from the verb metadata so the guide can't drift from it. */
 const RUBRIC = [...new Set(VERB_LIST.flatMap((v) => v.layer2))].filter((d) => d !== "All five rubric dimensions");
@@ -23,6 +24,7 @@ const SECTIONS: Section[] = [
   { id: "grading", title: "How you are graded", icon: "bullseye" },
   { id: "answers", title: "What a good answer looks like", icon: "edit" },
   { id: "outputs", title: "What your work turns into", icon: "trophy" },
+  { id: "access", title: "How long you have access", icon: "calendar" },
   { id: "around", title: "Finding your way around", icon: "home" },
   { id: "first", title: "Your first session", icon: "rocket" },
   { id: "tips", title: "Getting a good grade", icon: "lightbulb" },
@@ -642,6 +644,25 @@ export default function GuidePage() {
                 </Link>
               ))}
             </div>
+          </Sec>
+
+          <Sec
+            id="access"
+            title="How long you have access"
+            icon="calendar"
+            lead="The programme is 16 weeks of work, but your access stays open for 24 weeks from the start date you pick — an 8-week cushion for leave, revisions, and life. It's self-paced within that window."
+          >
+            <div className="mb-3"><AccessChip variant="light" /></div>
+            <Bullets
+              items={[
+                <><strong>24 weeks from day one.</strong> Your access runs until the date shown above (and on your dashboard and Billing page). Only <em>submitting new work</em> is time-boxed.</>,
+                <><strong>Your finished work never expires.</strong> Your certificate, CV, badges and completed deliverables stay viewable and shareable for life — even after the work window closes.</>,
+                <><strong>Need more time? Share your progress.</strong> Post a badge or certificate on LinkedIn, then paste the link on the <Link href="/app/badges" className="text-indigo-600 no-underline hover:underline">Badges</Link> or <Link href="/app/certificate" className="text-indigo-600 no-underline hover:underline">Certificate</Link> page to add <strong>4 weeks</strong>. One-time.</>,
+              ]}
+            />
+            <Note>
+              If your window closes before you finish, you can still open and read everything — you just can&apos;t submit until you extend it by sharing on LinkedIn.
+            </Note>
           </Sec>
 
           <Sec id="around" title="Finding your way around" icon="home" lead="What each item in the left-hand menu is for.">

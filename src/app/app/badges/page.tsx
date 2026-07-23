@@ -7,6 +7,7 @@ import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { SOFT_TONES } from "@/lib/tones";
 import { BADGES, type BadgeDef } from "@/lib/badges";
 import { learningsApi, type Learnings } from "@/lib/learnings";
+import { ExtendAccessCard } from "@/components/app/extend-access-card";
 
 type BadgeState = "earned" | "in-progress" | "locked";
 interface BadgeProgress extends BadgeDef { done: number; total: number; state: BadgeState; pct: number }
@@ -166,6 +167,8 @@ export default function BadgesPage() {
           </div>
         </>
       )}
+
+      {!loading && earned > 0 && <ExtendAccessCard kind="badge" />}
 
       <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">grcmentor · badges update automatically as you complete tasks</div>
     </div>

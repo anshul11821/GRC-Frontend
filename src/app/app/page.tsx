@@ -19,6 +19,7 @@ import { VERB_TONES, LRN_CHIP } from "@/lib/tones";
 import { STANDARDS, buildTaskIndex, tasksForStandard, nistCrossRefTaskCodes } from "@/lib/standards";
 import { TRACK_PREVIEWS, type TrackPreview } from "@/lib/track-previews";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
+import { AccessChip } from "@/components/app/access-chip";
 
 /** Next openable step in an org — drives the card "Next up" line and the panel "Continue" CTA. */
 function nextStepOf(o: LearningOrg): { id: string; taskCode: string; stepCode: string; verb: string; title: string } | null {
@@ -449,9 +450,12 @@ export default function DashboardPage() {
 
         {/* Header strip: status eyebrow (left) + track switcher (right) */}
         <div className="relative flex items-center justify-between gap-3 mb-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${locked ? "bg-amber-300" : "bg-emerald-300 animate-pulse"}`} />
-            <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{locked ? `${program?.code ?? "Track"} · locked` : cont ? "Pick up where you left off" : "Welcome aboard"}</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="flex items-center gap-2">
+              <span className={`w-1.5 h-1.5 rounded-full ${locked ? "bg-amber-300" : "bg-emerald-300 animate-pulse"}`} />
+              <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{locked ? `${program?.code ?? "Track"} · locked` : cont ? "Pick up where you left off" : "Welcome aboard"}</span>
+            </span>
+            <AccessChip variant="dark" />
           </div>
           <div className="flex items-center gap-2">
             {/* guide trigger — mirrors the Working Desk; blinks thrice on load to hint the walkthrough */}

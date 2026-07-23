@@ -37,21 +37,31 @@ function MoodPill({ mood }: { mood: MoodResult["mood"] }) {
   return <span className={`inline-flex items-center gap-1.5 px-2 h-6 rounded-full text-[11px] font-medium ring-1 ${SOFT[tone]}`}><span className={`w-1.5 h-1.5 rounded-full ${DOT[tone]}`} />{label}</span>;
 }
 
+/* A chat avatar: vivid gradient disc with a filled silhouette. Distinct look per speaker. */
+function Avatar({ who, label }: { who: "you" | "stakeholder"; label?: string }) {
+  const grad = who === "you" ? "from-indigo-500 to-sky-400" : "from-violet-500 to-fuchsia-500";
+  return (
+    <div title={label} className={`w-7 h-7 rounded-full bg-gradient-to-br ${grad} text-white flex items-center justify-center mt-0.5 shrink-0 ring-2 ring-white shadow-sm`}>
+      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden><circle cx="12" cy="8.5" r="3.6" /><path d="M5 19.5c0-3.4 3.1-5.3 7-5.3s7 1.9 7 5.3v.5H5z" /></svg>
+    </div>
+  );
+}
+
 /* A read-only stakeholder/mentee chat bubble (supports multi-paragraph text). */
 function Bubble({ who, initials, text }: { who: "you" | "stakeholder"; initials: string; text: string }) {
   const mine = who === "you";
   return (
     <div className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
-      {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-violet-200/70">{initials ? initials : <Icon name="user" size={14} />}</div>}
+      {!mine && <Avatar who="stakeholder" label={initials} />}
       <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[82%] leading-relaxed ring-1 whitespace-pre-line ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}>{text}</div>
-      {mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-indigo-200/70">{initials}</div>}
+      {mine && <Avatar who="you" label={initials} />}
     </div>
   );
 }
 
 /* A stakeholder reply that shows a "typing…" indicator for a beat before revealing the text,
    so replies feel like a live conversation. Animates once on mount. */
-function TypingBubble({ initials, text, delay = 850, onDone }: { initials: string; text: string; delay?: number; onDone?: () => void }) {
+function TypingBubble({ initials, text, delay = 1400, onDone }: { initials: string; text: string; delay?: number; onDone?: () => void }) {
   const [typing, setTyping] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => { setTyping(false); onDone?.(); }, delay);
@@ -62,7 +72,7 @@ function TypingBubble({ initials, text, delay = 850, onDone }: { initials: strin
   if (!typing) return <Bubble who="stakeholder" initials={initials} text={text} />;
   return (
     <div className="flex items-start gap-2.5">
-      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0 ring-1 ring-violet-200/70">{initials ? initials : <Icon name="user" size={14} />}</div>
+      <Avatar who="stakeholder" label={initials} />
       <div className="rounded-2xl px-3.5 py-3 bg-white ring-1 ring-slate-200/70 flex items-center gap-1">
         {[0, 1, 2].map((i) => <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />)}
       </div>

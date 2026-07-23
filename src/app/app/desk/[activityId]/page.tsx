@@ -19,7 +19,6 @@ import { useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
 import { getActivityContent } from "@/lib/activity-content";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
-import { StandardBanner } from "@/components/app/standards";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import type { TaskReference } from "@/lib/taskmeta";
 
@@ -498,9 +497,6 @@ export default function ActivityWorkspace() {
     <div className="max-w-[920px] mx-auto px-6 py-6">
       <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />
       <FloatingDocs docs={fw.docs} onClose={fw.close} onFocus={fw.focus} />
-
-      {/* standard banner — ties the step back to the framework it belongs to */}
-      <StandardBanner taskCode={activity.taskCode} activityId={activityId} />
 
       {/* header — description left, submission-feedback trigger on the right */}
       <div className="mb-5 flex items-start justify-between gap-4 flex-wrap">

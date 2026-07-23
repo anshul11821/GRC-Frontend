@@ -11,6 +11,7 @@ import { UniversitySelect } from "@/components/ui/university-select";
 import { COUNTRIES, DIAL_CODES, findCountry } from "@/lib/countries";
 import { CURRENT_PLAN, UPCOMING_PLANS, FOUNDATION_PRICE } from "@/lib/billing";
 import { usePaid, paidAt } from "@/lib/entitlement";
+import { formatAccessDate } from "@/components/app/access-chip";
 
 const TABS: { id: string; label: string; icon: IconName; desc: string }[] = [
   { id: "profile", label: "My Profile", icon: "user", desc: "Name, contact & public details" },
@@ -228,6 +229,8 @@ function BillingPanel() {
   const purchasedDate = purchasedIso
     ? new Date(purchasedIso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
     : null;
+  const accessLabel = formatAccessDate(user?.accessExpiresOn ?? null);
+  const accessExpired = !!user?.accessExpiresOn && new Date(user.accessExpiresOn) < new Date();
   return (
     <div className="space-y-5">
       {/* Current plan — gradient hero */}
@@ -256,9 +259,21 @@ function BillingPanel() {
             ))}
           </div>
         </div>
-        <div className="bg-white px-6 py-3.5 flex items-center gap-2 text-[12px] text-slate-500">
-          <Icon name="check" size={14} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
-          Foundations course purchased{purchasedDate ? ` on ${purchasedDate}` : ""} — you have lifetime access to GRC 101.
+        <div className="bg-white px-6 py-3.5 space-y-2">
+          <div className="flex items-center gap-2 text-[12px] text-slate-500">
+            <Icon name="check" size={14} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+            Foundations course purchased{purchasedDate ? ` on ${purchasedDate}` : ""} — your certificate and completed work stay yours for life.
+          </div>
+          {accessLabel && (
+            <div className="flex items-start gap-2 text-[12px] text-slate-500">
+              <Icon name="calendar" size={14} className="text-indigo-500 shrink-0 mt-px" />
+              <span>
+                {accessExpired ? "Active program access ended on " : "Active program access runs until "}
+                <span className="font-medium text-slate-700">{accessLabel}</span> — you have 24 weeks from your start date to work through the 16-week programme.{" "}
+                <Link href="/app/badges" className="text-indigo-600 no-underline hover:underline">Share a badge or certificate on LinkedIn</Link> to add 4 weeks.
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

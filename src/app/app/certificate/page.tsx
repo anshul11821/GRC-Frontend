@@ -6,6 +6,7 @@ import { Loader } from "@/components/ui/loader";
 import { CertificateSheet, type CertStat } from "@/components/cert/certificate-sheet";
 import { BADGES } from "@/lib/badges";
 import { certificateApi, CERT_LOCKED, type Certificate } from "@/lib/certificate";
+import { ExtendAccessCard } from "@/components/app/extend-access-card";
 
 const AI_MENTOR = { name: "grcmentor AI Mentor", title: "Automated Assessment · ISO 27001 aligned" };
 const ISSUER = { name: "grcmentor", title: "Issuing Authority" };
@@ -198,6 +199,11 @@ export default function CertificatePage() {
               <>Issues automatically at 100% completion · {cert.completionPct}% complete</>
             )}
           </div>
+          {cert.status === "issued" && (
+            <div className="max-w-[720px] mx-auto mt-2 cert-noprint">
+              <ExtendAccessCard kind="certificate" />
+            </div>
+          )}
         </>
       ) : (
         <div className="text-center text-[13px] text-slate-400 py-24">Couldn&apos;t load your certificate. Please try again.</div>

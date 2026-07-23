@@ -28,7 +28,16 @@ export interface User {
   language: string;
   /** Chosen program start (day-0 anchor), ISO yyyy-mm-dd. Null until picked on first visit. */
   startDate: string | null;
+  /** Last day new work can be submitted (start + 24wk + bonus), ISO. Null until start_date is set. */
+  accessExpiresOn: string | null;
+  /** True once the one-time LinkedIn-share access extension has been claimed. */
+  linkedinShareClaimed: boolean;
   createdAt: string;
+}
+
+export interface LinkedInShareRequest {
+  kind: "badge" | "certificate";
+  url: string;
 }
 
 export interface SignupStartRequest {
@@ -126,6 +135,7 @@ export const authApi = {
   me: () => api.get<User>("/me"),
   updateMe: (b: MePatchRequest) => api.patch<User>("/me", b),
   setStartDate: (startDate: string) => api.patch<User>("/me/start-date", { startDate }),
+  linkedinShare: (b: LinkedInShareRequest) => api.post<User>("/me/linkedin-share", b),
   changePassword: (b: ChangePasswordRequest) => api.post<void>("/auth/password", b),
   passwordForgot: (b: PasswordForgotRequest) =>
     api.post<{ message: string }>("/auth/password/forgot", b, { noAuth: true }),

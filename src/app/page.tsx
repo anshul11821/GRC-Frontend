@@ -3,8 +3,11 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Logo, SectionHead } from "@/components/ui/primitives";
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 import { Faq, type FaqEntry } from "@/components/landing/faq";
-import { LandingStats } from "@/components/landing/stats";
 import { GLOW, SOFT_TONES } from "@/lib/tones";
+import { WAITLIST_MODE } from "@/lib/flags";
+
+// Pre-launch the app isn't reachable, so every CTA points at the waitlist instead of signup.
+const CTA_HREF = WAITLIST_MODE ? "/waitlist" : "/signup";
 
 // ============ CONTENT (ported from the mockup) ============
 // Industry photos served straight from the Unsplash CDN (sized + cropped via query params).
@@ -18,7 +21,7 @@ const INDUSTRIES: { label: string; icon: IconName; tone: string; image: string }
   { label: "E-commerce & Retail", icon: "grid", tone: "rose", image: UNSPLASH("photo-1556742049-0cfed4f6a45d") },
   { label: "Manufacturing & Industrial", icon: "layers", tone: "sky", image: UNSPLASH("photo-1581091226825-a6a2a5aee158") },
   { label: "Government & Public Sector", icon: "flag", tone: "indigo", image: UNSPLASH("photo-1529107386315-e1a2ed48a620") },
-  { label: "Transportation & Logistics", icon: "send", tone: "emerald", image: UNSPLASH("photo-1566576912321-d58ddd7a6088") },
+  { label: "Transportation & Logistics", icon: "send", tone: "emerald", image: UNSPLASH("photo-1519003722824-194d4455a60c") },
   { label: "Education", icon: "book", tone: "violet", image: UNSPLASH("photo-1523240795612-9a054b0db644") },
   { label: "Media & Telecommunications", icon: "chat", tone: "amber", image: UNSPLASH("photo-1522071820081-009f0129c71c") },
   { label: "Energy & Utilities", icon: "bolt", tone: "rose", image: UNSPLASH("photo-1466611653911-95081537e5b7") },
@@ -30,12 +33,6 @@ const PROGRAM: { title: string; icon: IconName; tone: string; body: string }[] =
   { title: "Intelligent decision making", icon: "target", tone: "emerald", body: "Make reasoned, standards-aligned calls on classification, risk and remediation — graded against an industry rubric." },
   { title: "Continuous learning & adaptation", icon: "history", tone: "amber", body: "Every activity is mentor-reviewed with Socratic feedback, so you improve revision over revision." },
   { title: "Real, measurable impact", icon: "chart", tone: "rose", body: "Completed work compiles into a CV, credential badges and a verifiable certificate that proves capability." },
-];
-
-const TESTIMONIALS = [
-  { quote: "We could expand globally thanks to their compliance strategies.", name: "Emily Wang", role: "Director, GlobalTrade" },
-  { quote: "Truly professional and reliable service throughout the engagement.", name: "Carlos Morales", role: "CFO, BrightFuture" },
-  { quote: "Their solutions saved us significant time and effort.", name: "Marchent Dias", role: "CFO, Global Bright" },
 ];
 
 const TRACKS = [
@@ -57,7 +54,6 @@ const NAV_LINKS: [string, string][] = [
   ["#industries", "Industries"],
   ["#program", "Program"],
   ["#tracks", "Tracks"],
-  ["#testimonials", "Stories"],
   ["#faq", "FAQ"],
 ];
 
@@ -75,11 +71,13 @@ function Nav() {
           ))}
         </nav>
         <div className="flex items-center gap-2.5">
-          <Link href="/signin" className="focus-ring rounded-md px-1 py-0.5 hidden sm:inline text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
-            Sign in
-          </Link>
-          <Link href="/signup" className="focus-ring inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
-            Get started <Icon name="arrowRight" size={14} />
+          {!WAITLIST_MODE && (
+            <Link href="/signin" className="focus-ring rounded-md px-1 py-0.5 hidden sm:inline text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
+              Sign in
+            </Link>
+          )}
+          <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
+            {WAITLIST_MODE ? "Join the waitlist" : "Get started"} <Icon name="arrowRight" size={14} />
           </Link>
         </div>
       </div>
@@ -97,9 +95,9 @@ function Hero() {
         <div className="absolute top-10 right-10 w-[380px] h-[380px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.14), transparent 70%)" }} />
         <div className="absolute -bottom-10 left-10 w-[320px] h-[320px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%)" }} />
       </div>
-      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-24 text-center">
+      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-10 text-center">
         <div className="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-white ring-1 ring-slate-200/70 text-[12px] font-medium text-slate-600 tracking-tight">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Hands-on GRC mentorship · ISO 27001 · NIST · GDPR
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Hands-on GRC mentorship
         </div>
         <h1 className="mt-5 text-[40px] md:text-[58px] font-semibold tracking-[-0.035em] text-slate-900 leading-[1.04] max-w-3xl mx-auto">
           Become a job-ready <span className="text-indigo-600">GRC professional</span> through real work.
@@ -108,8 +106,8 @@ function Hero() {
           Practise governance, risk and compliance on simulated enterprise engagements — mentor-graded, standards-aligned, and mapped straight to the roles you want.
         </p>
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/signup" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
-            Start GRC 101 <Icon name="arrowRight" size={15} />
+          <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
+            {WAITLIST_MODE ? "Join the waitlist" : "Start GRC 101"} <Icon name="arrowRight" size={15} />
           </Link>
           <a href="#tracks" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white ring-1 ring-slate-200/70 text-slate-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-slate-50 transition-colors">
             Explore tracks
@@ -124,7 +122,7 @@ function Frameworks() {
   const items = ["ISO/IEC 27001", "NIST CSF 2.0", "CIS Controls v8", "SOC 2", "GDPR"];
   return (
     <section className="bg-[#FAFAF7]">
-      <div className="max-w-[1140px] mx-auto px-6 pt-12 pb-6">
+      <div className="max-w-[1140px] mx-auto px-6 pt-4 pb-10">
         <div className="flex flex-col items-center gap-4">
           <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold tracking-[0.14em] uppercase text-slate-500">
             <Icon name="shield" size={13} className="text-emerald-500" /> Aligned with industry standards
@@ -208,41 +206,6 @@ function Program() {
   );
 }
 
-function Testimonials() {
-  return (
-    <section id="testimonials" className="bg-[#F4F5F8] border-y border-slate-200/60">
-      <div className="max-w-[1140px] mx-auto px-6 py-20">
-        <SectionHead eyebrow="Testimonials" icon="chat" sub="Teams and leaders who built their compliance capability with grcmentor.">
-          What our <span className="text-indigo-600">members</span> say
-        </SectionHead>
-        <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {TESTIMONIALS.map((t) => (
-            <StaggerItem key={t.name} className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-card p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:ring-indigo-200/80">
-              <div className="flex items-center gap-0.5 text-amber-400 mb-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Icon key={i} name="star" size={14} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-[14px] text-slate-700 leading-relaxed tracking-tight flex-1" style={{ textWrap: "pretty" }}>
-                &ldquo;{t.quote}&rdquo;
-              </p>
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[12px] font-semibold ring-2 ring-white shadow-sm">
-                  {t.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
-                </div>
-                <div>
-                  <div className="text-[12.5px] font-semibold text-slate-900 tracking-tight">{t.name}</div>
-                  <div className="text-[11.5px] text-slate-500 tracking-tight">{t.role}</div>
-                </div>
-              </div>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </div>
-    </section>
-  );
-}
-
 function Tracks() {
   return (
     <section id="tracks" className="bg-white">
@@ -263,9 +226,15 @@ function Tracks() {
                 <div className="text-[11.5px] text-indigo-200/90 tracking-tight mt-0.5">{t.years}</div>
                 <p className="mt-3 text-[13px] text-indigo-50/85 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{t.body}</p>
               </div>
-              <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="focus-ring relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
-                Know more <Icon name="arrowRight" size={14} />
-              </Link>
+              {t.code === "GRC 101" ? (
+                <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="focus-ring relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
+                  Know more <Icon name="arrowRight" size={14} />
+                </Link>
+              ) : (
+                <div className="relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-white/10 ring-1 ring-white/15 text-indigo-100/80 text-[13px] font-semibold tracking-tight">
+                  Coming soon
+                </div>
+              )}
             </StaggerItem>
           ))}
         </Stagger>
@@ -275,10 +244,14 @@ function Tracks() {
 }
 
 function CtaFooter() {
-  const cols: [string, [string, string][]][] = [
-    ["Programme", [["GRC 101", "/signup"], ["GRC 301", "/signup"], ["GRC 501", "/signup"]]],
-    ["Platform", [["Dashboard", "/signin"], ["Reports", "/signin"], ["Certificate", "/signin"]]],
-    ["Grow", [["Badges", "/signin"], ["My CV", "/signin"], ["Matching Jobs", "/signin"]]],
+  // null href = not launched yet, rendered as plain text rather than a dead link
+  const cols: [string, [string, string | null][]][] = [
+    // Pre-launch, the track pages and auth routes are unreachable — don't link into a redirect.
+    ["Programme", [["GRC 101", WAITLIST_MODE ? null : "/tracks/grc-101"], ["GRC 301 — coming soon", null], ["GRC 501 — coming soon", null]]],
+    ["Explore", [["Industries", "/#industries"], ["How it works", "/#program"], ["Tracks", "/#tracks"], ["FAQ", "/#faq"]]],
+    WAITLIST_MODE
+      ? ["Access", [["Join the waitlist", "/waitlist"], ["Universities", "/waitlist"]]]
+      : ["Account", [["Sign in", "/signin"], ["Create account", "/signup"]]],
   ];
   return (
     <>
@@ -290,10 +263,12 @@ function CtaFooter() {
             <div className="pointer-events-none absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
             <h2 className="relative text-[28px] md:text-[36px] font-semibold tracking-[-0.03em] leading-tight">Ready to build a GRC career?</h2>
             <p className="relative mt-3 text-[15px] text-indigo-100/90 tracking-tight max-w-xl mx-auto" style={{ textWrap: "pretty" }}>
-              Start GRC 101 today — your first mentor-graded task takes minutes to begin.
+              {WAITLIST_MODE
+                ? "We're onboarding in batches. Join the waitlist and we'll let you know the moment your place opens."
+                : "Start GRC 101 today — your first mentor-graded task takes minutes to begin."}
             </p>
-            <Link href="/signup" className="focus-ring relative mt-7 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
-              Get started free <Icon name="arrowRight" size={15} />
+            <Link href={CTA_HREF} className="focus-ring relative mt-7 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
+              {WAITLIST_MODE ? "Join the waitlist" : "Get started free"} <Icon name="arrowRight" size={15} />
             </Link>
           </div>
         </div>
@@ -310,11 +285,15 @@ function CtaFooter() {
             <div key={title}>
               <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">{title}</div>
               <div className="mt-3 flex flex-col gap-2">
-                {items.map(([l, h]) => (
-                  <Link key={l} href={h} className="focus-ring rounded-md px-1 py-0.5 text-[13px] text-slate-600 hover:text-indigo-600 tracking-tight no-underline transition-colors">
-                    {l}
-                  </Link>
-                ))}
+                {items.map(([l, h]) =>
+                  h ? (
+                    <Link key={l} href={h} className="focus-ring rounded-md px-1 py-0.5 text-[13px] text-slate-600 hover:text-indigo-600 tracking-tight no-underline transition-colors">
+                      {l}
+                    </Link>
+                  ) : (
+                    <span key={l} className="px-1 py-0.5 text-[13px] text-slate-400 tracking-tight">{l}</span>
+                  )
+                )}
               </div>
             </div>
           ))}
@@ -325,7 +304,7 @@ function CtaFooter() {
             <div className="flex items-center gap-4 text-[12px] text-slate-500">
               <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Privacy</a>
               <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Terms</a>
-              <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Contact</a>
+              <a href="mailto:hello@grcmentor.com" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Contact</a>
             </div>
           </div>
         </div>
@@ -339,11 +318,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FAFAF7]">
       <Nav />
       <Hero />
-      <LandingStats />
       <Frameworks />
       <Industries />
       <Program />
-      <Testimonials />
       <Tracks />
       <section id="faq" className="bg-[#F4F5F8] border-t border-slate-200/60">
         <div className="max-w-[760px] mx-auto px-6 py-20">

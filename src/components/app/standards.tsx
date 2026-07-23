@@ -1,278 +1,104 @@
-import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
-import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
 import { TASK_META } from "@/lib/taskmeta";
-import type { LearningTask } from "@/lib/learnings";
-import {
-  type StandardMeta, STANDARD_BY_ID, tasksForStandard, standardForTaskCode, nistCrossRefTaskCodes,
-} from "@/lib/standards";
+import { CONTROLS_BY_TASK } from "@/lib/controls";
+import { STANDARD_BY_ID, standardForTaskCode } from "@/lib/standards";
 
-// Static tone maps (Tailwind v4 purges dynamic `bg-${tone}` classes).
+// Static tone maps (Tailwind v4 purges dynamic `bg-${tone}` classes). Each framework carries its
+// own colour identity — the banner wears it so the mentee reads the standard at a glance.
 const SOLID: Record<string, string> = {
   indigo: "bg-indigo-600", violet: "bg-violet-600", emerald: "bg-emerald-600", amber: "bg-amber-500", rose: "bg-rose-600",
 };
-const HERO: Record<string, string> = {
-  indigo: "from-indigo-50/70", violet: "from-violet-50/70", emerald: "from-emerald-50/70", amber: "from-amber-50/70", rose: "from-rose-50/70",
+const BAND: Record<string, string> = {
+  indigo: "from-indigo-50 via-indigo-50/30", violet: "from-violet-50 via-violet-50/30",
+  emerald: "from-emerald-50 via-emerald-50/30", amber: "from-amber-50 via-amber-50/30", rose: "from-rose-50 via-rose-50/30",
 };
-const HERO_RING: Record<string, string> = {
-  indigo: "ring-indigo-100/70", violet: "ring-violet-100/70", emerald: "ring-emerald-100/70", amber: "ring-amber-100/70", rose: "ring-rose-100/70",
+const SEAL_RING: Record<string, string> = {
+  indigo: "ring-indigo-100", violet: "ring-violet-100", emerald: "ring-emerald-100", amber: "ring-amber-100", rose: "ring-rose-100",
+};
+const ACCENT_BORDER: Record<string, string> = {
+  indigo: "border-indigo-200", violet: "border-violet-200", emerald: "border-emerald-200", amber: "border-amber-200", rose: "border-rose-200",
 };
 const tone = (t: string) => VERB_TONES[t] ?? VERB_TONES.indigo;
 
-const stepDot = (status?: string) =>
-  status === "complete"
-    ? <span className="w-4 h-4 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center"><Icon name="check" size={10} strokeWidth={3} className="text-white" /></span>
-    : status === "current" || status === "in-progress"
-      ? <span className="w-4 h-4 shrink-0 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-indigo-500" /></span>
-      : <span className="w-4 h-4 shrink-0 rounded-full border-2 border-slate-200" />;
-
-/** Index card — one per standard, linking to its overview. */
-export function StandardCard({ standard, taskByCode }: { standard: StandardMeta; taskByCode: Map<string, LearningTask> }) {
-  const t = tone(standard.tone);
-  const codes = tasksForStandard(standard.id);
-  const tasks = codes.map((c) => taskByCode.get(c)).filter(Boolean) as LearningTask[];
-  const done = tasks.reduce((a, x) => a + x.done, 0);
-  const total = tasks.reduce((a, x) => a + x.total, 0);
-  const pct = total ? Math.round((done / total) * 100) : 0;
-
-  return (
-    <Link href={`/app/standards/${standard.id}`} className="group block rounded-2xl bg-white ring-1 ring-slate-200/70 hover:ring-slate-300 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] transition-all overflow-hidden no-underline">
-      <div className={`px-5 pt-5 pb-4 bg-gradient-to-br ${HERO[standard.tone]} via-white to-white`}>
-        <div className="flex items-start gap-3">
-          <span className={`shrink-0 w-11 h-11 rounded-xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none`}>
-            <span className="text-[11px] font-mono font-semibold tracking-[0.04em]">{standard.short}</span>
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono tracking-tight ${t.bg} ${t.text} ring-1 ${t.ring}`}>{standard.code}</span>
-              {standard.crossCutting && <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-[0.06em] ${t.bg} ${t.text}`}>cross-cut</span>}
-            </div>
-            <h3 className="mt-1 text-[15px] font-semibold tracking-[-0.01em] text-slate-900 truncate">{standard.fullName}</h3>
-            <div className={`text-[11.5px] font-medium tracking-tight ${t.text}`}>{standard.domain}</div>
-          </div>
-        </div>
-      </div>
-      <div className="px-5 py-4">
-        <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight line-clamp-2" style={{ textWrap: "pretty" }}>{standard.description}</p>
-        <div className="mt-3.5 flex items-center gap-3">
-          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full ${SOLID[standard.tone]}`} style={{ width: `${pct}%` }} /></div>
-          <span className="text-[10.5px] font-mono text-slate-500 shrink-0">{codes.length} task{codes.length === 1 ? "" : "s"} · {pct}%</span>
-          <Icon name="arrowRight" size={14} className="text-slate-300 group-hover:text-indigo-500 shrink-0" />
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/** Compact task card on the standard landing: progress + per-activity list with verb chips. */
-export function TaskRowCard({ code, task, standard }: { code: string; task?: LearningTask; standard: StandardMeta }) {
-  const meta = TASK_META[code];
-  if (!meta) return null;
-  const t = tone(standard.tone);
-  const done = task?.done ?? 0;
-  const total = task?.total ?? task?.steps.length ?? 0;
-  const pct = total ? Math.round((done / total) * 100) : 0;
-
-  return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 hover:ring-slate-300 transition-all overflow-hidden">
-      <Link href={`/app/desk/task/${code}`} className="block px-5 py-4 hover:bg-slate-50/40 transition-colors no-underline">
-        <div className="flex items-start justify-between gap-5">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-1.5 py-0.5 rounded text-[10.5px] font-mono font-medium tracking-tight ${t.bg} ${t.text} ring-1 ${t.ring}`}>{code}</span>
-              <span className="text-[10.5px] font-mono text-slate-500">{total} activit{total === 1 ? "y" : "ies"}</span>
-            </div>
-            <h3 className="mt-1.5 text-[16px] font-semibold tracking-[-0.015em] text-slate-900">{meta.name}</h3>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600 tracking-tight line-clamp-2" style={{ textWrap: "pretty" }}>{meta.description}</p>
-          </div>
-          <div className="shrink-0 w-40 flex flex-col items-end gap-2">
-            <div className="text-[10.5px] font-mono text-slate-500">{done}/{total} · {pct}%</div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full ${SOLID[standard.tone]}`} style={{ width: `${pct}%` }} /></div>
-            {meta.badge && <div className="mt-1 inline-flex items-center gap-1 text-[10.5px] text-slate-500"><Icon name="ribbon" size={11} /><span className="tracking-tight truncate max-w-[150px]">{meta.badge}</span></div>}
-          </div>
-        </div>
-      </Link>
-      {task && task.steps.length > 0 && (
-        <details className="group/act border-t border-slate-100/80">
-          <summary className="flex items-center justify-between gap-3 px-5 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden hover:bg-slate-50/60 transition-colors">
-            <span className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-500">Activities · method applied per step</span>
-            <span className="flex items-center gap-1.5 shrink-0 text-[10.5px] font-mono text-slate-400">
-              {task.steps.length}
-              <Icon name="chevronDown" size={13} className="transition-transform duration-200 group-open/act:rotate-180 motion-reduce:transition-none" />
-            </span>
-          </summary>
-          <div className="px-5 pb-4 pt-1 space-y-0.5">
-            {task.steps.map((s) => {
-              const locked = !s.status || s.status === "locked" || s.status === "pending";
-              const inner = (
-                <>
-                  <span className="shrink-0 text-[10.5px] font-mono text-slate-400 w-7">{s.code}</span>
-                  {stepDot(s.status)}
-                  <span className={`flex-1 min-w-0 text-[12.5px] tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-700 group-hover:text-slate-900"}`}>{s.title}</span>
-                  <DVerb verbId={s.verb} />
-                  {locked && <Icon name="lock" size={10} className="text-slate-300 shrink-0" />}
-                </>
-              );
-              return locked ? (
-                <div key={s.id} className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg opacity-70 cursor-not-allowed">{inner}</div>
-              ) : (
-                <Link key={s.id} href={`/app/desk/${s.id}`} className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 group no-underline">{inner}</Link>
-              );
-            })}
-          </div>
-        </details>
-      )}
-    </div>
-  );
-}
-
-/** The standard overview page body. */
-export function StandardLanding({ standard, taskByCode, backHref = "/app/standards", backLabel = "All standards" }: { standard: StandardMeta; taskByCode: Map<string, LearningTask>; backHref?: string; backLabel?: string }) {
-  const t = tone(standard.tone);
-  const codes = tasksForStandard(standard.id);
-  const tasks = codes.map((c) => taskByCode.get(c)).filter(Boolean) as LearningTask[];
-  const activities = tasks.reduce((a, x) => a + (x.total || x.steps.length), 0);
-  const crossCodes = standard.crossCutting ? nistCrossRefTaskCodes() : [];
-
-  const stats = [
-    { label: "Tasks owned", value: codes.length || "—", hint: "Live in GRC 101" },
-    { label: "Activities", value: activities || "—", hint: "Across all tasks" },
-    { label: "Cross-refs", value: crossCodes.length || (standard.crossCutting ? "—" : "0"), hint: standard.crossCutting ? "Cross-cutting tasks" : "None" },
-  ];
-
-  return (
-    <div className="max-w-[920px] mx-auto px-6 py-6">
-      <Link href={backHref} className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-3"><Icon name="chevronLeft" size={14} /> {backLabel}</Link>
-
-      {/* Hero */}
-      <div className={`rounded-3xl ring-1 ring-slate-200/70 overflow-hidden bg-gradient-to-br ${HERO[standard.tone]} via-white to-white`}>
-        <div className="px-7 pt-7 pb-6">
-          <div className="flex items-start gap-5">
-            <div className={`shrink-0 w-16 h-16 rounded-2xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none ring-4 ${HERO_RING[standard.tone]}`}>
-              <span className="text-[14px] font-mono font-semibold tracking-[0.04em]">{standard.short}</span>
-              <span className="text-[8px] font-mono opacity-75 mt-1">STANDARD</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-[11px] font-medium tracking-tight">
-                <span className={`px-1.5 py-0.5 rounded font-mono tracking-tight ${t.bg} ${t.text} ring-1 ${t.ring}`}>{standard.code}</span>
-                {standard.crossCutting && <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-[0.06em] ${t.bg} ${t.text}`}>cross-cutting</span>}
-              </div>
-              <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.025em] text-slate-900 leading-tight">{standard.fullName}</h1>
-              <div className={`mt-1 text-[14px] font-medium tracking-tight ${t.text}`}>{standard.domain}</div>
-              <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{standard.description}</p>
-              <p className={`mt-2 text-[12.5px] italic tracking-tight ${t.text}`}>{standard.tagline}</p>
-            </div>
-          </div>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {stats.map((m) => (
-              <div key={m.label} className="rounded-xl bg-white ring-1 ring-slate-200/70 px-4 py-3">
-                <div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500">{m.label}</div>
-                <div className="mt-1 text-[22px] font-semibold tabular-nums tracking-[-0.02em] text-slate-900 leading-none">{m.value}</div>
-                <div className="mt-1.5 text-[10.5px] font-mono text-slate-400">{m.hint}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Tasks owned */}
-      <div className="mt-6">
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500">Tasks owned by this standard</h2>
-          <span className="text-[11px] font-mono text-slate-400">{codes.length} · click to open the playbook</span>
-        </div>
-        {codes.length === 0 ? (
-          <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/60 px-6 py-10 text-center">
-            <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-white ring-1 ring-slate-200/70 mb-3"><Icon name="info" size={18} className="text-slate-400" /></div>
-            <div className="text-[14px] font-semibold tracking-tight text-slate-900">No live tasks in this module yet</div>
-            <p className="mt-1 text-[12.5px] text-slate-500 tracking-tight">Tasks for this standard unlock later in the programme.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {codes.map((c) => <TaskRowCard key={c} code={c} task={taskByCode.get(c)} standard={standard} />)}
-          </div>
-        )}
-      </div>
-
-      {/* Cross-references (NIST) */}
-      {crossCodes.length > 0 && (
-        <div className="mt-7">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500">Where this standard appears as a cross-reference</h2>
-            <span className="text-[11px] font-mono text-slate-400">{crossCodes.length} task(s)</span>
-          </div>
-          <div className="space-y-2">
-            {crossCodes.map((c) => {
-              const owner = standardForTaskCode(c);
-              const ot = owner ? tone(owner.tone) : t;
-              return (
-                <Link key={c} href={`/app/desk/task/${c}`} className="w-full flex items-center gap-3 rounded-xl bg-white ring-1 ring-slate-200/70 hover:ring-slate-300 px-4 py-3 text-left transition-all no-underline">
-                  <span className={`shrink-0 w-7 h-7 rounded-lg ${SOLID[owner?.tone ?? standard.tone]} text-white flex items-center justify-center text-[9.5px] font-mono font-semibold`}>{owner?.short}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[12.5px] font-medium text-slate-900 tracking-tight truncate">{TASK_META[c]?.name}</div>
-                    <div className="text-[10.5px] font-mono text-slate-500 truncate">{TASK_META[c]?.nistCrossRef}</div>
-                  </div>
-                  <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono ${ot.bg} ${ot.text} ring-1 ${ot.ring}`}>{owner?.code}</span>
-                  <Icon name="arrowRight" size={13} className="text-slate-400 shrink-0" />
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** The standard banner that rides above the activity workspace. */
-export function StandardBanner({ taskCode, activityId }: { taskCode: string; activityId?: string }) {
+/** The framework dossier heading a task brief: the standard the task is graded against, its colour
+ *  identity, what's assessed, the framework's own explainer, and the task context. `onControls`, when
+ *  given, makes the "controls assessed" chip open the task's Control references. */
+export function StandardBanner({ taskCode, onControls }: { taskCode: string; onControls?: () => void }) {
   const standard = standardForTaskCode(taskCode);
   if (!standard) return null;
   const t = tone(standard.tone);
   const nistRef = TASK_META[taskCode]?.nistCrossRef?.trim();
   const alsoNist = standard.id !== "nistcsf" && !!nistRef ? STANDARD_BY_ID["nistcsf"] : null;
-  // Carry the originating activity so the overview's back link returns to this workspace.
-  const fromQuery = activityId ? `?from=${encodeURIComponent(activityId)}` : "";
+  const desc = TASK_META[taskCode]?.description?.trim();
+  const controlCount = CONTROLS_BY_TASK[taskCode]?.controls.length ?? 0;
 
   return (
-    <div className="mb-4 rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_2px_8px_-2px_rgba(15,23,42,0.04)]">
-      <div className="flex items-stretch">
-        <div className={`w-1.5 shrink-0 ${SOLID[standard.tone]}`} />
-        {/* Every cell is a label(16px)/value(20px) stack, so the label rows line up across cells. */}
-        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-3 px-3 sm:px-4 py-3">
-          <Link href={`/app/standards/${standard.id}${fromQuery}`} className="flex items-center gap-3 min-w-0 basis-full sm:basis-auto sm:flex-1 no-underline group">
-            <span className={`shrink-0 w-10 h-10 rounded-xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none`}>
-              <span className="text-[10px] font-mono font-semibold tracking-[0.06em]">{standard.short}</span>
-              <span className="text-[8px] font-mono opacity-70 mt-0.5">STD</span>
-            </span>
-            <span className="min-w-0">
-              <span className={`block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase ${t.text}`}>Standard / Framework</span>
-              <span className="block h-5 text-[13.5px] leading-5 font-semibold tracking-[-0.01em] text-slate-900 truncate group-hover:text-indigo-700">{standard.fullName}</span>
-            </span>
-          </Link>
-
-          <div className="hidden md:block h-9 w-px shrink-0 bg-slate-200/80" />
-
-          <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
-            <span className="block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase text-slate-500">Domain</span>
-            <span className="block h-5 text-[13.5px] leading-5 font-medium tracking-tight text-slate-800 truncate">{standard.domain}</span>
+    // Dossier layout: a colour-coded identity panel (left) beside the content panel (right). The
+    // tinted panel is a fixed width filled with seal + identity + meta, so no half is left empty.
+    <div className="mb-4 rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_8px_28px_-16px_rgba(15,23,42,0.14)] flex flex-col sm:flex-row">
+      {/* Identity panel — the framework's colour, monogram, name, and what it's assessed against. */}
+      <div className={`sm:w-[268px] shrink-0 bg-gradient-to-b ${BAND[standard.tone]} to-white/30 border-b sm:border-b-0 sm:border-r border-slate-200/60 p-4 sm:p-5 flex flex-col gap-3.5`}>
+        <div className="flex items-center gap-3">
+          <span aria-hidden className={`shrink-0 w-12 h-12 rounded-xl ${SOLID[standard.tone]} text-white flex flex-col items-center justify-center leading-none ring-4 ${SEAL_RING[standard.tone]} shadow-sm`}>
+            <span className="text-[12px] font-mono font-semibold tracking-[0.04em]">{standard.short}</span>
+            <span className="text-[7.5px] font-mono uppercase tracking-[0.14em] opacity-75 mt-0.5">std</span>
+          </span>
+          <div className="min-w-0">
+            <span className={`block text-[9.5px] font-semibold tracking-[0.16em] uppercase ${t.text}`}>Standard · Framework</span>
+            <h2 className="mt-0.5 text-[16.5px] font-semibold tracking-[-0.02em] text-slate-900 leading-snug tabular-nums">{standard.fullName}</h2>
           </div>
-
-          {alsoNist && (
-            <div className="shrink-0">
-              <span className="block h-4 text-[9.5px] leading-4 font-semibold tracking-[0.14em] uppercase text-slate-400">Also applies</span>
-              <Link href={`/app/standards/${alsoNist.id}${fromQuery}`} className={`h-5 inline-flex items-center gap-1.5 px-1.5 rounded-md ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring} text-[10.5px] leading-5 font-medium no-underline hover:opacity-80`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${tone(alsoNist.tone).dot}`} />{alsoNist.code}
-              </Link>
-            </div>
-          )}
-
-          <Link href={`/app/standards/${standard.id}${fromQuery}`} className={`shrink-0 ml-auto self-center inline-flex items-center gap-1.5 h-8 px-2.5 -mr-1 rounded-lg text-[11.5px] font-medium tracking-tight ${t.text} hover:bg-slate-50 transition-colors no-underline`}>
-            <span className="hidden sm:inline">Standard mapping</span><span className="sm:hidden">Mapping</span>
-            <Icon name="arrowUpRight" size={12} />
-          </Link>
         </div>
+
+        <div className="text-[12px] font-medium tracking-tight text-slate-600 leading-snug">{standard.domain}</div>
+
+        {/* Meta — compliance vernacular: what this task is assessed against. */}
+        <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+          {standard.crossCutting && (
+            <span className={`inline-flex items-center gap-1 h-6 px-2 rounded-md text-[10px] font-semibold uppercase tracking-[0.08em] ${t.bg} ${t.text} ring-1 ${t.ring}`}>
+              <Icon name="layers" size={11} /> Cross-cutting
+            </span>
+          )}
+          {controlCount > 0 && (onControls ? (
+            <button
+              type="button"
+              onClick={onControls}
+              aria-label={`View the ${controlCount} controls this task is assessed against`}
+              className="focus-ring group inline-flex items-center gap-1.5 h-6 pl-1.5 pr-1.5 rounded-md bg-white/80 ring-1 ring-slate-200/70 hover:ring-slate-300 hover:bg-white text-[11px] tracking-tight text-slate-600 transition-colors cursor-pointer"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+              <b className="font-semibold text-slate-900 tabular-nums">{controlCount}</b> controls assessed
+              <Icon name="arrowRight" size={11} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 h-6 pl-1.5 pr-2 rounded-md bg-white/80 ring-1 ring-slate-200/70 text-[11px] tracking-tight text-slate-600">
+              <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+              <b className="font-semibold text-slate-900 tabular-nums">{controlCount}</b> controls assessed
+            </span>
+          ))}
+          {alsoNist && (
+            <span className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] leading-none font-medium tracking-tight ${tone(alsoNist.tone).bg} ${tone(alsoNist.tone).text} ring-1 ${tone(alsoNist.tone).ring}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${tone(alsoNist.tone).dot}`} /> + {alsoNist.code}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Content panel — the framework explainer + the task in context. */}
+      <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col gap-3">
+        <div>
+          <span className="block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1.5">About this framework</span>
+          <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{standard.description}</p>
+          {standard.tagline && (
+            <p className={`mt-2 pl-2.5 border-l-2 text-[12px] italic tracking-tight text-slate-700 ${ACCENT_BORDER[standard.tone]}`}>{standard.tagline}</p>
+          )}
+        </div>
+        {desc && (
+          <div className="pt-3 border-t border-slate-100">
+            <span className="block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1.5">Your task in context</span>
+            <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{desc}</p>
+          </div>
+        )}
       </div>
     </div>
   );
