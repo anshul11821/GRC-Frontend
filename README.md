@@ -53,4 +53,4 @@ It's inlined at build time, so **changing it requires a rebuild/redeploy**, not 
 To launch, set it to `0` and redeploy — no code changes needed.
 
 Waitlist sign-ups land in the `waitlist_entries` table via `POST /waitlist` on the backend, and
-are read in the admin panel under **Waitlist** (with CSV export).
+are read in the admin panel under **Wait List** (with CSV export).

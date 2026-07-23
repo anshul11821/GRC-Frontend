@@ -77,7 +77,7 @@ function Nav() {
             </Link>
           )}
           <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
-            {WAITLIST_MODE ? "Join the waitlist" : "Get started"} <Icon name="arrowRight" size={14} />
+            {WAITLIST_MODE ? "Join the Wait List" : "Get started"} <Icon name="arrowRight" size={14} />
           </Link>
         </div>
       </div>
@@ -107,7 +107,7 @@ function Hero() {
         </p>
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
           <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
-            {WAITLIST_MODE ? "Join the waitlist" : "Start GRC 101"} <Icon name="arrowRight" size={15} />
+            {WAITLIST_MODE ? "Join the Wait List" : "Start GRC 101"} <Icon name="arrowRight" size={15} />
           </Link>
           <a href="#tracks" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white ring-1 ring-slate-200/70 text-slate-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-slate-50 transition-colors">
             Explore tracks
@@ -250,7 +250,7 @@ function CtaFooter() {
     ["Programme", [["GRC 101", WAITLIST_MODE ? null : "/tracks/grc-101"], ["GRC 301 — coming soon", null], ["GRC 501 — coming soon", null]]],
     ["Explore", [["Industries", "/#industries"], ["How it works", "/#program"], ["Tracks", "/#tracks"], ["FAQ", "/#faq"]]],
     WAITLIST_MODE
-      ? ["Access", [["Join the waitlist", "/waitlist"], ["Universities", "/waitlist"]]]
+      ? ["Access", [["Join the Wait List", "/waitlist"], ["Universities", "/waitlist"]]]
       : ["Account", [["Sign in", "/signin"], ["Create account", "/signup"]]],
   ];
   return (
@@ -264,11 +264,11 @@ function CtaFooter() {
             <h2 className="relative text-[28px] md:text-[36px] font-semibold tracking-[-0.03em] leading-tight">Ready to build a GRC career?</h2>
             <p className="relative mt-3 text-[15px] text-indigo-100/90 tracking-tight max-w-xl mx-auto" style={{ textWrap: "pretty" }}>
               {WAITLIST_MODE
-                ? "We're onboarding in batches. Join the waitlist and we'll let you know the moment your place opens."
+                ? "We're onboarding in batches. Join the Wait List and we'll let you know the moment your place opens."
                 : "Start GRC 101 today — your first mentor-graded task takes minutes to begin."}
             </p>
             <Link href={CTA_HREF} className="focus-ring relative mt-7 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-indigo-700 text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
-              {WAITLIST_MODE ? "Join the waitlist" : "Get started free"} <Icon name="arrowRight" size={15} />
+              {WAITLIST_MODE ? "Join the Wait List" : "Get started free"} <Icon name="arrowRight" size={15} />
             </Link>
           </div>
         </div>
