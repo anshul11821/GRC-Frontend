@@ -75,18 +75,6 @@ export interface SubmissionDetail {
   review: Review | null;
 }
 
-export interface ActivityFeedItem {
-  activityId: string;
-  activityCode: string;
-  activityTitle: string;
-  taskCode: string;
-  verb: string;
-  overallScore: number;
-  decision: "pass" | "revise" | string;
-  feedback: string;
-  createdAt: string;
-}
-
 export const deskApi = {
   activity: (id: string) => api.get<ActivityDetail>(`/me/activities/${id}`),
   saveDraft: (id: string, payload: ActivityPayload) =>
@@ -94,6 +82,4 @@ export const deskApi = {
   submit: (id: string, payload: ActivityPayload) =>
     api.post<SubmitResponse>(`/me/activities/${id}/submit`, { payload }),
   submissions: (id: string) => api.get<SubmissionDetail[]>(`/me/activities/${id}/submissions`),
-  activityFeed: (program = "grc101") =>
-    api.get<ActivityFeedItem[]>("/me/activity-feed", { query: { program } }),
 };

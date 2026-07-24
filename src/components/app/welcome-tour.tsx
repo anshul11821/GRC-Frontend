@@ -73,9 +73,9 @@ function steps(showNav: () => void): TourStep[] {
       ...nav("nav-reports"),
     },
     {
-      title: "Notifications and your account",
-      body: "Grades, feedback and scheduled stakeholder sessions land in the bell. Profile, password and billing sit under your avatar — along with a link back to this tour.",
-      icon: "bell",
+      title: "What's due, and your account",
+      body: "The clock shows what's on you right now — overdue stages, revisions still outstanding, and anything due in the next week. Profile, password and billing sit under your avatar — along with a link back to this tour.",
+      icon: "clock",
       getEl: tag("bell"),
     },
     {

@@ -8,7 +8,7 @@ import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
-import { NotificationBell } from "./notification-bell";
+import { UpNext } from "./up-next";
 import { DropdownPanel } from "@/components/ui/motion";
 
 function DashSidebar({
@@ -213,7 +213,7 @@ function DashTopBar({ openMobile }: { openMobile: () => void }) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span data-tour="bell"><NotificationBell /></span>
+        <span data-tour="bell"><UpNext /></span>
         <span data-tour="account"><UserMenu /></span>
       </div>
     </div>

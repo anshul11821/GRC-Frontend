@@ -16,7 +16,6 @@ import { formatAccessDate } from "@/components/app/access-chip";
 const TABS: { id: string; label: string; icon: IconName; desc: string }[] = [
   { id: "profile", label: "My Profile", icon: "user", desc: "Name, contact & public details" },
   { id: "password", label: "Change Password", icon: "lock", desc: "Password & security" },
-  { id: "notify", label: "Notifications", icon: "bell", desc: "Email, push & SMS alerts" },
   { id: "billing", label: "Billing", icon: "creditCard", desc: "Plan, payment & invoices" },
 ];
 
@@ -363,17 +362,6 @@ function BillingPanel() {
   );
 }
 
-function StubPanel({ title }: { title: string }) {
-  return (
-    <SettingsCard title={title} desc="Coming in a later phase.">
-      <div className="flex items-center gap-3 text-slate-500">
-        <Icon name="history" size={16} />
-        <span className="text-[13px]">This section isn&apos;t wired up yet.</span>
-      </div>
-    </SettingsCard>
-  );
-}
-
 export default function SettingsPage() {
   const [tab, setTab] = useState("profile");
 
@@ -384,7 +372,7 @@ export default function SettingsPage() {
           <Icon name="chevronLeft" size={14} />Back to dashboard
         </Link>
         <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">Account Settings</h1>
-        <p className="text-[13px] text-slate-500 mt-1">Manage your profile, security, notifications and billing in one place.</p>
+        <p className="text-[13px] text-slate-500 mt-1">Manage your profile, security and billing in one place.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[232px_1fr] gap-7 items-start">
@@ -414,7 +402,6 @@ export default function SettingsPage() {
         <div className="min-w-0">
           {tab === "profile" && <ProfilePanel />}
           {tab === "password" && <PasswordPanel />}
-          {tab === "notify" && <StubPanel title="Notification preferences" />}
           {tab === "billing" && <BillingPanel />}
         </div>
       </div>
