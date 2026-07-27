@@ -16,16 +16,16 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * keeps the panel mounted through its exit so closing eases out instead of snapping.
  * Reduced-motion collapses to a plain fade.
  *
- * The surface itself lives here so every header menu reads the same: frosted glass
- * (translucent + backdrop-blur), a hairline top highlight (inset white) for the lit
- * glass edge, and a *layered* shadow — a tight contact shadow under the panel plus a
- * soft wide ambient — instead of one flat blur. Callers pass only position + width.
+ * The surface itself lives here so every header menu reads the same: a solid white
+ * panel (opaque — content behind must not bleed through), a hairline ring, and a
+ * *layered* shadow — a tight contact shadow under the panel plus a soft wide ambient
+ * — instead of one flat blur. Callers pass only position + width.
  */
 const DROPDOWN_EASE = [0.16, 1, 0.3, 1] as const;
 
 const DROPDOWN_SURFACE =
-  "rounded-[18px] bg-white/85 backdrop-blur-2xl ring-1 ring-slate-900/[0.07] overflow-hidden z-50 " +
-  "shadow-[0_1px_1px_rgba(15,23,42,0.04),0_12px_24px_-10px_rgba(15,23,42,0.16),0_32px_60px_-18px_rgba(15,23,42,0.28),inset_0_1px_0_rgba(255,255,255,0.75)]";
+  "rounded-[18px] bg-white ring-1 ring-slate-900/10 overflow-hidden z-50 " +
+  "shadow-[0_1px_1px_rgba(15,23,42,0.04),0_12px_24px_-10px_rgba(15,23,42,0.16),0_32px_60px_-18px_rgba(15,23,42,0.28)]";
 
 export function DropdownPanel({
   open,

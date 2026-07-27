@@ -19,6 +19,8 @@ import { VERB_TONES, LRN_CHIP } from "@/lib/tones";
 import { STANDARDS, buildTaskIndex, tasksForStandard, nistCrossRefTaskCodes } from "@/lib/standards";
 import { TRACK_PREVIEWS, type TrackPreview } from "@/lib/track-previews";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
+import { TOUR_DONE_EVENT, type TourDoneEvent } from "@/components/app/welcome-tour";
+import { TOUR_SEEN_KEY } from "@/components/app/nav";
 import { AccessChip } from "@/components/app/access-chip";
 
 /** Next openable step in an org — drives the card "Next up" line and the panel "Continue" CTA. */
@@ -394,12 +396,27 @@ export default function DashboardPage() {
   const standardsTabsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // On a first sign-in the app-shell welcome tour is also auto-running, so queue behind it rather
+  // than spotlighting the same screen twice at once. If they skipped that one, don't ambush them
+  // with a second — mark this one seen and leave the hero's Guide button to offer it.
   useEffect(() => {
     if (loading || typeof localStorage === "undefined") return;
     if (localStorage.getItem("dashboardTourSeen")) return;
-    localStorage.setItem("dashboardTourSeen", "1");
-    const id = setTimeout(() => setTourStep(0), 500); // let the hero animate in first
-    return () => clearTimeout(id);
+
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const start = (completed: boolean) => {
+      localStorage.setItem("dashboardTourSeen", "1");
+      if (completed) id = setTimeout(() => setTourStep(0), 500); // let the hero animate in first
+    };
+    const onWelcomeDone = (e: Event) => start((e as TourDoneEvent).detail.completed);
+
+    if (localStorage.getItem(TOUR_SEEN_KEY)) start(true);
+    else window.addEventListener(TOUR_DONE_EVENT, onWelcomeDone, { once: true });
+
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener(TOUR_DONE_EVENT, onWelcomeDone);
+    };
   }, [loading]);
 
   const tourSteps: TourStep[] = [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GuidedTour, type TourStep } from "./guided-tour";
 import { TOUR_SEEN_KEY } from "./nav";
 
@@ -8,6 +8,11 @@ import { TOUR_SEEN_KEY } from "./nav";
  *  it. A window event keeps the trigger decoupled from AppShell, which owns the tour state. */
 export const TOUR_EVENT = "grc:welcome-tour";
 export const startWelcomeTour = () => window.dispatchEvent(new Event(TOUR_EVENT));
+
+/** Fired when this tour closes. The dashboard's own walkthrough queues behind it so a first-time
+ *  mentee never gets two spotlights at once. `detail.completed` is false if they skipped out. */
+export const TOUR_DONE_EVENT = "grc:welcome-tour-done";
+export type TourDoneEvent = CustomEvent<{ completed: boolean }>;
 
 /** Spotlight a piece of app chrome by its data-tour tag. */
 const tag = (name: string) => () => document.querySelector<HTMLElement>(`[data-tour="${name}"]`);
@@ -97,14 +102,18 @@ export function WelcomeTour({ openNav }: { openNav: () => void }) {
     if (window.matchMedia("(max-width: 767px)").matches) openNav();
   }, [openNav]);
 
+  const tourSteps = useMemo(() => steps(showNav), [showNav]);
+
   const close = useCallback(() => {
+    const completed = step === tourSteps.length - 1;
     setStep(-1);
     try {
       localStorage.setItem(TOUR_SEEN_KEY, "1");
     } catch {
       // Storage unavailable — the tour just offers itself again next visit.
     }
-  }, []);
+    window.dispatchEvent(new CustomEvent(TOUR_DONE_EVENT, { detail: { completed } }));
+  }, [step, tourSteps.length]);
 
   // First run. Delayed so the shell has painted and the nav targets are measurable.
   useEffect(() => {
@@ -126,5 +135,5 @@ export function WelcomeTour({ openNav }: { openNav: () => void }) {
     return () => window.removeEventListener(TOUR_EVENT, onStart);
   }, []);
 
-  return <GuidedTour steps={steps(showNav)} step={step} onStep={setStep} onClose={close} />;
+  return <GuidedTour steps={tourSteps} step={step} onStep={setStep} onClose={close} />;
 }
