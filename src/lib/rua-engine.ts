@@ -3,7 +3,7 @@
 // from the task's RUA catalog entry. The AI mentor (Layer 2) still grades the submitted payload;
 // this engine drives the in-workspace exercises and the readiness ledger.
 
-import { RUA_TASKS, type RuaTask } from "./rua-tasks";
+import { type RuaTask } from "./rua-tasks";
 
 /* ── text utilities ── */
 
@@ -57,10 +57,9 @@ export interface MicroCheckItem { q: string; options: string[]; answer: string }
 export function microCheck(task: RuaTask, taskCode: string, ctrlIdx: number): MicroCheckItem {
   const c = task.controls[ctrlIdx];
   const others = task.controls.filter((_, i) => i !== ctrlIdx);
-  const pool = others.length >= 3
-    ? others
-    : others.concat(Object.values(RUA_TASKS).flatMap((t) => t.controls).filter((x) => x.name !== c.name));
-  const distract = [...new Set(pool.map((x) => x.name))].filter((n) => n !== c.name).slice(0, 3);
+  // ponytail: within-task decoys only (the catalog is now server-side, one task at a time).
+  // A 3+-control task still yields 2-3 decoys; short tasks just show fewer options.
+  const distract = [...new Set(others.map((x) => x.name))].filter((n) => n !== c.name).slice(0, 3);
   return {
     q: `Which outcome does ${c.ref || "this reference"} actually require?`,
     options: seededShuffle([c.name, ...distract], taskCode + ctrlIdx),
@@ -77,8 +76,8 @@ export function inspectExercise(task: RuaTask, taskCode: string, tplIdx: number)
   const tpl = task.templates[tplIdx];
   if (tpl.fields.length >= 3) {
     const own = tpl.fields;
-    const decoyPool = task.templates.filter((_, i) => i !== tplIdx).flatMap((t) => t.fields)
-      .concat(Object.values(RUA_TASKS).flatMap((t) => t.templates).flatMap((t) => t.fields));
+    // ponytail: within-task decoy fields only — see microCheck note above.
+    const decoyPool = task.templates.filter((_, i) => i !== tplIdx).flatMap((t) => t.fields);
     const decoys = [...new Set(decoyPool)].filter((f) => !own.includes(f));
     const picks = seededShuffle(
       [

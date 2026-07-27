@@ -2,7 +2,7 @@
 // primary-standard `controls` and its NIST CSF `crosswalk`, so this file adds only what the UI
 // needs on top: a tone, a domain label, and a one-line purpose per clause.
 
-import { RUA_TASKS } from "./rua-tasks";
+import { TASK_CONTROL_DATA } from "./task-controls";
 import { TASK_META } from "./taskmeta";
 
 export interface Control { standard: string; tone: string; domain: string; num: string; name: string; purpose?: string; }
@@ -116,7 +116,7 @@ const PURPOSE: Record<string, string> = {
 };
 
 function toControls(code: string): TaskControls | undefined {
-  const rua = RUA_TASKS[code];
+  const rua = TASK_CONTROL_DATA[code];
   if (!rua) return undefined;
   const primary: Control[] = rua.controls.map((c) => ({
     standard: rua.standard,
@@ -138,5 +138,5 @@ function toControls(code: string): TaskControls | undefined {
 }
 
 export const CONTROLS_BY_TASK: Record<string, TaskControls> = Object.fromEntries(
-  Object.keys(RUA_TASKS).map((code) => [code, toControls(code)!]),
+  Object.keys(TASK_CONTROL_DATA).map((code) => [code, toControls(code)!]),
 );

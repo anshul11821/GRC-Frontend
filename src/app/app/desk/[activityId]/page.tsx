@@ -17,7 +17,7 @@ import { VerbWorkspace } from "@/components/app/workspaces";
 import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
-import { getActivityContent } from "@/lib/activity-content";
+import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import type { TaskReference } from "@/lib/taskmeta";
@@ -334,6 +334,10 @@ export default function ActivityWorkspace() {
 
   const closeTour = () => setTourStep(-1);
 
+  // Curriculum content (brief + reference bodies) is fetched per-task from the gated endpoint,
+  // not bundled — see task-bundle.ts. Fetches once activity (hence taskCode) is loaded.
+  const { bundle } = useTaskBundle(activity?.taskCode);
+
   const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
   const hasContent = Object.entries(values).some(([, v]) =>
@@ -423,7 +427,7 @@ export default function ActivityWorkspace() {
   }
 
   const verb = VERBS[activity.verb.id] ?? GATE_VERBS[activity.verb.id];
-  const content = getActivityContent(activity.taskCode, activity.code, activity.verb.id);
+  const content = bundle ? activityBrief(bundle, activity.code, activity.verb.id) : undefined;
   const layer1 = result?.layer1;
   const review = result?.review ?? activity.latestReview;
   const passed = review?.decision === "pass" || activity.status === "complete";

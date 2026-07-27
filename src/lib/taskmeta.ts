@@ -1,5 +1,7 @@
 // Per-task catalogue (GRC101_Tasks_Activities.docx) — fixed reference for the Working Desk tree + task overview.
-import { TASK_CONTENT } from "./task-content";
+// Non-sensitive public catalogue metadata (task names, standards, deliverables). The proprietary
+// objective / whatToDo / reference bodies are NOT merged in here anymore — they're served per-task
+// from the gated backend endpoint (see task-bundle.ts / TASK_CONTENT lives server-side only).
 
 /** A piece of reference material a task hands you. Opens in a right-side drawer.
  *  References carry the case facts/rules you NEED to produce a correct deliverable —
@@ -498,9 +500,3 @@ export const TASK_META: Record<string, TaskMeta> = {
 };
 
 export const METHOD_CATEGORY_ORDER: string[] = ["Assessment and Analysis", "Governance and Risk Management", "Compliance and Regulatory Management", "Design and Development", "Strategic Planning and Architecture", "Implementation and Execution", "Testing and Validation", "Monitoring and Management", "Communication and Advisory", "Response and Recovery", "Business Continuity and Resilience Planning", "Third-Party Risk Management", "Legal and Regulatory Coordination", "Project Execution", "Quality Assurance", "Knowledge Transfer"];
-
-// Rich per-task content (Objective / What to do / Reference material) lives in task-content.ts
-// and is merged in here so the rest of the app keeps reading it off TASK_META.
-for (const [code, content] of Object.entries(TASK_CONTENT)) {
-  if (TASK_META[code]) Object.assign(TASK_META[code], content);
-}

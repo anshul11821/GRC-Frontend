@@ -13,7 +13,8 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
 import { TabRail, PaneNav, type TabDef } from "./gates";
-import { getRuaTask } from "@/lib/rua-tasks";
+import { type RuaTask } from "@/lib/rua-tasks";
+import { useTaskBundle } from "@/lib/task-bundle";
 import { TASK_META } from "@/lib/taskmeta";
 import { RESEARCH_METHODS, RESEARCH_SOURCE_TYPES, type ResearchMethod } from "@/lib/research-methods";
 import {
@@ -251,8 +252,19 @@ function ReviewPane({ ctx, prog, patch, gate, goMethod }: {
 
 /* ── workspace shell ── */
 
-export function ResearchWorkspace({ taskCode, value, onChange }: WorkspaceProps) {
-  const rua = getRuaTask(taskCode);
+/** Fetches the task's curriculum bundle (gated, per-task) then renders the research gate. */
+export function ResearchWorkspace(props: WorkspaceProps) {
+  const { bundle, loading, error } = useTaskBundle(props.taskCode);
+  if (loading) {
+    return <GivenNote>Loading the research-gate content…</GivenNote>;
+  }
+  if (error || !bundle?.rua) {
+    return <GivenNote>The research-gate content for this task hasn&apos;t been published yet.</GivenNote>;
+  }
+  return <ResearchWorkspaceInner {...props} rua={bundle.rua} />;
+}
+
+function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspaceProps & { rua: RuaTask }) {
   const meta = taskCode ? TASK_META[taskCode] : undefined;
   const ctx: RsTaskContext = {
     org: rua?.org ?? "the organisation",

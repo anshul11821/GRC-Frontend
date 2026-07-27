@@ -14,8 +14,9 @@ import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
 import { TabRail, PaneNav, type TabDef } from "./gates";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
-import { getRuaTask, type RuaTask } from "@/lib/rua-tasks";
-import { RUA_REFS, type RuaRef } from "@/lib/rua-refs";
+import { type RuaTask } from "@/lib/rua-tasks";
+import { type RuaRef } from "@/lib/rua-refs";
+import { useTaskBundle } from "@/lib/task-bundle";
 import { TASK_META, type TaskReference } from "@/lib/taskmeta";
 import {
   microCheck, inspectExercise, boundaryItems, followUp,
@@ -1111,9 +1112,19 @@ function GateOutcomePanel({ decision, ledger, onRerun }: { decision: GateDecisio
 
 /* ================= workspace shell ================= */
 
-export function RuaWorkspace({ taskCode, value, onChange }: WorkspaceProps) {
-  const task = getRuaTask(taskCode);
-  const allRefs = (taskCode ? RUA_REFS[taskCode] : undefined) ?? [];
+/** Fetches the task's curriculum bundle (gated, per-task) then renders the gate. */
+export function RuaWorkspace(props: WorkspaceProps) {
+  const { bundle, loading, error } = useTaskBundle(props.taskCode);
+  if (loading) {
+    return <GivenNote>Loading the readiness-gate content…</GivenNote>;
+  }
+  if (error || !bundle?.rua) {
+    return <GivenNote>The readiness-gate content for this task hasn&apos;t been published yet.</GivenNote>;
+  }
+  return <RuaWorkspaceInner {...props} task={bundle.rua} allRefs={bundle.refs ?? []} />;
+}
+
+function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: WorkspaceProps & { task: RuaTask; allRefs: RuaRef[] }) {
   const [p, setP] = useState<RuaProgress>(() => {
     const base = task ? emptyProgress(task) : ({} as RuaProgress);
     // restore any previously drafted progress field-by-field
@@ -1128,15 +1139,11 @@ export function RuaWorkspace({ taskCode, value, onChange }: WorkspaceProps) {
 
   const patch: Patch = (mut) => setP((prev) => { const n = JSON.parse(JSON.stringify(prev)) as RuaProgress; mut(n); return n; });
 
-  const ledger = useMemo(() => (task ? computeLedger(task, p) : null), [task, p]);
+  const ledger = useMemo(() => computeLedger(task, p), [task, p]);
   const decision = p.attest?.decision;
   const objectiveMet = decision === "READY" || decision === "CONDITIONAL";
 
   useLift({ ...p, objectiveMet } as unknown as Record<string, unknown>, onChange);
-
-  if (!task || !ledger) {
-    return <GivenNote>The readiness-gate content for this task hasn&apos;t been published yet.</GivenNote>;
-  }
 
   const doneMap: Record<string, boolean> = {
     study: task.controls.every((_, i) => p.study[i]?.passed),

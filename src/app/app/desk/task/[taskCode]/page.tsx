@@ -14,6 +14,7 @@ import { isGateVerb } from "@/lib/verbs";
 import { CONTROLS_BY_TASK, type Control } from "@/lib/controls";
 import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
+import { useTaskBundle } from "@/lib/task-bundle";
 import { StandardBanner } from "@/components/app/standards";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { dueChip, fmtDue, type ScheduleItem } from "@/lib/schedule";
@@ -23,6 +24,10 @@ export default function TaskOverview() {
   const meta = TASK_META[taskCode];
   const reg = CONTROLS_BY_TASK[taskCode];
   const { learnings, loading, scheduleByActivity } = useDeskLearnings();
+  // The task objective is proprietary curriculum content, fetched per-task from the gated
+  // endpoint rather than bundled. Name/description/deliverable stay in TASK_META (public catalogue).
+  const { bundle } = useTaskBundle(taskCode);
+  const objective = bundle?.overview?.objective;
   const [controlsOpen, setControlsOpen] = useState(false);
   const [tourStep, setTourStep] = useState(-1); // -1 = closed
   const objectiveRef = useRef<HTMLDivElement>(null);
@@ -76,7 +81,7 @@ export default function TaskOverview() {
 
   // Guided walkthrough of the task brief, in reading order; skips anything this task doesn't have.
   const tourSteps: TourStep[] = [];
-  if (meta?.objective || meta?.description) tourSteps.push({
+  if (objective || meta?.description) tourSteps.push({
     title: "Read the objective",
     body: "What this whole task has to achieve, and the final deliverable it builds toward. Everything below serves this.",
     icon: "target",
@@ -139,11 +144,11 @@ export default function TaskOverview() {
 
       {/* objective — the task description now heads the banner above; keep only a distinct
           objective line (when one exists) plus the final deliverable here to avoid repeating it */}
-      {(meta?.objective || meta?.deliverable) && (
+      {(objective || meta?.deliverable) && (
         <div ref={objectiveRef}>
         <Card>
           <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Objective</h2>
-          {meta?.objective && <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{meta.objective}</p>}
+          {objective && <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{objective}</p>}
           {meta?.deliverable && (
             <div className="mt-4 rounded-xl bg-indigo-50/40 ring-1 ring-indigo-100 p-3.5">
               <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-indigo-600 mb-1">Final deliverable</div>

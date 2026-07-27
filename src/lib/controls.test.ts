@@ -1,9 +1,9 @@
 // Run: npx tsx src/lib/controls.test.ts
 import assert from "node:assert/strict";
 import { CONTROLS_BY_TASK } from "./controls";
-import { RUA_TASKS } from "./rua-tasks";
+import { TASK_CONTROL_DATA } from "./task-controls";
 
-const codes = Object.keys(RUA_TASKS);
+const codes = Object.keys(TASK_CONTROL_DATA);
 assert.equal(codes.length, 35);
 
 for (const code of codes) {
@@ -15,7 +15,7 @@ for (const code of codes) {
     assert.ok(c.name, `${code}: control ${c.num} has no name`);
     assert.ok(c.domain !== undefined, `${code}: ${c.num} has no domain`);
     // Every primary-standard control needs a description; NIST cross-walk rows use `name` as theirs.
-    if (c.standard !== "NIST CSF 2.0" || RUA_TASKS[code].standard.startsWith("NIST")) {
+    if (c.standard !== "NIST CSF 2.0" || TASK_CONTROL_DATA[code].standard.startsWith("NIST")) {
       assert.ok(c.purpose, `${code}: no purpose for ref "${c.num}" — add it to PURPOSE in controls.ts`);
     }
   }
