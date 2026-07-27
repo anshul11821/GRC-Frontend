@@ -29,7 +29,7 @@ const COPY: Record<Audience, { eyebrow: string; title: string; body: string }> =
   university: {
     eyebrow: "University partnership programme",
     title: "Give your students the edge of real-world GRC experience.",
-    body: "Hands-on governance, risk and compliance mentorship on simulated enterprise engagements — mentor-graded, standards-aligned, and mapped straight to the roles your graduates want.",
+    body: "Hands-on governance, risk and compliance mentorship on simulated enterprise engagements — mentor-graded, Human attested, standards-aligned, and mapped straight to the roles your graduates want.",
   },
 };
 
@@ -151,7 +151,7 @@ export default function WaitlistPage() {
                         : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
-                    {a === "student" ? "I'm a student" : "I'm a university"}
+                    {a === "student" ? "Individual" : "University"}
                   </button>
                 ))}
               </div>

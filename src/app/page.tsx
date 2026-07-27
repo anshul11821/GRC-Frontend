@@ -103,7 +103,7 @@ function Hero() {
           Become a job-ready <span className="text-indigo-600">GRC professional</span> through real work.
         </h1>
         <p className="mt-5 text-[16px] md:text-[17px] text-slate-500 leading-relaxed tracking-tight max-w-2xl mx-auto" style={{ textWrap: "pretty" }}>
-          Practise governance, risk and compliance on simulated enterprise engagements — mentor-graded, standards-aligned, and mapped straight to the roles you want.
+          Practise governance, risk and compliance on simulated enterprise engagements — mentor-graded, Human attested, standards-aligned, and mapped straight to the roles you want.
         </p>
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
           <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
