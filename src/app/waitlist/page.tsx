@@ -120,8 +120,8 @@ export default function WaitlistPage() {
               <p className="mt-2 text-[13px] text-slate-500 leading-relaxed">
                 {done.alreadyRegistered ? (
                   <>
-                    <span className="font-medium text-slate-700">{form.email}</span> is already on our
-                    list — no need to submit again. We&apos;ll be in touch.
+                    <span className="font-medium text-slate-700">{form.email}</span>{" "}
+                    is already on our list — no need to submit again. We&apos;ll be in touch.
                   </>
                 ) : (
                   <>
