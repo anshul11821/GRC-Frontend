@@ -7,7 +7,7 @@ import {
   GivenNote, RefBox, ScriptedExchange, SOFT, DOT, CLASS_TONE, type Tone,
 } from "./kit";
 import {
-  getRequestConversation, routeMood,
+  getRequestConversation, routeMood, shuffleOptions,
   type RequestConversation, type ConvOption, type MoodResult,
 } from "@/lib/request-conversations";
 import { getIdentifyTask, type IdentifyTask } from "@/lib/identify-tasks";
@@ -81,9 +81,10 @@ function TypingBubble({ initials, text, delay = 1400, onDone }: { initials: stri
 }
 
 function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversation } & Pick<WorkspaceProps, "value" | "onChange">) {
-  const [to, setTo] = useState(() => seed(value, "to", conv.recipient));
-  const [subject, setSubject] = useState(() => seed(value, "subject", conv.subject));
-  const [purpose, setPurpose] = useState(() => seed(value, "purpose", conv.purpose));
+  // Graded inputs start blank — the scripted values are hints (placeholders), never pre-typed answers.
+  const [to, setTo] = useState(() => seed(value, "to", ""));
+  const [subject, setSubject] = useState(() => seed(value, "subject", ""));
+  const [purpose, setPurpose] = useState(() => seed(value, "purpose", ""));
   const [items, setItems] = useState<string[]>(() => seed(value, "items", [] as string[]));
 
   // If a saved draft/submission already reached the objective, reconstruct the completed
@@ -94,8 +95,8 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
     const savedItems = seed(value, "items", [] as string[]).filter((i) => i.trim());
     if (savedItems.length < 3) return null;
     const r = routeMood({
-      subject: seed(value, "subject", conv.subject),
-      purpose: seed(value, "purpose", conv.purpose),
+      subject: seed(value, "subject", ""),
+      purpose: seed(value, "purpose", ""),
       items: savedItems, correctItems: conv.suggestedItems, wrongItems: conv.wrongItems,
     });
     const picks = conv.threads[r.mood].rounds.map((rd) => rd.options.find((o) => o.correct)!);
@@ -121,6 +122,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
   const toggle = (s: string) => setItems(selected(s) ? items.filter((i) => i !== s) : [...items, s]);
 
   const subjectOk = subject.length > 0 && subject.length <= 80;
+  const subjectBad = subject.length > 80; // empty is "not yet filled", not an error — only over-length turns the field red
   const sel = items.filter((i) => i.trim());
   const itemsN = sel.length;
   const toOk = to.trim().length > 0;
@@ -240,10 +242,10 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
               <div className="pt-1.5">
                 <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different reply" : "Choose your reply"}</div>
                 <div className="space-y-2">
-                  {thread.rounds[activeRound].options.map((o) => (
+                  {shuffleOptions(thread.rounds[activeRound].options).map((o, i) => (
                     <button key={o.id} onClick={() => pick(o, activeRound)}
                       className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
-                      <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                      <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{"ABC"[i]}</span>
                       <span>{o.text}</span>
                     </button>
                   ))}
@@ -283,24 +285,24 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
   // ── Compose view (compose-with-assists) ──
   return (
     <div className="space-y-5">
-      <GivenNote>The recipient is pre-set for this engagement. Compose a specific, well-scoped request and pick the items that belong in it — not every suggestion is appropriate. A vague or over-broad ask changes how the stakeholder responds.</GivenNote>
+      <GivenNote>Address this to <strong>{conv.recipient}</strong>. Compose a specific, well-scoped request and pick the items that belong in it — not every suggestion is appropriate. A vague or over-broad ask changes how the stakeholder responds.</GivenNote>
 
       <div>
         <SectionLabel>To · stakeholder (named role)</SectionLabel>
-        <WTextInput value={to} onChange={setTo} placeholder="e.g. IT Operations Lead" />
+        <WTextInput value={to} onChange={setTo} placeholder={conv.recipient} />
       </div>
 
       <div>
         <SectionLabel hint={`${subject.length} / 80`}>Subject</SectionLabel>
-        <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectOk ? "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30" : "ring-rose-300"}`}>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} className="flex-1 bg-transparent outline-none text-[13px] text-slate-900" />
+        <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectBad ? "ring-rose-300" : "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30"}`}>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A specific, scoped subject line…" className="flex-1 bg-transparent outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
           <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
         </div>
       </div>
 
       <div>
         <SectionLabel>Purpose</SectionLabel>
-        <WTextArea value={purpose} onChange={setPurpose} rows={3} hint={`${purpose.length} chars`} />
+        <WTextArea value={purpose} onChange={setPurpose} rows={3} placeholder="Why you need this and what you'll do with it…" hint={`${purpose.length} chars`} />
       </div>
 
       <div>
@@ -355,22 +357,18 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
 
 /* Legacy single-shot composer — fallback for Request activities not yet authored as a branching flow. */
 function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value" | "onChange">) {
-  const [to, setTo] = useState(() => seed(value, "to", "Legal Counsel"));
-  const [subject, setSubject] = useState(() => seed(value, "subject", "Request: regulated jurisdictions for EU operations"));
-  const [purpose, setPurpose] = useState(() => seed(value, "purpose", "To complete the interested-parties register I need your authoritative list of jurisdictions where we hold regulatory obligations."));
-  const [items, setItems] = useState<string[]>(() => seed(value, "items", [
-    "Confirmed list of countries with active operations and the regulator per country",
-    "Any new regulations expected to take effect within 12 months",
-    "Status of existing data-residency commitments to enterprise customers",
-  ]));
+  const [to, setTo] = useState(() => seed(value, "to", ""));
+  const [subject, setSubject] = useState(() => seed(value, "subject", ""));
+  const [purpose, setPurpose] = useState(() => seed(value, "purpose", ""));
+  const [items, setItems] = useState<string[]>(() => seed(value, "items", ["", "", ""]));
 
   useLift({ to, subject, purpose, items }, onChange);
-  const subjectOk = subject.length > 0 && subject.length <= 80;
+  const subjectBad = subject.length > 80; // empty is "not yet filled", not an error — only over-length turns the field red
   const itemsN = items.filter((i) => i.trim()).length;
 
   return (
     <div className="space-y-5">
-      <GivenNote>The recipient and reference documents are pre-set for this engagement. Write a specific, well-scoped request — a vague ask gets ignored.</GivenNote>
+      <GivenNote>The reference documents are pre-set for this engagement. Write a specific, well-scoped request — a vague ask gets ignored.</GivenNote>
 
       <div>
         <SectionLabel>To · stakeholder (named role)</SectionLabel>
@@ -379,15 +377,15 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
 
       <div>
         <SectionLabel hint={`${subject.length} / 80`}>Subject</SectionLabel>
-        <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectOk ? "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30" : "ring-rose-300"}`}>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} className="flex-1 bg-transparent outline-none text-[13px] text-slate-900" />
+        <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectBad ? "ring-rose-300" : "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30"}`}>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A specific, scoped subject line…" className="flex-1 bg-transparent outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
           <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
         </div>
       </div>
 
       <div>
         <SectionLabel>Purpose</SectionLabel>
-        <WTextArea value={purpose} onChange={setPurpose} rows={3} hint={`${purpose.length} chars`} />
+        <WTextArea value={purpose} onChange={setPurpose} rows={3} placeholder="Why you need this and what you'll do with it…" hint={`${purpose.length} chars`} />
       </div>
 
       <div>
@@ -398,8 +396,8 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
           {items.map((it, i) => (
             <div key={i} className="flex items-start gap-2">
               <span className="w-6 h-9 flex items-center justify-center text-[11.5px] font-mono text-slate-400">{i + 1}.</span>
-              <input value={it} onChange={(e) => { const n = [...items]; n[i] = e.target.value; setItems(n); }}
-                className="flex-1 h-9 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[13px] text-slate-900" />
+              <input value={it} onChange={(e) => { const n = [...items]; n[i] = e.target.value; setItems(n); }} placeholder="An item you need from them…"
+                className="flex-1 h-9 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
               {items.length > 3 && (
                 <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="w-9 h-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><Icon name="x" size={14} /></button>
               )}
@@ -483,10 +481,10 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
         <div>
           <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your opening</div>
           <div className="space-y-2">
-            {task.openings.map((o) => (
+            {shuffleOptions(task.openings).map((o, i) => (
               <button key={o.id} onClick={() => pickOpening(o)}
                 className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
-                <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{"ABC"[i]}</span>
                 <span>{o.text}</span>
               </button>
             ))}
@@ -534,10 +532,10 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
             <div className="pt-1.5">
               <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different probe" : "Choose your probe"}</div>
               <div className="space-y-2">
-                {thread!.rounds[activeRound].options.map((o) => (
+                {shuffleOptions(thread!.rounds[activeRound].options).map((o, i) => (
                   <button key={o.id} onClick={() => pick(o, activeRound)}
                     className="w-full text-left rounded-xl bg-white ring-1 ring-slate-200/80 hover:ring-indigo-400 hover:bg-indigo-50/40 px-3.5 py-2.5 text-[12.5px] text-slate-800 leading-relaxed tracking-tight transition-colors flex gap-2.5">
-                    <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{o.id}</span>
+                    <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-semibold flex items-center justify-center shrink-0 mt-px">{"ABC"[i]}</span>
                     <span>{o.text}</span>
                   </button>
                 ))}
@@ -743,11 +741,13 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
 }
 
 function LegacyRecordWorkspace({ value, onChange }: Pick<WorkspaceProps, "value" | "onChange">) {
+  // Asset name / type / location are the given intake data; owner, C-I-A and rationale are the
+  // mentee's to fill in.
   const [rows, setRows] = useState<RegRow[]>(() => seed(value, "register", [
-    { name: "orders-db (RDS)", type: "Database", owner: "Data Platform Lead", c: "High", i: "High", a: "High", loc: "AWS us-east-1", rationale: "Primary order PII + payment refs." },
-    { name: "Production K8s", type: "Infra", owner: "Head of Platform", c: "High", i: "High", a: "High", loc: "AWS us-east-1", rationale: "Runs all customer-facing services." },
-    { name: "Snowflake warehouse", type: "Data store", owner: "", c: "Confidential", i: "Medium", a: "Medium", loc: "AWS us-west-2", rationale: "" },
-    { name: "Stripe Connect", type: "Third party", owner: "Security Eng. Lead", c: "High", i: "High", a: "High", loc: "External", rationale: "Payment processor." },
+    { name: "orders-db (RDS)", type: "Database", owner: "", c: "", i: "", a: "", loc: "AWS us-east-1", rationale: "" },
+    { name: "Production K8s", type: "Infra", owner: "", c: "", i: "", a: "", loc: "AWS us-east-1", rationale: "" },
+    { name: "Snowflake warehouse", type: "Data store", owner: "", c: "", i: "", a: "", loc: "AWS us-west-2", rationale: "" },
+    { name: "Stripe Connect", type: "Third party", owner: "", c: "", i: "", a: "", loc: "External", rationale: "" },
   ]));
   useLift({ register: rows }, onChange);
   const set = (ri: number, k: keyof RegRow, v: string) => setRows((rs) => rs.map((r, i) => (i === ri ? { ...r, [k]: v } : r)));
@@ -770,7 +770,7 @@ function LegacyRecordWorkspace({ value, onChange }: Pick<WorkspaceProps, "value"
                 <td className="px-3 py-2.5 text-[12.5px] font-medium text-slate-900">{r.name}</td>
                 <td className="px-3 py-2.5 text-[12px] text-slate-600">{r.type}</td>
                 <td className="px-3 py-2.5">
-                  <select value={r.owner} onChange={(e) => set(ri, "owner", e.target.value)} className={`h-8 px-2 rounded-md text-[12px] outline-none ring-1 ${r.owner ? "ring-slate-200/80 bg-white" : "ring-rose-300 bg-rose-50/40"} focus:ring-2 focus:ring-indigo-500/40`}>
+                  <select value={r.owner} onChange={(e) => set(ri, "owner", e.target.value)} className="h-8 px-2 rounded-md text-[12px] outline-none ring-1 ring-slate-200/80 bg-white focus:ring-2 focus:ring-indigo-500/40">
                     <option value="">Required…</option>
                     {owners.map((o) => <option key={o}>{o}</option>)}
                   </select>
@@ -778,6 +778,7 @@ function LegacyRecordWorkspace({ value, onChange }: Pick<WorkspaceProps, "value"
                 {(["c", "i", "a"] as const).map((k) => (
                   <td key={k} className="px-2 py-2.5">
                     <select value={r[k]} onChange={(e) => set(ri, k, e.target.value)} className={`h-8 px-1.5 rounded-md text-[11px] font-medium outline-none ring-1 ring-inset focus:ring-2 focus:ring-indigo-500/40 ${CLASS_TONE[r[k]] ?? "bg-white ring-slate-200/80"}`}>
+                      <option value="">—</option>
                       {["Low", "Medium", "High", "Confidential"].map((o) => <option key={o}>{o}</option>)}
                     </select>
                   </td>
@@ -912,18 +913,19 @@ export function ScriptedApplyFlow({ task, value, onChange }: { task: ApplyTask }
 }
 
 function LegacyApplyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+  // Asset name + contents are given; the classification and its rationale are the mentee's call.
   const [items, setItems] = useState<ApplyItem[]>(() => seed(value, "items", [
-    { name: "orders-db (RDS)", contains: "Order PII + email", classification: "Confidential", rationale: "Contains personal data of identifiable customers." },
-    { name: "Production K8s", contains: "App workloads", classification: "Internal", rationale: "No data at rest; runs services that process Confidential data." },
-    { name: "Marketing CMS", contains: "Public copy", classification: "Public", rationale: "Customer-facing site content only." },
-    { name: "Snowflake warehouse", contains: "Derived analytics", classification: "Confidential", rationale: "Lineage includes hashed but joinable user IDs." },
-    { name: "Internal R&D sandbox", contains: "Synthetic data", classification: "Internal", rationale: "Production data prohibited per policy." },
+    { name: "orders-db (RDS)", contains: "Order PII + email", classification: "", rationale: "" },
+    { name: "Production K8s", contains: "App workloads", classification: "", rationale: "" },
+    { name: "Marketing CMS", contains: "Public copy", classification: "", rationale: "" },
+    { name: "Snowflake warehouse", contains: "Derived analytics", classification: "", rationale: "" },
+    { name: "Internal R&D sandbox", contains: "Synthetic data", classification: "", rationale: "" },
   ]));
   const [step, setStep] = useState(0);
   useLift({ items }, onChange);
   const cur = items[step];
   const set = (k: keyof ApplyItem, v: string) => setItems((is) => is.map((it, i) => (i === step ? { ...it, [k]: v } : it)));
-  const tone = (c: string): Tone => (c === "Public" ? "emerald" : c === "Internal" ? "amber" : "rose");
+  const tone = (c: string): Tone => (!c ? "slate" : c === "Public" ? "emerald" : c === "Internal" ? "amber" : "rose");
 
   return (
     <div className="space-y-4">
@@ -954,7 +956,7 @@ function LegacyApplyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
             </div>
             <div className="mt-4">
               <div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Rationale <span className="text-rose-500">*</span></div>
-              <textarea value={cur.rationale} onChange={(e) => set("rationale", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[12.5px] resize-none" />
+              <textarea value={cur.rationale} onChange={(e) => set("rationale", e.target.value)} rows={2} placeholder="Why this tier, for this asset…" className="w-full px-3 py-2 rounded-lg bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/30 outline-none text-[12.5px] resize-none placeholder:text-slate-400" />
             </div>
           </div>
         </div>
@@ -1089,10 +1091,10 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: "b3", name: "Snowflake DW", meta: "— · no owner" }, { id: "b4", name: "Stripe Connect", meta: "Security Eng. Lead · PCI" },
     { id: "b5", name: "Snowflake DW (dev)", meta: "Analytics · duplicate?" }, { id: "b6", name: "Datadog", meta: "Sec Ops · extra item" },
   ];
-  const [decisions, setDecisions] = useState<Record<string, string>>(() => seed(value, "decisions", { a1: "match", a2: "match", a3: "miss", a4: "match", a5: "miss", a6: "miss", b5: "duplicate", b6: "miss" }));
-  const [method, setMethod] = useState(() => seed(value, "method", "Joined the IT asset CMDB export with the vendor register on canonical asset name; flagged owner-role and presence differences."));
-  const [gapNote, setGapNote] = useState(() => seed(value, "gapNote", "Three CMDB assets are absent from the vendor register (PagerDuty, Marketing CMS, Snowflake). Snowflake appears twice in B (dev listed separately). B uses role names; A still uses departments."));
-  const [discrepancyClass, setDiscrepancyClass] = useState(() => seed(value, "discrepancyClass", "Owner-data mismatch"));
+  const [decisions, setDecisions] = useState<Record<string, string>>(() => seed(value, "decisions", {} as Record<string, string>));
+  const [method, setMethod] = useState(() => seed(value, "method", ""));
+  const [gapNote, setGapNote] = useState(() => seed(value, "gapNote", ""));
+  const [discrepancyClass, setDiscrepancyClass] = useState(() => seed(value, "discrepancyClass", ""));
   const discrepancies = Object.entries(decisions).filter(([, v]) => v !== "match").map(([id, v]) => ({ item: id, discrepancyClass: v }));
   useLift({ method, gapNote, discrepancyClass, discrepancies }, onChange);
 
@@ -1126,18 +1128,19 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
         <div>
           <SectionLabel>Gap note</SectionLabel>
-          <WTextArea value={gapNote} onChange={setGapNote} rows={3} hint={`${gapNote.length} chars`} />
+          <WTextArea value={gapNote} onChange={setGapNote} rows={3} placeholder="What differs between the two registers, and why…" hint={`${gapNote.length} chars`} />
         </div>
         <div>
           <SectionLabel>Discrepancy class</SectionLabel>
           <select value={discrepancyClass} onChange={(e) => setDiscrepancyClass(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 text-[13px] text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/30">
+            <option value="">Pick a class…</option>
             {["Owner-data mismatch", "Missing item in B", "Missing item in A", "Duplicate entry", "Schema drift"].map((o) => <option key={o}>{o}</option>)}
           </select>
         </div>
       </div>
       <div>
         <SectionLabel>Method</SectionLabel>
-        <WTextArea value={method} onChange={setMethod} rows={2} hint={`${method.length} chars`} />
+        <WTextArea value={method} onChange={setMethod} rows={2} placeholder="How you compared the two sources…" hint={`${method.length} chars`} />
       </div>
     </div>
   );
@@ -1156,7 +1159,7 @@ export function IdentifyWorkspace({ value, onChange, openRef, taskCode, activity
 type IdMark = { flagged: boolean; action: string; owner: string };
 
 function ScriptedIdentifyFlow({ task, value, onChange }: { task: IdentifyTask } & Pick<WorkspaceProps, "value" | "onChange">) {
-  const [criterion, setCriterion] = useState(() => seed(value, "criterion", task.criterion));
+  const [criterion, setCriterion] = useState(() => seed(value, "criterion", "")); // the mentee states the rule, it isn't handed to them
   const [marks, setMarks] = useState<Record<number, IdMark>>(() => seed(value, "marks", {} as Record<number, IdMark>));
   const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
 
@@ -1267,13 +1270,14 @@ function ScriptedIdentifyFlow({ task, value, onChange }: { task: IdentifyTask } 
 }
 
 function LegacyIdentifyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+  // The dataset is given; which rows to flag — and each flag's action + owner — is the mentee's work.
   const [rows, setRows] = useState<FlagRow[]>(() => seed(value, "rows", [
-    { id: 1, asset: "Production K8s cluster (us-east-1)", type: "Compute", source: "SOC 2 §III.A", flagged: true, action: "Add to ISMS scope; map to Annex A 8.20–8.23", owner: "Head of Platform" },
-    { id: 2, asset: "orders-db (Amazon RDS)", type: "Data store", source: "SOC 2 §III.A", flagged: true, action: "Add to ISMS scope; map to A.5.12 + A.8.10", owner: "Data Platform Lead" },
-    { id: 3, asset: "Stripe Connect integration", type: "Third party", source: "SOC 2 §III.B", flagged: true, action: "Add as processor; route to vendor register", owner: "Security Eng. Lead" },
+    { id: 1, asset: "Production K8s cluster (us-east-1)", type: "Compute", source: "SOC 2 §III.A", flagged: false, action: "", owner: "" },
+    { id: 2, asset: "orders-db (Amazon RDS)", type: "Data store", source: "SOC 2 §III.A", flagged: false, action: "", owner: "" },
+    { id: 3, asset: "Stripe Connect integration", type: "Third party", source: "SOC 2 §III.B", flagged: false, action: "", owner: "" },
     { id: 4, asset: "Marketing CMS (WordPress)", type: "App", source: "SOC 2 §III.D", flagged: false, action: "", owner: "" },
-    { id: 5, asset: "Snowflake analytics warehouse", type: "Data store", source: "SOC 2 §III.A", flagged: true, action: "", owner: "" },
-    { id: 6, asset: "PagerDuty (incident tooling)", type: "Third party", source: "SOC 2 §III.B", flagged: true, action: "Map to A.5.24 + A.5.25", owner: "Security Ops" },
+    { id: 5, asset: "Snowflake analytics warehouse", type: "Data store", source: "SOC 2 §III.A", flagged: false, action: "", owner: "" },
+    { id: 6, asset: "PagerDuty (incident tooling)", type: "Third party", source: "SOC 2 §III.B", flagged: false, action: "", owner: "" },
   ]));
   const flags = rows.filter((r) => r.flagged).map((r) => ({ item: r.asset, proposedAction: r.action, accountableRole: r.owner }));
   useLift({ flags }, onChange);
@@ -1397,14 +1401,15 @@ function ScriptedReviewFlow({ task, value, onChange }: { task: ReviewTask } & Pi
 }
 
 function LegacyReviewWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+  // The feedback list is given; ticking each item off is the mentee's confirmation.
   const [fb, setFb] = useState(() => seed(value, "priorFeedback", [
-    { id: 1, text: "Scope statement needs a line on excluded systems with rationale.", done: true },
-    { id: 2, text: "Standards Alignment: cite ISO §4.3 explicitly.", done: true },
-    { id: 3, text: "Risk Awareness: address Snowflake personal-data joinability.", done: true },
+    { id: 1, text: "Scope statement needs a line on excluded systems with rationale.", done: false },
+    { id: 2, text: "Standards Alignment: cite ISO §4.3 explicitly.", done: false },
+    { id: 3, text: "Risk Awareness: address Snowflake personal-data joinability.", done: false },
     { id: 4, text: "Communication: tighten executive summary (currently 240 words).", done: false },
     { id: 5, text: "Specificity: list named systems, not 'production environment'.", done: false },
   ]));
-  const [cover, setCover] = useState(() => seed(value, "coverNote", "Tightened scope language for ISO §4.3 alignment. Added explicit exclusions (Marketing CMS, R&D sandbox) with rationale. Snowflake risk paragraph rewritten — joinability now addressed."));
+  const [cover, setCover] = useState(() => seed(value, "coverNote", ""));
   const [revisionNo, setRevisionNo] = useState(() => seed(value, "revisionNo", "2"));
   const addressed = fb.filter((f) => f.done).length;
   useLift({ coverNote: cover, revisionNo, priorFeedbackAddressed: `${addressed} / ${fb.length}`, priorFeedback: fb }, onChange);
@@ -1447,13 +1452,9 @@ export function PresentWorkspace({ value, onChange, openRef, taskCode, activityC
   return <LegacyPresentWorkspace value={value} onChange={onChange} openRef={openRef} />;
 }
 function LegacyPresentWorkspace({ value, onChange, openRef }: WorkspaceProps) {
-  const [qa, setQa] = useState(() => seed(value, "anticipatedQuestions", [
-    { q: "Why this scope and not a phased approach?", a: "ISMS scope must be coherent — phasing risks gaps at boundaries. We sequence by maturity within the agreed scope." },
-    { q: "What's our exposure on Snowflake personal-data joinability?", a: "Joinable hashed identifiers are present. We classify Snowflake Confidential and apply the same controls as orders-db." },
-    { q: "How does this affect the SOC 2 timeline?", a: "ISMS work runs in parallel; first audit gate is Aug. No SOC 2 impact this quarter." },
-  ]));
+  const [qa, setQa] = useState(() => seed(value, "anticipatedQuestions", [{ q: "", a: "" }, { q: "", a: "" }, { q: "", a: "" }]));
   const [decision, setDecision] = useState(() => seed(value, "signoffDecision", ""));
-  const [decisionDate, setDecisionDate] = useState(() => seed(value, "decisionDate", "2026-07-10"));
+  const [decisionDate, setDecisionDate] = useState(() => seed(value, "decisionDate", ""));
   useLift({ deckLink: "ISMS Scope (May 2026).pptx · 8 slides", anticipatedQuestions: qa, signoffDecision: decision, decisionDate }, onChange);
   const setQ = (i: number, k: "q" | "a", v: string) => setQa((x) => x.map((it, j) => (j === i ? { ...it, [k]: v } : it)));
   const decisions: { id: string; label: string; tone: Tone }[] = [{ id: "Approved", label: "Approved", tone: "emerald" }, { id: "Approved with conditions", label: "Approved w/ conditions", tone: "amber" }, { id: "Rejected", label: "Rejected", tone: "rose" }];

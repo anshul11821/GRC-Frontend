@@ -79,8 +79,8 @@ function steps(showNav: () => void): TourStep[] {
     },
     {
       title: "What's due, and your account",
-      body: "The clock shows what's on you right now — overdue stages, revisions still outstanding, and anything due in the next week. Profile, password and billing sit under your avatar — along with a link back to this tour.",
-      icon: "clock",
+      body: "The bell shows what's on you right now — overdue stages, revisions still outstanding, and anything due in the next week. Profile, password and billing sit under your avatar — along with a link back to this tour.",
+      icon: "bell",
       getEl: tag("bell"),
     },
     {

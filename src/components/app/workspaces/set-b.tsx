@@ -245,15 +245,16 @@ export function DraftWorkspace(props: WorkspaceProps) {
 }
 function LegacyDraftWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [docTitle] = useState(() => seed(value, "docTitle", "Information Classification Policy"));
+  // Section headings are the given scaffold; every section body and citation is drafted by the mentee.
   const [sections, setSections] = useState<Section[]>(() => seed(value, "sectionList", [
-    { id: "purpose", title: "1 · Purpose", content: "Establish how the organisation classifies information assets so consistent protective controls apply across all in-scope systems." },
-    { id: "scope", title: "2 · Scope", content: "Applies to all information assets within the ISMS scope, all employees and contractors, and all third parties processing in-scope data." },
-    { id: "defs", title: "3 · Definitions", content: "Personal Data, Confidential Information, Owner (Role), Custodian (Role), Information Asset." },
+    { id: "purpose", title: "1 · Purpose", content: "" },
+    { id: "scope", title: "2 · Scope", content: "" },
+    { id: "defs", title: "3 · Definitions", content: "" },
     { id: "policy", title: "4 · Policy Statements", content: "" },
     { id: "roles", title: "5 · Roles & Responsibilities", content: "" },
     { id: "rev", title: "6 · Review Cadence", content: "" },
   ]));
-  const [standards, setStandards] = useState<string[]>(() => seed(value, "standardsCited", ["ISO/IEC 27001:2022 §5.12", "ISO/IEC 27002:2022 §5.13", "NIST SP 800-60"]));
+  const [standards, setStandards] = useState<string[]>(() => seed(value, "standardsCited", [""]));
   const filled = sections.filter((s) => s.content.trim()).length;
   useLift({ docTitle, sections: sections.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: sections, standardsCited: standards }, onChange);
   const set = (id: string, v: string) => setSections((ss) => ss.map((s) => (s.id === id ? { ...s, content: v } : s)));
@@ -297,16 +298,7 @@ export function MapWorkspace(props: WorkspaceProps) {
 function LegacyMapWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const rowsA = ["EU GDPR", "UK GDPR", "PCI-DSS v4.0", "SOC 2 (existing)", "ISO 27701"];
   const colsB = ["orders-db", "K8s prod", "Stripe Connect", "Snowflake", "Marketing CMS"];
-  const [cells, setCells] = useState<Record<string, string>>(() => seed(value, "cells", {
-    "EU GDPR|orders-db": "Personal data of EU customers; Art. 30 record applies.",
-    "EU GDPR|Stripe Connect": "Processor under Art. 28; DPA in place.",
-    "UK GDPR|orders-db": "UK customers; mirror of EU obligations.",
-    "PCI-DSS v4.0|Stripe Connect": "SAQ-A scope (no PAN stored locally).",
-    "SOC 2 (existing)|K8s prod": "In scope per Sec. III.A.",
-    "SOC 2 (existing)|orders-db": "In scope per Sec. III.A.",
-    "SOC 2 (existing)|Snowflake": "In scope per Sec. III.A.",
-    "ISO 27701|orders-db": "PII processing — Annex B controls.",
-  }));
+  const [cells, setCells] = useState<Record<string, string>>(() => seed(value, "cells", {} as Record<string, string>));
   const mappings = Object.entries(cells).filter(([, v]) => v.trim()).map(([k, v]) => { const [itemA, itemB] = k.split("|"); return { itemA, itemB, rationale: v }; });
   useLift({ cells, mappings }, onChange);
 
@@ -439,11 +431,9 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
 }
 
 function LegacyCalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
-  const [inputs, setInputs] = useState(() => seed(value, "inputValues", { likelihood: 3, impact: 4, controlEff: 2 }));
-  const [citations, setCitations] = useState(() => seed(value, "citations", {
-    likelihood: "Sec Ops 2025 Incident Report §4.2", impact: "Org profile · ~2.4M customers", controlEff: "Internal audit ISMS-AUD-2026-01",
-  }));
-  const [working, setWorking] = useState(() => seed(value, "working", "Likelihood 3 (Moderate) per the 2025 incident frequency report. Impact 4 (High) — orders-db handles PII for ~2.4M customers. Control effectiveness 2 (Partial) — encryption at rest but no per-record audit log yet."));
+  const [inputs, setInputs] = useState(() => seed(value, "inputValues", { likelihood: 0, impact: 0, controlEff: 0 }));
+  const [citations, setCitations] = useState(() => seed(value, "citations", { likelihood: "", impact: "", controlEff: "" }));
+  const [working, setWorking] = useState(() => seed(value, "working", ""));
   const inherent = inputs.likelihood * inputs.impact;
   const residual = inherent * (1 - inputs.controlEff / 4);
   useLift({ formula: "Residual = L × I × (1 − ControlEff/4)", inputs: `L=${inputs.likelihood}; I=${inputs.impact}; ControlEff=${inputs.controlEff}`, inputValues: inputs, citations, working, result: residual.toFixed(1) }, onChange);
@@ -465,7 +455,7 @@ function LegacyCalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) 
                 <tr key={row.k} className="border-b border-slate-50 last:border-0">
                   <td className="px-3 py-3"><div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{row.label}</div><div className="text-[10.5px] font-mono text-slate-500">{row.scale}</div></td>
                   <td className="px-3 py-3"><input type="number" min={0} max={4} value={inputs[row.k]} onChange={(e) => setInputs({ ...inputs, [row.k]: Math.max(0, Math.min(4, parseInt(e.target.value) || 0)) })} className="w-16 h-9 px-2 rounded-md ring-1 ring-slate-200/80 outline-none text-[14px] font-semibold text-slate-900 text-center bg-white focus:ring-2 focus:ring-amber-400/40" /></td>
-                  <td className="px-3 py-3"><input value={citations[row.k]} onChange={(e) => setCitations({ ...citations, [row.k]: e.target.value })} className="w-full h-9 px-2 rounded-md bg-slate-50 ring-1 ring-slate-200/80 outline-none text-[12px] focus:ring-2 focus:ring-amber-400/40" /></td>
+                  <td className="px-3 py-3"><input value={citations[row.k]} onChange={(e) => setCitations({ ...citations, [row.k]: e.target.value })} placeholder="Where this number comes from…" className="w-full h-9 px-2 rounded-md bg-slate-50 ring-1 ring-slate-200/80 outline-none text-[12px] focus:ring-2 focus:ring-amber-400/40 placeholder:text-slate-400" /></td>
                 </tr>
               ))}
             </tbody>
@@ -478,7 +468,7 @@ function LegacyCalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) 
           <div className="mt-4 pt-3 border-t border-slate-700/60"><div className="text-[10.5px] font-medium tracking-[0.12em] uppercase text-slate-400">Residual risk</div><div className="mt-1 flex items-baseline gap-1"><div className="text-[36px] font-semibold tabular-nums leading-none">{residual.toFixed(1)}</div><div className="text-[15px] text-slate-400">/ 16</div></div></div>
         </div>
       </div>
-      <div><SectionLabel hint={`${working.length} chars · min 30`}>Working narrative</SectionLabel><WTextArea value={working} onChange={setWorking} rows={3} /></div>
+      <div><SectionLabel hint={`${working.length} chars · min 30`}>Working narrative</SectionLabel><WTextArea value={working} onChange={setWorking} rows={3} placeholder="Justify each score against its cited source…" /></div>
     </div>
   );
 }
@@ -493,18 +483,20 @@ function LegacyPrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
   const crit: { id: "lik" | "imp" | "vel" | "exp"; label: string; weight: number }[] = [
     { id: "lik", label: "Likelihood", weight: 0.3 }, { id: "imp", label: "Impact", weight: 0.4 }, { id: "vel", label: "Velocity", weight: 0.15 }, { id: "exp", label: "Exposure", weight: 0.15 },
   ];
+  // Risk items are given; every criterion score is the mentee's.
   const [rows, setRows] = useState<PRow[]>(() => seed(value, "rows", [
-    { id: 1, name: "Missing audit log on orders-db", lik: 3, imp: 4, vel: 3, exp: 3 },
-    { id: 2, name: "Snowflake joinability risk", lik: 2, imp: 4, vel: 2, exp: 4 },
-    { id: 3, name: "Stripe sub-processor disclosure", lik: 3, imp: 3, vel: 2, exp: 3 },
-    { id: 4, name: "Vendor cert lapse workflow", lik: 4, imp: 2, vel: 4, exp: 2 },
-    { id: 5, name: "R&D sandbox isolation drift", lik: 2, imp: 2, vel: 3, exp: 2 },
+    { id: 1, name: "Missing audit log on orders-db", lik: 0, imp: 0, vel: 0, exp: 0 },
+    { id: 2, name: "Snowflake joinability risk", lik: 0, imp: 0, vel: 0, exp: 0 },
+    { id: 3, name: "Stripe sub-processor disclosure", lik: 0, imp: 0, vel: 0, exp: 0 },
+    { id: 4, name: "Vendor cert lapse workflow", lik: 0, imp: 0, vel: 0, exp: 0 },
+    { id: 5, name: "R&D sandbox isolation drift", lik: 0, imp: 0, vel: 0, exp: 0 },
   ]));
   const [tieRationale, setTieRationale] = useState(() => seed(value, "tieRationale", ""));
   const score = (r: PRow) => crit.reduce((s, c) => s + r[c.id] * c.weight, 0);
   const sorted = [...rows].sort((a, b) => score(b) - score(a));
   const ties = new Set<number>();
-  sorted.forEach((r, i) => { if (i > 0 && Math.abs(score(r) - score(sorted[i - 1])) < 0.01) { ties.add(r.id); ties.add(sorted[i - 1].id); } });
+  // Unscored rows all sit at 0 — that's not a tie to resolve, so only compare scored ones.
+  sorted.forEach((r, i) => { if (i > 0 && score(r) > 0 && Math.abs(score(r) - score(sorted[i - 1])) < 0.01) { ties.add(r.id); ties.add(sorted[i - 1].id); } });
   const ranked = sorted.map((r, i) => ({ item: r.name, criterion: score(r).toFixed(2), rank: i + 1 }));
   useLift({ rows, ranked, tieRationale }, onChange);
   const setS = (id: number, k: "lik" | "imp" | "vel" | "exp", v: string) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: Math.max(0, Math.min(4, parseInt(v) || 0)) } : r)));
@@ -552,9 +544,10 @@ export function RecommendWorkspace(props: WorkspaceProps) {
   return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyRecommendWorkspace {...props} />;
 }
 function LegacyRecommendWorkspace({ value, onChange }: WorkspaceProps) {
+  // The gaps are given; the remediation, owner, control and rationale are the mentee's.
   const [recs, setRecs] = useState<Rec[]>(() => seed(value, "recommendations", [
-    { id: 1, gap: "Missing per-record audit log on orders-db", action: "Enable RDS audit-log streaming to CloudTrail; 90 days hot, 1 year cold.", owner: "Data Platform Lead", control: "ISO 27001 A.8.15", rationale: "Closes the residual-risk gap from RR-2026.1. Audit logs are required for incident response and forensic review." },
-    { id: 2, gap: "Snowflake personal-data joinability", action: "Apply data-masking to PII columns; restrict joinable identifiers to a dedicated role.", owner: "Data Platform Lead", control: "ISO 27001 A.5.34", rationale: "Joinable hashed IDs effectively reconstitute PII; masking + role isolation aligns with Annex A PII guidance." },
+    { id: 1, gap: "Missing per-record audit log on orders-db", action: "", owner: "", control: "", rationale: "" },
+    { id: 2, gap: "Snowflake personal-data joinability", action: "", owner: "", control: "", rationale: "" },
     { id: 3, gap: "Stripe sub-processor disclosure cadence", action: "", owner: "", control: "", rationale: "" },
   ]));
   useLift({ recommendations: recs }, onChange);
@@ -591,12 +584,13 @@ export function ValidateWorkspace(props: WorkspaceProps) {
   return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyValidateWorkspace {...props} />;
 }
 function LegacyValidateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
+  // The findings are given; each citation, verdict and follow-up is the mentee's.
   const [findings, setFindings] = useState<Finding[]>(() => seed(value, "findings", [
-    { id: 1, text: "orders-db lacks per-record audit log", citation: "ISO 27001 A.8.15", verified: true, followup: "" },
-    { id: 2, text: "Snowflake personal-data joinability risk", citation: "ISO 27001 A.5.34", verified: true, followup: "" },
+    { id: 1, text: "orders-db lacks per-record audit log", citation: "", verified: null, followup: "" },
+    { id: 2, text: "Snowflake personal-data joinability risk", citation: "", verified: null, followup: "" },
     { id: 3, text: "Vendor cert-tracker follow-through is weak", citation: "", verified: null, followup: "" },
-    { id: 4, text: "R&D sandbox lacks isolation testing cadence", citation: "NIST SP 800-53 SC-7", verified: false, followup: "Schedule penetration test for sandbox tier; results due 2026-08-15." },
-    { id: 5, text: "Sub-processor disclosure cadence undocumented", citation: "GDPR Art. 28(2)", verified: false, followup: "" },
+    { id: 4, text: "R&D sandbox lacks isolation testing cadence", citation: "", verified: null, followup: "" },
+    { id: 5, text: "Sub-processor disclosure cadence undocumented", citation: "", verified: null, followup: "" },
   ]));
   useLift({ findings }, onChange);
   const set = (id: number, k: keyof Finding, v: string | boolean | null) => setFindings((fs) => fs.map((f) => (f.id === id ? ({ ...f, [k]: v } as Finding) : f)));
@@ -639,10 +633,10 @@ export function ScheduleWorkspace(props: WorkspaceProps) {
   return t ? <FormFlow task={t} value={props.value} onChange={props.onChange} /> : <LegacyScheduleWorkspace {...props} />;
 }
 function LegacyScheduleWorkspace({ value, onChange }: WorkspaceProps) {
-  const [purpose, setPurpose] = useState(() => seed(value, "purpose", "Walk through the Q3 access-review approach and confirm RBAC role definitions for the new ISMS scope."));
-  const [agenda, setAgenda] = useState(() => seed(value, "agenda", "1. Current access-review cadence (10 min)\n2. RBAC role catalogue review (15 min)\n3. Privileged-access workflow gaps (15 min)\n4. Decision on Q3 ownership (10 min)"));
+  const [purpose, setPurpose] = useState(() => seed(value, "purpose", ""));
+  const [agenda, setAgenda] = useState(() => seed(value, "agenda", ""));
   const [slots, setSlots] = useState(() => seed(value, "slots", [
-    { time: "Tue 2026-07-02 · 10:00", agreed: false }, { time: "Wed 2026-07-03 · 14:00", agreed: true }, { time: "Fri 2026-07-05 · 11:00", agreed: false },
+    { time: "Tue 2026-07-02 · 10:00", agreed: false }, { time: "Wed 2026-07-03 · 14:00", agreed: false }, { time: "Fri 2026-07-05 · 11:00", agreed: false },
   ]));
   const agreed = slots.filter((s) => s.agreed).map((s) => s.time);
   useLift({ purpose, agenda, proposedTimes: slots.map((s) => s.time), confirmation: agreed.join(", ") }, onChange);
@@ -651,8 +645,8 @@ function LegacyScheduleWorkspace({ value, onChange }: WorkspaceProps) {
   return (
     <div className="space-y-4">
       <GivenNote>Provide purpose, agenda, and time options, then mark the slot the stakeholder confirmed (their reply is pre-scripted below).</GivenNote>
-      <div><SectionLabel>Purpose</SectionLabel><WTextArea value={purpose} onChange={setPurpose} rows={2} hint={`${purpose.length} chars`} /></div>
-      <div><SectionLabel>Agenda</SectionLabel><WTextArea value={agenda} onChange={setAgenda} rows={5} /></div>
+      <div><SectionLabel>Purpose</SectionLabel><WTextArea value={purpose} onChange={setPurpose} rows={2} placeholder="What this meeting is for…" hint={`${purpose.length} chars`} /></div>
+      <div><SectionLabel>Agenda</SectionLabel><WTextArea value={agenda} onChange={setAgenda} rows={5} placeholder={"1. Item (10 min)\n2. Item (15 min)…"} /></div>
       <div>
         <SectionLabel>Proposed time slots — tap the confirmed one</SectionLabel>
         <div className="space-y-2">

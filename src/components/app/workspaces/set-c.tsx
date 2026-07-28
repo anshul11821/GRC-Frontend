@@ -84,15 +84,17 @@ export function AssessWorkspace(props: WorkspaceProps) {
 }
 function LegacyAssessWorkspace({ value, onChange }: WorkspaceProps) {
   const scale = ["Initial", "Repeatable", "Defined", "Managed", "Optimising"];
+  // Domains and outlier flags are given; every maturity level and its cited evidence is the mentee's.
+  // Score starts at the scale floor (1 · Initial) — the mentee must actively rate each domain.
   const [items, setItems] = useState<Domain[]>(() => seed(value, "domains", [
-    { id: "ac", name: "Access Control", score: 3, evidence: "RBAC documented; access reviews quarterly with audit trail.", outlier: false },
-    { id: "ir", name: "Incident Response", score: 3, evidence: "Runbook v2.1 exercised in Q1 tabletop; comms templates ready.", outlier: false },
-    { id: "rm", name: "Risk Management", score: 2, evidence: "Annual risk register; no formal treatment workflow yet.", outlier: false },
-    { id: "vm", name: "Vendor Management", score: 4, evidence: "Procurement gate, DPA library, cert tracking automation.", outlier: true },
-    { id: "cm", name: "Change Management", score: 3, evidence: "PR-driven changes with two reviewers; emergency runbook exists.", outlier: false },
+    { id: "ac", name: "Access Control", score: 1, evidence: "", outlier: false },
+    { id: "ir", name: "Incident Response", score: 1, evidence: "", outlier: false },
+    { id: "rm", name: "Risk Management", score: 1, evidence: "", outlier: false },
+    { id: "vm", name: "Vendor Management", score: 1, evidence: "", outlier: true },
+    { id: "cm", name: "Change Management", score: 1, evidence: "", outlier: false },
     { id: "bc", name: "Business Continuity", score: 1, evidence: "", outlier: true },
-    { id: "tr", name: "Training & Awareness", score: 2, evidence: "Annual training; phishing sim quarterly.", outlier: false },
-    { id: "lg", name: "Logging & Monitoring", score: 3, evidence: "CloudTrail + observability; orders-db audit logs pending.", outlier: false },
+    { id: "tr", name: "Training & Awareness", score: 1, evidence: "", outlier: false },
+    { id: "lg", name: "Logging & Monitoring", score: 1, evidence: "", outlier: false },
   ]));
   useLift({ items: items.map((i) => ({ item: i.name, evidence: i.evidence, rating: `${i.score} ${scale[i.score - 1]}` })), domains: items }, onChange);
   const set = (id: string, k: keyof Domain, v: string | number) => setItems((is) => is.map((i) => (i.id === id ? ({ ...i, [k]: v } as Domain) : i)));
@@ -133,9 +135,9 @@ function LegacyScoreWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: "risk", label: "Risk Awareness", weight: 0.15, anchor0: "Misses obvious", anchor4: "Surfaces non-obvious risks" },
     { id: "comm", label: "Communication Quality", weight: 0.15, anchor0: "Hard to follow", anchor4: "Crisp, audience-aware" },
   ];
-  const [scores, setScores] = useState<Record<string, number>>(() => seed(value, "scores", { spec: 3, stand: 2, reas: 3, risk: 2, comm: 3 }));
-  const [notes, setNotes] = useState<Record<string, string>>(() => seed(value, "notes", { spec: "Names each in-scope asset and its owner.", stand: "Cites SOC 2 sections but no ISO control references yet.", reas: "Inferences from the system description are clearly drawn.", risk: "", comm: "" }));
-  const aggregate = dims.reduce((s, d) => s + scores[d.id] * d.weight, 0);
+  const [scores, setScores] = useState<Record<string, number>>(() => seed(value, "scores", { spec: 0, stand: 0, reas: 0, risk: 0, comm: 0 }));
+  const [notes, setNotes] = useState<Record<string, string>>(() => seed(value, "notes", { spec: "", stand: "", reas: "", risk: "", comm: "" }));
+  const aggregate = dims.reduce((s, d) => s + (scores[d.id] ?? 0) * d.weight, 0);
   useLift({ dimensions: dims.map((d) => ({ dimension: d.label, score: scores[d.id], justification: notes[d.id] })), aggregate: aggregate.toFixed(2), scores, notes }, onChange);
 
   return (
@@ -177,21 +179,22 @@ function LegacyCompileWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: "s6", title: "Residual Risk Calculation", code: "RR-1" },
   ];
   type Sec = { id: string; title: string; required: boolean; refs: string[] };
+  // Section list is the given report skeleton; the source links and the summary are the mentee's.
   const [secs, setSecs] = useState<Sec[]>(() => seed(value, "sectionList", [
-    { id: "scope", title: "2 · Scope statement", required: true, refs: ["s4"] },
-    { id: "assets", title: "3 · Asset inventory", required: true, refs: ["s1"] },
-    { id: "classification", title: "4 · Classification outcomes", required: true, refs: ["s2"] },
-    { id: "regulatory", title: "5 · Regulatory driver map", required: true, refs: ["s3"] },
-    { id: "risk", title: "6 · Residual risk summary", required: true, refs: ["s6"] },
+    { id: "scope", title: "2 · Scope statement", required: true, refs: [] },
+    { id: "assets", title: "3 · Asset inventory", required: true, refs: [] },
+    { id: "classification", title: "4 · Classification outcomes", required: true, refs: [] },
+    { id: "regulatory", title: "5 · Regulatory driver map", required: true, refs: [] },
+    { id: "risk", title: "6 · Residual risk summary", required: true, refs: [] },
   ]));
-  const [exec, setExec] = useState(() => seed(value, "executiveSummary", "The ISMS scope covers 4 core systems (orders-db, K8s prod, Snowflake DW, Stripe Connect); 2 are excluded with documented rationale. Regulatory drivers: GDPR, UK GDPR, PCI-DSS, SOC 2, ISO 27701. Highest residual risk: orders-db audit-log gap (Residual 6.0 / 16)."));
+  const [exec, setExec] = useState(() => seed(value, "executiveSummary", ""));
   useLift({ sections: ["1 · Executive summary", ...secs.map((s) => s.title)], executiveSummary: exec, sectionList: secs }, onChange);
   const toggle = (secId: string, srcId: string) => setSecs((ss) => ss.map((s) => (s.id === secId ? { ...s, refs: s.refs.includes(srcId) ? s.refs.filter((r) => r !== srcId) : [...s.refs, srcId] } : s)));
 
   return (
     <div className="space-y-4">
       <GivenNote>Assemble the final report: link ≥ 1 source artefact to each required section and write the executive summary. <button onClick={() => openRef("ws-source-index")} className="text-indigo-600 hover:underline font-medium">Open sources →</button></GivenNote>
-      <div><SectionLabel>1 · Executive summary <span className="text-rose-500">*</span></SectionLabel><WTextArea value={exec} onChange={setExec} rows={4} hint={`${exec.length} chars`} /></div>
+      <div><SectionLabel>1 · Executive summary <span className="text-rose-500">*</span></SectionLabel><WTextArea value={exec} onChange={setExec} rows={4} placeholder="Scope, drivers, and the highest residual risk — in a few sentences…" hint={`${exec.length} chars`} /></div>
       <div className="space-y-2">
         {secs.map((s) => (
           <div key={s.id} className="rounded-xl bg-white ring-1 ring-slate-200/70 p-3">
@@ -214,9 +217,9 @@ export function BriefWorkspace(props: WorkspaceProps) {
 }
 function LegacyBriefWorkspace({ value, onChange }: WorkspaceProps) {
   const [format, setFormat] = useState(() => seed(value, "format", "page"));
-  const [audience, setAudience] = useState(() => seed(value, "audience", "All engineering staff (~180 ICs + EMs)"));
-  const [keyMessage, setKeyMessage] = useState(() => seed(value, "keyMessage", "From June 15, every in-scope repository requires a CODEOWNERS file and a Security review tag on PRs touching listed paths. The two-reviewer rule already applies — this makes ownership explicit.\n\nWhy: auditors flagged that PR approvals don't trace to a named owner role. ISO 27001 §A.8.2 requires named ownership of information assets."));
-  const [ask, setAsk] = useState(() => seed(value, "ask", "Add a CODEOWNERS file to your repo by June 12. Template + questions thread in #isms-rollout."));
+  const [audience, setAudience] = useState(() => seed(value, "audience", ""));
+  const [keyMessage, setKeyMessage] = useState(() => seed(value, "keyMessage", ""));
+  const [ask, setAsk] = useState(() => seed(value, "ask", ""));
   useLift({ audience, keyMessage, ask, format }, onChange);
   const mcq = [
     { q: "When does the new rule take effect?", a: "June 15" }, { q: "Does this apply to repos outside the ISMS scope?", a: "No" }, { q: "Where do you ask questions?", a: "#isms-rollout" },
@@ -236,8 +239,8 @@ function LegacyBriefWorkspace({ value, onChange }: WorkspaceProps) {
             </div>
           </div>
           <div><SectionLabel>Audience <span className="text-rose-500">*</span></SectionLabel><WTextInput value={audience} onChange={setAudience} placeholder="Be specific: who is reading this?" /></div>
-          <div><SectionLabel hint={`${keyMessage.split(/\s+/).filter(Boolean).length} words`}>Brief body (plain language)</SectionLabel><WTextArea value={keyMessage} onChange={setKeyMessage} rows={7} /></div>
-          <div><SectionLabel>Ask of audience <span className="text-rose-500">*</span></SectionLabel><WTextArea value={ask} onChange={setAsk} rows={2} /></div>
+          <div><SectionLabel hint={`${keyMessage.split(/\s+/).filter(Boolean).length} words`}>Brief body (plain language)</SectionLabel><WTextArea value={keyMessage} onChange={setKeyMessage} rows={7} placeholder="What changes, from when, and why — no jargon…" /></div>
+          <div><SectionLabel>Ask of audience <span className="text-rose-500">*</span></SectionLabel><WTextArea value={ask} onChange={setAsk} rows={2} placeholder="The one concrete thing they must do, and by when…" /></div>
         </div>
         <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start">
           <h4 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Comprehension check</h4>
@@ -256,10 +259,10 @@ export function SignoffWorkspace(props: WorkspaceProps) {
   return <LegacySignoffWorkspace {...props} />;
 }
 function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
-  const [decision, setDecision] = useState(() => seed(value, "decision", "Approved with conditions"));
-  const [conditions, setConditions] = useState(() => seed(value, "conditions", "Add a line on data-residency commitments; circulate to the DPO before publishing."));
+  const [decision, setDecision] = useState(() => seed(value, "decision", ""));
+  const [conditions, setConditions] = useState(() => seed(value, "conditions", ""));
   const [revisionPlan, setRevisionPlan] = useState(() => seed(value, "revisionPlan", ""));
-  const [date, setDate] = useState(() => seed(value, "date", "2026-07-10"));
+  const [date, setDate] = useState(() => seed(value, "date", ""));
   useLift({ decision, conditions, revisionPlan, date }, onChange);
   const opts: { id: string; tone: Tone }[] = [{ id: "Approved", tone: "emerald" }, { id: "Approved with conditions", tone: "amber" }, { id: "Rejected", tone: "rose" }];
 
@@ -283,7 +286,7 @@ function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
               </button>
             ))}
           </div>
-          {decision === "Approved with conditions" && <div className="mt-4"><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Conditions <span className="text-rose-500">*</span></div><textarea value={conditions} onChange={(e) => setConditions(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-amber-400/40 outline-none text-[12.5px] resize-none" /></div>}
+          {decision === "Approved with conditions" && <div className="mt-4"><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Conditions <span className="text-rose-500">*</span></div><textarea value={conditions} onChange={(e) => setConditions(e.target.value)} rows={3} placeholder="What must happen before this is fully approved?" className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-amber-400/40 outline-none text-[12.5px] resize-none" /></div>}
           {decision === "Rejected" && <div className="mt-4"><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Revision plan <span className="text-rose-500">*</span></div><textarea value={revisionPlan} onChange={(e) => setRevisionPlan(e.target.value)} rows={3} placeholder="What changes before resubmission?" className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-rose-400/40 outline-none text-[12.5px] resize-none" /></div>}
         </div>
         <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start space-y-3">
@@ -297,14 +300,8 @@ function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 
 /* ============================ INTERVIEW ============================ */
 export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
-  const [questions, setQuestions] = useState<string[]>(() => seed(value, "questions", [
-    "What does a 'good day' look like for your team?",
-    "Where do you spend the most time on compliance work?",
-    "What ISMS process most often breaks in practice?",
-    "Tell me about the last time you escalated a security concern.",
-    "Who do you wish was involved earlier in your work?",
-  ]));
-  const [summary, setSummary] = useState(() => seed(value, "notesPerQuestion", "Procurement-security duplication is the highest-friction process. Escalation paths are too long for incident-grade decisions — a bypass mechanism is needed. Probe next: ownership boundaries between DPO and Security Eng. Lead."));
+  const [questions, setQuestions] = useState<string[]>(() => seed(value, "questions", ["", "", "", "", ""]));
+  const [summary, setSummary] = useState(() => seed(value, "notesPerQuestion", ""));
   const prepared = questions.filter((q) => q.trim()).length;
   useLift({ questions, notesPerQuestion: summary }, onChange);
 
@@ -343,18 +340,19 @@ export function DocumentWorkspace(props: WorkspaceProps) {
   return <LegacyDocumentWorkspace {...props} />;
 }
 function LegacyDocumentWorkspace({ value, onChange }: WorkspaceProps) {
+  // Headings are the given write-up skeleton; every section body is the mentee's.
   const [secs, setSecs] = useState<DocSec[]>(() => seed(value, "sectionList", [
-    { id: "context", title: "1 · Context", done: true, content: "Following the May 2026 ISMS sprint, a written process was needed for how scope changes are proposed, reviewed, and recorded once the baseline is signed off." },
-    { id: "decision", title: "2 · Decision", done: true, content: "Scope changes are proposed via a dated change request linked to the asset register. Reviewer is the Compliance Lead; final approver is the Department Head. Changes apply prospectively." },
-    { id: "rationale", title: "3 · Rationale", done: true, content: "An annual cadence was rejected (too slow) and continuous edits were rejected (no audit trail). The change-request approach gives auditability without blocking minor additions." },
-    { id: "lessons", title: "4 · Lessons learned", done: true, content: "Asset-owner role names should have been agreed in week 1 — rework cost ~3 days. The next sprint will start with role-catalogue confirmation." },
+    { id: "context", title: "1 · Context", done: false, content: "" },
+    { id: "decision", title: "2 · Decision", done: false, content: "" },
+    { id: "rationale", title: "3 · Rationale", done: false, content: "" },
+    { id: "lessons", title: "4 · Lessons learned", done: false, content: "" },
     { id: "links", title: "5 · Cross-references", done: false, content: "" },
   ]));
   const xrefs = [
     { artefact: "Asset Register v2", resolved: true }, { artefact: "Scope Statement v0.4", resolved: true },
     { artefact: "Risk Calculation RR-2026.1", resolved: true }, { artefact: "Maturity Assessment Q2-26", resolved: false },
   ];
-  const [crossRefs, setCrossRefs] = useState<string[]>(() => seed(value, "crossReferences", ["Asset Register v2", "Scope Statement v0.4", "Risk Calculation RR-2026.1"]));
+  const [crossRefs, setCrossRefs] = useState<string[]>(() => seed(value, "crossReferences", [] as string[]));
   useLift({ sections: secs.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: secs, crossReferences: crossRefs }, onChange);
   const set = (id: string, k: keyof DocSec, v: string | boolean) => setSecs((ss) => ss.map((s) => (s.id === id ? ({ ...s, [k]: v } as DocSec) : s)));
   const toggleRef = (a: string) => setCrossRefs((c) => (c.includes(a) ? c.filter((x) => x !== a) : [...c, a]));
@@ -373,7 +371,7 @@ function LegacyDocumentWorkspace({ value, onChange }: WorkspaceProps) {
                   <div className="space-y-1.5">{xrefs.map((x) => { const on = crossRefs.includes(x.artefact); return <button key={x.artefact} disabled={!x.resolved} onClick={() => toggleRef(x.artefact)} className={`w-full flex items-center gap-2 text-[12px] px-2 py-1.5 rounded ring-1 transition-all ${!x.resolved ? "bg-rose-50/40 ring-rose-200 text-rose-700 cursor-not-allowed" : on ? "bg-emerald-50/40 ring-emerald-200 text-slate-700" : "bg-white ring-slate-200/70 text-slate-500 hover:ring-slate-300"}`}><Icon name="link" size={11} /><span className="flex-1 text-left tracking-tight">{x.artefact}</span>{!x.resolved && <span className="text-[10px] font-medium">broken</span>}{on && x.resolved && <Icon name="check" size={11} strokeWidth={3} className="text-emerald-600" />}</button>; })}</div>
                 </div>
               ) : (
-                <textarea value={s.content} onChange={(e) => set(s.id, "content", e.target.value)} rows={2} className="ml-6 w-[calc(100%-1.5rem)] px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px] resize-none leading-relaxed" />
+                <textarea value={s.content} onChange={(e) => set(s.id, "content", e.target.value)} rows={2} placeholder="Write this section…" className="ml-6 w-[calc(100%-1.5rem)] px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-emerald-400/40 outline-none text-[12.5px] resize-none leading-relaxed" />
               )}
             </div>
           ))}

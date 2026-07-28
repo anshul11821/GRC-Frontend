@@ -119,6 +119,53 @@ function RefAccordion({ references, focusId }: { references: TaskReference[]; fo
   );
 }
 
+/** Field key → human label ("objectiveMet" → "Objective met", "formula_cite" → "Formula cite"). */
+function humanKey(k: string): string {
+  const s = k.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim().toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Render any lifted workspace value as plain text. Workspaces lift arbitrary JSON (strings,
+ *  lists, row arrays, id-keyed maps), so this walks it generically rather than per-verb. */
+function fieldText(v: unknown, depth = 0): string {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  const pad = "  ".repeat(depth);
+  if (Array.isArray(v)) {
+    return v.map((x) => { const t = fieldText(x, depth + 1).trimStart(); return t ? `${pad}• ${t}` : ""; }).filter(Boolean).join("\n");
+  }
+  if (typeof v === "object") {
+    return Object.entries(v as Record<string, unknown>)
+      .map(([k, val]) => { const t = fieldText(val, depth + 1); return t ? `${pad}${humanKey(k)}: ${t.includes("\n") ? `\n${t}` : t.trimStart()}` : ""; })
+      .filter(Boolean).join("\n");
+  }
+  return String(v);
+}
+
+/** What the mentee actually sent for one submission — every graded field, any verb. */
+function SubmittedFields({ payload }: { payload?: ActivityPayload }) {
+  const entries = Object.entries(payload?.fields ?? {})
+    .map(([k, v]) => [k, fieldText(v)] as const)
+    .filter(([, t]) => t.trim() !== "");
+  if (entries.length === 0) return null;
+  return (
+    <dl className="space-y-2.5">
+      {entries.map(([k, text]) => (
+        <div key={k}>
+          <dt className="text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-400">{humanKey(k)}</dt>
+          <dd className="text-[12px] text-slate-700 leading-relaxed tracking-tight whitespace-pre-line mt-0.5">{text}</dd>
+        </div>
+      ))}
+      {payload?.notes?.trim() && (
+        <div>
+          <dt className="text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-400">Notes</dt>
+          <dd className="text-[12px] text-slate-700 leading-relaxed tracking-tight whitespace-pre-line mt-0.5">{payload.notes}</dd>
+        </div>
+      )}
+    </dl>
+  );
+}
+
 /** Non-empty test for a single form value (string, list, or table-row array). */
 function isFilled(v: unknown): boolean {
   return Array.isArray(v)
@@ -292,10 +339,10 @@ export default function ActivityWorkspace() {
         setActivity(a);
         setHistory(h);
         setResubmit(false);
-        // Restore from the saved draft, or — for an already-submitted task — the latest submission,
-        // so a completed activity opens already filled in.
-        const restore = a.draft ?? h[0]?.submission.payload ?? null;
-        if (restore) setValues(restore.fields ?? {});
+        // Only an unsubmitted draft refills the workspace. Past submissions are *not* replayed into
+        // the form — they're read back under "What you submitted" in the feedback drawer — so a
+        // reopened activity starts from the scripted blank state, same as the first attempt.
+        if (a.draft) setValues(a.draft.fields ?? {});
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
       .finally(() => !cancelled && setLoading(false));
@@ -435,6 +482,9 @@ export default function ActivityWorkspace() {
   const attemptsUsed = result?.attemptsUsed ?? activity.attemptsUsed;
   const maxAttempts = result?.maxAttempts ?? activity.maxAttempts;
   const noAttemptsLeft = attemptsRemaining <= 0;
+  // Attempts exhausted → the workspace goes read-only. A passed step stays interactive (you can
+  // still Resubmit, and the gate workspaces need their tab rails to stay clickable).
+  const locked = noAttemptsLeft;
   const hasFeedback = !!(layer1 || review);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
@@ -626,7 +676,17 @@ export default function ActivityWorkspace() {
           <DocOpenStrip docs={stripRefs} onOpen={fw.open} className="mb-5" />
         )}
 
-        <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+        {/* A native disabled fieldset switches off every control inside in one go. */}
+        <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
+          <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+        </fieldset>
+
+        {noAttemptsLeft && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2 text-[12px] text-slate-600 tracking-tight">
+            <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
+            <span>You&apos;ve used all {maxAttempts} attempts for this step — it&apos;s now read-only. Your submissions are in <button onClick={() => setFeedbackOpen(true)} className="underline underline-offset-2 hover:text-slate-900 cursor-pointer">Submission feedback</button>.</span>
+          </div>
+        )}
 
         {error &&<div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
@@ -657,7 +717,8 @@ export default function ActivityWorkspace() {
               <button onClick={submit} disabled={busy || !hasContent || objectiveBlocked || noAttemptsLeft} className="focus-ring h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none text-white text-[13px] font-medium tracking-tight inline-flex items-center gap-2 shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)] transition-all">
                 <Icon name="send" size={14} /> {busy ? "Grading…" : "Submit for review"}
               </button>
-              <button onClick={saveDraft} disabled={busy} className="focus-ring h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
+              <button onClick={saveDraft} disabled={busy || locked} className="focus-ring h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-[13px] font-medium tracking-tight">
+
                 Save draft
               </button>
               <AttemptsMeter used={attemptsUsed} max={maxAttempts} />
@@ -774,7 +835,7 @@ export default function ActivityWorkspace() {
             <section>
               <h3 className="text-[13px] font-semibold tracking-tight text-slate-900 mb-3">Revision history</h3>
               <div className="space-y-3">
-                {history.map((h) => {
+                {history.map((h, hi) => {
                   const r = h.review;
                   const pass = r?.decision === "pass";
                   return (
@@ -799,6 +860,18 @@ export default function ActivityWorkspace() {
                           <span className="text-[10.5px] text-slate-400 ml-auto">{new Date(h.submission.createdAt).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
                         {r?.feedback && <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{r.feedback}</p>}
+                        {/* what was actually sent — newest attempt expanded, older ones collapsed */}
+                        {Object.keys(h.submission.payload?.fields ?? {}).length > 0 && (
+                        <details open={hi === 0} className="mt-2 rounded-lg bg-slate-50/70 ring-1 ring-slate-200/70 group">
+                          <summary className="cursor-pointer list-none select-none px-3 py-1.5 flex items-center gap-1.5 text-[11.5px] font-medium text-slate-600 hover:text-slate-900">
+                            <Icon name="chevronDown" size={12} className="transition-transform group-open:rotate-0 -rotate-90" />
+                            What you submitted
+                          </summary>
+                          <div className="px-3 pb-3 pt-2 border-t border-slate-200/70">
+                            <SubmittedFields payload={h.submission.payload} />
+                          </div>
+                        </details>
+                        )}
                       </div>
                     </div>
                   );

@@ -10,9 +10,22 @@ import { SOFT_TONES } from "@/lib/tones";
 import { DropdownPanel } from "@/components/ui/motion";
 
 const PROGRAM = "grc101";
+const SEEN_KEY = "grcmentor:upnext-seen";
+
+/** IDs the mentee has already seen in the dropdown. Storing IDs (not a timestamp) means a
+ *  brand-new overdue item or revision still lights the badge even if you opened it earlier. */
+function readSeen(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
 
 export function UpNext() {
   const [open, setOpen] = useState(false);
+  const [seen, setSeen] = useState<Set<string>>(readSeen);
   const ref = useRef<HTMLDivElement>(null);
 
   // Same cache key as the Calendar page — this costs no extra request.
@@ -27,17 +40,31 @@ export function UpNext() {
   }, []);
 
   const items = useMemo(() => buildUpNext(cal ?? []), [cal]);
-  const blocking = items.reduce((n, x) => n + (x.blocking ? 1 : 0), 0);
-  const late = items.some((x) => x.tone === "rose");
+  const blocking = items.reduce((n, x) => n + (x.blocking && !seen.has(x.id) ? 1 : 0), 0);
+  const late = items.some((x) => x.tone === "rose" && !seen.has(x.id));
+
+  const toggle = () => {
+    setOpen((v) => {
+      const next = !v;
+      if (next) {
+        // Mark everything currently shown as seen; overwrite (not merge) so storage stays
+        // bounded to the live list — resolved items drop out on their own.
+        const ids = items.map((x) => x.id);
+        if (typeof window !== "undefined") localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+        setSeen(new Set(ids));
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         aria-label="Up next"
         className="focus-ring w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative"
       >
-        <Icon name="clock" size={17} />
+        <Icon name="bell" size={17} />
         {blocking > 0 && (
           <span
             className={`absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full text-white text-[9px] font-semibold flex items-center justify-center ring-2 ring-white tabular-nums ${late ? "bg-rose-500" : "bg-indigo-500"}`}

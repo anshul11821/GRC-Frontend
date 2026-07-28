@@ -23,7 +23,7 @@ const STAGES = [
 const COPY: Record<Audience, { eyebrow: string; title: string; body: string }> = {
   student: {
     eyebrow: "Early access",
-    title: "Join the grcmentor Wait List",
+    title: "Enroll now with grcmentor",
     body: "Hands-on GRC engagements, AI-graded, that compile into a CV, badges and a verifiable certificate. We're onboarding in batches — leave your details and we'll be in touch.",
   },
   university: {
@@ -115,13 +115,13 @@ export default function WaitlistPage() {
                   ? "You're already registered"
                   : audience === "university"
                     ? "Thanks — we've got it"
-                    : "You're on the list"}
+                    : "You're enrolled"}
               </h1>
               <p className="mt-2 text-[13px] text-slate-500 leading-relaxed">
                 {done.alreadyRegistered ? (
                   <>
                     <span className="font-medium text-slate-700">{form.email}</span>{" "}
-                    is already on our list — no need to submit again. We&apos;ll be in touch.
+                    is already enrolled — no need to submit again. We&apos;ll be in touch.
                   </>
                 ) : (
                   <>
@@ -257,7 +257,11 @@ export default function WaitlistPage() {
                 )}
 
                 <PrimaryBtn type="submit" disabled={busy} className="w-full">
-                  {busy ? "Submitting…" : audience === "university" ? "Submit" : "Join the Wait List"}
+                  {busy
+                    ? "Submitting…"
+                    : audience === "university"
+                      ? "Request partnership details"
+                      : "Enroll now"}
                 </PrimaryBtn>
               </form>
               <p className="mt-4 text-center text-[11.5px] text-slate-400">

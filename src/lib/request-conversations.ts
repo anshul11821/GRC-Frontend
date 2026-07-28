@@ -13,6 +13,19 @@
 
 export type MoodId = "cooperative" | "vague" | "defensive";
 
+/**
+ * Every scripted round is authored with the correct option first, so it must be re-ordered before
+ * display or the mentee just learns "always pick the top one". Ordering is derived from the option
+ * text itself: stable across SSR/hydration and across re-renders within a round (a wrong pick keeps
+ * the round open), unlike Math.random.
+ * ponytail: content-hash shuffle, not per-user random — swap for a seeded RNG if the fixed
+ * per-round position ever becomes shareable-answer-key territory.
+ */
+export function shuffleOptions<T extends { text: string }>(options: T[]): T[] {
+  const hash = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; };
+  return [...options].sort((a, b) => hash(a.text) - hash(b.text));
+}
+
 export interface ConvOption {
   id: "A" | "B" | "C";
   /** The mentee's selectable reply. */
