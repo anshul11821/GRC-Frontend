@@ -53,3 +53,18 @@ export function DeskLearningsProvider({ children }: { children: React.ReactNode 
 }
 
 export const useDeskLearnings = () => useContext(DeskLearningsContext);
+
+/** Show/hide the activity tree from outside DeskLayout — the walkthrough runs on a child route but
+ *  has to spotlight the tree, which is an off-canvas drawer on small screens. No-op on md+, where
+ *  the rail is always there. */
+/** Fire from anywhere inside the desk to (re)start the walkthrough — the org page's Guide button
+ *  uses it. A window event keeps the trigger decoupled from DeskLayout, which owns the tour. */
+export const DESK_TOUR_EVENT = "grc:desk-tour";
+export const startDeskTour = () => window.dispatchEvent(new Event(DESK_TOUR_EVENT));
+
+export const DESK_TREE_EVENT = "grc:desk-tree";
+export const showDeskTree = (open: boolean) => {
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    window.dispatchEvent(new CustomEvent(DESK_TREE_EVENT, { detail: { open } }));
+  }
+};

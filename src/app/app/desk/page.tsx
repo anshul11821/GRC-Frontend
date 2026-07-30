@@ -8,30 +8,27 @@ import { Card } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
 import { PageSkeleton } from "@/components/ui/skeleton";
 
-/** Working Desk entry — routes to the current task's overview (first in-progress, else first task). */
+/** Working Desk entry — routes to the current organisation's context page. That's the desk's landing
+ *  surface: the client brief you work from, with the tree alongside already expanded on your current
+ *  task (the sidebar opens the active org, category and task on its own). */
 export default function DeskHome() {
   const router = useRouter();
   const { learnings, loading } = useDeskLearnings();
-  // Resolve where to send the user: the current task's code, undefined while loading, null when nothing is open.
-  const targetCode = useMemo<string | null | undefined>(() => {
+  // Resolve where to send the user: the active org's id, undefined while loading, null when nothing is open.
+  const targetOrgId = useMemo<string | null | undefined>(() => {
     if (loading) return undefined;
     if (!learnings) return null;
-    for (const org of learnings.orgs) {
-      if (org.status === "locked") continue;
-      for (const proj of org.projects) {
-        const task = proj.tasks.find((t) => t.status === "in-progress") ?? proj.tasks.find((t) => t.status === "not-started") ?? proj.tasks[0];
-        if (task) return task.code;
-      }
-    }
-    return null;
+    const orgs = learnings.orgs;
+    const open = (o: (typeof orgs)[number]) => o.status !== "locked" && o.status !== "upcoming" && o.status !== "complete";
+    return (orgs.find((o) => o.status === "active") ?? orgs.find(open))?.id ?? null;
   }, [loading, learnings]);
 
   useEffect(() => {
-    if (targetCode) router.replace(`/app/desk/task/${targetCode}`);
-  }, [targetCode, router]);
+    if (targetOrgId) router.replace(`/app/desk/org/${targetOrgId}`);
+  }, [targetOrgId, router]);
 
-  // Still resolving, or navigating to the resolved task → keep the skeleton up.
-  if (targetCode === undefined || targetCode) {
+  // Still resolving, or navigating to the resolved org → keep the skeleton up.
+  if (targetOrgId === undefined || targetOrgId) {
     return <PageSkeleton cards={4} />;
   }
   return (

@@ -25,8 +25,13 @@ export const DASH_NAV: NavItem[] = [
   { id: "guide", label: "User Guide", icon: "help", href: "/app/guide" },
 ];
 
-/** Set when the welcome tour is finished or skipped, so it only ambushes a mentee once. */
+/** Walkthrough "already ran" flags — see `useTourOnce`, which suffixes them per mentee. */
 export const TOUR_SEEN_KEY = "grc.tour.seen";
+
+/** Same, for the Working Desk walkthrough (mounted by DeskLayout — it spans the org context page
+ *  and a task brief). The desk is gated behind the start-date picker, so a mentee's first visit
+ *  there is the moment right after they choose their start date. */
+export const DESK_TOUR_SEEN_KEY = "grc.desk.tour.seen";
 
 export function initialsOf(first?: string | null, last?: string | null, email?: string): string {
   const a = (first || "").trim();

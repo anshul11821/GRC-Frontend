@@ -1,27 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { GuidedTour, type TourStep } from "./guided-tour";
+import { useRouter } from "next/navigation";
+import { GuidedTour, markTourSeen, useTourOnce, type TourStep } from "./guided-tour";
+import { useAuth } from "@/components/auth/auth-provider";
 import { TOUR_SEEN_KEY } from "./nav";
 
-/** Fire from anywhere to (re)start the welcome tour — the User Guide page and the account menu use
- *  it. A window event keeps the trigger decoupled from AppShell, which owns the tour state. */
+/** Fire from anywhere to (re)start the main guide — the User Guide page, the account menu and the
+ *  dashboard's own Guide button use it. A window event keeps the trigger decoupled from AppShell,
+ *  which owns the tour state. */
 export const TOUR_EVENT = "grc:welcome-tour";
 export const startWelcomeTour = () => window.dispatchEvent(new Event(TOUR_EVENT));
-
-/** Fired when this tour closes. The dashboard's own walkthrough queues behind it so a first-time
- *  mentee never gets two spotlights at once. `detail.completed` is false if they skipped out. */
-export const TOUR_DONE_EVENT = "grc:welcome-tour-done";
-export type TourDoneEvent = CustomEvent<{ completed: boolean }>;
 
 /** Spotlight a piece of app chrome by its data-tour tag. */
 const tag = (name: string) => () => document.querySelector<HTMLElement>(`[data-tour="${name}"]`);
 
-/** First-run walkthrough of the app shell — same spotlight coach-marks the task and activity screens
- *  use, pointed at the real navigation instead. Covers what each surface is for and the working
- *  rhythm itself, ending on the written guide. */
-function steps(showNav: () => void): TourStep[] {
+/**
+ * The main guide: one walkthrough of the whole app. It covers the shell's navigation and, in the
+ * middle, walks the dashboard itself — opening it if the mentee is somewhere else. The dashboard
+ * has no separate tour; these are the same steps, in reading order.
+ *
+ * Mounted by AppShell, which persists across every /app route, so the tour survives the navigation
+ * it performs. The Working Desk keeps its own deeper walkthrough (organisation, tree, task brief).
+ */
+function steps(showNav: () => void, goto: (href: string) => void): TourStep[] {
+  /** Nav steps: the rail is always mounted; reveal the drawer on small screens. */
   const nav = (name: string): Pick<TourStep, "getEl" | "onEnter"> => ({ getEl: tag(name), onEnter: showNav });
+  /** Dashboard steps: make sure we're on the dashboard (also covers stepping Back into them). */
+  const dash = (name: string): Pick<TourStep, "getEl" | "onEnter"> => ({ getEl: tag(name), onEnter: () => goto("/app") });
+
   return [
     {
       title: "Welcome — here's how this works",
@@ -31,32 +38,54 @@ function steps(showNav: () => void): TourStep[] {
     },
     {
       title: "Your dashboard",
-      body: "Progress at a glance, your rubric averages, and a Continue card that jumps straight into your next unfinished activity. Start here each session.",
+      body: "Start every session here. It's the first item in the nav, and it's where your progress, your scores and your next move all live.",
       icon: "home",
       ...nav("nav-dashboard"),
     },
     {
-      title: "The Working Desk — where you actually work",
-      body: "Your engagement nests: organisation → project → task → activity. The desk gives you one activity at a time, with its brief, its reference documents and the form you fill in, all on one screen.",
-      icon: "desk",
-      ...nav("nav-desk"),
+      title: "Your next move, always on top",
+      body: "This banner points at the exact task and step to continue, with your enrol status and certificate progress beside it. Continue jumps straight into the Working Desk.",
+      icon: "play",
+      ...dash("dash-hero"),
     },
     {
-      title: "The rhythm never changes",
-      body: "Read the brief → read the reference documents → fill in the workspace with the live checklist visible → submit → act on the feedback. Every activity in every track runs that same loop.",
-      icon: "refresh",
+      title: "Your numbers at a glance",
+      body: "Activities completed, your average mentor score, and anything due soon — a quick read on where you stand this track.",
+      icon: "checkSquare",
+      optional: true, // a locked track shows a preview instead
+      ...dash("dash-stats"),
+    },
+    {
+      title: "Your organisations",
+      body: "Each card is a simulated enterprise engagement. Open one and you land in the Working Desk, on that organisation's context page.",
+      icon: "briefcase",
+      optional: true,
+      ...dash("dash-orgs"),
+    },
+    {
+      title: "Standards you're covering",
+      body: "The GRC frameworks behind your tasks. Use the tabs to move across every framework in the track — each opens its own panel showing the tasks and activities it drives.",
+      icon: "shield",
+      optional: true,
+      ...dash("dash-standards"),
+    },
+    {
+      title: "Track your growth",
+      body: "Your skill rubric radar and progress bars fill in as the mentor grades your work. Come back here to watch badges and scores climb.",
+      icon: "star",
+      optional: true,
+      ...dash("dash-grid"),
+    },
+    {
+      title: "The Working Desk — where you actually work",
+      body: "Your engagement nests: organisation → project → task → activity. Read the brief → read the reference documents → fill in the workspace → submit → act on the feedback. Every activity runs that same loop, and the desk has its own walkthrough when you get there.",
+      icon: "desk",
       ...nav("nav-desk"),
     },
     {
       title: "Read the documents. That's the job.",
       body: "Each task hands you real source material — intake notes, a classification scheme, a standard extract. The facts you need are only in there. Answers written from general knowledge instead of the documents are the single most common reason work comes back.",
       icon: "book",
-      ...nav("nav-desk"),
-    },
-    {
-      title: "Every task opens and closes with a gate",
-      body: "A readiness check proves you understand the controls and templates before the activities unlock; a research submission evidences your sources before the task closes. Both are graded.",
-      icon: "shield",
       ...nav("nav-desk"),
     },
     {
@@ -79,8 +108,8 @@ function steps(showNav: () => void): TourStep[] {
     },
     {
       title: "What's due, and your account",
-      body: "The bell shows what's on you right now — overdue stages, revisions still outstanding, and anything due in the next week. Profile, password and billing sit under your avatar — along with a link back to this tour.",
-      icon: "bell",
+      body: "The clock shows what's on you right now — overdue stages, revisions still outstanding, and anything due in the next week. Profile, password and billing sit under your avatar — along with a link back to this guide.",
+      icon: "clock",
       getEl: tag("bell"),
     },
     {
@@ -95,6 +124,8 @@ function steps(showNav: () => void): TourStep[] {
 /** Mounted once by AppShell. Auto-runs on the mentee's first visit, and any time `startWelcomeTour`
  *  fires. `openNav` reveals the mobile drawer so the nav targets exist on small screens. */
 export function WelcomeTour({ openNav }: { openNav: () => void }) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [step, setStep] = useState(-1);
 
   // On desktop the sidebar is always present — don't pop the drawer open behind the spotlight.
@@ -102,31 +133,15 @@ export function WelcomeTour({ openNav }: { openNav: () => void }) {
     if (window.matchMedia("(max-width: 767px)").matches) openNav();
   }, [openNav]);
 
-  const tourSteps = useMemo(() => steps(showNav), [showNav]);
+  // replace, not push: a fourteen-step guide shouldn't bury the mentee's real history.
+  const goto = useCallback((href: string) => {
+    if (window.location.pathname !== href) router.replace(href);
+  }, [router]);
 
-  const close = useCallback(() => {
-    const completed = step === tourSteps.length - 1;
-    setStep(-1);
-    try {
-      localStorage.setItem(TOUR_SEEN_KEY, "1");
-    } catch {
-      // Storage unavailable — the tour just offers itself again next visit.
-    }
-    window.dispatchEvent(new CustomEvent(TOUR_DONE_EVENT, { detail: { completed } }));
-  }, [step, tourSteps.length]);
+  const tourSteps = useMemo(() => steps(showNav, goto), [showNav, goto]);
 
-  // First run. Delayed so the shell has painted and the nav targets are measurable.
-  useEffect(() => {
-    let seen = true;
-    try {
-      seen = !!localStorage.getItem(TOUR_SEEN_KEY);
-    } catch {
-      // Can't tell → don't ambush them.
-    }
-    if (seen) return;
-    const t = setTimeout(() => setStep(0), 600);
-    return () => clearTimeout(t);
-  }, []);
+  // First run, per mentee. Delayed so the shell has painted and the nav targets are measurable.
+  useTourOnce(TOUR_SEEN_KEY, user?.email, true, () => setStep(0), 600);
 
   // Manual relaunch.
   useEffect(() => {
@@ -134,6 +149,11 @@ export function WelcomeTour({ openNav }: { openNav: () => void }) {
     window.addEventListener(TOUR_EVENT, onStart);
     return () => window.removeEventListener(TOUR_EVENT, onStart);
   }, []);
+
+  const close = useCallback(() => {
+    setStep(-1);
+    markTourSeen(TOUR_SEEN_KEY, user?.email);
+  }, [user?.email]);
 
   return <GuidedTour steps={tourSteps} step={step} onStep={setStep} onClose={close} />;
 }

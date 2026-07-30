@@ -62,7 +62,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
 
   return (
     <div>
-      <div className={`flex items-center gap-1 rounded-lg ${taskRowCls}`}>
+      <div data-tour={onThisTask ? "desk-task" : undefined} className={`flex items-center gap-1 rounded-lg ${taskRowCls}`}>
         <button onClick={() => setOpen((o) => !o)} className="w-6 h-7 flex items-center justify-center shrink-0 text-slate-400 hover:text-slate-600" aria-label="Toggle actions">
           <Icon name="chevronRight" size={13} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
@@ -85,7 +85,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
       </div>
 
       {open && (
-        <div className="ml-6 pl-2 border-l border-slate-200/70 py-0.5">
+        <div data-tour={onThisTask ? "desk-steps" : undefined} className="ml-6 pl-2 border-l border-slate-200/70 py-0.5">
           {task.steps.map((s) => {
             const ss = stepState(s.status);
             const active = s.id === activeId;
@@ -206,7 +206,7 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   );
 
   return (
-    <div className={`rounded-xl ${contextActive ? "ring-1 ring-indigo-200 bg-indigo-50/60" : state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
+    <div data-tour={state === "active" ? "desk-org" : undefined} className={`rounded-xl ${contextActive ? "ring-1 ring-indigo-200 bg-indigo-50/60" : state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
       <div className="flex items-center gap-1 pr-1.5">
         {locked ? (
           <div title={lockedHint} className="flex-1 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
@@ -244,7 +244,7 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
 
 function SidebarShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   return (
-    <aside className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
+    <aside data-tour="desk-tree" className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
       <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">{children}</div>
       {footer}
     </aside>
@@ -286,7 +286,7 @@ export function DeskSidebar() {
   orgs.forEach((o) => o.projects.forEach((p) => p.tasks.forEach((t) => { done += t.done; total += t.total; })));
   const pct = total ? Math.round((done / total) * 100) : 0;
   const progressFooter = total > 0 ? (
-    <div className="shrink-0 border-t border-slate-200/60 px-3.5 py-3 bg-white/40">
+    <div data-tour="desk-progress" className="shrink-0 border-t border-slate-200/60 px-3.5 py-3 bg-white/40">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] font-semibold tracking-tight text-slate-700">GRC 101 · Foundations</span>
         <span className="text-[10.5px] text-slate-400 tabular-nums">{done}/{total}</span>

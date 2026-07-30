@@ -20,7 +20,7 @@ const SECTIONS: Section[] = [
   { id: "task", title: "Anatomy of a task", icon: "clipboard" },
   { id: "desk", title: "Doing the work: the Working Desk", icon: "desk" },
   { id: "example", title: "A worked example", icon: "play" },
-  { id: "method", title: "The 22-verb method", icon: "grid" },
+  { id: "method", title: "Vocabulary", icon: "grid" },
   { id: "grading", title: "How you are graded", icon: "bullseye" },
   { id: "answers", title: "What a good answer looks like", icon: "edit" },
   { id: "outputs", title: "What your work turns into", icon: "trophy" },
@@ -483,7 +483,7 @@ export default function GuidePage() {
 
           <Sec
             id="method"
-            title="The 22-verb method"
+            title="Vocabulary"
             icon="grid"
             lead="Every activity in every track is one of these 22 actions. They are the vocabulary of the profession — by the end you will have practised all of them, and your CV shows which."
           >

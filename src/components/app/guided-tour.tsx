@@ -13,6 +13,9 @@ export type TourStep = {
   getEl: () => HTMLElement | null;
   /** Side-effect before measuring — e.g. expand a collapsed panel or reveal a HUD. */
   onEnter?: () => void;
+  /** Skip this step when its target isn't on the page — for sections a given user's data doesn't
+   *  render (a locked track has no stats, no org cards). Waits briefly, then moves on. */
+  optional?: boolean;
 };
 
 /** Hidden-state offset for the card's directional entrance (settles toward the target). */
@@ -32,7 +35,7 @@ const GAP = 12; // tooltip ↔ target
 const MARGIN = 14; // tooltip ↔ viewport edge
 const PAD = 6; // spotlight padding around target
 const TIP_W = 320;
-const OFFSCREEN: Box = { top: -9999, left: -9999, width: 0, height: 0 }; // hole hidden → whole screen dimmed
+const OFFSCREEN: Box = { top: -9999, left: -9999, width: 0, height: 0 }; // sentinel: no target → plain full-screen dim, no hole
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -67,6 +70,69 @@ function place(r: DOMRect | null, th: number): Pos {
 
 const inView = (r: DOMRect) => r.top >= 64 && r.bottom <= window.innerHeight - 16 && r.height < window.innerHeight;
 
+/**
+ * Queue a walkthrough to run the moment its surface next mounts.
+ *
+ * Call this at the event that earns the walkthrough — finishing signup, setting a start date —
+ * rather than leaving the tour to infer "first time" from storage. The two are not the same: signup
+ * finishes on the checkout page, not the dashboard, and a mentee can reach either surface on a
+ * device that has never seen them. The event is the fact; storage is only a guess about it.
+ */
+export const requestTour = (base: string) => {
+  try {
+    sessionStorage.setItem(`${base}.pending`, "1");
+  } catch {
+    // Storage unavailable — the "never seen on this device" path below still covers most cases.
+  }
+};
+
+/**
+ * Auto-run a walkthrough: whenever one has been queued by `requestTour`, and otherwise the first
+ * time a given mentee reaches this surface on this device.
+ *
+ * That second path is keyed per user, because localStorage is per browser: without the suffix a
+ * second account signing up on the same machine inherits the first one's flags and silently gets
+ * nothing. `ready` holds the run back until the data its first steps point at exists.
+ *
+ * Fires at most once per mount, and deliberately registers no cleanup for the delay: the data these
+ * tours wait on settles more than once, and cancelling on a dependency change would swallow the
+ * single run. Marked as seen when it starts, not when it ends, so a mid-tour reload doesn't ambush
+ * them again.
+ */
+export function useTourOnce(base: string, who: string | null | undefined, ready: boolean, start: () => void, delay = 600) {
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (fired.current || !ready || !who) return;
+    let queued = false;
+    try {
+      queued = !!sessionStorage.getItem(`${base}.pending`);
+      if (!queued && localStorage.getItem(`${base}:${who}`)) return;
+    } catch {
+      return; // storage unavailable — leave the Guide button as the way in
+    }
+    fired.current = true; // once per mount, whatever else changes
+    setTimeout(() => {
+      try {
+        sessionStorage.removeItem(`${base}.pending`);
+      } catch { /* consumed either way */ }
+      start();
+    }, delay);
+  }, [base, who, ready, delay, start]);
+}
+
+/** Record that a mentee has been through a walkthrough. Called when the tour closes — never when it
+ *  merely starts. Marking on start means one silent failure to appear suppresses it forever, which
+ *  is both a bad experience and impossible to retry without hand-editing storage. */
+export const markTourSeen = (base: string, who: string | null | undefined) => {
+  if (!who) return;
+  try {
+    localStorage.setItem(`${base}:${who}`, "1");
+  } catch {
+    // Storage unavailable — it'll offer itself again next visit. Harmless.
+  }
+};
+
 /** A spotlight coach-mark tour: dims the page, cuts a hole around the current target, and shows a
  *  smartly-placed "Step X of N" tooltip with an arrow + Back / Next / Skip. Purely presentational —
  *  the parent owns `step` (‑1 = closed) and persistence.
@@ -86,16 +152,31 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
   const [shown, setShown] = useState(false);
   const tipRef = useRef<HTMLDivElement>(null);
   const stepRef = useRef<TourStep | null>(null);
+  /** Mirror of what's committed, so a tracking frame that measures no change costs nothing. Null
+   *  forces the next measurement through (step change / reopen). */
+  const lastRef = useRef<{ box: Box | null; pos: Pos | null }>({ box: null, pos: null });
 
   const active = step >= 0 && step < steps.length;
   stepRef.current = active ? steps[step] : null;
 
+  // Measure and commit only on actual movement. The tracking loop runs at frame rate, so setting
+  // state unconditionally would re-render (and repaint the full-screen dim) 60×/second for nothing.
   const reposition = useCallback(() => {
     const s = stepRef.current;
     if (!s) return;
     const r = s.getEl()?.getBoundingClientRect() ?? null;
-    setBox(r ? { top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 } : OFFSCREEN);
-    setPos(place(r, tipRef.current?.offsetHeight ?? 170));
+    const last = lastRef.current;
+
+    const b = r ? { top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 } : OFFSCREEN;
+    if (!last.box || last.box.top !== b.top || last.box.left !== b.left || last.box.width !== b.width || last.box.height !== b.height) {
+      last.box = b;
+      setBox(b);
+    }
+    const p = place(r, tipRef.current?.offsetHeight ?? 170);
+    if (!last.pos || last.pos.side !== p.side || last.pos.top !== p.top || last.pos.left !== p.left || last.pos.arrow !== p.arrow) {
+      last.pos = p;
+      setPos(p);
+    }
   }, []);
 
   // Step change: reveal the target, scroll to it if off-screen, then track it for a beat (catches the
@@ -104,42 +185,86 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
     if (!active) return;
     const s = stepRef.current!;
     setShown(false);
+    lastRef.current = { box: null, pos: null };
     s.onEnter?.();
 
-    const el = s.getEl();
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const r = el?.getBoundingClientRect();
-    const needsScroll = !r || !inView(r);
-    if (needsScroll && el) {
-      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: r && r.height > window.innerHeight * 0.7 ? "start" : "center" });
+    const scrollTo = (n: HTMLElement) => {
+      const b = n.getBoundingClientRect();
+      if (!inView(b)) n.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: b.height > window.innerHeight * 0.7 ? "start" : "center" });
+    };
+
+    let raf = 0;
+    let poll = 0;
+    let showId: ReturnType<typeof setTimeout> | undefined;
+
+    // Track the target at frame rate for a beat, to catch the smooth-scroll, an expanding panel or
+    // a late layout shift. Cheap now that reposition() only commits on real movement.
+    const track = (ms: number) => {
+      const stop = performance.now() + ms;
+      const frame = () => {
+        reposition();
+        if (performance.now() < stop) raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+    };
+
+    const el = s.getEl();
+    if (el) {
+      const needsScroll = !inView(el.getBoundingClientRect());
+      scrollTo(el);
+      track(needsScroll ? 650 : 380);
+      showId = setTimeout(() => setShown(true), reduce ? 0 : needsScroll ? 380 : 100);
+    } else {
+      // A step whose onEnter navigates elsewhere has no target until that page mounts and loads.
+      // Wait for it on a timer — polling a missing element at 60fps is pure burn.
+      reposition(); // drop the previous step's hole straight away: dim everything while it loads
+      // An optional step is one whose section may simply not exist for this user; give it just long
+      // enough to appear, then move on rather than parking on a blank.
+      const giveUp = performance.now() + (s.optional ? 600 : 4000);
+      if (!s.optional) showId = setTimeout(() => setShown(true), reduce ? 0 : 250); // card reads while the page arrives
+      poll = window.setInterval(() => {
+        const late = stepRef.current?.getEl();
+        if (late) {
+          clearInterval(poll);
+          scrollTo(late);
+          setShown(true);
+          track(650);
+        } else if (performance.now() > giveUp) {
+          clearInterval(poll);
+          if (!s.optional) setShown(true); // never showed up — card floats over the dim
+          else if (step + 1 < steps.length) onStep(step + 1);
+          else onClose();
+        }
+      }, 120);
     }
 
-    const deadline = performance.now() + (needsScroll ? 650 : 380);
-    let raf = 0;
-    const loop = () => {
-      reposition();
-      if (performance.now() < deadline) raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    const showId = setTimeout(() => setShown(true), reduce ? 0 : needsScroll ? 380 : 100);
-    return () => { cancelAnimationFrame(raf); clearTimeout(showId); };
-  }, [step, active, reposition]);
+    return () => { cancelAnimationFrame(raf); clearInterval(poll); clearTimeout(showId); };
+  }, [step, active, reposition, steps.length, onStep, onClose]);
 
   // Reset when the tour closes so the next open appears cleanly (no stale hole).
   useEffect(() => {
     if (active) return;
     setShown(false);
     setBox(OFFSCREEN);
+    lastRef.current = { box: null, pos: null };
   }, [active]);
 
-  // Stay glued through manual scroll / resize.
+  // Stay glued through manual scroll / resize, coalesced to one measurement per frame — scroll
+  // fires far faster than that, and it's capture-phase so every nested scroller feeds it.
   useEffect(() => {
     if (!active) return;
-    window.addEventListener("scroll", reposition, true);
-    window.addEventListener("resize", reposition);
+    let raf = 0;
+    const onMove = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; reposition(); });
+    };
+    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("resize", onMove);
     return () => {
-      window.removeEventListener("scroll", reposition, true);
-      window.removeEventListener("resize", reposition);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onMove, true);
+      window.removeEventListener("resize", onMove);
     };
   }, [active, reposition]);
 
@@ -178,16 +303,23 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
 
   return createPortal(
     <div className="fixed inset-0 z-[70]">
-      {/* spotlight cutout — one div: the giant shadow dims the page, while a crisp white separation
-          ring + indigo halo + soft glow make the target read as "lit", on-brand and not harsh. */}
-      <div
-        className="absolute rounded-xl pointer-events-none"
-        style={{
-          ...box,
-          boxShadow:
-            "0 0 0 9999px rgba(15,23,42,0.62), 0 0 0 1.5px rgba(255,255,255,0.95), 0 0 0 4px rgba(99,102,241,0.45), 0 0 30px 5px rgba(217,70,239,0.40)",
-        }}
-      />
+      {/* Targetless step (the welcome card) — nothing to cut a hole around, so dim the page flat.
+          The cutout below can't do this: its shadow spreads from the off-screen sentinel box and
+          never reaches the viewport. */}
+      {box === OFFSCREEN ? (
+        <div className="absolute inset-0 bg-slate-900/[0.62] pointer-events-none" />
+      ) : (
+        /* spotlight cutout — one div: the giant shadow dims the page, while a crisp white separation
+           ring + indigo halo + soft glow make the target read as "lit", on-brand and not harsh. */
+        <div
+          className="absolute rounded-xl pointer-events-none"
+          style={{
+            ...box,
+            boxShadow:
+              "0 0 0 9999px rgba(15,23,42,0.62), 0 0 0 1.5px rgba(255,255,255,0.95), 0 0 0 4px rgba(99,102,241,0.45), 0 0 30px 5px rgba(217,70,239,0.40)",
+          }}
+        />
+      )}
       {/* invisible blocker — stops interaction with the page; clicks do nothing (no accidental skips) */}
       <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
       {/* card */}

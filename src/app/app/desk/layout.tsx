@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { DeskLearningsProvider, useDeskLearnings } from "@/components/app/desk-context";
+import { DESK_TREE_EVENT, DeskLearningsProvider, useDeskLearnings } from "@/components/app/desk-context";
 import { DeskSidebar } from "@/components/app/desk-sidebar";
+import { DeskTour } from "@/components/app/desk-tour";
 import { StartDateGate } from "@/components/app/start-date-gate";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
@@ -54,6 +55,13 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
     return () => document.removeEventListener("keydown", onKey);
   }, [treeOpen]);
 
+  // The task walkthrough spotlights the tree, so it needs the drawer revealed on small screens.
+  useEffect(() => {
+    const onTree = (e: Event) => setTreeOpen((e as CustomEvent<{ open: boolean }>).detail.open);
+    window.addEventListener(DESK_TREE_EVENT, onTree);
+    return () => window.removeEventListener(DESK_TREE_EVENT, onTree);
+  }, []);
+
   // The Working Desk stays locked until the learner picks their timeline start date.
   // The app shell (nav) still surrounds this, so they can keep exploring elsewhere.
   // Gate AFTER all hooks so hook order stays stable across the locked/unlocked switch.
@@ -103,6 +111,9 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
           </button>
           <DeskSidebar />
         </div>
+
+        {/* Walkthrough — lives here, not on a page, because it navigates between them. */}
+        <DeskTour />
 
         <div className="flex-1 min-w-0 flex flex-col min-h-0">
           {/* Mobile-only desk subheader: opens the activity tree. */}

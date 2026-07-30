@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./auth-provider";
 import { authApi } from "@/lib/auth";
+import { requestTour } from "@/components/app/guided-tour";
+import { TOUR_SEEN_KEY } from "@/components/app/nav";
 import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
 import { UniversitySelect } from "@/components/ui/university-select";
 import { COUNTRIES, DIAL_CODES, findCountry } from "@/lib/countries";
@@ -63,6 +65,9 @@ export function ProfileForm({
       await authApi.signupProfile({ ...profile, timezone: defaultTimezone, language: "en" });
       sessionStorage.removeItem("grc_signup_step");
       sessionStorage.removeItem("grc_signup_email");
+      // Signup is done — queue the app walkthrough for whenever they first land in the app. Signup
+      // ends on checkout, so the app shell can't tell "just signed up" from "signed in again".
+      requestTour(TOUR_SEEN_KEY);
       await refreshUser();
       router.replace("/checkout");
     } catch (err) {

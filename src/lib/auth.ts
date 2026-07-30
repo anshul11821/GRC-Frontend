@@ -30,6 +30,9 @@ export interface User {
   startDate: string | null;
   /** Last day new work can be submitted (start + 24wk + bonus), ISO. Null until start_date is set. */
   accessExpiresOn: string | null;
+  /** Last day they may choose as their start date — signup + 1 week, ISO. Once it passes with no
+   *  choice made, the backend assigns this very date as the start date. */
+  startWindowEndsOn: string | null;
   /** True once the one-time LinkedIn-share access extension has been claimed. */
   linkedinShareClaimed: boolean;
   createdAt: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion, useMotionValue, animate } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Card, Bar, Ring } from "@/components/ui/primitives";
@@ -18,9 +18,7 @@ import { ProgramTabs } from "@/components/app/program-tabs";
 import { VERB_TONES, LRN_CHIP } from "@/lib/tones";
 import { STANDARDS, buildTaskIndex, tasksForStandard, nistCrossRefTaskCodes } from "@/lib/standards";
 import { TRACK_PREVIEWS, type TrackPreview } from "@/lib/track-previews";
-import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
-import { TOUR_DONE_EVENT, type TourDoneEvent } from "@/components/app/welcome-tour";
-import { TOUR_SEEN_KEY } from "@/components/app/nav";
+import { startWelcomeTour } from "@/components/app/welcome-tour";
 import { AccessChip } from "@/components/app/access-chip";
 
 /** Next openable step in an org — drives the card "Next up" line and the panel "Continue" CTA. */
@@ -58,6 +56,14 @@ function deriveContinue(l: Learnings): Continue | null {
     }
   }
   return null;
+}
+
+/**
+ * True once any activity has been passed. Task status can't be used: the backend marks task 1
+ * "in-progress" from day one because it always has a `current` step.
+ */
+function hasStarted(l: Learnings): boolean {
+  return l.orgs.some((o) => o.projects.some((p) => p.tasks.some((t) => t.done > 0)));
 }
 
 /** Roll up per-org engagement stats for the dashboard cards. */
@@ -212,7 +218,7 @@ const STD_GRAD: Record<string, string> = {
  * Ported from the v2 dashboard mockup; stats (tasks owned / activities / cross-refs) are computed
  * live from the learnings tree so they always reflect real progress.
  */
-function StandardsSection({ learnings, tabsRef }: { learnings: Learnings | null | undefined; tabsRef?: React.Ref<HTMLDivElement> }) {
+function StandardsSection({ learnings }: { learnings: Learnings | null | undefined }) {
   const [activeId, setActiveId] = useState(STANDARDS[0]?.id);
   const taskIndex = useMemo(() => buildTaskIndex(learnings), [learnings]);
   const active = STANDARDS.find((s) => s.id === activeId) ?? STANDARDS[0];
@@ -235,7 +241,7 @@ function StandardsSection({ learnings, tabsRef }: { learnings: Learnings | null 
           <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Standards</h2>
           <span className="px-1.5 h-5 rounded-md bg-slate-100 ring-1 ring-slate-200/70 text-[10.5px] font-medium text-slate-600 flex items-center">{STANDARDS.length}</span>
         </div>
-        <div ref={tabsRef} className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 flex-wrap">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 ring-1 ring-slate-200/60 flex-wrap">
           {STANDARDS.map((s) => {
             const sel = s.id === active.id;
             const st = VERB_TONES[s.tone] ?? VERB_TONES.indigo;
@@ -373,6 +379,7 @@ export default function DashboardPage() {
   const preview = locked ? TRACK_PREVIEWS[programId] : undefined;
   const first = user?.firstName || "there";
   const cont = !locked && learnings ? deriveContinue(learnings) : null;
+  const started = !!learnings && hasStarted(learnings);
   const orgs = learnings?.orgs ?? [];
 
   const rubricScoreMap = new Map<string, number>();
@@ -387,55 +394,7 @@ export default function DashboardPage() {
   const certPct = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const earnedBadges = BADGES.filter((b) => b.taskCodes.length > 0 && b.taskCodes.every((c) => completedTaskCodes.has(c)));
 
-  // Guided walkthrough (same coach-mark as the Working Desk). -1 = closed. Auto-runs once per browser.
-  const [tourStep, setTourStep] = useState(-1);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const orgsRef = useRef<HTMLDivElement>(null);
-  const standardsRef = useRef<HTMLDivElement>(null);
-  const standardsTabsRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
 
-  // On a first sign-in the app-shell welcome tour is also auto-running, so queue behind it rather
-  // than spotlighting the same screen twice at once. If they skipped that one, don't ambush them
-  // with a second — mark this one seen and leave the hero's Guide button to offer it.
-  useEffect(() => {
-    if (loading || typeof localStorage === "undefined") return;
-    if (localStorage.getItem("dashboardTourSeen")) return;
-
-    let id: ReturnType<typeof setTimeout> | undefined;
-    const start = (completed: boolean) => {
-      localStorage.setItem("dashboardTourSeen", "1");
-      if (completed) id = setTimeout(() => setTourStep(0), 500); // let the hero animate in first
-    };
-    const onWelcomeDone = (e: Event) => start((e as TourDoneEvent).detail.completed);
-
-    if (localStorage.getItem(TOUR_SEEN_KEY)) start(true);
-    else window.addEventListener(TOUR_DONE_EVENT, onWelcomeDone, { once: true });
-
-    return () => {
-      clearTimeout(id);
-      window.removeEventListener(TOUR_DONE_EVENT, onWelcomeDone);
-    };
-  }, [loading]);
-
-  const tourSteps: TourStep[] = [
-    {
-      title: cont ? "Pick up where you left off" : "Your track starts here",
-      body: cont ? "This banner always points to your next move — the exact task and step to continue. Hit Continue to jump straight into the Working Desk." : "Enrol status, your certificate progress ring, and the button to open your first engagement all live in this banner.",
-      icon: "play",
-      getEl: () => heroRef.current,
-    },
-  ];
-  if (!locked) {
-    tourSteps.push(
-      { title: "Your numbers at a glance", body: "Activities completed, your average mentor score, and anything due soon — a quick read on where you stand this track.", icon: "checkSquare", getEl: () => statsRef.current },
-      { title: "Your organisations", body: "Each card is a simulated enterprise engagement. Click one to open its full project → task → activity breakdown in the Working Desk.", icon: "briefcase", getEl: () => orgsRef.current },
-      { title: "Standards you're covering", body: "The GRC frameworks behind your tasks. Switch between them to see how many tasks and activities each one drives in this track.", icon: "shield", getEl: () => standardsRef.current },
-      { title: "Switch between standards", body: "Use these tabs to move across every framework in the track — each one opens its own detail panel with the tasks and activities it owns.", icon: "shield", getEl: () => standardsTabsRef.current },
-      { title: "Track your growth", body: "Your skill rubric radar and progress bars fill in as the mentor grades your work. Come back here to watch badges and scores climb.", icon: "star", getEl: () => gridRef.current },
-    );
-  }
 
   if (loading) {
     return (
@@ -457,11 +416,9 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
-      <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={() => setTourStep(-1)} />
-
       {/* Hero / continue — the track switcher lives in the header strip so there's no empty band up top */}
       <Reveal>
-      <div ref={heroRef} className="bg-brand-gradient relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]">
+      <div data-tour="dash-hero" className="bg-brand-gradient relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]">
         <div className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
         <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
 
@@ -470,14 +427,14 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <span className="flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full ${locked ? "bg-amber-300" : "bg-emerald-300 animate-pulse"}`} />
-              <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{locked ? `${program?.code ?? "Track"} · locked` : cont ? "Pick up where you left off" : "Welcome aboard"}</span>
+              <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-indigo-100">{locked ? `${program?.code ?? "Track"} · locked` : cont && started ? "Pick up where you left off" : "Welcome aboard"}</span>
             </span>
             <AccessChip variant="dark" />
           </div>
           <div className="flex items-center gap-2">
             {/* guide trigger — mirrors the Working Desk; blinks thrice on load to hint the walkthrough */}
             <button
-              onClick={() => setTourStep(0)}
+              onClick={startWelcomeTour}
               className="guide-blink focus-ring inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white/10 ring-1 ring-white/20 backdrop-blur-sm text-white hover:bg-white/20 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
             >
               <Icon name="help" size={14} /> Guide
@@ -490,12 +447,12 @@ export default function DashboardPage() {
           <div className="flex-1 min-w-0">
             <h1 className="text-[24px] md:text-[27px] font-semibold tracking-[-0.02em] leading-tight">Good to see you, {first}.</h1>
             <p className="text-[13.5px] text-indigo-100/90 mt-1 mb-4 tracking-tight max-w-xl">
-              {locked ? <>{program?.code} unlocks after you finish the previous track. Preview its engagements below.</> : cont ? <>Your next move is <span className="font-medium text-white">{cont.taskCode}</span> — step {cont.stepCode}.</> : <>You&apos;re enrolled in {program?.code ?? "GRC 101"}. Open your first engagement to begin.</>}
+              {locked ? <>{program?.code} unlocks after you finish the previous track. Preview its engagements below.</> : cont ? <>{started ? "Your next move is" : "Your first task is"} <span className="font-medium text-white">{cont.taskCode}</span> — step {cont.stepCode}.</> : <>You&apos;re enrolled in {program?.code ?? "GRC 101"}. Open your first engagement to begin.</>}
             </p>
             {!locked && (
             <div className="flex flex-wrap items-center gap-3">
               <Link href={cont ? `/app/desk/${cont.activityId}` : "/app/desk"} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white text-indigo-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-50 transition-colors shadow-sm">
-                <Icon name="play" size={13} /> {cont ? "Continue task" : `Start ${program?.code ?? "GRC 101"}`}
+                <Icon name="play" size={13} /> {cont && started ? "Continue task" : cont ? "Start task" : `Start ${program?.code ?? "GRC 101"}`}
               </Link>
               {cont && (
                 <div className="inline-flex items-center gap-2 h-10 px-3 rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
@@ -530,7 +487,7 @@ export default function DashboardPage() {
       {/* Stat strip */}
       {!locked && progress && (
         <Reveal delay={0.08}>
-        <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div data-tour="dash-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Stat icon="checkSquare" tone="indigo" value={progress.activitiesDone} sub={`/ ${progress.activitiesTotal}`} label="Activities completed" />
           <Stat icon="star" tone="amber" value={progress.reviewsCount ? progress.avgScore : "—"} decimals={1} sub={progress.reviewsCount ? `/ ${progress.scoreOutOf}` : undefined} label={`Avg mentor score · ${progress.reviewsCount} reviews`} />
           <Stat icon="calendar" tone="violet" value="None" label="Due soon · self-paced" />
@@ -547,7 +504,7 @@ export default function DashboardPage() {
       <Reveal delay={0.16}>
       <div className="space-y-5">
         {/* Your organisations — click a card for the full engagement breakdown */}
-        <div ref={orgsRef}>
+        <div data-tour="dash-orgs">
         <Card>
           <details open className="group/orgs">
             <summary className="focus-ring list-none cursor-pointer flex items-center justify-between mb-4 rounded-lg [&::-webkit-details-marker]:hidden">
@@ -638,10 +595,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Standards — segmented selector + integrated detail (active track only) */}
-        {!locked && <div ref={standardsRef}><StandardsSection learnings={learnings} tabsRef={standardsTabsRef} /></div>}
+        {!locked && <div data-tour="dash-standards"><StandardsSection learnings={learnings} /></div>}
 
         {!locked && (
-        <div ref={gridRef} className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div data-tour="dash-grid" className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Skill rubric — radar */}
           <Card>
             <div className="flex items-center justify-between mb-1">
