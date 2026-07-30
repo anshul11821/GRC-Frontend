@@ -14,7 +14,7 @@ import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/do
 import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
-import { VERB_FORMS, GENERIC_FORM, type FieldSpec } from "@/lib/verb-forms";
+import { checklistStates, isFilled } from "@/lib/checklist";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
 import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
@@ -166,84 +166,18 @@ function SubmittedFields({ payload }: { payload?: ActivityPayload }) {
   );
 }
 
-/** Non-empty test for a single form value (string, list, or table-row array). */
-function isFilled(v: unknown): boolean {
-  return Array.isArray(v)
-    ? v.some((x) => (typeof x === "string" ? x.trim() !== "" : Object.values(x ?? {}).some((c) => String(c ?? "").trim() !== "")))
-    : String(v ?? "").trim() !== "";
-}
-
-/** [criterion-keyword, form-token] pairs — tie an acceptance criterion to the input(s) that satisfy it. */
-const CRITERION_CONCEPTS: [RegExp, RegExp][] = [
-  [/role|owner|accountable|stakeholder|audience|named/, /role|owner|accountable|stakeholder|audience/],
-  [/deadline|date|target|time/, /date|deadline|target|time/],
-  [/citation|cited|cite|standard|control|reference|cross-?ref|evidence|source/, /cit|standard|control|refer|cross|evidence|source/],
-  [/rationale|justification|justif/, /rational|justif/],
-  [/question/, /question|guide|interview/],
-  [/subject/, /subject/],
-  [/purpose/, /purpose/],
-  [/agenda/, /agenda/],
-  [/confirmation|confirmed/, /confirm/],
-  [/method/, /method/],
-  [/formula/, /formula/],
-  [/result/, /result/],
-  [/summary/, /executive|summary/],
-  [/decision|sign-?off|approval|approved/, /decision|signoff|sign-?off|approv/],
-  [/cover/, /cover/],
-  [/deck|uploaded|slide|artefact/, /deck|slide|artefact|link/],
-  [/feedback|prior/, /feedback|prior/],
-  [/revision/, /revision/],
-  [/discrepan/, /discrepan/],
-  [/flag/, /flag/],
-  [/action|recommend/, /action|recommend/],
-  [/\bask\b/, /\bask\b/],
-  [/section/, /section/],
-  [/item|rank|mapping|\blink|finding|dimension|register|asset|entr/, /item|rank|map|link|find|dimension|register|asset|entr|name/],
-];
-
-type Atom = { tokens: string; filled: boolean };
-
-/** Flatten a verb form-spec + current values into matchable atoms (one per field, one per table column). */
-function formAtoms(spec: FieldSpec[], values: Record<string, unknown>): Atom[] {
-  const atoms: Atom[] = [];
-  for (const f of spec) {
-    const v = values[f.key];
-    if ("columns" in f && f.columns) {
-      const rows = Array.isArray(v) ? (v as Record<string, unknown>[]) : [];
-      atoms.push({ tokens: `${f.key} ${f.label}`.toLowerCase(), filled: rows.some((r) => Object.values(r ?? {}).some((c) => String(c ?? "").trim() !== "")) });
-      for (const c of f.columns) atoms.push({ tokens: `${c.key} ${c.label}`.toLowerCase(), filled: rows.some((r) => String(r?.[c.key] ?? "").trim() !== "") });
-    } else {
-      const type = "type" in f ? f.type : "";
-      atoms.push({ tokens: `${f.key} ${f.label} ${type}`.toLowerCase(), filled: isFilled(v) });
-    }
-  }
-  return atoms;
-}
-
-/** Provisional, client-side guess at whether a Layer-1 criterion is met by the current inputs. */
-function criterionMet(criterion: string, atoms: Atom[], allFilled: boolean, anyFilled: boolean): boolean {
-  const t = criterion.toLowerCase();
-  if (/if applicable|if any|if rejected|where applicable|n\/a/.test(t)) return anyFilled; // conditional/optional
-  const relevant = CRITERION_CONCEPTS.filter(([kw, atomRe]) => kw.test(t) && atoms.some((a) => atomRe.test(a.tokens)));
-  if (relevant.length === 0) return allFilled; // quality checks we can't verify client-side → gate on completion
-  return relevant.some(([, atomRe]) => atoms.some((a) => atomRe.test(a.tokens) && a.filled));
-}
-
 /** Live acceptance-criteria checklist (always expanded). Heuristic before submit; authoritative after.
  *  Pass `onClose` to show a dismiss (✕) button (used by the floating HUD). */
-function AcceptanceChecklist({ criteria, spec, values, layer1, onClose }: {
+function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
   criteria: string[];
-  spec: FieldSpec[];
   values: Record<string, unknown>;
   layer1?: Layer1Result | null;
   onClose?: () => void;
 }) {
-  const atoms = formAtoms(spec, values);
-  const allFilled = spec.length > 0 && spec.every((f) => isFilled(values[f.key]));
-  const anyFilled = atoms.some((a) => a.filled);
   // Once graded, defer to the backend's deterministic result (when it lines up 1:1 with the criteria).
   const graded = !!layer1 && layer1.checks.length === criteria.length;
-  const states = criteria.map((c, i) => (graded ? layer1!.checks[i].passed : criterionMet(c, atoms, allFilled, anyFilled)));
+  const live = checklistStates(criteria, values);
+  const states = criteria.map((c, i) => (graded ? layer1!.checks[i].passed : live[i]));
   const met = states.filter(Boolean).length;
   const allMet = met === criteria.length;
 
@@ -387,9 +321,7 @@ export default function ActivityWorkspace() {
 
   const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
-  const hasContent = Object.entries(values).some(([, v]) =>
-    Array.isArray(v) ? v.some((x) => (typeof x === "string" ? x.trim() : Object.values(x ?? {}).some(Boolean))) : String(v ?? "").trim() !== "",
-  );
+  const hasContent = Object.values(values).some(isFilled);
   // Workspaces with a guided objective (e.g. the Request conversation) lift `objectiveMet`.
   // While it's present and not yet true, submission is blocked until the right path is reached.
   const objectiveBlocked = values.objectiveMet === false;
@@ -512,7 +444,6 @@ export default function ActivityWorkspace() {
   const hasFeedback = !!(layer1 || review);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
-  const formSpec = verb ? VERB_FORMS[verb.id] ?? GENERIC_FORM : GENERIC_FORM;
   // Documents with their own Open button (floating windows) leave the drawer: the Reference-material
   // panel keeps only the verb workspace's scripted artefacts (Scope Statement, Asset Register, …)
   // opened via the in-workspace "Open" buttons.
@@ -768,7 +699,7 @@ export default function ActivityWorkspace() {
       {/* Acceptance criteria. Small screens: inline card under the deliverable. */}
       {hasChecklist && (
         <div ref={checklistInlineRef} className="md:hidden mt-5">
-          <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} />
+          <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} />
         </div>
       )}
 
@@ -779,7 +710,7 @@ export default function ActivityWorkspace() {
       {hasChecklist && (
         <>
           <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
-            <AcceptanceChecklist criteria={verb!.layer1!} spec={formSpec} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
+            <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
             onClick={() => setCriteriaHidden(false)}

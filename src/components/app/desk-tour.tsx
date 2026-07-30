@@ -123,14 +123,36 @@ function steps(goto: (href: string) => void, orgHref: string, task: { href: stri
   ];
 }
 
-/** Mounted once by DeskLayout. Auto-runs on the mentee's first visit to the desk — which, because
- *  the desk is gated behind the start-date picker, is the moment right after they pick their start
- *  date — and any time `startDeskTour` fires from the org page's Guide button. */
+/**
+ * Module scope, deliberately — not React state.
+ *
+ * `app/template.tsx` is re-keyed by Next on every navigation, so everything under it (DeskLayout,
+ * and this component with it) remounts whenever the mentee moves between desk pages. React state
+ * therefore can't hold a walkthrough that walks from the org page into a task brief: `step` would
+ * reset to -1 at the very step that navigates, the tour would vanish, and — because it never
+ * reached `onClose` — it would count as unseen and start again on the next navigation.
+ *
+ * These two survive the remount. `liveStep` keeps the tour running across pages; `offered` stops a
+ * remount re-offering a walkthrough the mentee has already been shown this session, even if they
+ * walked away from it rather than dismissing it.
+ */
+let liveStep = -1;
+let offered = false;
+
+/** Auto-runs on the mentee's first visit to the desk — which, because the desk is gated behind the
+ *  start-date picker, is the moment right after they pick their start date — and any time
+ *  `startDeskTour` fires from the org page's Guide button. */
 export function DeskTour() {
   const router = useRouter();
   const { user } = useAuth();
   const { learnings } = useDeskLearnings();
-  const [step, setStep] = useState(-1);
+  // Seeded from module scope so a remount mid-tour resumes instead of restarting. Safe for
+  // hydration: a client-side navigation isn't a hydration pass, and on first load this is -1.
+  const [step, setStepState] = useState(liveStep);
+  const setStep = useCallback((i: number) => {
+    liveStep = i;
+    setStepState(i);
+  }, []);
 
   // Where the tour goes: the active placement, and the task it's currently on.
   const { orgHref, task } = useMemo(() => {
@@ -159,17 +181,22 @@ export function DeskTour() {
     setStep(-1);
     showDeskTree(false);
     markTourSeen(DESK_TOUR_SEEN_KEY, user?.email);
-  }, [user?.email]);
+  }, [setStep, user?.email]);
 
-  // First run, per mentee — held until we know which organisation the tour opens on.
-  useTourOnce(DESK_TOUR_SEEN_KEY, user?.email, !!orgHref, () => setStep(0), 700);
+  const open = useCallback(() => {
+    offered = true;
+    setStep(0);
+  }, [setStep]);
+
+  // First run, per mentee — held until we know which organisation the tour opens on, and never
+  // re-offered by a remount (submitting a gate navigates, which remounts this whole subtree).
+  useTourOnce(DESK_TOUR_SEEN_KEY, user?.email, !!orgHref && !offered, open, 700);
 
   // Manual relaunch from the org page.
   useEffect(() => {
-    const onStart = () => setStep(0);
-    window.addEventListener(DESK_TOUR_EVENT, onStart);
-    return () => window.removeEventListener(DESK_TOUR_EVENT, onStart);
-  }, []);
+    window.addEventListener(DESK_TOUR_EVENT, open);
+    return () => window.removeEventListener(DESK_TOUR_EVENT, open);
+  }, [open]);
 
   return <GuidedTour steps={tourSteps} step={step} onStep={setStep} onClose={close} />;
 }
