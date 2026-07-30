@@ -39,6 +39,29 @@ export interface RequestOptions {
 let refreshHandler: (() => Promise<boolean>) | null = null;
 export function setRefreshHandler(fn: (() => Promise<boolean>) | null): void {
   refreshHandler = fn;
+  inflightRefresh = null;
+}
+
+let inflightRefresh: Promise<boolean> | null = null;
+
+/**
+ * Refresh at most once at a time. A screen like the Working Desk fires several requests together;
+ * when the access token expires they all 401 at once. Letting each one POST /auth/refresh rotates
+ * the same cookie N times — the first rotation revokes it, so the rest present a revoked token and
+ * the backend's reuse detection revokes the whole family, hard-logging the learner out mid-session.
+ * Sharing one promise means one rotation and one new token that every waiting caller retries with.
+ *
+ * ponytail: per-tab only — two open tabs can still race. Needs a short server-side grace window on
+ * the just-rotated token if that ever shows up in practice.
+ */
+export function refreshOnce(): Promise<boolean> {
+  if (!refreshHandler) return Promise.resolve(false);
+  if (!inflightRefresh) {
+    inflightRefresh = refreshHandler().finally(() => {
+      inflightRefresh = null;
+    });
+  }
+  return inflightRefresh;
 }
 
 /** Turn a backend error body into a readable string. FastAPI 422 `detail` is an array of {loc,msg,type}. */
@@ -108,7 +131,7 @@ async function request<T>(
   // present but invalid/expired — treat both as "try a silent refresh, then retry once".
   const isAuthFailure = res.status === 401 || res.status === 403;
   if (isAuthFailure && !opts.noRefresh && !opts.noAuth && refreshHandler) {
-    const refreshed = await refreshHandler();
+    const refreshed = await refreshOnce();
     if (refreshed) res = await rawRequest(method, path, body, { ...opts, noRefresh: true });
   }
 
