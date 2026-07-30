@@ -280,7 +280,8 @@ function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspacePro
     include: seed(value, "include", {}),
     decl: seed(value, "decl", {}),
   }));
-  const [tab, setTab] = useState(RESEARCH_METHODS[0].key);
+  // null = "wherever they left off", resolved from restored progress once the tabs are built below.
+  const [tabPick, setTabPick] = useState<string | null>(null);
 
   const patch: Patch = (mut) => setProg((prev) => { const n = JSON.parse(JSON.stringify(prev)) as RsProgress; mut(n); return n; });
 
@@ -289,8 +290,6 @@ function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspacePro
 
   useLift({ methods: prog.methods, include: prog.include, decl: prog.decl, objectiveMet }, onChange);
 
-  const goMethod = (k: string) => setTab(k);
-  const method = RESEARCH_METHODS.find((m) => m.key === tab);
   const resFor = (m: ResearchMethod) => gate.rows.find((r) => r.m.key === m.key)!.res;
 
   const tabs: TabDef[] = [
@@ -309,6 +308,11 @@ function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspacePro
     }),
     { key: "review", label: "Review & submit", icon: "send", blurb: "declaration + sign-off", done: gate.canSubmit, group: "Sign-off" },
   ];
+  // Reopening the gate resumes at the first method still outstanding, not always the first required
+  // one. Landing back on method 1 every time made finished work look lost.
+  const tab = tabPick ?? tabs.find((t) => !t.done)?.key ?? tabs[0].key;
+  const goMethod = (k: string) => setTabPick(k);
+  const method = RESEARCH_METHODS.find((m) => m.key === tab);
 
   return (
     <div>
@@ -321,13 +325,13 @@ function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspacePro
       </div>
 
       <div className="md:flex md:items-start md:gap-5">
-        <TabRail tabs={tabs} active={tab} onSelect={setTab} progressLabel={`${gate.reqDone + gate.optDone}/${gate.required + gate.minOptional} methods complete`} />
+        <TabRail tabs={tabs} active={tab} onSelect={setTabPick} progressLabel={`${gate.reqDone + gate.optDone}/${gate.required + gate.minOptional} methods complete`} />
 
         <div className="min-w-0 flex-1 md:border-l md:border-slate-100 md:pl-5 md:min-h-[300px] md:flex md:flex-col [&>*:first-child]:flex-1">
           {tab === "review"
             ? <ReviewPane ctx={ctx} prog={prog} patch={patch} gate={gate} goMethod={goMethod} />
             : method && <MethodEditor ctx={ctx} m={method} prog={prog} patch={patch} res={resFor(method)} />}
-          <PaneNav tabs={tabs} active={tab} onSelect={setTab} />
+          <PaneNav tabs={tabs} active={tab} onSelect={setTabPick} />
         </div>
       </div>
     </div>

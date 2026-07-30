@@ -1134,7 +1134,8 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
     }
     return base;
   });
-  const [tab, setTab] = useState("study");
+  // null = "wherever they left off", resolved from restored progress once the tabs are built below.
+  const [tabPick, setTabPick] = useState<string | null>(null);
   const fw = useFloatingDocs();
 
   const patch: Patch = (mut) => setP((prev) => { const n = JSON.parse(JSON.stringify(prev)) as RuaProgress; mut(n); return n; });
@@ -1167,8 +1168,11 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
     { key: "attest", label: "Attest", icon: "shield", blurb: "Request the gate decision", done: doneMap.attest, group: "D · Readiness Sign-off" },
   ];
   const doneCount = tabs.filter((t) => t.done).length;
+  // Reopening the gate resumes at the first unfinished step. Landing back on Study every time made
+  // finished work look lost, even though the draft had restored it.
+  const tab = tabPick ?? tabs.find((t) => !t.done)?.key ?? tabs[0].key;
   const paneProps: PaneProps = {
-    task, taskCode: taskCode ?? "", p, patch, goVerb: setTab,
+    task, taskCode: taskCode ?? "", p, patch, goVerb: setTabPick,
     refs: allRefs.filter((r) => r.tab === tab), openDoc: fw.open,
   };
 
@@ -1183,7 +1187,7 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
       </div>
 
       <div className="md:flex md:items-start md:gap-5">
-        <TabRail tabs={tabs} active={tab} onSelect={setTab} progressLabel={`${doneCount}/${tabs.length} steps complete`} />
+        <TabRail tabs={tabs} active={tab} onSelect={setTabPick} progressLabel={`${doneCount}/${tabs.length} steps complete`} />
 
         <div className="min-w-0 flex-1 md:border-l md:border-slate-100 md:pl-5 md:min-h-[300px] md:flex md:flex-col [&>*:first-child]:flex-1">
           {tab === "study" && <StudyPane {...paneProps} />}
@@ -1194,7 +1198,7 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
           {tab === "explain" && <ExplainPane {...paneProps} />}
           {tab === "answer" && <AnswerPane {...paneProps} />}
           {tab === "attest" && <AttestPane {...paneProps} ledger={ledger} />}
-          <PaneNav tabs={tabs} active={tab} onSelect={setTab} />
+          <PaneNav tabs={tabs} active={tab} onSelect={setTabPick} />
         </div>
       </div>
 
