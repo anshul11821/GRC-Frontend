@@ -394,10 +394,34 @@ export default function ActivityWorkspace() {
   // While it's present and not yet true, submission is blocked until the right path is reached.
   const objectiveBlocked = values.objectiveMet === false;
 
+  // Autosave. An activity holds up to an hour of written work and the only other way to persist it
+  // was a manual button click, so a closed tab, a crash or an expired session lost everything typed
+  // since the last one. Fires 2s after typing stops; the Save draft button stays for reassurance.
+  const savedSnapshot = useRef<string | null>(null);
+  const saveChain = useRef<Promise<unknown>>(Promise.resolve());
+  const touched = useRef(false); // set by the page's capture handlers on the first real interaction
+  useEffect(() => { savedSnapshot.current = null; touched.current = false; }, [activityId]);
+  useEffect(() => {
+    if (!activity || activity.attemptsRemaining <= 0) return; // not loaded, or read-only
+    const snapshot = JSON.stringify(values);
+    // First run after the activity loads is the seeded draft, not something the mentee typed.
+    if (savedSnapshot.current === null) { savedSnapshot.current = snapshot; return; }
+    if (!touched.current || snapshot === savedSnapshot.current) return;
+    const id = setTimeout(() => {
+      // Chained, so a slow save can never land after — and overwrite — a newer one.
+      saveChain.current = saveChain.current
+        .then(() => deskApi.saveDraft(activityId, { fields: values, notes: "", attachments: [] }))
+        .then(() => { savedSnapshot.current = snapshot; setSavedAt(new Date().toLocaleTimeString()); })
+        .catch(() => {}); // keep the stale snapshot so the next edit retries; the button still reports errors
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [values, activity, activityId]);
+
   const saveDraft = async () => {
     setBusy(true); setError(null);
     try {
       await deskApi.saveDraft(activityId, payload());
+      savedSnapshot.current = JSON.stringify(values);
       setSavedAt(new Date().toLocaleTimeString());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save draft.");
@@ -548,7 +572,13 @@ export default function ActivityWorkspace() {
   });
 
   return (
-    <div className="max-w-[920px] mx-auto px-6 py-6">
+    <div
+      className="max-w-[920px] mx-auto px-6 py-6"
+      // Autosave only after the mentee actually touches the page — workspaces seed their scripted
+      // defaults into `values` on mount, and that must not be mistaken for typed work.
+      onPointerDownCapture={() => { touched.current = true; }}
+      onKeyDownCapture={() => { touched.current = true; }}
+    >
       <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />
       <FloatingDocs docs={fw.docs} onClose={fw.close} onFocus={fw.focus} />
 
