@@ -304,7 +304,7 @@ function CtaFooter() {
             <div className="flex items-center gap-4 text-[12px] text-slate-500">
               <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Privacy</a>
               <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Terms</a>
-              <a href="mailto:hello@grcmentor.com" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Contact</a>
+              <a href="mailto:partner@grcmentor.ai" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Contact</a>
             </div>
           </div>
         </div>
