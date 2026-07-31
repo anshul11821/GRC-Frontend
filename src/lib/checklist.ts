@@ -6,6 +6,10 @@
 // field-spec: the bespoke per-verb workspaces lift their own keys, so any static spec drifts out of
 // sync and leaves criteria permanently unticked with nothing on screen to tick them.
 
+/** Flags a workspace lifts to tell the backend how to grade — not part of the deliverable, so they
+ *  never count as content and are never shown as submitted fields. */
+export const CONTROL_KEYS = new Set(["objectiveMet", "scripted"]);
+
 /** Non-empty test. Booleans count as filled only when true; objects/arrays when something inside is. */
 export function isFilled(v: unknown): boolean {
   if (typeof v === "boolean") return v;
@@ -48,7 +52,7 @@ type Atom = { tokens: string; filled: boolean };
 function valueAtoms(values: Record<string, unknown>): Atom[] {
   const atoms: Atom[] = [];
   for (const [key, v] of Object.entries(values)) {
-    if (key === "objectiveMet") continue; // control flag, not a deliverable field
+    if (CONTROL_KEYS.has(key)) continue; // grading flag, not a deliverable field
     atoms.push({ tokens: key.toLowerCase(), filled: isFilled(v) });
     const rows = Array.isArray(v) ? v : [];
     const cols = new Set(rows.flatMap((r) => (r && typeof r === "object" && !Array.isArray(r) ? Object.keys(r) : [])));
@@ -65,7 +69,7 @@ function valueAtoms(values: Record<string, unknown>): Atom[] {
  *  `objectiveMet` and are the authority; the rest fall back to "every lifted value has content". */
 function isComplete(values: Record<string, unknown>): boolean {
   if (typeof values.objectiveMet === "boolean") return values.objectiveMet;
-  const entries = Object.entries(values);
+  const entries = Object.entries(values).filter(([k]) => !CONTROL_KEYS.has(k));
   return entries.length > 0 && entries.every(([, v]) => isFilled(v));
 }
 

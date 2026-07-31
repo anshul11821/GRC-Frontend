@@ -352,7 +352,9 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
   const citeOk = cite.trim().toUpperCase() === task.formulaId.toUpperCase();
   const allMatch = task.rows.every(matchOf);
   const objectiveMet = allMatch && citeOk;
-  useLift({ formulaCite: cite, results, objectiveMet }, onChange);
+  // Every result is checked against the engine and the formula ID must match exactly, so a passing
+  // submission is identical for every mentee — graded deterministically, no LLM. See ai_grader.
+  useLift({ scripted: true, formulaCite: cite, results, objectiveMet }, onChange);
 
   const setResult = (id: number, v: string) => setResults((s) => ({ ...s, [id]: v }));
   const label = (id: number) => task.rows.find((r) => r.id === id)?.instance ?? `#${id}`;

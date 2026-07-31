@@ -443,7 +443,10 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
   const captured = terminal === "met" && thread
     ? [thread.opener, ...correctPicks.map((_, i) => thread.rounds[i].stakeholderNext).filter((x): x is string => !!x)]
     : [];
-  useLift({ roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", captured: captured.join("\n\n") || undefined }, onChange);
+  // `scripted` tells the backend there is no mentee-authored prose here — every choice is forced
+  // correct and `captured` is the stakeholder's scripted reply — so it grades this deterministically
+  // instead of asking an LLM to score its own script. See layer1_checks / ai_grader.
+  useLift({ scripted: true, roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", captured: captured.join("\n\n") || undefined }, onChange);
 
   const reset = () => { setOpening(null); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(false); };
   const pickOpening = (o: ConductOpening) => { setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(true); };

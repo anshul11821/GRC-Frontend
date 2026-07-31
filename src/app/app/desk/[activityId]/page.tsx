@@ -14,7 +14,7 @@ import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/do
 import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
-import { checklistStates, isFilled } from "@/lib/checklist";
+import { CONTROL_KEYS, checklistStates, isFilled } from "@/lib/checklist";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
 import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
@@ -145,6 +145,7 @@ function fieldText(v: unknown, depth = 0): string {
 /** What the mentee actually sent for one submission — every graded field, any verb. */
 function SubmittedFields({ payload }: { payload?: ActivityPayload }) {
   const entries = Object.entries(payload?.fields ?? {})
+    .filter(([k]) => !CONTROL_KEYS.has(k))
     .map(([k, v]) => [k, fieldText(v)] as const)
     .filter(([, t]) => t.trim() !== "");
   if (entries.length === 0) return null;
@@ -253,8 +254,9 @@ export default function ActivityWorkspace() {
   // The criteria HUD stays closed until the user scrolls the deliverable into view (see observer below).
   const [criteriaHidden, setCriteriaHidden] = useState(false); // user dismissed it
   const [atDeliverable, setAtDeliverable] = useState(false);   // deliverable card is on screen
-  // When a passed activity is reopened, lets the user choose to edit and submit again.
+  // When a passed activity is reopened, lets the user choose to start the deliverable again.
   const [resubmit, setResubmit] = useState(false);
+  const [attemptKey, setAttemptKey] = useState(0); // bumped to remount the workspace blank
   const deliverableRef = useRef<HTMLDivElement>(null);
   // Guided walkthrough: objective → what to do → checklist → deliverable. -1 = closed.
   const [tourStep, setTourStep] = useState(-1);
@@ -321,7 +323,7 @@ export default function ActivityWorkspace() {
 
   const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
-  const hasContent = Object.values(values).some(isFilled);
+  const hasContent = Object.entries(values).some(([k, v]) => !CONTROL_KEYS.has(k) && isFilled(v));
   // Workspaces with a guided objective (e.g. the Request conversation) lift `objectiveMet`.
   // While it's present and not yet true, submission is blocked until the right path is reached.
   const objectiveBlocked = values.objectiveMet === false;
@@ -358,6 +360,18 @@ export default function ActivityWorkspace() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save draft.");
     } finally { setBusy(false); }
+  };
+
+  // Resubmit is a fresh attempt, not an edit of the last one: clear the answers, drop the previous
+  // grading, and remount the workspace so its internal state re-seeds from the blank value.
+  const startResubmit = () => {
+    setValues({});
+    setResult(null);
+    setError(null);
+    setSavedAt(null);
+    savedSnapshot.current = null; // don't autosave the blanking itself; the next edit saves
+    setAttemptKey((k) => k + 1);
+    setResubmit(true);
   };
 
   const submit = async () => {
@@ -639,7 +653,7 @@ export default function ActivityWorkspace() {
 
         {/* A native disabled fieldset switches off every control inside in one go. */}
         <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
-          <VerbWorkspace verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+          <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
         </fieldset>
 
         {noAttemptsLeft && (
@@ -667,7 +681,7 @@ export default function ActivityWorkspace() {
                 </Link>
               )}
               {!noAttemptsLeft && (
-                <button onClick={() => setResubmit(true)} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-medium tracking-tight hover:bg-slate-50">
+                <button onClick={startResubmit} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-medium tracking-tight hover:bg-slate-50">
                   <Icon name="refresh" size={14} /> Resubmit
                 </button>
               )}

@@ -30,8 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const r = await authApi.refresh();
         setAccessToken(r.accessToken);
         return true;
-      } catch {
-        setAccessToken(null);
+      } catch (e) {
+        // Only a definitive rejection means the session is really gone — drop it and let
+        // RouteGuard bounce them to sign in. A network blip / backend hiccup must NOT log a
+        // learner out mid-activity; that path just fails the request and keeps the session.
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+          setAccessToken(null);
+          setUserState(null);
+        }
         return false;
       }
     });
