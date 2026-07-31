@@ -10,7 +10,7 @@ import { getCalcTask, type CalcTask } from "@/lib/calc-tasks";
 import { getFormTask, type FormTask, type FormKind } from "@/lib/form-tasks";
 import { getMapTask } from "@/lib/map-tasks";
 import { getPrioTask, type PrioTask } from "@/lib/prioritise-tasks";
-import { ScriptedApplyFlow } from "./set-a";
+import { RunQuality, ScriptedApplyFlow } from "./set-a";
 
 /* ===== Prioritise: score items per criterion → live aggregate + rank → ties need a tiebreaker ===== */
 function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & Pick<WorkspaceProps, "value" | "onChange">) {
@@ -256,7 +256,9 @@ function LegacyDraftWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   ]));
   const [standards, setStandards] = useState<string[]>(() => seed(value, "standardsCited", [""]));
   const filled = sections.filter((s) => s.content.trim()).length;
-  useLift({ docTitle, sections: sections.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: sections, standardsCited: standards }, onChange);
+  // Headings and the doc title are the given scaffold; the bodies and citations are the work.
+  const ready = filled === sections.length && standards.some((s) => s.trim());
+  useLift({ docTitle, sections: sections.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: sections, standardsCited: standards, ready }, onChange);
   const set = (id: string, v: string) => setSections((ss) => ss.map((s) => (s.id === id ? { ...s, content: v } : s)));
 
   return (
@@ -300,11 +302,14 @@ function LegacyMapWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const colsB = ["orders-db", "K8s prod", "Stripe Connect", "Snowflake", "Marketing CMS"];
   const [cells, setCells] = useState<Record<string, string>>(() => seed(value, "cells", {} as Record<string, string>));
   const mappings = Object.entries(cells).filter(([, v]) => v.trim()).map(([k, v]) => { const [itemA, itemB] = k.split("|"); return { itemA, itemB, rationale: v }; });
-  useLift({ cells, mappings }, onChange);
+  // A blank cell is a valid answer ("no obligation"), but every driver needs at least one link,
+  // otherwise an empty grid would submit as a finished mapping.
+  const ready = rowsA.every((r) => mappings.some((m) => m.itemA === r));
+  useLift({ cells, mappings, ready }, onChange);
 
   return (
     <div className="space-y-4">
-      <GivenNote>Map each regulatory driver to the assets it touches. A blank cell means no obligation (valid). A populated link needs a one-line rationale. <button onClick={() => openRef("ws-driver-map")} className="text-indigo-600 hover:underline font-medium">Open drivers →</button></GivenNote>
+      <GivenNote>Map each regulatory driver to the assets it touches. A blank cell means no obligation (valid), but every driver needs at least one mapped asset. A populated link needs a one-line rationale. <button onClick={() => openRef("ws-driver-map")} className="text-indigo-600 hover:underline font-medium">Open drivers →</button></GivenNote>
       <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
         <div className="grid min-w-[720px]" style={{ gridTemplateColumns: `150px repeat(${colsB.length}, 1fr)` }}>
           <div className="bg-slate-50/60 border-b border-slate-100" />
@@ -342,6 +347,9 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
   const [results, setResults] = useState<Record<number, string>>(() => seed(value, "results", {} as Record<number, string>));
   const [cite, setCite] = useState(() => seed(value, "formulaCite", ""));
   const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
+  // Rows the mentee has had to correct. Every passing submission is otherwise identical, so this is
+  // what the deterministic grade scores — get every figure right first time and it's full marks.
+  const [slipRows, setSlipRows] = useState<number[]>(() => seed(value, "slipRows", [] as number[]));
 
   const matchOf = (r: { id: number; expected: number }) => {
     const v = results[r.id];
@@ -354,7 +362,14 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
   const objectiveMet = allMatch && citeOk;
   // Every result is checked against the engine and the formula ID must match exactly, so a passing
   // submission is identical for every mentee — graded deterministically, no LLM. See ai_grader.
-  useLift({ scripted: true, formulaCite: cite, results, objectiveMet }, onChange);
+  useLift({ scripted: true, formulaCite: cite, results, objectiveMet, slips: slipRows.length, slipRows }, onChange);
+
+  // Checking is how you find out you were wrong, so a check that surfaces a bad figure is the slip.
+  // Recorded per row, so re-checking the same mistake doesn't compound it.
+  const check = () => {
+    setChecked(true);
+    setSlipRows((prev) => [...new Set([...prev, ...wrongIds])]);
+  };
 
   const setResult = (id: number, v: string) => setResults((s) => ({ ...s, [id]: v }));
   const label = (id: number) => task.rows.find((r) => r.id === id)?.instance ?? `#${id}`;
@@ -378,7 +393,7 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
 
       <div>
         <SectionLabel hint={`${task.rows.filter(matchOf).length} / ${task.rows.length} correct`} action={
-          <button onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check results</button>
+          <button onClick={check} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check results</button>
         }>{task.title}</SectionLabel>
         <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -426,6 +441,7 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
         <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
           <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> All results match the engine</div>
           <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">Every value recomputes to ±0 and the formula is cited. {task.feedsNext}</p>
+          <RunQuality slips={slipRows.length} />
         </div>
       )}
     </div>
@@ -438,7 +454,9 @@ function LegacyCalculateWorkspace({ value, onChange, openRef }: WorkspaceProps) 
   const [working, setWorking] = useState(() => seed(value, "working", ""));
   const inherent = inputs.likelihood * inputs.impact;
   const residual = inherent * (1 - inputs.controlEff / 4);
-  useLift({ formula: "Residual = L × I × (1 − ControlEff/4)", inputs: `L=${inputs.likelihood}; I=${inputs.impact}; ControlEff=${inputs.controlEff}`, inputValues: inputs, citations, working, result: residual.toFixed(1) }, onChange);
+  // Every input needs its source cited (the stated acceptance criterion) plus the working narrative.
+  const ready = (["likelihood", "impact", "controlEff"] as const).every((k) => citations[k].trim()) && working.trim().length >= 30;
+  useLift({ formula: "Residual = L × I × (1 − ControlEff/4)", inputs: `L=${inputs.likelihood}; I=${inputs.impact}; ControlEff=${inputs.controlEff}`, inputValues: inputs, citations, working, result: residual.toFixed(1), ready }, onChange);
   const rows: { k: "likelihood" | "impact" | "controlEff"; label: string; scale: string }[] = [
     { k: "likelihood", label: "Likelihood", scale: "0 None — 4 Almost certain" },
     { k: "impact", label: "Impact", scale: "0 Negligible — 4 Catastrophic" },
@@ -500,12 +518,14 @@ function LegacyPrioritiseWorkspace({ value, onChange }: WorkspaceProps) {
   // Unscored rows all sit at 0 — that's not a tie to resolve, so only compare scored ones.
   sorted.forEach((r, i) => { if (i > 0 && score(r) > 0 && Math.abs(score(r) - score(sorted[i - 1])) < 0.01) { ties.add(r.id); ties.add(sorted[i - 1].id); } });
   const ranked = sorted.map((r, i) => ({ item: r.name, criterion: score(r).toFixed(2), rank: i + 1 }));
-  useLift({ rows, ranked, tieRationale }, onChange);
+  // Every item scored on every criterion (0 = unscored here), and any tie documented.
+  const ready = rows.every((r) => crit.every((c) => r[c.id] > 0)) && (ties.size === 0 || tieRationale.trim().length > 0);
+  useLift({ rows, ranked, tieRationale, ready }, onChange);
   const setS = (id: number, k: "lik" | "imp" | "vel" | "exp", v: string) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: Math.max(0, Math.min(4, parseInt(v) || 0)) } : r)));
 
   return (
     <div className="space-y-4">
-      <GivenNote>Rank by weighted criterion (L 30 · I 40 · Velocity 15 · Exposure 15). The aggregate re-computes server-side; resolve ties with a written rationale.</GivenNote>
+      <GivenNote>Score every item on all four criteria (1–4) — 0 counts as unscored. Ranking is by weighted criterion (L 30 · I 40 · Velocity 15 · Exposure 15); the aggregate re-computes server-side, and any tie needs a written rationale.</GivenNote>
       <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
         <table className="w-full min-w-[640px]">
           <thead className="bg-slate-50/60 border-b border-slate-100"><tr>
@@ -552,10 +572,11 @@ function LegacyRecommendWorkspace({ value, onChange }: WorkspaceProps) {
     { id: 2, gap: "Snowflake personal-data joinability", action: "", owner: "", control: "", rationale: "" },
     { id: 3, gap: "Stripe sub-processor disclosure cadence", action: "", owner: "", control: "", rationale: "" },
   ]));
-  useLift({ recommendations: recs }, onChange);
+  // Same rule the per-card "valid" badge shows — every gap needs a complete recommendation.
+  const valid = (r: Rec) => r.action.length > 10 && !!r.owner && !!r.control && r.rationale.length >= 30;
+  useLift({ recommendations: recs, ready: recs.every(valid) }, onChange);
   const set = (id: number, k: keyof Rec, v: string) => setRecs((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: v } : r)));
   const owners = ["Data Platform Lead", "Head of Platform", "Security Eng. Lead", "Compliance Lead", "DPO"];
-  const valid = (r: Rec) => r.action.length > 10 && r.owner && r.control && r.rationale.length >= 30;
 
   return (
     <div className="space-y-3">
@@ -594,7 +615,9 @@ function LegacyValidateWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: 4, text: "R&D sandbox lacks isolation testing cadence", citation: "", verified: null, followup: "" },
     { id: 5, text: "Sub-processor disclosure cadence undocumented", citation: "", verified: null, followup: "" },
   ]));
-  useLift({ findings }, onChange);
+  // Stated rules: every finding cited, none left indeterminate, unverified ones need a follow-up.
+  const ready = findings.every((f) => f.citation.trim() && f.verified !== null && (f.verified || f.followup.trim()));
+  useLift({ findings, ready }, onChange);
   const set = (id: number, k: keyof Finding, v: string | boolean | null) => setFindings((fs) => fs.map((f) => (f.id === id ? ({ ...f, [k]: v } as Finding) : f)));
 
   return (
@@ -641,14 +664,16 @@ function LegacyScheduleWorkspace({ value, onChange }: WorkspaceProps) {
     { time: "Tue 2026-07-02 · 10:00", agreed: false }, { time: "Wed 2026-07-03 · 14:00", agreed: false }, { time: "Fri 2026-07-05 · 11:00", agreed: false },
   ]));
   const agreed = slots.filter((s) => s.agreed).map((s) => s.time);
-  useLift({ purpose, agenda, proposedTimes: slots.map((s) => s.time), confirmation: agreed.join(", ") }, onChange);
+  // The slots are given; purpose, agenda and the confirmed time are the mentee's.
+  const ready = !!purpose.trim() && !!agenda.trim() && agreed.length > 0;
+  useLift({ purpose, agenda, proposedTimes: slots.map((s) => s.time), confirmation: agreed.join(", "), ready }, onChange);
   const toggle = (i: number) => setSlots((ss) => ss.map((s, j) => ({ ...s, agreed: j === i ? !s.agreed : s.agreed })));
 
   return (
     <div className="space-y-4">
       <GivenNote>Provide purpose, agenda, and time options, then mark the slot the stakeholder confirmed (their reply is pre-scripted below).</GivenNote>
-      <div><SectionLabel>Purpose</SectionLabel><WTextArea value={purpose} onChange={setPurpose} rows={2} placeholder="What this meeting is for…" hint={`${purpose.length} chars`} /></div>
-      <div><SectionLabel>Agenda</SectionLabel><WTextArea value={agenda} onChange={setAgenda} rows={5} placeholder={"1. Item (10 min)\n2. Item (15 min)…"} /></div>
+      <div><SectionLabel>Purpose <span className="text-rose-500">*</span></SectionLabel><WTextArea value={purpose} onChange={setPurpose} rows={2} placeholder="What this meeting is for…" hint={`${purpose.length} chars`} /></div>
+      <div><SectionLabel>Agenda <span className="text-rose-500">*</span></SectionLabel><WTextArea value={agenda} onChange={setAgenda} rows={5} placeholder={"1. Item (10 min)\n2. Item (15 min)…"} /></div>
       <div>
         <SectionLabel>Proposed time slots — tap the confirmed one</SectionLabel>
         <div className="space-y-2">

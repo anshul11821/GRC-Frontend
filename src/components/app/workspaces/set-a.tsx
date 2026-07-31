@@ -20,6 +20,28 @@ import { getRecordTask, type RecordTask, type RecCol } from "@/lib/record-tasks"
 
 const CLASS = ["Public", "Internal", "Confidential"];
 
+/* Mirrors ai_grader.scripted_score — a guided step is scored on how cleanly you got there, so the
+   mentee sees what a wrong turn cost instead of finding out from an unexplained 4.0. */
+const SCRIPTED_MAX = 5, SCRIPTED_SLIP_PENALTY = 0.5, SCRIPTED_FLOOR = 3.6;
+export const scriptedScore = (slips: number) =>
+  Math.max(SCRIPTED_FLOOR, SCRIPTED_MAX - Math.max(0, slips) * SCRIPTED_SLIP_PENALTY);
+
+export function RunQuality({ slips }: { slips: number }) {
+  const score = scriptedScore(slips);
+  const clean = slips === 0;
+  return (
+    <div className={`mt-3 pt-3 border-t flex items-start gap-2 ${clean ? "border-emerald-200/70" : "border-amber-200/70"}`}>
+      <Icon name={clean ? "check" : "info"} size={13} className={`shrink-0 mt-px ${clean ? "text-emerald-600" : "text-amber-600"}`} />
+      <p className={`text-[12px] leading-relaxed ${clean ? "text-emerald-900/80" : "text-amber-900/80"}`}>
+        <strong className="font-semibold">{score.toFixed(1)} / 5</strong>{" "}
+        {clean
+          ? "— flawless run. Every choice right first time, so this step scores full marks."
+          : `— ${slips} wrong turn${slips === 1 ? "" : "s"} along the way, ${(slips * SCRIPTED_SLIP_PENALTY).toFixed(1)} off. A run with no retries scores the full 5.`}
+      </p>
+    </div>
+  );
+}
+
 /* ============================ REQUEST ============================ */
 // Two modes: when the activity has an authored branching conversation, run the compose →
 // mood-route → multi-turn flow (ScriptedRequestFlow). Otherwise fall back to the legacy
@@ -362,21 +384,23 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
   const [purpose, setPurpose] = useState(() => seed(value, "purpose", ""));
   const [items, setItems] = useState<string[]>(() => seed(value, "items", ["", "", ""]));
 
-  useLift({ to, subject, purpose, items }, onChange);
   const subjectBad = subject.length > 80; // empty is "not yet filled", not an error — only over-length turns the field red
   const itemsN = items.filter((i) => i.trim()).length;
+  // The verb's own acceptance criteria: named recipient · subject ≤ 80 · ≥ 3 requested items.
+  const ready = !!to.trim() && !!subject.trim() && !subjectBad && !!purpose.trim() && itemsN >= 3;
+  useLift({ to, subject, purpose, items, ready }, onChange);
 
   return (
     <div className="space-y-5">
       <GivenNote>The reference documents are pre-set for this engagement. Write a specific, well-scoped request — a vague ask gets ignored.</GivenNote>
 
       <div>
-        <SectionLabel>To · stakeholder (named role)</SectionLabel>
+        <SectionLabel>To · stakeholder (named role) <span className="text-rose-500">*</span></SectionLabel>
         <WTextInput value={to} onChange={setTo} placeholder="e.g. IT Operations Lead" />
       </div>
 
       <div>
-        <SectionLabel hint={`${subject.length} / 80`}>Subject</SectionLabel>
+        <SectionLabel hint={`${subject.length} / 80`}>Subject <span className="text-rose-500">*</span></SectionLabel>
         <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectBad ? "ring-rose-300" : "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30"}`}>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A specific, scoped subject line…" className="flex-1 bg-transparent outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
           <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
@@ -384,7 +408,7 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
       </div>
 
       <div>
-        <SectionLabel>Purpose</SectionLabel>
+        <SectionLabel>Purpose <span className="text-rose-500">*</span></SectionLabel>
         <WTextArea value={purpose} onChange={setPurpose} rows={3} placeholder="Why you need this and what you'll do with it…" hint={`${purpose.length} chars`} />
       </div>
 
@@ -438,6 +462,10 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
   const [terminal, setTerminal] = useState<"met" | "miss" | null>(() => restored ? "met" : null);
   const [missOption, setMissOption] = useState<ConductOption | null>(null);
   const [waiting, setWaiting] = useState(false); // interviewee reply is still "typing" — hold the next picker until it lands
+  // Every wrong turn the flow coached them through. Since each choice is retried until correct, this
+  // is the only thing that varies between two completed runs — and so the only thing the
+  // deterministic grade can score. Reaching the objective with 0 slips is full marks.
+  const [slips, setSlips] = useState(() => seed(value, "slips", 0));
 
   const thread = opening ? task.threads[opening.routesTo] : null;
   const captured = terminal === "met" && thread
@@ -446,13 +474,18 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
   // `scripted` tells the backend there is no mentee-authored prose here — every choice is forced
   // correct and `captured` is the stakeholder's scripted reply — so it grades this deterministically
   // instead of asking an LLM to score its own script. See layer1_checks / ai_grader.
-  useLift({ scripted: true, roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", captured: captured.join("\n\n") || undefined }, onChange);
+  useLift({ scripted: true, roleAgent: task.roleAgent, openingId: opening?.id, disposition: opening?.routesTo, objectiveMet: terminal === "met", slips, captured: captured.join("\n\n") || undefined }, onChange);
 
+  // Re-opening keeps the slip count: starting over is a legitimate way to explore, not a way to
+  // erase a wrong turn you were already coached on.
   const reset = () => { setOpening(null); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(false); };
-  const pickOpening = (o: ConductOpening) => { setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(true); };
+  const pickOpening = (o: ConductOpening) => {
+    if (!o.correct) setSlips((n) => n + 1); // a weak opening sets a worse disposition — that's a wrong turn
+    setOpening(o); setCorrectPicks([]); setTerminal(null); setMissOption(null); setWaiting(true);
+  };
   const pick = (o: ConductOption, roundIdx: number) => {
     if (terminal || !thread) return;
-    if (!o.correct) { setMissOption(o); return; } // soft miss — coach inline, keep this round open to retry
+    if (!o.correct) { setMissOption(o); setSlips((n) => n + 1); return; } // soft miss — coach inline, keep this round open to retry
     setMissOption(null);
     const next = [...correctPicks, o];
     setCorrectPicks(next);
@@ -559,6 +592,7 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
           <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
             <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-800 mb-1"><Icon name="check" size={14} /> Objective met</div>
             <p className="text-[12.5px] text-emerald-900/80 leading-relaxed">{task.metEnd}</p>
+            <RunQuality slips={slips} />
           </div>
         </>
       )}
@@ -577,7 +611,8 @@ function LegacyConductWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
   const stakeholder = "Compliance Lead";
   const [activeQ, setActiveQ] = useState(0);
   const [findings, setFindings] = useState(() => seed(value, "findings", ""));
-  useLift({ stakeholder, questionsAnswered: `${script.length} / ${script.length}`, findings }, onChange);
+  // The walkthrough is pre-scripted; the key findings are the only mentee-authored field.
+  useLift({ stakeholder, questionsAnswered: `${script.length} / ${script.length}`, findings, ready: findings.trim().length >= 30 }, onChange);
 
   return (
     <div className="space-y-5">
@@ -620,7 +655,7 @@ function LegacyConductWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
       </div>
 
       <div>
-        <SectionLabel hint={`${findings.length} chars`}>Key findings <span className="text-rose-500">*</span></SectionLabel>
+        <SectionLabel hint={`${findings.length} chars · min 30`}>Key findings <span className="text-rose-500">*</span></SectionLabel>
         <WTextArea value={findings} onChange={setFindings} rows={4} placeholder="Summarise the most important findings, the biggest gap, and a recommended follow-up." />
       </div>
     </div>
@@ -752,14 +787,16 @@ function LegacyRecordWorkspace({ value, onChange }: Pick<WorkspaceProps, "value"
     { name: "Snowflake warehouse", type: "Data store", owner: "", c: "", i: "", a: "", loc: "AWS us-west-2", rationale: "" },
     { name: "Stripe Connect", type: "Third party", owner: "", c: "", i: "", a: "", loc: "External", rationale: "" },
   ]));
-  useLift({ register: rows }, onChange);
-  const set = (ri: number, k: keyof RegRow, v: string) => setRows((rs) => rs.map((r, i) => (i === ri ? { ...r, [k]: v } : r)));
   const needsRationale = (r: RegRow) => r.c === "High" || r.c === "Confidential";
+  // Asset name / type / location are given; the owner, C-I-A and rationale are the mentee's.
+  const ready = rows.every((r) => r.owner && r.c && r.i && r.a && (!needsRationale(r) || r.rationale.trim()));
+  useLift({ register: rows, ready }, onChange);
+  const set = (ri: number, k: keyof RegRow, v: string) => setRows((rs) => rs.map((r, i) => (i === ri ? { ...r, [k]: v } : r)));
   const owners = ["Data Platform Lead", "Head of Platform", "Security Eng. Lead", "Security Ops", "Compliance Lead"];
 
   return (
     <div className="space-y-4">
-      <GivenNote>The register is pre-populated from intake. Every owner must be a <strong>role</strong> (not a department); High/Confidential assets need a rationale.</GivenNote>
+      <GivenNote>The register is pre-populated from intake. Every row needs an owner and all three C-I-A values; the owner must be a <strong>role</strong> (not a department), and High/Confidential assets need a rationale.</GivenNote>
       <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
         <table className="w-full border-collapse min-w-[760px]">
           <thead className="bg-slate-50/60 border-b border-slate-100">
@@ -925,14 +962,15 @@ function LegacyApplyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { name: "Internal R&D sandbox", contains: "Synthetic data", classification: "", rationale: "" },
   ]));
   const [step, setStep] = useState(0);
-  useLift({ items }, onChange);
+  // Asset name + contents are given; the classification and its rationale are the mentee's call.
+  useLift({ items, ready: items.every((it) => !!it.classification && !!it.rationale.trim()) }, onChange);
   const cur = items[step];
   const set = (k: keyof ApplyItem, v: string) => setItems((is) => is.map((it, i) => (i === step ? { ...it, [k]: v } : it)));
   const tone = (c: string): Tone => (!c ? "slate" : c === "Public" ? "emerald" : c === "Internal" ? "amber" : "rose");
 
   return (
     <div className="space-y-4">
-      <GivenNote>Apply the three-tier scheme to each asset. Personal-data items must never be Public. <button onClick={() => openRef("ws-classification-scheme")} className="text-indigo-600 hover:underline font-medium">Open the scheme →</button></GivenNote>
+      <GivenNote>Apply the three-tier scheme to <strong>every</strong> asset — use the list on the right to move between them. Each needs a classification and a rationale. Personal-data items must never be Public. <button onClick={() => openRef("ws-classification-scheme")} className="text-indigo-600 hover:underline font-medium">Open the scheme →</button></GivenNote>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
         <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden">
           <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
@@ -1099,7 +1137,10 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [gapNote, setGapNote] = useState(() => seed(value, "gapNote", ""));
   const [discrepancyClass, setDiscrepancyClass] = useState(() => seed(value, "discrepancyClass", ""));
   const discrepancies = Object.entries(decisions).filter(([, v]) => v !== "match").map(([id, v]) => ({ item: id, discrepancyClass: v }));
-  useLift({ method, gapNote, discrepancyClass, discrepancies }, onChange);
+  // Every row on both sides needs a tag, plus the method, gap note and discrepancy class.
+  const ready = [...sourceA, ...sourceB].every((r) => !!decisions[r.id])
+    && !!method.trim() && !!gapNote.trim() && !!discrepancyClass;
+  useLift({ method, gapNote, discrepancyClass, discrepancies, ready }, onChange);
 
   const setD = (id: string, v: string) => setDecisions((d) => ({ ...d, [id]: v }));
   const opts: { k: string; label: string; tone: Tone }[] = [{ k: "match", label: "Match", tone: "emerald" }, { k: "miss", label: "Miss", tone: "amber" }, { k: "duplicate", label: "Dup", tone: "rose" }];
@@ -1107,7 +1148,7 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
 
   return (
     <div className="space-y-4">
-      <GivenNote>Reconcile the two registers. Tag each row Match / Miss / Dup, then write the method and gap note. <button onClick={() => openRef("ws-cmdb-export")} className="text-indigo-600 hover:underline font-medium">Open sources →</button></GivenNote>
+      <GivenNote>Reconcile the two registers. Tag <strong>every</strong> row on both sides Match / Miss / Dup, then write the gap note, pick a discrepancy class, and state your method. <button onClick={() => openRef("ws-cmdb-export")} className="text-indigo-600 hover:underline font-medium">Open sources →</button></GivenNote>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[{ title: "A · IT asset CMDB", rows: sourceA }, { title: "B · Vendor register", rows: sourceB }].map((src) => (
           <div key={src.title} className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-hidden">
@@ -1130,11 +1171,11 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
         <div>
-          <SectionLabel>Gap note</SectionLabel>
+          <SectionLabel>Gap note <span className="text-rose-500">*</span></SectionLabel>
           <WTextArea value={gapNote} onChange={setGapNote} rows={3} placeholder="What differs between the two registers, and why…" hint={`${gapNote.length} chars`} />
         </div>
         <div>
-          <SectionLabel>Discrepancy class</SectionLabel>
+          <SectionLabel>Discrepancy class <span className="text-rose-500">*</span></SectionLabel>
           <select value={discrepancyClass} onChange={(e) => setDiscrepancyClass(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-white ring-1 ring-slate-200/80 text-[13px] text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/30">
             <option value="">Pick a class…</option>
             {["Owner-data mismatch", "Missing item in B", "Missing item in A", "Duplicate entry", "Schema drift"].map((o) => <option key={o}>{o}</option>)}
@@ -1142,7 +1183,7 @@ function LegacyCrossRefWorkspace({ value, onChange, openRef }: WorkspaceProps) {
         </div>
       </div>
       <div>
-        <SectionLabel>Method</SectionLabel>
+        <SectionLabel>Method <span className="text-rose-500">*</span></SectionLabel>
         <WTextArea value={method} onChange={setMethod} rows={2} placeholder="How you compared the two sources…" hint={`${method.length} chars`} />
       </div>
     </div>
@@ -1283,7 +1324,9 @@ function LegacyIdentifyWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: 6, asset: "PagerDuty (incident tooling)", type: "Third party", source: "SOC 2 §III.B", flagged: false, action: "", owner: "" },
   ]));
   const flags = rows.filter((r) => r.flagged).map((r) => ({ item: r.asset, proposedAction: r.action, accountableRole: r.owner }));
-  useLift({ flags }, onChange);
+  // Verb criteria: every flag needs a proposed action and a named accountable role.
+  const ready = flags.length > 0 && flags.every((f) => f.proposedAction.trim() && f.accountableRole);
+  useLift({ flags, ready }, onChange);
   const toggle = (id: number) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, flagged: !r.flagged, action: !r.flagged ? r.action : "", owner: !r.flagged ? r.owner : "" } : r)));
   const set = (id: number, k: "action" | "owner", v: string) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: v } : r)));
   const owners = ["Head of Platform", "Data Platform Lead", "Security Eng. Lead", "Security Ops", "Compliance Lead"];
@@ -1415,7 +1458,9 @@ function LegacyReviewWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [cover, setCover] = useState(() => seed(value, "coverNote", ""));
   const [revisionNo, setRevisionNo] = useState(() => seed(value, "revisionNo", "2"));
   const addressed = fb.filter((f) => f.done).length;
-  useLift({ coverNote: cover, revisionNo, priorFeedbackAddressed: `${addressed} / ${fb.length}`, priorFeedback: fb }, onChange);
+  // Verb criteria: cover note present and every prior-feedback item confirmed addressed.
+  const ready = cover.trim().length >= 30 && addressed === fb.length;
+  useLift({ coverNote: cover, revisionNo, priorFeedbackAddressed: `${addressed} / ${fb.length}`, priorFeedback: fb, ready }, onChange);
   const toggle = (id: number) => setFb((x) => x.map((f) => (f.id === id ? { ...f, done: !f.done } : f)));
 
   return (
@@ -1458,7 +1503,10 @@ function LegacyPresentWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [qa, setQa] = useState(() => seed(value, "anticipatedQuestions", [{ q: "", a: "" }, { q: "", a: "" }, { q: "", a: "" }]));
   const [decision, setDecision] = useState(() => seed(value, "signoffDecision", ""));
   const [decisionDate, setDecisionDate] = useState(() => seed(value, "decisionDate", ""));
-  useLift({ deckLink: "ISMS Scope (May 2026).pptx · 8 slides", anticipatedQuestions: qa, signoffDecision: decision, decisionDate }, onChange);
+  // Verb criteria: ≥ 3 anticipated questions answered + a sign-off decision with its date.
+  // The deck is given, so it must not on its own make this look like a finished deliverable.
+  const ready = qa.filter((x) => x.q.trim() && x.a.trim()).length >= 3 && !!decision && !!decisionDate;
+  useLift({ deckLink: "ISMS Scope (May 2026).pptx · 8 slides", anticipatedQuestions: qa, signoffDecision: decision, decisionDate, ready }, onChange);
   const setQ = (i: number, k: "q" | "a", v: string) => setQa((x) => x.map((it, j) => (j === i ? { ...it, [k]: v } : it)));
   const decisions: { id: string; label: string; tone: Tone }[] = [{ id: "Approved", label: "Approved", tone: "emerald" }, { id: "Approved with conditions", label: "Approved w/ conditions", tone: "amber" }, { id: "Rejected", label: "Rejected", tone: "rose" }];
 

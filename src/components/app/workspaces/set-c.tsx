@@ -96,7 +96,10 @@ function LegacyAssessWorkspace({ value, onChange }: WorkspaceProps) {
     { id: "tr", name: "Training & Awareness", score: 1, evidence: "", outlier: false },
     { id: "lg", name: "Logging & Monitoring", score: 1, evidence: "", outlier: false },
   ]));
-  useLift({ items: items.map((i) => ({ item: i.name, evidence: i.evidence, rating: `${i.score} ${scale[i.score - 1]}` })), domains: items }, onChange);
+  // `ready` gates Submit: the domains and their ratings are given/defaulted, so without it an
+  // untouched assessment reads as a complete deliverable. Cited evidence is the mentee's work.
+  const ready = items.every((i) => i.evidence.trim().length > 0);
+  useLift({ items: items.map((i) => ({ item: i.name, evidence: i.evidence, rating: `${i.score} ${scale[i.score - 1]}` })), domains: items, ready }, onChange);
   const set = (id: string, k: keyof Domain, v: string | number) => setItems((is) => is.map((i) => (i.id === id ? ({ ...i, [k]: v } as Domain) : i)));
 
   return (
@@ -138,7 +141,8 @@ function LegacyScoreWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [scores, setScores] = useState<Record<string, number>>(() => seed(value, "scores", { spec: 0, stand: 0, reas: 0, risk: 0, comm: 0 }));
   const [notes, setNotes] = useState<Record<string, string>>(() => seed(value, "notes", { spec: "", stand: "", reas: "", risk: "", comm: "" }));
   const aggregate = dims.reduce((s, d) => s + (scores[d.id] ?? 0) * d.weight, 0);
-  useLift({ dimensions: dims.map((d) => ({ dimension: d.label, score: scores[d.id], justification: notes[d.id] })), aggregate: aggregate.toFixed(2), scores, notes }, onChange);
+  const ready = dims.every((d) => (notes[d.id] ?? "").trim().length >= 15); // the acceptance criterion
+  useLift({ dimensions: dims.map((d) => ({ dimension: d.label, score: scores[d.id], justification: notes[d.id] })), aggregate: aggregate.toFixed(2), scores, notes, ready }, onChange);
 
   return (
     <div className="space-y-4">
@@ -188,7 +192,8 @@ function LegacyCompileWorkspace({ value, onChange, openRef }: WorkspaceProps) {
     { id: "risk", title: "6 · Residual risk summary", required: true, refs: [] },
   ]));
   const [exec, setExec] = useState(() => seed(value, "executiveSummary", ""));
-  useLift({ sections: ["1 · Executive summary", ...secs.map((s) => s.title)], executiveSummary: exec, sectionList: secs }, onChange);
+  const ready = exec.trim().length > 0 && secs.every((s) => !s.required || s.refs.length > 0);
+  useLift({ sections: ["1 · Executive summary", ...secs.map((s) => s.title)], executiveSummary: exec, sectionList: secs, ready }, onChange);
   const toggle = (secId: string, srcId: string) => setSecs((ss) => ss.map((s) => (s.id === secId ? { ...s, refs: s.refs.includes(srcId) ? s.refs.filter((r) => r !== srcId) : [...s.refs, srcId] } : s)));
 
   return (
@@ -220,7 +225,8 @@ function LegacyBriefWorkspace({ value, onChange }: WorkspaceProps) {
   const [audience, setAudience] = useState(() => seed(value, "audience", ""));
   const [keyMessage, setKeyMessage] = useState(() => seed(value, "keyMessage", ""));
   const [ask, setAsk] = useState(() => seed(value, "ask", ""));
-  useLift({ audience, keyMessage, ask, format }, onChange);
+  const ready = !!audience.trim() && !!keyMessage.trim() && !!ask.trim(); // `format` is pre-selected
+  useLift({ audience, keyMessage, ask, format, ready }, onChange);
   const mcq = [
     { q: "When does the new rule take effect?", a: "June 15" }, { q: "Does this apply to repos outside the ISMS scope?", a: "No" }, { q: "Where do you ask questions?", a: "#isms-rollout" },
   ];
@@ -239,7 +245,7 @@ function LegacyBriefWorkspace({ value, onChange }: WorkspaceProps) {
             </div>
           </div>
           <div><SectionLabel>Audience <span className="text-rose-500">*</span></SectionLabel><WTextInput value={audience} onChange={setAudience} placeholder="Be specific: who is reading this?" /></div>
-          <div><SectionLabel hint={`${keyMessage.split(/\s+/).filter(Boolean).length} words`}>Brief body (plain language)</SectionLabel><WTextArea value={keyMessage} onChange={setKeyMessage} rows={7} placeholder="What changes, from when, and why — no jargon…" /></div>
+          <div><SectionLabel hint={`${keyMessage.split(/\s+/).filter(Boolean).length} words`}>Brief body (plain language) <span className="text-rose-500">*</span></SectionLabel><WTextArea value={keyMessage} onChange={setKeyMessage} rows={7} placeholder="What changes, from when, and why — no jargon…" /></div>
           <div><SectionLabel>Ask of audience <span className="text-rose-500">*</span></SectionLabel><WTextArea value={ask} onChange={setAsk} rows={2} placeholder="The one concrete thing they must do, and by when…" /></div>
         </div>
         <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start">
@@ -263,7 +269,10 @@ function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
   const [conditions, setConditions] = useState(() => seed(value, "conditions", ""));
   const [revisionPlan, setRevisionPlan] = useState(() => seed(value, "revisionPlan", ""));
   const [date, setDate] = useState(() => seed(value, "date", ""));
-  useLift({ decision, conditions, revisionPlan, date }, onChange);
+  const ready = !!decision && !!date
+    && (decision !== "Approved with conditions" || !!conditions.trim())
+    && (decision !== "Rejected" || !!revisionPlan.trim());
+  useLift({ decision, conditions, revisionPlan, date, ready }, onChange);
   const opts: { id: string; tone: Tone }[] = [{ id: "Approved", tone: "emerald" }, { id: "Approved with conditions", tone: "amber" }, { id: "Rejected", tone: "rose" }];
 
   return (
@@ -290,7 +299,7 @@ function LegacySignoffWorkspace({ value, onChange, openRef }: WorkspaceProps) {
           {decision === "Rejected" && <div className="mt-4"><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Revision plan <span className="text-rose-500">*</span></div><textarea value={revisionPlan} onChange={(e) => setRevisionPlan(e.target.value)} rows={3} placeholder="What changes before resubmission?" className="w-full px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-rose-400/40 outline-none text-[12.5px] resize-none" /></div>}
         </div>
         <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start space-y-3">
-          <div><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Decision date</div><WTextInput type="date" value={date} onChange={setDate} /></div>
+          <div><div className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-slate-500 mb-1.5">Decision date <span className="text-rose-500">*</span></div><WTextInput type="date" value={date} onChange={setDate} /></div>
           <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 space-y-1"><div className="flex justify-between"><span>Decided by</span><span className="text-slate-800 font-medium">Head of Engineering</span></div><div className="flex justify-between"><span>Audit record</span><span className="text-slate-800 font-mono">SO-2026-0142</span></div></div>
         </div>
       </div>
@@ -303,7 +312,8 @@ export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
   const [questions, setQuestions] = useState<string[]>(() => seed(value, "questions", ["", "", "", "", ""]));
   const [summary, setSummary] = useState(() => seed(value, "notesPerQuestion", ""));
   const prepared = questions.filter((q) => q.trim()).length;
-  useLift({ questions, notesPerQuestion: summary }, onChange);
+  const ready = prepared >= 5 && summary.trim().length >= 30; // the two stated minimums
+  useLift({ questions, notesPerQuestion: summary, ready }, onChange);
 
   return (
     <div className="space-y-4">
@@ -353,13 +363,15 @@ function LegacyDocumentWorkspace({ value, onChange }: WorkspaceProps) {
     { artefact: "Risk Calculation RR-2026.1", resolved: true }, { artefact: "Maturity Assessment Q2-26", resolved: false },
   ];
   const [crossRefs, setCrossRefs] = useState<string[]>(() => seed(value, "crossReferences", [] as string[]));
-  useLift({ sections: secs.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: secs, crossReferences: crossRefs }, onChange);
+  // The "links" section is filled by picking artefacts, not by typing — hence the id exclusion.
+  const ready = secs.every((s) => s.id === "links" || s.content.trim().length > 0) && crossRefs.length > 0;
+  useLift({ sections: secs.map((s) => `${s.title}: ${s.content}`).join("\n"), sectionList: secs, crossReferences: crossRefs, ready }, onChange);
   const set = (id: string, k: keyof DocSec, v: string | boolean) => setSecs((ss) => ss.map((s) => (s.id === id ? ({ ...s, [k]: v } as DocSec) : s)));
   const toggleRef = (a: string) => setCrossRefs((c) => (c.includes(a) ? c.filter((x) => x !== a) : [...c, a]));
 
   return (
     <div className="space-y-4">
-      <GivenNote>Write up the process and lessons-learned, then link upstream artefacts. Broken cross-references (unresolved artefacts) block submission.</GivenNote>
+      <GivenNote>Write up <strong>every</strong> section, then link at least one upstream artefact. Broken cross-references (unresolved artefacts) block submission.</GivenNote>
       <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden">
         <div className="px-4 py-4 space-y-4">
           {secs.map((s) => (

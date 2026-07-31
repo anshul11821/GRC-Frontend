@@ -324,9 +324,14 @@ export default function ActivityWorkspace() {
   const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
   const hasContent = Object.entries(values).some(([k, v]) => !CONTROL_KEYS.has(k) && isFilled(v));
-  // Workspaces with a guided objective (e.g. the Request conversation) lift `objectiveMet`.
-  // While it's present and not yet true, submission is blocked until the right path is reached.
-  const objectiveBlocked = values.objectiveMet === false;
+  // Workspaces that judge their own completion lift a flag: `objectiveMet` (answer-key validated,
+  // e.g. the Request conversation) or `ready` (every required field filled). While either is
+  // present and not yet true, submitting is blocked — otherwise a workspace that also lifts its
+  // given/scripted data reads as "has content" and an untouched deliverable can be sent for grading.
+  const objectiveBlocked = values.objectiveMet === false || values.ready === false;
+  const blockedHint = values.objectiveMet === false
+    ? "Complete the guided steps successfully to submit."
+    : "Complete every required field in the deliverable to submit.";
 
   // Autosave. An activity holds up to an hour of written work and the only other way to persist it
   // was a manual button click, so a closed tab, a crash or an expired session lost everything typed
@@ -703,7 +708,7 @@ export default function ActivityWorkspace() {
                 </button>
               )}
               {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
-              {objectiveBlocked && <span className="text-[11.5px] text-amber-600">Complete the conversation successfully to submit.</span>}
+              {objectiveBlocked && <span className="text-[11.5px] text-amber-600">{blockedHint}</span>}
             </div>
           )}
         </div>
