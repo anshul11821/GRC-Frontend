@@ -198,9 +198,10 @@ export default function WaitlistPage() {
                         ))}
                       </Select>
                     </Field>
-                    <Field label="LinkedIn" hint="optional">
+                    <Field label="LinkedIn">
                       <TextInput
                         icon="linkedin"
+                        required
                         value={form.linkedin}
                         onChange={set("linkedin")}
                         placeholder="https://linkedin.com/in/…"
