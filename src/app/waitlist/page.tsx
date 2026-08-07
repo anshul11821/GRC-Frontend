@@ -8,6 +8,8 @@ import { api } from "@/lib/api";
 import { getCaptchaToken } from "@/lib/recaptcha";
 import { useLinkedInVerify } from "@/lib/linkedin-verify";
 import { LinkedInGate } from "@/components/waitlist/linkedin-gate";
+import { useEmailVerify } from "@/lib/email-verify";
+import { EmailVerify } from "@/components/waitlist/email-verify";
 
 // Standalone early-access waitlist. Not linked from anywhere — reachable by /waitlist only.
 // One page, two audiences (student / university) sharing a shell and one submit.
@@ -68,17 +70,28 @@ export default function WaitlistPage() {
     if (li.identity || li.error) setAudience("student");
   }, [li.identity, li.error]);
 
+  // Individuals verify via LinkedIn when it's on; universities (and the LinkedIn-off fallback)
+  // verify by email OTP. Either way, no unverified email is submitted.
+  const em = useEmailVerify();
+
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
+  const setEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, email: e.target.value }));
+    if (em.sent || em.verified) em.reset();
+  };
 
   const verified = !!li.identity;
-  const studentNeedsVerify = li.enabled && audience === "student" && !verified;
+  const studentNeedsLinkedIn = li.enabled && audience === "student" && !verified;
+  const emailRequired = audience === "university" || (audience === "student" && !li.enabled);
+  const needsEmail = emailRequired && !em.verified;
+  const blocked = studentNeedsLinkedIn || needsEmail;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (studentNeedsVerify) return;
+    if (blocked) return;
     setError(null);
     setBusy(true);
     try {
@@ -94,6 +107,7 @@ export default function WaitlistPage() {
               institution: form.institution,
               designation: form.designation,
               captchaToken,
+              emailToken: em.token,
             }
           : {
               audience,
@@ -104,6 +118,7 @@ export default function WaitlistPage() {
               why: form.why,
               captchaToken,
               linkedinToken: li.token,
+              emailToken: em.token,
             },
         { noAuth: true, noRefresh: true },
       );
@@ -215,10 +230,11 @@ export default function WaitlistPage() {
                         required
                         readOnly={verified}
                         value={form.email}
-                        onChange={set("email")}
+                        onChange={setEmail}
                         placeholder="you@example.com"
                       />
                     </Field>
+                    {!li.enabled && <EmailVerify email={form.email} hook={em} />}
                     <Field label="Where are you in your GRC journey?">
                       <Select icon="target" required value={form.stage} onChange={set("stage")}>
                         <option value="" disabled>
@@ -283,14 +299,15 @@ export default function WaitlistPage() {
                         type="email"
                         required
                         value={form.email}
-                        onChange={set("email")}
+                        onChange={setEmail}
                         placeholder="you@university.ac.uk"
                       />
                     </Field>
+                    <EmailVerify email={form.email} hook={em} />
                   </>
                 )}
 
-                <PrimaryBtn type="submit" disabled={busy || studentNeedsVerify} className="w-full">
+                <PrimaryBtn type="submit" disabled={busy || blocked} className="w-full">
                   {busy
                     ? "Submitting…"
                     : audience === "university"

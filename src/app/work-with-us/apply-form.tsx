@@ -7,6 +7,8 @@ import { api } from "@/lib/api";
 import { getCaptchaToken } from "@/lib/recaptcha";
 import { useLinkedInVerify } from "@/lib/linkedin-verify";
 import { LinkedInGate } from "@/components/waitlist/linkedin-gate";
+import { useEmailVerify } from "@/lib/email-verify";
+import { EmailVerify } from "@/components/waitlist/email-verify";
 
 // Assessment Board applications ride the waitlist endpoint as a third audience: years of
 // experience land in `stage`, the reviewer position in `designation`.
@@ -26,13 +28,23 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
     if (li.identity) setForm((f) => ({ ...f, name: li.identity!.name, email: li.identity!.email }));
   }, [li.identity]);
 
+  // LinkedIn verifies identity (and email) when configured; otherwise fall back to email OTP.
+  const em = useEmailVerify();
+
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
+  // Editing the email invalidates a prior verification.
+  const setEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, email: e.target.value }));
+    if (em.sent || em.verified) em.reset();
+  };
 
   const verified = !!li.identity;
-  const needsVerify = li.enabled && !verified;
+  const needsLinkedIn = li.enabled && !verified;
+  const needsEmail = !li.enabled && !em.verified;
+  const needsVerify = needsLinkedIn || needsEmail;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +64,7 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
           designation: form.position,
           captchaToken,
           linkedinToken: li.token,
+          emailToken: em.token,
         },
         { noAuth: true, noRefresh: true },
       );
@@ -111,8 +124,11 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
               <TextInput icon="user" required readOnly={verified} value={form.name} onChange={set("name")} placeholder="Jane Okafor" />
             </Field>
             <Field label="Email address">
-              <TextInput icon="mail" type="email" required readOnly={verified} value={form.email} onChange={set("email")} placeholder="jane@company.com" />
+              <TextInput icon="mail" type="email" required readOnly={verified} value={form.email} onChange={setEmail} placeholder="jane@company.com" />
             </Field>
+            {!li.enabled && (
+              <EmailVerify email={form.email} hook={em} />
+            )}
             <Field label="LinkedIn profile">
               <TextInput icon="linkedin" required value={form.linkedin} onChange={set("linkedin")} placeholder="https://linkedin.com/in/…" />
             </Field>
