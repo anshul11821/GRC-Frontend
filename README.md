@@ -54,3 +54,18 @@ To launch, set it to `0` and redeploy — no code changes needed.
 
 Waitlist sign-ups land in the `waitlist_entries` table via `POST /waitlist` on the backend, and
 are read in the admin panel under **Wait List** (with CSV export).
+
+## LinkedIn identity verification (waitlist)
+
+Individuals on `/waitlist` and `/work-with-us` verify identity via "Sign in with LinkedIn"
+before their entry is saved (universities stay on captcha). It's off unless **both** the backend
+LinkedIn env vars and this frontend flag are set:
+
+```
+NEXT_PUBLIC_LINKEDIN_ENABLED=1   # show "Continue with LinkedIn"; also needs backend LINKEDIN_* vars
+NEXT_PUBLIC_LINKEDIN_ENABLED=0   # captcha-only fallback (default)
+```
+
+The backend owns the OAuth round-trip; the client half lives in
+[`src/lib/linkedin-verify.ts`](src/lib/linkedin-verify.ts). Note LinkedIn's OIDC does not return
+the profile URL, so verification proves a real account with a verified email/name — not the URL.

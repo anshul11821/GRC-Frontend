@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui/primitives";
 import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/lib/api";
 import { getCaptchaToken } from "@/lib/recaptcha";
+import { useLinkedInVerify } from "@/lib/linkedin-verify";
+import { LinkedInGate } from "@/components/waitlist/linkedin-gate";
 
 // Standalone early-access waitlist. Not linked from anywhere — reachable by /waitlist only.
 // One page, two audiences (student / university) sharing a shell and one submit.
@@ -52,13 +54,31 @@ export default function WaitlistPage() {
   const [done, setDone] = useState<{ alreadyRegistered: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // LinkedIn verification gates the individual audience only. Universities register a contact
+  // person who may not be the one on LinkedIn, so they stay on captcha.
+  const li = useLinkedInVerify<typeof form>("wl_student");
+  useEffect(() => {
+    if (li.restored) setForm((f) => ({ ...f, ...li.restored }));
+  }, [li.restored]);
+  useEffect(() => {
+    if (li.identity) setForm((f) => ({ ...f, name: li.identity!.name, email: li.identity!.email }));
+  }, [li.identity]);
+  // Coming back from LinkedIn is always the individual flow — land on that tab.
+  useEffect(() => {
+    if (li.identity || li.error) setAudience("student");
+  }, [li.identity, li.error]);
+
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const verified = !!li.identity;
+  const studentNeedsVerify = li.enabled && audience === "student" && !verified;
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (studentNeedsVerify) return;
     setError(null);
     setBusy(true);
     try {
@@ -83,6 +103,7 @@ export default function WaitlistPage() {
               linkedin: form.linkedin,
               why: form.why,
               captchaToken,
+              linkedinToken: li.token,
             },
         { noAuth: true, noRefresh: true },
       );
@@ -164,9 +185,20 @@ export default function WaitlistPage() {
               </h1>
               <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">{copy.body}</p>
 
-              {error && (
+              {(error || li.error) && (
                 <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">
-                  {error}
+                  {error || li.error}
+                </div>
+              )}
+
+              {audience === "student" && li.enabled && (
+                <div className="mt-5">
+                  <LinkedInGate identity={li.identity} onStart={() => li.begin(form)} />
+                  {!verified && (
+                    <p className="mt-2 text-[11.5px] text-slate-400 text-center">
+                      Verify your identity with LinkedIn to join.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -174,13 +206,14 @@ export default function WaitlistPage() {
                 {audience === "student" ? (
                   <>
                     <Field label="Full name">
-                      <TextInput icon="user" required value={form.name} onChange={set("name")} placeholder="Jane Doe" />
+                      <TextInput icon="user" required readOnly={verified} value={form.name} onChange={set("name")} placeholder="Jane Doe" />
                     </Field>
                     <Field label="Email address">
                       <TextInput
                         icon="mail"
                         type="email"
                         required
+                        readOnly={verified}
                         value={form.email}
                         onChange={set("email")}
                         placeholder="you@example.com"
@@ -198,10 +231,10 @@ export default function WaitlistPage() {
                         ))}
                       </Select>
                     </Field>
-                    <Field label="LinkedIn">
+                    <Field label="LinkedIn" hint={li.enabled ? "optional" : undefined}>
                       <TextInput
                         icon="linkedin"
-                        required
+                        required={!li.enabled}
                         value={form.linkedin}
                         onChange={set("linkedin")}
                         placeholder="https://linkedin.com/in/…"
@@ -257,7 +290,7 @@ export default function WaitlistPage() {
                   </>
                 )}
 
-                <PrimaryBtn type="submit" disabled={busy} className="w-full">
+                <PrimaryBtn type="submit" disabled={busy || studentNeedsVerify} className="w-full">
                   {busy
                     ? "Submitting…"
                     : audience === "university"
