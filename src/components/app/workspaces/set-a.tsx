@@ -715,7 +715,14 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
 
   return (
     <div className="space-y-4">
-      <GivenNote>Record each entry into the <strong>{task.registerName}</strong>. Mandatory fields are marked *; IDs must match the format, owners must be a role (not a department), and no IDs may repeat. Submission unlocks at {task.requiredRows}+ valid rows.</GivenNote>
+      <GivenNote>
+        {task.source ? (
+          <>Transcribe the entries from <strong>{task.source}</strong> — open it from the document card above this deliverable — into the <strong>{task.registerName}</strong>, one row per distinct item.{" "}</>
+        ) : (
+          <>Record each entry into the <strong>{task.registerName}</strong>.{" "}</>
+        )}
+        Mandatory fields are marked *; IDs must match the format, owners must be a role (not a department), and no IDs may repeat. Submission unlocks at {task.requiredRows}+ valid rows.
+      </GivenNote>
       <SectionLabel hint={task.standard} action={
         <button onClick={addRow} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add row</button>
       }>{task.title} · {startedRows.filter(rowOk).length}/{task.requiredRows} valid</SectionLabel>

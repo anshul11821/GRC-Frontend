@@ -16,6 +16,9 @@ export type TourStep = {
   /** Skip this step when its target isn't on the page — for sections a given user's data doesn't
    *  render (a locked track has no stats, no org cards). Waits briefly, then moves on. */
   optional?: boolean;
+  /** Live content rendered under the body — for a step that's better tried than described. The card
+   *  already stops click propagation, so anything in here is interactive. */
+  demo?: React.ReactNode;
 };
 
 /** Hidden-state offset for the card's directional entrance (settles toward the target). */
@@ -355,6 +358,7 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
         </div>
 
         <p className="text-[12.5px] text-slate-600 leading-relaxed tracking-tight mt-2.5" style={{ textWrap: "pretty" }}>{current.body}</p>
+        {current.demo}
 
         {/* footer — progress dots left, controls right */}
         <div className="flex items-center justify-between gap-3 mt-4">

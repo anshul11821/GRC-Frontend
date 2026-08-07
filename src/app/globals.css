@@ -138,3 +138,27 @@ body {
     background: #fff !important;
   }
 }
+
+/* Glossary term definitions — a native popover, so it escapes the scrolling reference panel via the
+   top layer and gets light-dismiss/Esc for free. Anchored under its term where CSS anchor
+   positioning exists; older engines fall back to the UA default (centred), which still reads fine. */
+@supports (position-area: block-end) {
+  [popover].gloss-pop {
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: flip-block, flip-inline;
+    margin: 6px 0 0;
+  }
+}
+
+
+/* Inside the guided-tour card the footer (Back / Next) sits directly under the demo, so a
+   definition opening downward would cover it and eat the click. Open upward there instead.
+   The popover is in the top layer for painting but still a DOM descendant, so this selector matches. */
+@supports (position-area: block-start) {
+  .gloss-above [popover].gloss-pop {
+    position-area: block-start span-inline-end;
+    position-try-fallbacks: flip-block, flip-inline;
+    margin: 0 0 6px;
+  }
+}
+

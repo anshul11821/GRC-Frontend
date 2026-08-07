@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -16,6 +16,7 @@ import type { LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "@/components/app/desk-context";
 import { useTaskBundle } from "@/lib/task-bundle";
 import { StandardBanner } from "@/components/app/standards";
+import { gloss, TermsUsed } from "@/components/app/glossary";
 import { dueChip, fmtDue, type ScheduleItem } from "@/lib/schedule";
 
 export default function TaskOverview() {
@@ -59,6 +60,11 @@ export default function TaskOverview() {
   }, [reg]);
 
   const nextStep = task?.steps.find((s) => s.status !== "complete") ?? task?.steps[0];
+
+  // Glossary: objective + final deliverable share one "seen" set, so each term is underlined once
+  // on the card and every term either way is listed in full underneath.
+  const uid = useId();
+  const seen = new Set<string>();
 
   if (loading) {
     return (
@@ -109,13 +115,14 @@ export default function TaskOverview() {
         <div data-tour="task-objective">
         <Card>
           <h2 className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-2">Objective</h2>
-          {objective && <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{objective}</p>}
+          {objective && <p className="text-[13.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{gloss(objective, seen, `${uid}o`)}</p>}
           {meta?.deliverable && (
             <div className="mt-4 rounded-xl bg-indigo-50/40 ring-1 ring-indigo-100 p-3.5">
               <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-indigo-600 mb-1">Final deliverable</div>
-              <p className="text-[12.5px] text-slate-700 tracking-tight" style={{ textWrap: "pretty" }}>{meta.deliverable}</p>
+              <p className="text-[12.5px] text-slate-700 tracking-tight" style={{ textWrap: "pretty" }}>{gloss(meta.deliverable, seen, `${uid}d`)}</p>
             </div>
           )}
+          <TermsUsed texts={[objective ?? "", meta?.deliverable ?? ""]} className="mt-4" />
         </Card>
         </div>
       )}

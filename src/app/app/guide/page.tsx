@@ -7,6 +7,7 @@ import { VERB_LIST, GATE_VERBS } from "@/lib/verbs";
 import { VERB_TONES } from "@/lib/tones";
 import { startWelcomeTour } from "@/components/app/welcome-tour";
 import { AccessChip } from "@/components/app/access-chip";
+import { Gloss } from "@/components/app/glossary";
 
 /** The five rubric dimensions, derived from the verb metadata so the guide can't drift from it. */
 const RUBRIC = [...new Set(VERB_LIST.flatMap((v) => v.layer2))].filter((d) => d !== "All five rubric dimensions");
@@ -325,7 +326,21 @@ export default function GuidePage() {
                   produced in earlier activities is available here too — later tasks build on it.
                 </p>
               </Step>
-              <Step n={4} title="Fill in the workspace">
+              <Step n={4} title="Look up any term you don't know">
+                <p>
+                  Technical terms carry a <span className="underline decoration-dotted decoration-slate-400 underline-offset-[3px]">dotted underline</span> wherever
+                  they appear — the brief, the organisation context, the reference material, the acceptance
+                  criteria. Click one and its definition opens beside the word; click away, or press Esc, to
+                  dismiss it. Nothing is hidden behind a hover, so it works on a touchscreen too.
+                </p>
+                <p>
+                  Below each brief, organisation profile and reference document there is a{" "}
+                  <strong>Terms used here</strong> panel listing every defined term on that screen with its
+                  definition, so you can read them all in one pass instead of hunting for underlines. Try it
+                  now: <Gloss>the asset owner signs the asset register, and a DPIA covers personal data.</Gloss>
+                </p>
+              </Step>
+              <Step n={5} title="Fill in the workspace">
                 <p>
                   Every verb has its own purpose-built workspace: a register grid for Record, a mapping matrix
                   for Map, a request form for Request, a scoring rubric for Score, and so on. Tabs across the
@@ -337,7 +352,7 @@ export default function GuidePage() {
                   what is graded is the quality of what you wrote.
                 </p>
               </Step>
-              <Step n={5} title="Submit and read the feedback">
+              <Step n={6} title="Submit and read the feedback">
                 <p>
                   Submitting runs the grading immediately. If a deterministic check fails you get told exactly
                   which one, you fix it, and you resubmit. If it passes, the rubric feedback tells you where

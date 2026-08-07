@@ -9,6 +9,7 @@ import { DVerb } from "@/components/ui/dverb";
 import { Drawer } from "@/components/ui/drawer";
 import { DraggablePanel } from "@/components/ui/draggable-panel";
 import { RefBody } from "@/components/app/reference-material";
+import { Gloss, TermsUsed } from "@/components/app/glossary";
 import { VERBS, GATE_VERBS, isGateVerb } from "@/lib/verbs";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
 import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
@@ -221,7 +222,7 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
                 {ok && <Icon name="check" size={11} strokeWidth={3.5} />}
                 {failed && <Icon name="x" size={11} strokeWidth={3.5} />}
               </span>
-              <span className={`text-[12px] leading-snug tracking-tight transition-colors ${ok ? "text-slate-700" : failed ? "text-rose-700 font-medium" : "text-slate-500"}`}>{c}</span>
+              <span className={`text-[12px] leading-snug tracking-tight transition-colors ${ok ? "text-slate-700" : failed ? "text-rose-700 font-medium" : "text-slate-500"}`}><Gloss>{c}</Gloss></span>
             </div>
           );
         })}
@@ -603,7 +604,7 @@ export default function ActivityWorkspace() {
                     <Icon name="target" size={14} className="text-indigo-600" />
                     <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-indigo-700">Objective</h2>
                   </div>
-                  <p className="text-[13px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{content.objective}</p>
+                  <p className="text-[13px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{content.objective}</Gloss></p>
                 </div>
               )}
               {content?.whatToDo && content.whatToDo.length > 0 && (
@@ -616,13 +617,15 @@ export default function ActivityWorkspace() {
                     {content.whatToDo.map((step, i) => (
                       <li key={i} className="flex gap-2.5">
                         <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10.5px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">{i + 1}</span>
-                        <span className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{step}</span>
+                        <span className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{step}</Gloss></span>
                       </li>
                     ))}
                   </ol>
                 </div>
               )}
             </div>
+            {/* Every term this step's brief uses, defined in full — hover is opt-in, this isn't. */}
+            <TermsUsed texts={[content?.objective ?? "", ...(content?.whatToDo ?? []), verb?.when ?? "", ...(verb?.layer1 ?? [])]} className="mt-4" />
             </div>
           </div>
         </div>
@@ -635,7 +638,7 @@ export default function ActivityWorkspace() {
           <div className="min-w-0">
             <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">Your deliverable</h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
-              {verb ? `${verb.label} — ${verb.when}` : "Capture your work for this step."}
+              {verb ? <><span className="font-medium">{verb.label}</span> — <Gloss>{verb.when}</Gloss></> : "Capture your work for this step."}
             </p>
           </div>
           {references.length > 0 && (
@@ -650,10 +653,15 @@ export default function ActivityWorkspace() {
           )}
         </div>
 
-        {/* this step's materials, each openable as its own draggable window (the RUA gate renders
-            its own per-verb-step strips inside the workspace) */}
+        {/* This step's materials, each openable as its own draggable window (the RUA gate renders
+            its own per-verb-step strips inside the workspace). Sticky, so the source document rides
+            down with the mentee instead of scrolling away above a long table — the Card is the
+            containing block, so it pins for exactly the length of the deliverable. Width is capped
+            on md+ to stay clear of the acceptance-checklist HUD pinned top-right; the shadow only
+            appears once we're in the deliverable, so a pinned bar reads as deliberate. */}
         {!isGateVerb(activity.verb.id) && stripRefs.length > 0 && (
-          <DocOpenStrip docs={stripRefs} onOpen={fw.open} className="mb-5" />
+          <DocOpenStrip docs={stripRefs} onOpen={fw.open}
+            className={`mb-5 sticky top-2 z-10 md:max-w-[520px] transition-shadow duration-200 motion-reduce:transition-none ${atDeliverable ? "shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)]" : ""}`} />
         )}
 
         {/* A native disabled fieldset switches off every control inside in one go. */}

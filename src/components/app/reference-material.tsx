@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Drawer } from "@/components/ui/drawer";
+import { gloss, TermsUsed } from "@/components/app/glossary";
 import type { TaskReference } from "@/lib/taskmeta";
 
-/** Renders a reference body: "## " headings, "- " bullets, "| " table rows, blank lines split paragraphs. */
+/** Renders a reference body: "## " headings, "- " bullets, "| " table rows, blank lines split paragraphs.
+ *  Technical terms are underlined and open a definition popover — first occurrence per body only. */
 export function RefBody({ text }: { text: string }) {
+  const uid = useId();
+  // Fresh per render, so a term stays interactive on its first appearance in this body and nowhere else.
+  const seen = new Set<string>();
+  const g = (s: string, k: string) => gloss(s, seen, `${uid}${k}`);
   const out: React.ReactNode[] = [];
   let bullets: string[] = [];
   let rows: string[][] = [];
   const flushBullets = (k: string) => {
     if (bullets.length) {
-      out.push(<ul key={k} className="list-disc pl-5 space-y-1.5 my-2">{bullets.map((b, j) => <li key={j} className="text-[13px] text-slate-700 leading-relaxed tracking-tight">{b}</li>)}</ul>);
+      out.push(<ul key={k} className="list-disc pl-5 space-y-1.5 my-2">{bullets.map((b, j) => <li key={j} className="text-[13px] text-slate-700 leading-relaxed tracking-tight">{g(b, `${k}-${j}`)}</li>)}</ul>);
       bullets = [];
     }
   };
@@ -36,10 +42,10 @@ export function RefBody({ text }: { text: string }) {
     else if (t.startsWith("- ")) { flushRows(`r${i}`); bullets.push(t.slice(2)); }
     else if (t.startsWith("| ")) { flushBullets(`b${i}`); rows.push(t.slice(2).split(" | ").map((c) => c.trim())); }
     else if (t === "") { flushBullets(`b${i}`); flushRows(`r${i}`); }
-    else { flushBullets(`b${i}`); flushRows(`r${i}`); out.push(<p key={i} className="text-[13px] text-slate-700 leading-relaxed tracking-tight my-1.5" style={{ textWrap: "pretty" }}>{t}</p>); }
+    else { flushBullets(`b${i}`); flushRows(`r${i}`); out.push(<p key={i} className="text-[13px] text-slate-700 leading-relaxed tracking-tight my-1.5" style={{ textWrap: "pretty" }}>{g(t, `p${i}`)}</p>); }
   });
   flushBullets("bend"); flushRows("rend");
-  return <>{out}</>;
+  return <>{out}<TermsUsed texts={[text]} className="mt-4" /></>;
 }
 
 /** A list of reference cards; each opens a right-side drawer with its body. */

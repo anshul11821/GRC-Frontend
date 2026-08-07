@@ -17,6 +17,7 @@ import { type RuaTask } from "@/lib/rua-tasks";
 import { useTaskBundle } from "@/lib/task-bundle";
 import { TASK_META } from "@/lib/taskmeta";
 import { RESEARCH_METHODS, RESEARCH_SOURCE_TYPES, type ResearchMethod } from "@/lib/research-methods";
+import { Gloss } from "@/components/app/glossary";
 import {
   rsGateFor, rsFill,
   type RsTaskContext, type RsProgress, type RsMethodEntry, type RsSource, type RsMethodResult, type RsGate,
@@ -100,7 +101,7 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
               : <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full text-[9.5px] font-semibold ring-1 ${included ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-slate-50 text-slate-500 ring-slate-200"}`}>{included ? "INCLUDED" : "OPTIONAL"}</span>}
           </div>
           <h3 className="text-[17px] font-semibold text-slate-900 tracking-tight leading-tight">{m.name}</h3>
-          <p className="mt-1 text-[13px] text-slate-500 tracking-tight" style={{ textWrap: "pretty" }}>{m.definition}</p>
+          <p className="mt-1 text-[13px] text-slate-500 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{m.definition}</Gloss></p>
           <p className="mt-1 text-[12px] text-indigo-700/90 tracking-tight" style={{ textWrap: "pretty" }}>{rsFill(m.why, ctx)}</p>
         </div>
         {!m.req && (

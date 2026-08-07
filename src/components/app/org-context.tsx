@@ -2,6 +2,7 @@
 
 import { Icon, type IconName } from "@/components/ui/icon";
 import { OrgLogo } from "@/components/app/org-logo";
+import { Gloss, TermsUsed } from "@/components/app/glossary";
 import { LRN_CHIP } from "@/lib/tones";
 import type { LearningOrg } from "@/lib/learnings";
 
@@ -40,14 +41,14 @@ const Row = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Chip = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center px-2.5 h-[26px] rounded-full bg-slate-100 text-slate-700 text-[11.5px] tracking-tight">{children}</span>
+  <span className="inline-flex items-center px-2.5 h-[26px] rounded-full bg-slate-100 text-slate-700 text-[11.5px] tracking-tight"><Gloss>{children}</Gloss></span>
 );
 
 /** Ruled list — asset inventories read as an audit table, not as chips. */
 const RuledList = ({ items }: { items: string[] }) => (
   <ul>
     {items.map((s, i) => (
-      <li key={i} className="text-[12.5px] text-slate-700 tracking-tight py-2 border-b border-slate-100 last:border-0 last:pb-0 first:pt-0" style={{ textWrap: "pretty" }}>{s}</li>
+      <li key={i} className="text-[12.5px] text-slate-700 tracking-tight py-2 border-b border-slate-100 last:border-0 last:pb-0 first:pt-0" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></li>
     ))}
   </ul>
 );
@@ -122,12 +123,22 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
         <div className="flex flex-col lg:flex-row lg:items-end gap-4 mt-4">
           <div className="flex-1 min-w-0 space-y-3">
             {description && (
-              <p className="text-[13px] text-slate-600 leading-[1.65] tracking-tight max-w-[68ch]" style={{ textWrap: "pretty" }}>{description}</p>
+              <>
+                <p className="text-[13px] text-slate-600 leading-[1.65] tracking-tight max-w-[68ch]" style={{ textWrap: "pretty" }}><Gloss>{description}</Gloss></p>
+                {/* Scans the whole profile, not just the paragraph above — the standards chips and
+                    asset lists are where most of the jargon actually is. */}
+                <TermsUsed className="max-w-[68ch]" texts={[
+                  description, p?.hqRegulatoryRationale ?? "", p?.primaryRegulator ?? "",
+                  ...(p?.regulatoryRequirements ?? []), ...(p?.mandatoryStandards ?? []), ...(p?.optionalStandards ?? []),
+                  ...(p?.servicesAndProducts ?? []), ...(p?.clientDataHandled ?? []), ...(p?.customerFacingProcesses ?? []),
+                  ...onPrem, ...cloud, ...reqRows.map((r) => r.need),
+                ]} />
+              </>
             )}
             {p?.primaryRegulator && (
               <p className="flex items-start gap-2 text-[12.5px] text-indigo-900 bg-indigo-50/70 ring-1 ring-indigo-100 rounded-xl px-3 py-2 max-w-[68ch]">
                 <Icon name="shield" size={14} className="text-indigo-500 shrink-0 mt-[2px]" />
-                <span style={{ textWrap: "pretty" }}><span className="font-semibold">Primary regulator — </span>{p.primaryRegulator}</span>
+                <span style={{ textWrap: "pretty" }}><span className="font-semibold">Primary regulator — </span><Gloss>{p.primaryRegulator}</Gloss></span>
               </p>
             )}
           </div>
@@ -174,7 +185,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
             {p?.hqRegulatoryRationale && (
               <div className="mt-auto pt-3">
                 <div className="font-mono text-[9px] uppercase tracking-[0.1em] text-slate-500 mb-1 border-t border-slate-100 pt-3">Why here</div>
-                <p className="text-[11.5px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{p.hqRegulatoryRationale}</p>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{p.hqRegulatoryRationale}</Gloss></p>
               </div>
             )}
           </Panel>
@@ -194,7 +205,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
               {(p?.mandatoryStandards ?? []).map((s, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg bg-emerald-50/60 ring-1 ring-emerald-100 px-2.5 py-2">
                   <Icon name="checkCircle" size={14} className="text-emerald-600 shrink-0" />
-                  <span className="text-[12px] font-medium text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}>{s}</span>
+                  <span className="text-[12px] font-medium text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></span>
                 </div>
               ))}
             </div>
@@ -215,7 +226,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
               {p.servicesAndProducts.map((s, i) => (
                 <div key={i} className="flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
                   <Icon name="bolt" size={14} className="text-indigo-500 shrink-0 mt-[2px]" />
-                  <span className="text-[12px] font-medium text-slate-800 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{s}</span>
+                  <span className="text-[12px] font-medium text-slate-800 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></span>
                 </div>
               ))}
             </div>
@@ -230,7 +241,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
                   <SubHead>Internal governance</SubHead>
                   <div className="space-y-1.5">
                     {internal.map((s, i) => (
-                      <div key={i} className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}>{s}</div>
+                      <div key={i} className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></div>
                     ))}
                   </div>
                 </div>
@@ -240,7 +251,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
                   <SubHead>External partners</SubHead>
                   <div className="space-y-1.5">
                     {external.map((s, i) => (
-                      <div key={i} className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}>{s}</div>
+                      <div key={i} className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></div>
                     ))}
                   </div>
                 </div>
@@ -261,7 +272,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
               {p.customerFacingProcesses.map((s, i) => (
                 <li key={i} className="flex gap-2 text-[12px] text-slate-600 tracking-tight leading-relaxed">
                   <span className="w-1 h-1 rounded-full bg-indigo-300 shrink-0 mt-[7px]" />
-                  <span style={{ textWrap: "pretty" }}>{s}</span>
+                  <span style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></span>
                 </li>
               ))}
             </ul>
@@ -281,7 +292,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
                 {reqRows.map((r, i) => (
                   <tr key={i} className="border-b border-slate-100 last:border-0 align-top">
                     <td className="py-1.5 pr-3 text-[11.5px] font-semibold text-slate-800 tracking-tight whitespace-nowrap">{r.party}</td>
-                    <td className="py-1.5 text-[12px] text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{r.need}</td>
+                    <td className="py-1.5 text-[12px] text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{r.need}</Gloss></td>
                   </tr>
                 ))}
               </tbody>
@@ -295,7 +306,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
               {p.regulatoryRequirements.map((s, i) => (
                 <li key={i} className="relative">
                   <span className="absolute -left-[26px] top-[5px] w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-white" />
-                  <p className="text-[12px] text-slate-600 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{s}</p>
+                  <p className="text-[12px] text-slate-600 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></p>
                 </li>
               ))}
             </ol>

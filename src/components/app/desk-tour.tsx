@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GuidedTour, markTourSeen, useTourOnce, type TourStep } from "./guided-tour";
+import { Icon } from "@/components/ui/icon";
+import { Gloss } from "@/components/app/glossary";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DESK_TOUR_EVENT, showDeskTree, useDeskLearnings } from "./desk-context";
 import { DESK_TOUR_SEEN_KEY } from "./nav";
@@ -35,6 +37,25 @@ function steps(goto: (href: string) => void, orgHref: string, task: { href: stri
       body: "Your engagement has started — this is where you'll do every piece of work from here on. You're looking at the organisation you've been placed at; the tree on the left is everything you'll do for them.",
       icon: "desk",
       getEl: () => null, // no target — the card floats, page dimmed
+    },
+    {
+      // Second, before any content — it's the key to reading everything the rest of the tour shows,
+      // and skimmers who bail after two cards still leave with it. Targetless, so the demo in the
+      // card is the whole step: one click and the mechanic is learnt.
+      title: "Stuck on a word? Click it.",
+      body: "Every technical term is underlined wherever it appears — briefs, the organisation profile, reference documents, grading criteria. You never have to leave to look one up.",
+      icon: "book",
+      getEl: () => null,
+      demo: (
+        <div className="gloss-above guide-blink mt-3 rounded-xl bg-gradient-to-br from-indigo-50 via-violet-50/70 to-fuchsia-50/60 ring-1 ring-indigo-100 px-3.5 py-3">
+          <p className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>
+            <Gloss>Every information asset needs a named asset owner before sign-off.</Gloss>
+          </p>
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-tight text-fuchsia-600">
+            <Icon name="bolt" size={12} /> Try it now — click a dotted word
+          </p>
+        </div>
+      ),
     },
     {
       title: "Your engagement, top to bottom",

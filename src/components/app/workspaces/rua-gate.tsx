@@ -12,6 +12,7 @@
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
+import { Gloss } from "@/components/app/glossary";
 import { TabRail, PaneNav, type TabDef } from "./gates";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
 import { type RuaTask } from "@/lib/rua-tasks";
@@ -56,7 +57,7 @@ function ScreenHead({ v, name, title, subtitle, ring }: { v: string; name: strin
           <span className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400">{name}</span>
         </div>
         <h3 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{title}</h3>
-        {subtitle && <p className="mt-1 text-[12px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-[12px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{subtitle}</Gloss></p>}
       </div>
       {ring && <Ring value={ring.value} label={ring.label} />}
     </div>
@@ -153,12 +154,12 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
               {isOpen && (
                 <div className="px-4 pb-4 pt-0.5 space-y-3">
                   <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>
-                    Studied for intent, not wording: {c.ref} forces the organisation to demonstrably control “{c.name.toLowerCase()}”. Ask what risk it removes and how you&apos;d see it working.
+                    <Gloss>Studied for intent, not wording: {c.ref} forces the organisation to demonstrably control “{c.name.toLowerCase()}”. Ask what risk it removes and how you&apos;d see it working.</Gloss>
                   </p>
                   <div className="rounded-xl bg-violet-50/70 px-3.5 py-3">
                     <div className="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-violet-600 mb-1">Why this matters here</div>
                     <p className="text-[12px] leading-relaxed text-slate-700 tracking-tight" style={{ textWrap: "pretty" }}>
-                      Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.
+                      <Gloss>Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.</Gloss>
                     </p>
                   </div>
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
@@ -280,7 +281,7 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl ring-1 ring-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{tpl.purpose || "Structured document — review its sections before use."}</div>
+                    <div className="rounded-xl ring-1 ring-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{tpl.purpose || "Structured document — review its sections before use."}</Gloss></div>
                   )}
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <InspectExerciseBox task={task} taskCode={taskCode} idx={i} passed={done}
@@ -418,7 +419,7 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
               </span>
               <div className="flex-1 min-w-0">
                 <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full ring-1 text-[10px] font-semibold ${m.chip}`}>{m.label}</span>
-                <p className="mt-1 text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{a.label}</p>
+                <p className="mt-1 text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{a.label}</Gloss></p>
                 <div className="mt-1.5"><ItemDoc refs={refs} idx={i} openDoc={openDoc} /></div>
               </div>
               <div className="shrink-0 self-center">
@@ -535,7 +536,7 @@ function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
             {done && <span className="inline-flex items-center gap-1 h-[17px] px-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold"><Icon name="check" size={9} strokeWidth={3} /> understood</span>}
             {state === "query" && <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold">query open</span>}
           </div>
-          <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{step.text}</p>
+          <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{step.text}</Gloss></p>
           <div className="mt-1.5"><ItemDoc refs={refs} idx={idx} openDoc={openDoc} /></div>
 
           {mode === null && state === "pending" && (
@@ -665,7 +666,7 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
           </div>
           <div className="px-4 py-3.5">
             <div className="text-[14px] font-semibold text-slate-900 tracking-tight mb-1">{task.deliverable}</div>
-            <p className="text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{task.acceptance}</p>
+            <p className="text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{task.acceptance}</Gloss></p>
           </div>
         </div>
 
@@ -687,7 +688,7 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
               const reveal = graded?.ok;
               return (
                 <div key={i} className="flex items-center gap-3 rounded-xl ring-1 ring-slate-200/70 bg-slate-50/60 px-3 py-2.5">
-                  <span className="flex-1 text-[12px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{it.text}</span>
+                  <span className="flex-1 text-[12px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{it.text}</Gloss></span>
                   <div className="shrink-0 flex gap-1">
                     {([["in", "In scope"], ["out", "Out"]] as const).map(([val, lab]) => {
                       const on = choice === val;
@@ -776,7 +777,7 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
               <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-violet-50 text-violet-700 ring-1 ring-violet-200 text-[10px] font-semibold">Concept {passedCount + 1} of {total}</span>
               {(p.explain[idx]?.attempts ?? 0) > 0 && <span className="text-[11px] text-amber-600 font-medium">re-queued · attempt {(p.explain[idx]?.attempts ?? 0) + 1}</span>}
             </div>
-            <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{task.concepts[idx]}</h4>
+            <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{task.concepts[idx]}</Gloss></h4>
           </div>
           <div className="px-4 pt-3">
             <ItemDoc refs={refs} idx={idx} openDoc={openDoc} />
@@ -817,7 +818,7 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
               <div className="grid sm:grid-cols-2 gap-2.5">
                 <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-3">
                   <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1.5">Model key points</div>
-                  <p className="text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}>{task.concepts[idx]}</p>
+                  <p className="text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{task.concepts[idx]}</Gloss></p>
                 </div>
                 <div className="rounded-xl bg-violet-50/70 p-3">
                   <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-violet-600 mb-1.5">Your explanation</div>
@@ -954,7 +955,7 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
           <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-violet-50 text-violet-700 ring-1 ring-violet-200 text-[10px] font-semibold">Question {qi + 1} / {N}</span>
           <span className="text-[11px] text-slate-400">no back-navigation</span>
         </div>
-        <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug mb-4" style={{ textWrap: "pretty" }}>{task.questions[qi]}</h4>
+        <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug mb-4" style={{ textWrap: "pretty" }}><Gloss>{task.questions[qi]}</Gloss></h4>
 
         {stage === "answer" && (
           <div className="space-y-3">
@@ -976,7 +977,7 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
           <div className="space-y-3">
             <div className="rounded-xl bg-violet-50/70 px-3.5 py-3">
               <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-violet-600 mb-1">Follow-up probe</div>
-              <p className="text-[12.5px] text-slate-800 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{followUp(qi)}</p>
+              <p className="text-[12.5px] text-slate-800 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{followUp(qi)}</Gloss></p>
             </div>
             <textarea autoFocus value={fu} onChange={(e) => setFu(e.target.value)} rows={3} placeholder="Respond to the probe…" aria-label="Follow-up response"
               className="w-full resize-none rounded-xl bg-slate-50 ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-500/40 px-3.5 py-3 text-[13px] text-slate-800 outline-none placeholder:text-slate-400" />
@@ -1041,7 +1042,7 @@ function AttestPane({ task, p, patch, ledger }: PaneProps & { ledger: Ledger }) 
                   <span className={`shrink-0 mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg ${col.chip}`}><span className={`w-2 h-2 rounded-full ${col.dot}`} /></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[12.5px] font-semibold text-slate-800 tracking-tight leading-snug" style={{ textWrap: "pretty" }}>{c.label}</span>
+                      <span className="text-[12.5px] font-semibold text-slate-800 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{c.label}</Gloss></span>
                       {c.critical && <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-rose-500 bg-rose-50 rounded px-1 py-0.5">critical</span>}
                     </div>
                     <div className="text-[11px] text-slate-400 tracking-tight mt-0.5 font-mono">{c.ev}</div>
@@ -1091,7 +1092,7 @@ function GateOutcomePanel({ decision, ledger, onRerun }: { decision: GateDecisio
             <span className={`text-[10.5px] font-bold uppercase tracking-[0.14em] rounded px-1.5 py-0.5 text-white ${col.dot}`}>{d.label}</span>
           </div>
           <div className="text-[16px] font-semibold text-slate-900 tracking-tight mt-0.5">{d.head}</div>
-          <p className="text-[12.5px] text-slate-600 tracking-tight mt-1" style={{ textWrap: "pretty" }}>{d.sub}</p>
+          <p className="text-[12.5px] text-slate-600 tracking-tight mt-1" style={{ textWrap: "pretty" }}><Gloss>{d.sub}</Gloss></p>
         </div>
       </div>
       {decision !== "READY" && ledger.watch.length > 0 && (

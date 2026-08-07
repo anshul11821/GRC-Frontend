@@ -3,6 +3,7 @@ import { VERB_TONES } from "@/lib/tones";
 import { TASK_META } from "@/lib/taskmeta";
 import { CONTROLS_BY_TASK } from "@/lib/controls";
 import { STANDARD_BY_ID, standardForTaskCode } from "@/lib/standards";
+import { Gloss, TermsUsed } from "@/components/app/glossary";
 
 // Static tone maps (Tailwind v4 purges dynamic `bg-${tone}` classes). Each framework carries its
 // own colour identity — the banner wears it so the mentee reads the standard at a glance.
@@ -88,15 +89,16 @@ export function StandardBanner({ taskCode, onControls }: { taskCode: string; onC
       <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col gap-3">
         <div>
           <span className="block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1.5">About this framework</span>
-          <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{standard.description}</p>
+          <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{standard.description}</Gloss></p>
           {standard.tagline && (
-            <p className={`mt-2 pl-2.5 border-l-2 text-[12px] italic tracking-tight text-slate-700 ${ACCENT_BORDER[standard.tone]}`}>{standard.tagline}</p>
+            <p className={`mt-2 pl-2.5 border-l-2 text-[12px] italic tracking-tight text-slate-700 ${ACCENT_BORDER[standard.tone]}`}><Gloss>{standard.tagline}</Gloss></p>
           )}
         </div>
         {desc && (
           <div className="pt-3 border-t border-slate-100">
             <span className="block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1.5">Your task in context</span>
-            <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>{desc}</p>
+            <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{desc}</Gloss></p>
+            <TermsUsed texts={[standard.description, standard.tagline ?? "", desc]} className="mt-3" />
           </div>
         )}
       </div>

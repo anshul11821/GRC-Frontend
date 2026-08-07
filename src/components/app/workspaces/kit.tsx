@@ -9,6 +9,7 @@
 
 import { useEffect } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Gloss } from "@/components/app/glossary";
 
 /** Every workspace is a controlled component over the graded `fields` object. */
 export interface WorkspaceProps {
@@ -83,12 +84,13 @@ export function WTextArea({ value, onChange, placeholder, rows = 4, hint }: {
   );
 }
 
-/** A small "given" hint line — the scripted instruction telling the mentee what is pre-loaded. */
+/** A small "given" hint line — the scripted instruction telling the mentee what is pre-loaded.
+ *  Glossed here rather than at the ~48 call sites, so every verb workspace gets it for free. */
 export function GivenNote({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2 text-[11.5px] text-slate-500 tracking-tight">
       <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
-      <span style={{ textWrap: "pretty" }}>{children}</span>
+      <span style={{ textWrap: "pretty" }}><Gloss>{children}</Gloss></span>
     </div>
   );
 }
@@ -134,7 +136,7 @@ export function ScriptedExchange({ title, turns }: {
           return (
             <div key={i} className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
               {!mine && <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{t.initials}</div>}
-              <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[80%] leading-relaxed ring-1 ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}>{t.text}</div>
+              <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[80%] leading-relaxed ring-1 ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}><Gloss>{t.text}</Gloss></div>
               {mine && <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{t.initials}</div>}
             </div>
           );
