@@ -66,6 +66,10 @@ await page.waitForTimeout(250);
 await page.screenshot({ path: `${OUT}/04-sheet.png`, fullPage: true });
 const summary = await page.locator('[role="dialog"] >> text=/reason(s)? ·/').first().innerText().catch(() => "(none)");
 console.log("summary line:", summary);
+// Regression guard: escalation is driven by mentor returns at this gate, not by the submission's
+// revision number. This card is on a high revision from grader failures with no mentor return,
+// so it must offer a RETURN. Reading it off `revision` used to make this say "escalate".
+console.log("escalates on revision alone (must be false):", summary.includes("escalate"));
 console.log("confirm enabled after 2 reasons:", !(await page.locator('[role="dialog"] button:has-text("Confirm")').isDisabled()));
 
 // 7. digits typed into the note must NOT toggle reasons

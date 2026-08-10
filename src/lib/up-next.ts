@@ -7,6 +7,7 @@
  * notify about something that isn't already derivable from the calendar.
  */
 import type { CalendarEvent } from "./calendar";
+import type { MentorFeedback } from "./desk";
 
 /** Only look this far ahead — beyond it, everything is "later", which is the Calendar page's job. */
 export const HORIZON_DAYS = 7;
@@ -72,10 +73,44 @@ function toItem(e: CalendarEvent, from?: string): UpNextItem | null {
   return null; // leave days, far-future deadlines, past interactions
 }
 
-export function buildUpNext(events: CalendarEvent[], from?: string): UpNextItem[] {
-  return events
-    .map((e) => toItem(e, from))
-    .filter((x): x is UpNextItem => x !== null)
+/**
+ * A mentor decision, as a bell item. Always counted on the badge: unseen feedback is news whether
+ * it is good or bad, and an approval nobody notices is an approval that did not land. The seen-set
+ * clears it once the dropdown is opened.
+ */
+function feedbackItem(f: MentorFeedback, from?: string): UpNextItem {
+  const day = f.decidedAt.slice(0, 10);
+  const where = `${f.taskCode}·${f.activityCode}`;
+  const style: Record<MentorFeedback["outcome"], { icon: string; tone: UpNextItem["tone"]; title: string }> = {
+    approve: { icon: "checkCircle", tone: "indigo", title: "Mentor approved your work" },
+    // Approved, but the step will not complete until they read the note — so it is action, not news.
+    approve_note: { icon: "chat", tone: "amber", title: "Mentor left a note to read" },
+    disapprove_return: { icon: "refresh", tone: "amber", title: "Mentor returned your work" },
+    disapprove_escalate: { icon: "flag", tone: "rose", title: "Mentor escalated your work" },
+  };
+  const s = style[f.outcome];
+  return {
+    id: f.id,
+    icon: s.icon,
+    tone: s.tone,
+    title: s.title,
+    detail: `${where} · ${f.gateName}`,
+    when: relDay(day, from),
+    href: `/app/desk/${f.activityId}`,
+    date: day,
+    blocking: true,
+  };
+}
+
+export function buildUpNext(
+  events: CalendarEvent[],
+  feedback: MentorFeedback[] = [],
+  from?: string,
+): UpNextItem[] {
+  return [
+    ...events.map((e) => toItem(e, from)).filter((x): x is UpNextItem => x !== null),
+    ...feedback.map((f) => feedbackItem(f, from)),
+  ]
     .sort((a, b) => a.date.localeCompare(b.date)) // past dates sort first
     .slice(0, 10);
 }

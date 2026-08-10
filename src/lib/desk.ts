@@ -37,6 +37,33 @@ export interface Review {
   createdAt: string;
 }
 
+export interface MentorReview {
+  decisionId: number;
+  outcome: "approve" | "approve_note" | "disapprove_return" | "disapprove_escalate";
+  gateName: string;
+  /** `action` is the corrective step, shown verbatim as the reviewer selected it. */
+  reasons: { text: string; action: string | null }[];
+  note: string;
+  reviewerName: string;
+  reviewerRole: string;
+  decidedAt: string;
+  advisory: boolean;
+  /** approve_note only: the step stays incomplete, and the next one locked, until acknowledged. */
+  needsAcknowledgement: boolean;
+}
+
+/** A mentor decision as it appears in the Up-next bell. Full detail lives on the step itself. */
+export interface MentorFeedback {
+  id: string;
+  activityId: string;
+  taskCode: string;
+  activityCode: string;
+  gateName: string;
+  outcome: MentorReview["outcome"];
+  reviewerName: string;
+  decidedAt: string;
+}
+
 export interface ActivityDetail {
   id: string;
   code: string;
@@ -47,6 +74,12 @@ export interface ActivityDetail {
   status: string;
   draft: ActivityPayload | null;
   latestReview: Review | null;
+  /**
+   * Present only on the 70 mentor review-gate steps, once a mentor has decided. While `advisory`
+   * is true the decision is shown to the learner but gates nothing — their result is still the
+   * AI's. Do not branch progression on this.
+   */
+  mentorReview: MentorReview | null;
   attemptsUsed: number;
   attemptsRemaining: number;
   maxAttempts: number;
@@ -77,6 +110,9 @@ export interface SubmissionDetail {
 
 export const deskApi = {
   activity: (id: string) => api.get<ActivityDetail>(`/me/activities/${id}`),
+  mentorFeedback: () => api.get<MentorFeedback[]>("/me/mentor-feedback"),
+  acknowledgeMentorFeedback: (decisionId: number) =>
+    api.post<{ ok: boolean }>(`/me/mentor-feedback/${decisionId}/acknowledge`),
   saveDraft: (id: string, payload: ActivityPayload) =>
     api.put<{ ok: boolean }>(`/me/activities/${id}/draft`, { payload }),
   submit: (id: string, payload: ActivityPayload) =>

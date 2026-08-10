@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useCachedQuery } from "@/lib/use-query";
 import { calendarApi } from "@/lib/calendar";
+import { deskApi } from "@/lib/desk";
 import { buildUpNext } from "@/lib/up-next";
 import { SOFT_TONES } from "@/lib/tones";
 import { DropdownPanel } from "@/components/ui/motion";
@@ -30,6 +31,10 @@ export function UpNext() {
 
   // Same cache key as the Calendar page — this costs no extra request.
   const { data: cal } = useCachedQuery(`calendar:${PROGRAM}`, () => calendarApi.get(PROGRAM));
+  // Mentor decisions are news, not dated commitments, so they ride their own small endpoint
+  // rather than the calendar feed — putting them there would clutter the Calendar page with
+  // things the learner does not owe anybody.
+  const { data: feedback } = useCachedQuery("mentor-feedback", () => deskApi.mentorFeedback());
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -39,7 +44,7 @@ export function UpNext() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const items = useMemo(() => buildUpNext(cal ?? []), [cal]);
+  const items = useMemo(() => buildUpNext(cal ?? [], feedback ?? []), [cal, feedback]);
   const blocking = items.reduce((n, x) => n + (x.blocking && !seen.has(x.id) ? 1 : 0), 0);
   const late = items.some((x) => x.tone === "rose" && !seen.has(x.id));
 
@@ -88,7 +93,7 @@ export function UpNext() {
             </div>
             <div className="text-[12.5px] font-medium text-slate-600">Nothing due</div>
             <div className="text-[11.5px] text-slate-400 mt-0.5 max-w-[220px]">
-              Deadlines, outstanding revisions and booked sessions show up here.
+              Deadlines, outstanding revisions, mentor feedback and booked sessions show up here.
             </div>
           </div>
         ) : (

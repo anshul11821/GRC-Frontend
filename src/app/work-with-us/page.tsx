@@ -8,35 +8,42 @@ import { ApplyForm } from "./apply-form";
 export const metadata: Metadata = {
   title: "Work with us — grcmentor Assessment Board",
   description:
-    "Join the grcmentor Assessment Board: practitioners who review mentee submissions against the rubric for their NICE work role. Remote, asynchronous, 4–6 hours a month.",
+    "Join the grcmentor Assessment Board: practitioners who decide mentee submissions at the 70 review gates for their NICE work role. Remote, asynchronous, around ten minutes a decision.",
 };
 
-// Reviewer positions, each mapped to the NICE work role it grades against.
-export const ROLES: { title: string; code: string; duty: string }[] = [
-  { title: "Policy & Governance Analyst", code: "OG-PLA-001", duty: "Drafts, reviews and publishes cybersecurity and data-privacy policy; owns the policy register and the governance document set." },
-  { title: "Compliance Manager", code: "OG-AUD-001", duty: "Owns regulatory obligations, control mapping and compliance status reporting; runs internal compliance assessments." },
-  { title: "Information Security Auditor", code: "OG-AUD-002", duty: "Plans and performs control testing; owns workpaper standards, evidence quality and audit readiness." },
-  { title: "Cyber Risk Manager", code: "OG-RIS-001", duty: "Owns the risk framework, scoring anchors, treatment decisions and the risk register review cycle." },
-  { title: "Vendor / Third-Party Risk Analyst", code: "OG-SCRM-001", duty: "Owns supplier assessment, sub-processor governance and third-party contractual security terms." },
-  { title: "Business Continuity & Resilience Analyst", code: "OG-MAP-001", duty: "Owns business impact analysis, RTO/RPO determination and ICT continuity documentation." },
-  { title: "Security Awareness & Training Specialist", code: "OG-CUR-001", duty: "Owns awareness content, delivery quality, knowledge assessment and training evidence." },
-  { title: "Incident Response & Crisis Manager (GRC)", code: "PD-IRM-001", duty: "Owns incident procedure design, exercise facilitation and post-incident learning." },
-  { title: "Cybersecurity Program Manager", code: "OG-PMA-001", duty: "Owns programme roadmaps, charters, resourcing and delivery governance." },
-  { title: "Data Protection Officer", code: "OG-PRI-001", duty: "Statutory privacy role; owns RoPA, DPIA disposition, lawful basis and supervisory-authority interface." },
+// Reviewer positions, each mapped to the NICE work role it reviews against, with the review load
+// one mentee generates for it across a full 35-task rotation.
+//
+// This list mirrors ROLES in backend/app/seed/build_gates.py, which is the canonical vocabulary a
+// mentor account is validated against — keep the titles and NICE codes identical or an approved
+// applicant cannot be given the role they applied for. Load figures are derived from the gate
+// register (backend/_seed/grc101_gates.json); see docs/MENTOR_REVIEW.md.
+export const ROLES: { title: string; code: string; duty: string; gates: string; hours: string }[] = [
+  { title: "Compliance Manager", code: "OG-AUD-001", gates: "16 gates", hours: "3.3 h", duty: "Owns regulatory obligations, control mapping and compliance status reporting; runs internal compliance assessments." },
+  { title: "Information Security Auditor", code: "OG-AUD-002", gates: "10 gates", hours: "2.1 h", duty: "Plans and performs control testing; owns workpaper standards, evidence quality and audit readiness." },
+  { title: "Policy & Governance Analyst", code: "OG-PLA-001", gates: "10 gates", hours: "2.0 h", duty: "Drafts, reviews and publishes cybersecurity and data-privacy policy; owns the policy register and the governance document set." },
+  { title: "Data Protection Officer", code: "OG-PRI-001", gates: "6 gates", hours: "1.4 h", duty: "Statutory privacy role; owns RoPA, DPIA disposition, lawful basis and supervisory-authority interface. Decides the DPIA screening, retention-period and privacy-notice gates." },
+  { title: "Cybersecurity Program Manager", code: "OG-PMA-001", gates: "6 gates", hours: "1.3 h", duty: "Owns programme roadmaps, charters, resourcing and delivery governance." },
+  { title: "Security Awareness & Training Specialist", code: "OG-CUR-001", gates: "6 gates", hours: "1.1 h", duty: "Owns awareness content, delivery quality, knowledge assessment and training evidence." },
+  { title: "Cyber Risk Manager", code: "OG-RIS-001", gates: "4 gates", hours: "0.9 h", duty: "Owns the risk framework, scoring anchors, treatment decisions and the risk register review cycle." },
+  { title: "Vendor / Third-Party Risk Analyst", code: "OG-SCRM-001", gates: "4 gates", hours: "0.9 h", duty: "Owns supplier assessment, sub-processor governance and third-party contractual security terms." },
+  { title: "Business Continuity & Resilience Analyst", code: "OG-MAP-001", gates: "4 gates", hours: "0.8 h", duty: "Owns business impact analysis, RTO/RPO determination and ICT continuity documentation." },
+  { title: "Incident Response & Crisis Manager", code: "PD-IRM-001", gates: "4 gates", hours: "0.8 h", duty: "Owns incident procedure design, exercise facilitation and post-incident learning." },
 ];
 
 const DUTIES: { icon: IconName; title: string; body: string }[] = [
-  { icon: "file", title: "Assess submitted work", body: "Policies, risk registers, audit workpapers, DPIAs and continuity plans, submitted through the platform queue." },
-  { icon: "checkSquare", title: "Grade against the rubric", body: "Score with anchored criteria, leave written feedback, and decide whether the mentee has met the standard for the role." },
-  { icon: "gauge", title: "Keep the bar calibrated", body: "Join periodic calibration sessions so grading stays consistent across reviewers and cohorts." },
+  { icon: "file", title: "Read the artefact", body: "Registers, policies, procedures, DPIAs, audit workpapers and continuity plans — the real deliverable, rendered in full on one screen." },
+  { icon: "checkSquare", title: "Decide, don't write an essay", body: "Approve or disapprove and pick from reason codes written for that specific gate. A free-text note is available and never required." },
+  { icon: "gauge", title: "Judge what an agent cannot", body: "The AI grader has already checked the work is complete, consistent and cited. You judge whether the determination is one you would defend to a regulator or a board." },
 ];
 
-const CHIPS = ["Remote & asynchronous", "NICE-aligned work roles", "4–6 hrs per month"];
+const CHIPS = ["Remote & asynchronous", "~10 minutes per decision", "Two working days to respond"];
 
 const REQUIREMENTS = [
   "Minimum three years in the discipline you apply to review.",
   "A LinkedIn profile we can match to your stated experience.",
-  "Capacity for roughly five submissions a month.",
+  "Capacity for roughly five decisions a month, carrying no more than two mentees at a time.",
+  "Independence: you will not review anyone you line-manage, and you disclose any work of your own that a submission touches.",
 ];
 
 function Hero() {
@@ -55,7 +62,7 @@ function Hero() {
           Join the <span className="text-indigo-600">Assessment Board</span> and grade the next generation of GRC.
         </h1>
         <p className="mt-5 text-[16px] md:text-[17px] text-slate-500 leading-relaxed tracking-tight max-w-2xl mx-auto" style={{ textWrap: "pretty" }}>
-          Assessment Board members review submissions made by mentees on the grcmentor application. You bring the practitioner judgement; we bring the workflow, the rubric and the candidates.
+          An agent can check that an artefact is complete, consistent and correctly cited. It cannot judge whether a determination is one a competent professional would defend in front of a regulator. That judgement is what the board is for — and it is a decision with a reason code, not a report to write.
         </p>
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
           <a href="#apply" className="focus-ring inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 text-white text-[14px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]">
@@ -83,7 +90,7 @@ function WhatTheBoardDoes() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
       <div className="pointer-events-none absolute -top-24 left-1/4 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.22), transparent 70%)" }} />
       <div className="relative max-w-[1140px] mx-auto px-6 py-20">
-        <SectionHead dark eyebrow="What the board does" icon="clipboard" sub="Mentees complete simulated enterprise engagements inside our application. Board members assess the evidence they produce against the rubric for their work role.">
+        <SectionHead dark eyebrow="What the board does" icon="clipboard" sub="Mentees complete simulated enterprise engagements inside our application, and an AI grader scores every step. You are pulled in at the 70 steps out of 280 where a determination is inherited by everything after it, or where the artefact stops being an exercise and goes out as real.">
           Review real submissions, <span className="text-indigo-400">not exam papers</span>
         </SectionHead>
         <Stagger className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -109,25 +116,33 @@ function Positions() {
   return (
     <section id="positions" className="scroll-mt-16 bg-white">
       <div className="max-w-[1140px] mx-auto px-6 py-20">
-        <SectionHead eyebrow="Open positions" icon="briefcase" sub="Each reviewer role maps to a NICE work role. Apply for the one your day job qualifies you to judge.">
+        <SectionHead eyebrow="Open positions" icon="briefcase" sub="Each reviewer role maps to a NICE work role. Apply for the one your day job qualifies you to judge — the load shown is what a single mentee generates for that seat across a full 35-task rotation.">
           Reviewer <span className="text-indigo-600">roles</span>
         </SectionHead>
         <div className="mt-10 rounded-2xl ring-1 ring-slate-200/70 overflow-hidden shadow-card">
-          <div className="hidden md:grid grid-cols-[1.1fr_0.5fr_1.8fr] gap-6 px-6 py-3.5 bg-slate-900 text-white text-[11px] font-semibold tracking-[0.08em] uppercase">
+          <div className="hidden md:grid grid-cols-[1.1fr_0.5fr_0.7fr_1.6fr] gap-6 px-6 py-3.5 bg-slate-900 text-white text-[11px] font-semibold tracking-[0.08em] uppercase">
             <div>Reviewer role</div>
             <div>NICE work role</div>
+            <div>Load per mentee</div>
             <div>Responsibility that qualifies them</div>
           </div>
           {ROLES.map((r) => (
-            <div key={r.code} className="grid md:grid-cols-[1.1fr_0.5fr_1.8fr] gap-1.5 md:gap-6 px-6 py-4 bg-white border-t border-slate-100 first:border-t-0 md:first:border-t md:items-start hover:bg-slate-50/70 transition-colors">
+            <div key={r.code} className="grid md:grid-cols-[1.1fr_0.5fr_0.7fr_1.6fr] gap-1.5 md:gap-6 px-6 py-4 bg-white border-t border-slate-100 first:border-t-0 md:first:border-t md:items-start hover:bg-slate-50/70 transition-colors">
               <div className="text-[14px] font-semibold tracking-tight text-slate-900 leading-snug">{r.title}</div>
               <div className="font-mono text-[12px] text-indigo-600 md:pt-0.5">{r.code}</div>
+              <div className="md:pt-0.5">
+                <div className="text-[12.5px] font-medium text-slate-700 tracking-tight">{r.hours}</div>
+                <div className="text-[11.5px] text-slate-400 tracking-tight">{r.gates}</div>
+              </div>
               <div className="text-[13px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{r.duty}</div>
             </div>
           ))}
         </div>
         <p className="mt-4 text-[12.5px] text-slate-500 tracking-tight">
-          All positions are voluntary board appointments, reviewed every 12 months.
+          All positions are voluntary board appointments, reviewed every 12 months. Every gate has a
+          single reviewer — the role best placed to judge that particular determination — so a DPIA,
+          a retention decision or an incident procedure goes to the specialist rather than to the
+          analyst who owns the rest of the task. You may hold more than one seat.
         </p>
       </div>
     </section>
@@ -139,7 +154,7 @@ function Apply() {
     <section id="apply" className="scroll-mt-16 bg-[#F4F5F8] border-t border-slate-200/60">
       <div className="max-w-[1140px] mx-auto px-6 py-20 grid lg:grid-cols-[0.85fr_1.15fr] gap-12 items-start">
         <div>
-          <SectionHead center={false} eyebrow="Application" icon="send" sub="Tell us who you are and which reviewer position you want. We verify your background against the work role, then invite you to a calibration walkthrough.">
+          <SectionHead center={false} eyebrow="Application" icon="send" sub="Tell us who you are and which reviewer position you want. We verify your background against the work role, then you decide five archived submissions with known outcomes as a calibration set before your first live card.">
             Apply to join the <span className="text-indigo-600">board</span>
           </SectionHead>
           <div className="mt-7 flex flex-col gap-3">

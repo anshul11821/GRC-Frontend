@@ -13,9 +13,11 @@ import {
   formatSubmitted,
   isAuthError,
   mentorApi,
+  OUTCOME_LABEL,
   type Block,
   type Card,
   type DecisionResult,
+  type HistoryEntry,
 } from "@/lib/mentor";
 
 export default function MentorCardPage() {
@@ -78,12 +80,12 @@ function CardBody() {
     return () => document.removeEventListener("keydown", onKey);
   }, [sheet, toast, raced, openSheet, router]);
 
-  async function confirm(codes: string[], note: string) {
+  async function confirm(codes: string[], note: string, requireAck: boolean) {
     if (!card || !sheet) return;
     setBusy(true);
     setSheetError(null);
     try {
-      const res = await mentorApi.decide(card.submissionId, sheet, codes, note);
+      const res = await mentorApi.decide(card.submissionId, sheet, codes, note, requireAck);
       setSheet(null);
       setToast(res);
     } catch (e) {
@@ -156,6 +158,12 @@ function CardBody() {
               <span className="text-[11px] text-slate-400">
                 {card.taskCode} · {card.step} · {card.activityTitle}
               </span>
+              <span
+                className="inline-flex items-center h-[17px] px-1.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold"
+                title={`${card.reviewerRole} · NICE ${card.reviewerRoleNice}`}
+              >
+                {card.reviewerRoleCode}
+              </span>
             </div>
             <h1 className="text-[22px] font-semibold tracking-tight text-slate-900 mt-1">{card.gateName}</h1>
           </div>
@@ -183,20 +191,16 @@ function CardBody() {
           <Meta label="Head office" value={card.orgHeadOffice || "—"} />
           <Meta label="Artefact" value={card.artefact} />
           <Meta label="Output ID" value={card.outputId} mono />
-          <Meta label="Second reviewer" value={card.secondReviewer ?? "—"} />
+          <Meta label="Reviewed by" value={card.reviewerRole} sub={`NICE ${card.reviewerRoleNice}`} />
         </div>
       </div>
 
-      {card.revision >= 2 && (
+      {card.priorReturns > 0 && (
         <Banner tone="amber">
-          This is revision {card.revision}. A disapproval here is recorded as an escalation rather
-          than a return.
-        </Banner>
-      )}
-      {card.secondReviewer && (
-        <Banner tone="blue">
-          This gate names a second reviewer ({card.secondReviewer}). Second-reviewer routing is not
-          live yet — your decision stands alone for now.
+          Returned {card.priorReturns} time{card.priorReturns === 1 ? "" : "s"} at this gate
+          {card.priorReturns >= card.maxReturns
+            ? ` — the limit is ${card.maxReturns}, so a further disapproval escalates to the Programme Manager instead of returning.`
+            : ` of ${card.maxReturns} allowed.`}
         </Banner>
       )}
       {decisionBlocked && (
@@ -218,6 +222,11 @@ function CardBody() {
             </TabButton>
             <TabButton active={tab === "grading"} onClick={() => setTab("grading")}>
               Step activity
+              {card.history.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center h-[15px] px-1 rounded bg-slate-100 text-slate-500 text-[9.5px] font-semibold align-middle">
+                  {card.history.length}
+                </span>
+              )}
             </TabButton>
           </div>
           <div className="max-h-[64vh] overflow-y-auto px-6 py-6">
@@ -244,6 +253,12 @@ function CardBody() {
                   {formatSubmitted(card.submittedAt)} · revision {card.revision}
                 </Field>
                 {card.grader.feedback && <Field label="Agent feedback">{card.grader.feedback}</Field>}
+                <div>
+                  <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2">
+                    Revision history at this gate
+                  </div>
+                  <History entries={card.history} />
+                </div>
               </div>
             )}
           </div>
@@ -318,7 +333,8 @@ function CardBody() {
       <ReasonSheet
         mode={sheet}
         reasons={sheet === "approve" ? card.approve : card.disapprove}
-        revision={card.revision}
+        priorReturns={card.priorReturns}
+        maxReturns={card.maxReturns}
         busy={busy}
         error={sheetError}
         onCancel={() => setSheet(null)}
@@ -396,6 +412,58 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-1">{label}</div>
       <div className="text-[12.5px] text-slate-700 leading-relaxed">{children}</div>
+    </div>
+  );
+}
+
+function History({ entries }: { entries: HistoryEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <p className="text-[12.5px] text-slate-500">
+        First time this learner has reached this gate — no prior decision.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {entries.map((e, i) => (
+        <div
+          key={i}
+          className={`rounded-xl border px-3.5 py-3 ${
+            e.withdrawn ? "border-[#e6eaf0] bg-slate-50/60 opacity-70" : "border-[#e6eaf0] bg-white"
+          }`}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`inline-flex items-center h-[18px] px-1.5 rounded text-[10px] font-semibold ${
+                e.outcome.startsWith("approve") ? "bg-[#e8f5ee] text-[#1e7a46]" : "bg-[#fdecec] text-[#a31d1d]"
+              }`}
+            >
+              {OUTCOME_LABEL[e.outcome]}
+            </span>
+            <span className="text-[11px] text-slate-500">revision {e.revision}</span>
+            <span className="text-[11px] text-slate-400">
+              {e.mentorName} · {formatSubmitted(e.decidedAt)}
+            </span>
+            {e.withdrawn && (
+              <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-slate-200 text-slate-600 text-[9.5px] font-semibold">
+                WITHDRAWN
+              </span>
+            )}
+          </div>
+          {e.reasons.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {e.reasons.map((r) => (
+                <li key={r} className="flex gap-2 text-[12px] text-slate-700 leading-snug">
+                  <span className="text-slate-300 mt-1.5 shrink-0">•</span>
+                  <span>{r}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {e.note && <p className="mt-2 text-[11.5px] text-slate-500 italic leading-relaxed">{e.note}</p>}
+        </div>
+      ))}
     </div>
   );
 }

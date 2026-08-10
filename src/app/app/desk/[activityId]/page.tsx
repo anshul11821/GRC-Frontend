@@ -21,6 +21,8 @@ import { dueChip, fmtDue } from "@/lib/schedule";
 import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
+import { MentorDecision } from "@/components/app/mentor-decision";
+import { invalidateQuery } from "@/lib/use-query";
 import type { TaskReference } from "@/lib/taskmeta";
 
 function ReviewPanel({ review }: { review: Review }) {
@@ -461,7 +463,7 @@ export default function ActivityWorkspace() {
   // Attempts exhausted → the workspace goes read-only. A passed step stays interactive (you can
   // still Resubmit, and the gate workspaces need their tab rails to stay clickable).
   const locked = noAttemptsLeft;
-  const hasFeedback = !!(layer1 || review);
+  const hasFeedback = !!(layer1 || review || activity.mentorReview);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
   // Documents with their own Open button (floating windows) leave the drawer: the Reference-material
@@ -572,7 +574,9 @@ export default function ActivityWorkspace() {
               className={`inline-flex items-center gap-2 h-9 px-3 rounded-lg ring-1 transition-colors ${passed ? "bg-emerald-50 ring-emerald-200/70 hover:bg-emerald-100/70 text-emerald-700" : "bg-amber-50 ring-amber-200/70 hover:bg-amber-100/70 text-amber-700"}`}
             >
               <Icon name={passed ? "check" : "chat"} size={14} strokeWidth={passed ? 3 : 2} />
-              <span className="text-[12.5px] font-medium tracking-tight">Submission feedback</span>
+              <span className="text-[12.5px] font-medium tracking-tight">
+                {activity.mentorReview ? "Mentor feedback" : "Submission feedback"}
+              </span>
               <span className="text-[11.5px] font-semibold tabular-nums">
                 {review ? (passed ? `· ${review.overallScore.toFixed(1)}/5` : "· revise") : layer1 && !layer1.passed ? "· not met" : ""}
               </span>
@@ -788,6 +792,20 @@ export default function ActivityWorkspace() {
         eyebrow={review ? (passed ? "Passed" : "Needs revision") : "Result"}
       >
         <div className="space-y-6">
+          {/* A human reviewer's decision leads — it is the part the learner can actually ask about. */}
+          {activity.mentorReview && (
+            <MentorDecision
+              review={activity.mentorReview}
+              onAcknowledged={() => {
+                // Acknowledging completes the step and unlocks the next one, so the tree and the
+                // activity both have to be re-read — not just this panel.
+                invalidateQuery("mentor-feedback");
+                deskApi.activity(activityId).then(setActivity);
+                void refreshTree();
+              }}
+            />
+          )}
+
           {layer1 && (
             <section>
               <h3 className="text-[13px] font-semibold tracking-tight text-slate-900 mb-2.5">

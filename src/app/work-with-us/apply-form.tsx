@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
+import { Field, TextInput, PrimaryBtn } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/lib/api";
 import { getCaptchaToken } from "@/lib/recaptcha";
@@ -13,8 +13,14 @@ import { EmailVerify } from "@/components/waitlist/email-verify";
 // Assessment Board applications ride the waitlist endpoint as a third audience: years of
 // experience land in `stage`, the reviewer position in `designation`.
 
+// A mentor may hold several reviewer seats, so the application takes a set. Capped to match
+// MAX_REVIEWER_ROLES in backend/app/api/waitlist.py — applying for most of the board is a claim
+// nobody can verify.
+const MAX_ROLES = 3;
+
 export function ApplyForm({ roles }: { roles: { title: string; code: string }[] }) {
-  const [form, setForm] = useState({ name: "", email: "", linkedin: "", years: "", position: "" });
+  const [form, setForm] = useState({ name: "", email: "", linkedin: "", years: "" });
+  const [positions, setPositions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ alreadyRegistered: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +39,7 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
 
   const set =
     (k: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
   // Editing the email invalidates a prior verification.
   const setEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +67,7 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
           name: form.name,
           linkedin: form.linkedin,
           stage: form.years,
-          designation: form.position,
+          reviewerRoles: positions,
           captchaToken,
           linkedinToken: li.token,
           emailToken: em.token,
@@ -135,19 +141,42 @@ export function ApplyForm({ roles }: { roles: { title: string; code: string }[] 
             <Field label="Total years of experience">
               <TextInput icon="history" type="number" min={0} max={60} required value={form.years} onChange={set("years")} placeholder="8" />
             </Field>
-            <Field label="Reviewer position applied for">
-              <Select icon="briefcase" required value={form.position} onChange={set("position")}>
-                <option value="" disabled>
-                  Select a reviewer role
-                </option>
-                {roles.map((r) => (
-                  <option key={r.code} value={r.title}>
-                    {r.title} — {r.code}
-                  </option>
-                ))}
-              </Select>
+            <Field label={`Reviewer positions applied for — choose up to ${MAX_ROLES}`}>
+              <div className="rounded-xl ring-1 ring-slate-200/70 bg-white divide-y divide-slate-100 overflow-hidden">
+                {roles.map((r) => {
+                  const on = positions.includes(r.title);
+                  const full = positions.length >= MAX_ROLES && !on;
+                  return (
+                    <label
+                      key={r.code}
+                      className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors ${
+                        full ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        disabled={full}
+                        onChange={() =>
+                          setPositions((p) => (on ? p.filter((t) => t !== r.title) : [...p, r.title]))
+                        }
+                        className="w-4 h-4 shrink-0 accent-indigo-600"
+                      />
+                      <span className="text-[13px] text-slate-800 tracking-tight flex-1 leading-snug">
+                        {r.title}
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-400 shrink-0">{r.code}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-1.5 text-[11.5px] text-slate-400">
+                {positions.length === 0
+                  ? "Apply only for seats your day job qualifies you to judge."
+                  : `${positions.length} of ${MAX_ROLES} selected.`}
+              </p>
             </Field>
-            <PrimaryBtn type="submit" disabled={busy || needsVerify} className="w-full">
+            <PrimaryBtn type="submit" disabled={busy || needsVerify || positions.length === 0} className="w-full">
               {busy ? "Submitting…" : "Submit application"}
             </PrimaryBtn>
           </form>

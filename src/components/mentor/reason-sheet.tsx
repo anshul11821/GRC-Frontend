@@ -15,7 +15,8 @@ import { willEscalate, type Reason } from "@/lib/mentor";
 export function ReasonSheet({
   mode,
   reasons,
-  revision,
+  priorReturns,
+  maxReturns,
   busy,
   error,
   onCancel,
@@ -23,16 +24,18 @@ export function ReasonSheet({
 }: {
   mode: "approve" | "disapprove" | null;
   reasons: Reason[];
-  revision: number;
+  priorReturns: number;
+  maxReturns: number;
   busy: boolean;
   error: string | null;
   onCancel: () => void;
-  onConfirm: (codes: string[], note: string) => void;
+  onConfirm: (codes: string[], note: string, requireAck: boolean) => void;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const [requireAck, setRequireAck] = useState(false);
   const open = mode !== null;
-  const escalating = mode === "disapprove" && willEscalate(revision);
+  const escalating = mode === "disapprove" && willEscalate(priorReturns, maxReturns);
 
   // Clear the previous decision's selection during render when the sheet opens or switches mode,
   // so an approve sheet can never paint holding a disapprove sheet's checked reasons.
@@ -41,6 +44,7 @@ export function ReasonSheet({
     setPrevMode(mode);
     setSelected([]);
     setNote("");
+    setRequireAck(false);
   }
 
   // The drawer stays mounted when closed, so a focused note field keeps focus after Esc — and the
@@ -57,7 +61,7 @@ export function ReasonSheet({
       const typing = target?.tagName === "TEXTAREA" || target?.tagName === "INPUT";
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        if (selected.length && !busy) onConfirm(selected, note);
+        if (selected.length && !busy) onConfirm(selected, note, requireAck && !!note.trim());
         return;
       }
       if (typing) return; // Esc is handled by the Drawer itself
@@ -94,7 +98,8 @@ export function ReasonSheet({
             This converts to “Disapprove — escalate”
           </div>
           <div className="text-[12px] text-[#a31d1d]/85 leading-relaxed mt-1">
-            The submission is already on revision {revision}. Confirming escalates it and the gate
+            This gate has already been returned {priorReturns} time{priorReturns === 1 ? "" : "s"} —
+            the limit is {maxReturns}. Confirming raises it to the Programme Manager and the gate
             does not reopen for the mentee.
           </div>
         </div>
@@ -150,6 +155,32 @@ export function ReasonSheet({
         />
       </label>
 
+      {/* Approve with note: the work is good enough to release, but a habit needs correcting.
+          Releases the step and costs no revision — it just will not complete until they read it. */}
+      {mode === "approve" && (
+        <label
+          className={`mt-2 flex items-start gap-2.5 rounded-xl border px-3.5 py-3 ${
+            note.trim() ? "cursor-pointer border-[#e6eaf0] hover:bg-slate-50" : "border-[#f1f5f9] opacity-50"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={requireAck && !!note.trim()}
+            disabled={!note.trim()}
+            onChange={(e) => setRequireAck(e.target.checked)}
+            className="mt-0.5 w-4 h-4 shrink-0 accent-indigo-600"
+          />
+          <span className="text-[12.5px] text-slate-700 leading-snug">
+            The mentee must read this note before the step completes
+            <span className="block text-[11.5px] text-slate-400 mt-0.5">
+              {note.trim()
+                ? "Approves and releases the work; costs them no revision."
+                : "Write a note above to use this."}
+            </span>
+          </span>
+        </label>
+      )}
+
       {error && (
         <div className="mt-3 rounded-lg border border-[#f0c2c2] bg-[#fdecec] px-3 py-2 text-[12px] text-[#a31d1d]">
           {error}
@@ -172,7 +203,7 @@ export function ReasonSheet({
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(selected, note)}
+            onClick={() => onConfirm(selected, note, requireAck && !!note.trim())}
             disabled={selected.length === 0 || busy}
             className={`h-9 px-4 rounded-lg text-[12.5px] font-semibold transition-colors ${
               selected.length === 0 || busy

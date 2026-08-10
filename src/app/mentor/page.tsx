@@ -130,8 +130,9 @@ function QueueBody() {
             All roles
           </Chip>
           {queue.roles.map((r) => (
-            <Chip key={r} active={role === r} onClick={() => setRole(r)}>
-              {r}
+            <Chip key={r.name} active={role === r.name} onClick={() => setRole(r.name)} title={`${r.name} · ${r.nice}`}>
+              <span className="font-mono text-[10.5px] mr-1.5 opacity-70">{r.code}</span>
+              {r.name}
             </Chip>
           ))}
         </div>
@@ -189,10 +190,21 @@ function Key({ k, children }: { k: string; children: React.ReactNode }) {
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title?: string;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
+      title={title}
       className={`h-7 px-2.5 rounded-full text-[11.5px] font-medium transition-colors ${
         active ? "bg-indigo-600 text-white" : "bg-white border border-[#e6eaf0] text-slate-600 hover:bg-slate-50"
       }`}
@@ -259,11 +271,6 @@ function Row({ row, active, readOnly, showRole }: { row: QueueRow; active?: bool
           {row.revision > 1 && (
             <span className="inline-flex items-center h-[17px] px-1.5 rounded bg-[#fdf1e6] text-[#a3541d] text-[10px] font-semibold">
               Revision {row.revision}
-            </span>
-          )}
-          {row.secondReviewer && (
-            <span className="inline-flex items-center h-[17px] px-1.5 rounded bg-[#eef6fb] text-[#0b4a66] text-[10px] font-semibold">
-              2nd reviewer
             </span>
           )}
         </span>
@@ -346,7 +353,7 @@ function DecidedRowView({ row, onChanged }: { row: DecidedRow; onChanged: () => 
       </span>
       <span
         className={`shrink-0 inline-flex items-center h-[19px] px-2 rounded text-[10px] font-semibold ${
-          row.outcome === "approve" ? "bg-[#e8f5ee] text-[#1e7a46]" : "bg-[#fdecec] text-[#a31d1d]"
+          row.outcome.startsWith("approve") ? "bg-[#e8f5ee] text-[#1e7a46]" : "bg-[#fdecec] text-[#a31d1d]"
         }`}
       >
         {OUTCOME_LABEL[row.outcome]}

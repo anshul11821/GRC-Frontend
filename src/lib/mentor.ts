@@ -12,7 +12,7 @@ import { api, ApiError, type RequestOptions } from "./api";
 
 const KEY = "grc_mentor_token";
 
-export type Outcome = "approve" | "disapprove_return" | "disapprove_escalate";
+export type Outcome = "approve" | "approve_note" | "disapprove_return" | "disapprove_escalate";
 export type GraderResult = "PASS" | "FAIL" | "PENDING";
 
 export interface Mentor {
@@ -36,7 +36,6 @@ export interface QueueRow {
   grader: GraderResult;
   submittedAt: string;
   remainingMin: number;
-  secondReviewer: string | null;
 }
 
 export interface DecidedRow {
@@ -50,9 +49,17 @@ export interface DecidedRow {
   undoSeconds: number;
 }
 
+export interface Role {
+  code: string;
+  name: string;
+  /** NICE work role — what qualifies someone to hold this reviewer role. */
+  nice: string;
+  responsibility: string;
+}
+
 export interface Queue {
   stats: { overdue: number; dueToday: number; awaitingYou: number; decidedToday: number };
-  roles: string[];
+  roles: Role[];
   needsDecision: QueueRow[];
   waiting: QueueRow[];
   decided: DecidedRow[];
@@ -83,6 +90,18 @@ export interface Grader {
   feedback: string;
 }
 
+export interface HistoryEntry {
+  revision: number;
+  submittedAt: string;
+  outcome: Outcome;
+  /** Reason text, not bare codes — resolved server-side against the gate's library. */
+  reasons: string[];
+  note: string;
+  mentorName: string;
+  decidedAt: string;
+  withdrawn: boolean;
+}
+
 export interface Card {
   submissionId: number;
   gateId: string;
@@ -90,7 +109,8 @@ export interface Card {
   gateType: string;
   step: string;
   reviewerRole: string;
-  secondReviewer: string | null;
+  reviewerRoleCode: string;
+  reviewerRoleNice: string;
   taskCode: string;
   taskName: string;
   activityTitle: string;
@@ -115,6 +135,9 @@ export interface Card {
   grader: Grader;
   approve: Reason[];
   disapprove: Reason[];
+  priorReturns: number;
+  maxReturns: number;
+  history: HistoryEntry[];
   decidedBy: string | null;
 }
 
@@ -160,10 +183,16 @@ export const mentorApi = {
   me: () => api.get<Mentor>("/mentor/me", opts()),
   queue: () => api.get<Queue>("/mentor/queue", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),
-  decide: (submissionId: number, outcome: "approve" | "disapprove", reasonCodes: string[], note: string) =>
+  decide: (
+    submissionId: number,
+    outcome: "approve" | "disapprove",
+    reasonCodes: string[],
+    note: string,
+    requireAck = false,
+  ) =>
     api.post<DecisionResult>(
       `/mentor/cards/${submissionId}/decision`,
-      { outcome, reasonCodes, note },
+      { outcome, reasonCodes, note, requireAck },
       opts(),
     ),
   undo: (decisionId: number) =>
@@ -193,11 +222,16 @@ export function formatSubmitted(iso: string): string {
 
 export const OUTCOME_LABEL: Record<Outcome, string> = {
   approve: "Approved",
+  approve_note: "Approved with note",
   disapprove_return: "Disapprove — return",
   disapprove_escalate: "Disapprove — escalate",
 };
 
-/** Escalation is decided by the server, but the sheet must warn before the mentor commits. */
-export function willEscalate(revision: number): boolean {
-  return revision >= 2;
+/**
+ * Escalation is decided by the server; the sheet only has to warn before the mentor commits.
+ * Counted in mentor returns already recorded at this gate — not the submission's revision number,
+ * which also advances on grader failures the mentor never saw.
+ */
+export function willEscalate(priorReturns: number, maxReturns: number): boolean {
+  return priorReturns >= maxReturns;
 }
