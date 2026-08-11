@@ -135,7 +135,6 @@ export function CvSheet({ cv }: { cv: Cv }) {
                       {exp.tasks.map((t) => (
                         <div key={t.code} className="mt-3.5 rounded-xl bg-slate-50/60 ring-1 ring-slate-200/60 p-4">
                           <div className="flex items-center gap-2.5 mb-3">
-                            <span className="inline-flex items-center justify-center px-1.5 h-5 rounded-md text-[10.5px] font-mono font-medium bg-indigo-600 text-white">{t.code}</span>
                             <div className="min-w-0">
                               <div className="text-[13px] font-medium tracking-tight text-slate-900 truncate">{t.title}</div>
                               <div className="text-[10.5px] text-slate-400 tracking-tight">{t.standards}</div>

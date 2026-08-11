@@ -74,7 +74,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
             <span className="text-[10px] text-slate-400 tabular-nums ml-auto shrink-0">{task.done}/{task.total}</span>
           </div>
           <div className={`text-[12px] tracking-tight truncate mt-0.5 ${onThisTask ? "text-indigo-700 font-medium" : locked ? "text-slate-400" : "text-slate-800"}`}>
-            <span className="font-mono text-[10px] text-slate-400 mr-1">{task.code}</span>{meta?.name ?? task.title}
+            {meta?.name ?? task.title}
           </div>
           {nextDue && (() => { const c = dueChip(nextDue); return (
             <span className={`inline-flex items-center gap-1 h-[15px] px-1.5 mt-1 rounded text-[9px] font-medium ring-1 ${c.cls}`}>

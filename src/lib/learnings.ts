@@ -2,7 +2,6 @@
  * Per-user learnings tree + progress (authed). Mirrors the FastAPI LearningsOut / ProgressOut.
  */
 import { api } from "./api";
-import { currentDataset } from "./task-bundle";
 
 export type TaskStatus = "not-started" | "in-progress" | "complete" | "locked" | "upcoming" | "active";
 
@@ -95,9 +94,8 @@ export interface Progress {
 }
 
 export const learningsApi = {
-  // `dataset` picks which curriculum the tree is grouped by — the live 4 organisations or the
-  // workbook's 8. Temporary, alongside the switch in task-bundle.ts.
-  get: (program: string) =>
-    api.get<Learnings>("/me/learnings", { query: { program, dataset: currentDataset() } }),
+  // The tree is grouped by the organisation each task is assigned to for THIS learner, so the
+  // response is per-user — the backend derives it, the client just asks for the program.
+  get: (program: string) => api.get<Learnings>("/me/learnings", { query: { program } }),
   progress: (program: string) => api.get<Progress>("/me/progress", { query: { program } }),
 };

@@ -157,7 +157,7 @@ function ReportTask({ row, defaultOpen }: { row: ReportRow; defaultOpen?: boolea
   return (
     <Card pad={false} className="transition-all duration-300 hover:ring-indigo-200/70">
       <button onClick={() => setOpen((o) => !o)} className="focus-ring w-full text-left p-4 flex items-center gap-3 rounded-2xl">
-        <span className={`shrink-0 inline-flex items-center justify-center px-1.5 h-6 rounded-md text-[11px] font-mono font-medium ${active ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"}`}>{row.code}</span>
+        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${active ? "bg-indigo-600" : "bg-slate-300"}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[14px] font-semibold tracking-tight text-slate-900">{row.title}</span>

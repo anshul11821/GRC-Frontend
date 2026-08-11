@@ -232,7 +232,6 @@ function TaskPill({ row, active, onClick }: { row: Row; active: boolean; onClick
     <button onClick={onClick}
       className={`text-left rounded-lg px-3 py-2 ring-1 transition-all ${active ? "bg-white ring-indigo-300 shadow-[0_4px_14px_-6px_rgba(99,102,241,0.3)]" : "bg-white/60 ring-slate-200/60 hover:bg-white hover:ring-slate-300"}`}>
       <div className="flex items-center gap-1.5 mb-0.5">
-        <span className="text-[10px] font-mono text-slate-400">{row.code}</span>
         <span className={`w-1 h-1 rounded-full ${LRN_TONE[row.standardTone].bar}`} />
         <span className={`text-[10px] font-medium ${LRN_TONE[row.standardTone].text}`}>{row.standardLabel}</span>
         <span className={`ml-auto w-1.5 h-1.5 rounded-full ${dot}`} title={statusChip(row.status).label} />
@@ -265,8 +264,7 @@ function ControlDetail({ row }: { row: Row }) {
           <span className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] font-medium ${t.soft} ${t.text} ring-1 ${t.ring}`}>
             <Icon name={icon} size={12} />{row.category}
           </span>
-          <span className="font-mono text-[11px] text-slate-400">{row.code}</span>
-          {row.org && <span className="text-[11px] text-slate-400 tracking-tight">· {row.org}</span>}
+          {row.org && <span className="text-[11px] text-slate-400 tracking-tight">{row.org}</span>}
           <span className={`ml-auto px-2 py-0.5 rounded-full text-[10.5px] font-medium ring-1 tracking-tight ${statusChip(row.status).cls}`}>{statusChip(row.status).label}</span>
         </div>
         <h3 className="text-[21px] font-semibold tracking-[-0.02em] text-slate-900 leading-tight">{row.name}</h3>

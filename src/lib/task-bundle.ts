@@ -29,33 +29,17 @@ export interface TaskBundle {
 
 const cache = new Map<string, Promise<TaskBundle>>();
 
-// Which curriculum dataset the backend serves: the live 4-organisation content, or "v2", the
-// 8-organisation Word/Excel rebuild. Temporary, so it lives in localStorage rather than in
-// the user record — switching affects only this browser.
-// ponytail: delete this and the switcher once one dataset wins.
-const DATASET_KEY = "grc-dataset";
-
-export function currentDataset(): "live" | "v2" {
-  if (typeof window === "undefined") return "live";
-  return localStorage.getItem(DATASET_KEY) === "v2" ? "v2" : "live";
-}
-
-export function setDataset(next: "live" | "v2"): void {
-  localStorage.setItem(DATASET_KEY, next);
-  cache.clear(); // bundles are dataset-specific — drop them or the old one sticks
-  window.location.reload();
-}
-
+// The bundle the backend returns is rendered into this learner's own organisation and scope
+// objects, so it is per-user content on a per-user session — caching it by task code alone is
+// still correct, and it is dropped when the tab goes.
 export function fetchTaskBundle(taskCode: string): Promise<TaskBundle> {
-  const dataset = currentDataset();
-  const key = `${dataset}/${taskCode}`;
-  let p = cache.get(key);
+  let p = cache.get(taskCode);
   if (!p) {
-    p = api.get<TaskBundle>(`/me/task-content/${taskCode}?dataset=${dataset}`).catch((err) => {
-      cache.delete(key); // don't cache failures — allow a retry
+    p = api.get<TaskBundle>(`/me/task-content/${taskCode}`).catch((err) => {
+      cache.delete(taskCode); // don't cache failures — allow a retry
       throw err;
     });
-    cache.set(key, p);
+    cache.set(taskCode, p);
   }
   return p;
 }

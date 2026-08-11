@@ -540,7 +540,7 @@ export default function ActivityWorkspace() {
       <div className="mb-5 flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <Link href="/app/learnings" className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-2">
-            <Icon name="chevronLeft" size={14} /> {activity.taskCode} · {activity.taskTitle}
+            <Icon name="chevronLeft" size={14} /> {activity.taskTitle}
           </Link>
           <div className="flex items-start gap-3">
             <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold shrink-0 mt-0.5">{activity.code}</span>
@@ -707,7 +707,7 @@ export default function ActivityWorkspace() {
               </span>
               {nextStepId ? (
                 <Link href={`/app/desk/${nextStepId}`} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
-                  Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
+                  {nextTaskCode && nextTaskCode !== activity.taskCode ? "Next task" : "Next step"} <Icon name="arrowRight" size={15} />
                 </Link>
               ) : (
                 <Link href="/app/desk" className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-50">
@@ -913,7 +913,7 @@ export default function ActivityWorkspace() {
               </div>
               {nextStepId ? (
                 <Link href={`/app/desk/${nextStepId}`} onClick={() => setFeedbackOpen(false)} className="focus-ring inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold tracking-tight no-underline shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
-                  Next step{nextTaskCode && nextTaskCode !== activity.taskCode ? ` · ${nextTaskCode}` : ""} <Icon name="arrowRight" size={15} />
+                  {nextTaskCode && nextTaskCode !== activity.taskCode ? "Next task" : "Next step"} <Icon name="arrowRight" size={15} />
                 </Link>
               ) : (
                 <Link href="/app/desk" onClick={() => setFeedbackOpen(false)} className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-white ring-1 ring-slate-200/80 text-slate-700 text-[13px] font-semibold tracking-tight no-underline hover:bg-slate-50">

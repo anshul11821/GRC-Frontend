@@ -129,6 +129,12 @@ export interface Card {
   menteeRotation: string;
   orgName: string;
   orgHeadOffice: string;
+  // The learner's variant setting. The gate checks are org-agnostic, but the reviewer still has
+  // to know which organisation, asset and framing produced the work in front of them.
+  scopeAsset: string;
+  scopeVendor: string;
+  analyticalLens: string;
+  deliverableFormat: string;
   revision: number;
   submittedAt: string;
   blocks: Block[];

@@ -187,10 +187,10 @@ function CardBody() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden">
           <Meta label="Mentee" value={card.menteeName} sub={card.menteeRotation} />
-          <Meta label="Organisation" value={card.orgName} />
-          <Meta label="Head office" value={card.orgHeadOffice || "—"} />
-          <Meta label="Artefact" value={card.artefact} />
-          <Meta label="Output ID" value={card.outputId} mono />
+          <Meta label="Organisation" value={card.orgName} sub={card.orgHeadOffice} />
+          <Meta label="In scope" value={card.scopeAsset || "—"} sub={card.scopeVendor} />
+          <Meta label="Organised" value={card.analyticalLens || "—"} />
+          <Meta label="Artefact" value={card.artefact} sub={card.deliverableFormat} />
           <Meta label="Reviewed by" value={card.reviewerRole} sub={`NICE ${card.reviewerRoleNice}`} />
         </div>
       </div>
