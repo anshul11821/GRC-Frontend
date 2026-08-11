@@ -199,6 +199,22 @@ export default function WaitlistPage() {
                 {copy.title}
               </h1>
               <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">{copy.body}</p>
+              {audience === "student" && (
+                <div className="mt-5 rounded-xl bg-slate-50/80 ring-1 ring-slate-200/70 px-4 py-3.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[30px] font-semibold tracking-[-0.03em] tabular-nums leading-none text-slate-900">$250</span>
+                      <span className="text-[12.5px] font-semibold text-slate-400">USD</span>
+                    </div>
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 bg-white ring-1 ring-slate-200/70 rounded-full px-2 py-1">
+                      GRC 101
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11.5px] text-slate-500 tracking-tight">
+                    One-time payment · full track access · no subscription
+                  </p>
+                </div>
+              )}
 
               {(error || li.error) && (
                 <div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">

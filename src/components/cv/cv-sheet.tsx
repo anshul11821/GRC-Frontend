@@ -2,8 +2,8 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Bar } from "@/components/ui/primitives";
 import { DVerb } from "@/components/ui/dverb";
 import { VERB_LIST } from "@/lib/verbs";
-import { SOFT_TONES } from "@/lib/tones";
 import { BADGES } from "@/lib/badges";
+import { BadgeMedal } from "@/components/app/badge-medal";
 import type { Cv } from "@/lib/cv";
 
 const STD_TONES: Record<string, { chip: string; dot: string }> = {
@@ -97,15 +97,15 @@ export function CvSheet({ cv }: { cv: Cv }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {earnedBadges.map((b) => (
               <div key={b.id} className="relative rounded-xl bg-white ring-1 ring-slate-200/70 p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center"><Icon name="check" size={10} strokeWidth={3.5} /></div>
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ring-1 mb-2.5 ${SOFT_TONES[b.tone] ?? SOFT_TONES.indigo}`}><Icon name={b.icon} size={20} /></div>
+                <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center z-10"><Icon name="check" size={10} strokeWidth={3.5} /></div>
+                <BadgeMedal badge={b} className="w-full mb-2.5" />
                 <div className="text-[12.5px] font-semibold tracking-tight text-slate-900 leading-tight">{b.name}</div>
                 <div className="text-[10.5px] text-slate-400 tracking-tight leading-tight mt-0.5">{b.blurb}</div>
               </div>
             ))}
             {lockedBadges.map((b) => (
               <div key={b.id} className="rounded-xl bg-slate-50/60 ring-1 ring-dashed ring-slate-200 p-3.5">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center ring-1 bg-slate-100 text-slate-300 ring-slate-200/60 mb-2.5"><Icon name={b.icon} size={20} /></div>
+                <BadgeMedal badge={b} state="locked" className="w-full mb-2.5" />
                 <div className="text-[12.5px] font-semibold tracking-tight text-slate-400 leading-tight">{b.name}</div>
                 <div className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-slate-400 font-medium"><Icon name="history" size={10} /> In progress</div>
               </div>

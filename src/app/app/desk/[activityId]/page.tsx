@@ -22,6 +22,7 @@ import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { MentorDecision } from "@/components/app/mentor-decision";
+import { ModelAnswer } from "@/components/app/model-answer";
 import { invalidateQuery } from "@/lib/use-query";
 import type { TaskReference } from "@/lib/taskmeta";
 
@@ -585,6 +586,22 @@ export default function ActivityWorkspace() {
           )}
         </div>
       </div>
+
+      {/* Stuck with no way forward — the reference answer goes in the page body, not behind the
+          feedback drawer. Someone who cannot submit needs to see why and what to do next without
+          hunting for it. */}
+      {activity.modelAnswer && (
+        <div className="mb-5">
+          <ModelAnswer
+            answer={activity.modelAnswer}
+            onReleased={() => {
+              invalidateQuery("mentor-feedback");
+              deskApi.activity(activityId).then(setActivity);
+              void refreshTree();
+            }}
+          />
+        </div>
+      )}
 
       {/* brief — objective + what-to-do side by side, collapsible to reclaim space */}
       {hasBrief && (

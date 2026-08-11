@@ -34,9 +34,9 @@ const PROGRAM: { title: string; icon: IconName; tone: string; body: string }[] =
 ];
 
 const TRACKS = [
-  { code: "GRC 101", title: "Foundations", years: "GRC Analyst · 0–2 years", body: "Maps control frameworks (e.g. NIST, ISO 27001) to business processes, conducts risk and compliance assessments, and helps prepare audit evidence." },
-  { code: "GRC 301", title: "Advanced", years: "GRC Specialist · 2–4 years", body: "Leads risk assessments and assurance engagements across frameworks, manages third-party risk, and drives remediation to closure." },
-  { code: "GRC 501", title: "Leadership", years: "GRC Leader · 5+ years", body: "Sets GRC strategy, designs the operating model, and reports risk posture to the board and executive leadership." },
+  { code: "GRC 101", title: "Foundations", years: "GRC Analyst · 0–2 years", price: "$250", body: "Maps control frameworks (e.g. NIST, ISO 27001) to business processes, conducts risk and compliance assessments, and helps prepare audit evidence." },
+  { code: "GRC 301", title: "Advanced", years: "GRC Specialist · 2–4 years", price: null, body: "Leads risk assessments and assurance engagements across frameworks, manages third-party risk, and drives remediation to closure." },
+  { code: "GRC 501", title: "Leadership", years: "GRC Leader · 5+ years", price: null, body: "Sets GRC strategy, designs the operating model, and reports risk posture to the board and executive leadership." },
 ];
 
 const FAQS: FaqEntry[] = [
@@ -190,6 +190,17 @@ function Tracks() {
                 <div className="text-[11.5px] text-indigo-200/90 tracking-tight mt-0.5">{t.years}</div>
                 <p className="mt-3 text-[13px] text-indigo-50/85 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{t.body}</p>
               </div>
+              {t.price && (
+                <div className="relative mt-6 pt-5 border-t border-white/10">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[34px] font-semibold tracking-[-0.03em] tabular-nums leading-none">{t.price}</span>
+                    <span className="text-[13px] font-semibold text-indigo-200/80">USD</span>
+                  </div>
+                  <p className="mt-1.5 text-[11.5px] text-indigo-200/80 tracking-tight">
+                    One-time payment · full track access
+                  </p>
+                </div>
+              )}
               {t.code === "GRC 101" ? (
                 <Link href={`/tracks/${t.code.toLowerCase().replace(/\s+/g, "-")}`} className="focus-ring relative mt-5 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-[13px] font-semibold tracking-tight no-underline transition-colors">
                   Know more <Icon name="arrowRight" size={14} />

@@ -64,6 +64,19 @@ export interface MentorFeedback {
   decidedAt: string;
 }
 
+/**
+ * The reference answer. Present only when the learner can no longer reach it themselves — an
+ * escalated gate, or attempts exhausted without a pass. Never sent in any other state.
+ */
+export interface ModelAnswer {
+  reason: "attempts_exhausted" | "escalated";
+  artefact: string;
+  acceptance: string;
+  worked: string;
+  /** Escalated only: acknowledging this releases the step. Null when nothing is owed. */
+  acknowledgeDecisionId: number | null;
+}
+
 export interface ActivityDetail {
   id: string;
   code: string;
@@ -80,6 +93,7 @@ export interface ActivityDetail {
    * AI's. Do not branch progression on this.
    */
   mentorReview: MentorReview | null;
+  modelAnswer: ModelAnswer | null;
   attemptsUsed: number;
   attemptsRemaining: number;
   maxAttempts: number;
