@@ -38,15 +38,16 @@ export function Nav({ active }: { active?: string }) {
           ))}
         </nav>
         <div className="flex items-center gap-2.5">
-          {/* Staff entry point. Deliberately rendered in waitlist mode too — mentors review and
-              calibrate before the learner product launches (see proxy.ts, which lets /mentor
-              through the gate). Styled as a quiet secondary so it never competes with the CTA. */}
-          <Link
-            href="/mentor"
-            className="focus-ring hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg ring-1 ring-slate-200/70 bg-white text-[13px] font-medium text-slate-600 tracking-tight no-underline hover:text-slate-900 hover:ring-slate-300 transition-colors"
-          >
-            <Icon name="shield" size={13} className="text-indigo-500" /> Mentor sign-in
-          </Link>
+          {/* Staff entry point, hidden in waitlist mode. Styled as a quiet secondary so it never
+              competes with the CTA. (/mentor itself stays reachable via proxy.ts.) */}
+          {!WAITLIST_MODE && (
+            <Link
+              href="/mentor"
+              className="focus-ring hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg ring-1 ring-slate-200/70 bg-white text-[13px] font-medium text-slate-600 tracking-tight no-underline hover:text-slate-900 hover:ring-slate-300 transition-colors"
+            >
+              <Icon name="shield" size={13} className="text-indigo-500" /> Mentor sign-in
+            </Link>
+          )}
           {!WAITLIST_MODE && (
             <Link href="/signin" className="focus-ring rounded-md px-1 py-0.5 hidden sm:inline text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
               Sign in
@@ -70,7 +71,7 @@ export function SiteFooter() {
     // The nav's mentor button is hidden below `sm` along with the rest of the nav, so the footer
     // carries the only entry point a mentor on a phone will find.
     WAITLIST_MODE
-      ? ["Access", [["Enroll now", "/waitlist"], ["Universities", "/waitlist"], ["Mentor sign-in", "/mentor"]]]
+      ? ["Access", [["Enroll now", "/waitlist"], ["Universities", "/waitlist"]]]
       : ["Account", [["Sign in", "/signin"], ["Create account", "/signup"], ["Mentor sign-in", "/mentor"]]],
   ];
   return (
