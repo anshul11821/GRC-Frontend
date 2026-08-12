@@ -207,9 +207,13 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
 
   return (
     <div data-tour={state === "active" ? "desk-org" : undefined} className={`rounded-xl ${contextActive ? "ring-1 ring-indigo-200 bg-indigo-50/60" : state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
+      {/* Both branches need `min-w-0`: without it a flex child cannot shrink past its content,
+          `truncate` on the org name never engages, and a long name widens the whole tree into a
+          horizontal scrollbar. The locked branch only started rendering once UNLOCK_ALL_TASKS
+          was turned off, which is why it went unnoticed. */}
       <div className="flex items-center gap-1 pr-1.5">
         {locked ? (
-          <div title={lockedHint} className="flex-1 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
+          <div title={lockedHint} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
         ) : (
           <Link href={`/app/desk/org/${org.id}`} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl no-underline hover:bg-slate-100/50 transition-colors">{header}</Link>
         )}

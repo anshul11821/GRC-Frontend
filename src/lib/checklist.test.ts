@@ -102,4 +102,22 @@ assert.equal(isFilled(false), false);
 assert.equal(isFilled([{ a: "", b: "" }]), false);
 assert.equal(isFilled([{ a: "", b: "x" }]), true);
 
+// A lifted array can be SPARSE or hold nulls — the RUA gate writes its per-question entries by
+// index, so unanswered questions leave holes, and the workspace itself reads them with `?.`.
+// Indexing one of those threw "Cannot read properties of null (reading 'passed')" and took the
+// whole Working Desk down with a runtime error.
+const sparse: unknown[] = [];
+sparse[2] = { passed: true, attempts: 1 };
+for (const rows of [sparse, [null, { passed: true }], [undefined, { passed: false }], [{ passed: true }, "x"]]) {
+  assert.doesNotThrow(
+    () => checklistStates(VERBS.record.layer1, { study: rows, ready: false }),
+    `sparse/null rows must not throw: ${JSON.stringify(rows)}`,
+  );
+}
+// …and a real row among the holes still counts as content.
+assert.ok(
+  checklistStates(VERBS.record.layer1, { rows: [null, { name: "CRM", owner: "IT Ops" }], ready: false }).some(Boolean),
+  "a populated row alongside nulls should still tick something",
+);
+
 console.log("checklist: ok");

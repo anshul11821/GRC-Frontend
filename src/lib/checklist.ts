@@ -59,8 +59,14 @@ function valueAtoms(values: Record<string, unknown>): Atom[] {
   const atoms: Atom[] = [];
   for (const [key, v] of Object.entries(values)) {
     if (CONTROL_KEYS.has(key)) continue; // grading flag, not a deliverable field
-    const rows = Array.isArray(v) ? v : [];
-    const cols = new Set(rows.flatMap((r) => (r && typeof r === "object" && !Array.isArray(r) ? Object.keys(r) : [])));
+    // Only object rows can carry columns. Filtered once and reused, because collecting the column
+    // names and reading them back have to agree: a lifted array can be sparse or hold nulls (the
+    // RUA gate's per-question entries are written by index, and the workspace itself reads them
+    // with `?.`), and indexing one of those blew up with "Cannot read properties of null".
+    const rows = (Array.isArray(v) ? v : []).filter(
+      (r): r is Record<string, unknown> => !!r && typeof r === "object" && !Array.isArray(r),
+    );
+    const cols = new Set(rows.flatMap((r) => Object.keys(r)));
     // A table gets column atoms only. Its bare key would count as filled off any one column, and
     // workspaces put the given data (finding text, asset names) in the same rows as the mentee's —
     // so the key alone would tick criteria about columns that are still empty.
@@ -68,7 +74,7 @@ function valueAtoms(values: Record<string, unknown>): Atom[] {
     for (const c of cols)
       atoms.push({
         tokens: `${key} ${c}`.toLowerCase(),
-        filled: rows.some((r) => isFilled((r as Record<string, unknown>)[c])),
+        filled: rows.some((r) => isFilled(r[c])),
       });
   }
   return atoms;
