@@ -475,17 +475,30 @@ export default function ActivityWorkspace() {
   const taskRefs = references.filter((r) => r.group === "task");
   const docRefs = references.filter((r) => r.group !== "task");
 
-  // After a pass the backend marks the next step "current" — find it (from the refreshed tree) to advance.
+  // Where "Next step" goes. Two rules, in order:
+  //  1. the next step of THIS task that isn't locked — so paging forward through a task you have
+  //     already finished walks 1.1 -> 1.2 rather than leaping to the next task;
+  //  2. otherwise the first unlocked incomplete step anywhere ahead — the real "carry on here".
+  // Previously this only ever took each task's FIRST current step and, if that was the step you
+  // were standing on, fell through to the next task entirely.
   let nextStepId: string | null = null;
   let nextTaskCode: string | null = null;
   if (learnings) {
-    for (const o of learnings.orgs) {
-      if (o.status === "locked") continue;
-      for (const p of o.projects) for (const t of p.tasks) {
-        const s = t.steps.find((x) => x.status === "current");
-        if (s && s.id !== activityId) { nextStepId = s.id; nextTaskCode = t.code; break; }
+    const openTasks = learnings.orgs
+      .filter((o) => o.status !== "locked")
+      .flatMap((o) => o.projects.flatMap((p) => p.tasks));
+
+    const here = openTasks.find((t) => t.steps.some((s) => s.id === activityId));
+    if (here) {
+      const i = here.steps.findIndex((s) => s.id === activityId);
+      const within = here.steps.slice(i + 1).find((s) => s.status !== "locked");
+      if (within) { nextStepId = within.id; nextTaskCode = here.code; }
+    }
+    if (!nextStepId) {
+      for (const t of openTasks) {
+        const s = t.steps.find((x) => x.status === "current" && x.id !== activityId);
+        if (s) { nextStepId = s.id; nextTaskCode = t.code; break; }
       }
-      if (nextStepId) break;
     }
   }
 
