@@ -230,7 +230,9 @@ function CardBody() {
               )}
             </TabButton>
           </div>
-          <div className="max-h-[64vh] overflow-y-auto px-6 py-6">
+          {/* No height cap: the submission reads on the page's own scroll. The aside is sticky, so
+              Approve/Disapprove stay in reach however long the deliverable runs. */}
+          <div className="px-6 py-6">
             {tab === "submission" && (
               <div>
                 <TheAsk brief={card.brief} title={card.activityTitle} />
