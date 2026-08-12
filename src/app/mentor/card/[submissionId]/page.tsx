@@ -15,6 +15,7 @@ import {
   mentorApi,
   OUTCOME_LABEL,
   type Block,
+  type Brief,
   type Card,
   type DecisionResult,
   type HistoryEntry,
@@ -28,7 +29,10 @@ export default function MentorCardPage() {
   );
 }
 
-type Tab = "submission" | "inputs" | "grading";
+// Two tabs, not three. The card's job is "here is what they were asked, here is what they sent";
+// everything from the gate register that isn't needed to make that judgement moved behind the
+// second tab so the submission is what opens.
+type Tab = "submission" | "background";
 
 function CardBody() {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -185,13 +189,13 @@ function CardBody() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden">
+        {/* Four facts, not six: the lens and the deliverable format read better in the engagement
+            sentence below, and the reviewer role is already the chip beside the gate id. */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden">
           <Meta label="Mentee" value={card.menteeName} sub={card.menteeRotation} />
           <Meta label="Organisation" value={card.orgName} sub={card.orgHeadOffice} />
           <Meta label="In scope" value={card.scopeAsset || "—"} sub={card.scopeVendor} />
-          <Meta label="Organised" value={card.analyticalLens || "—"} />
           <Meta label="Artefact" value={card.artefact} sub={card.deliverableFormat} />
-          <Meta label="Reviewed by" value={card.reviewerRole} sub={`NICE ${card.reviewerRoleNice}`} />
         </div>
       </div>
 
@@ -211,17 +215,14 @@ function CardBody() {
         </Banner>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-3 items-start">
         <div className="rounded-[14px] border border-[#e6eaf0] bg-white">
           <div className="flex items-center gap-1 border-b border-[#f1f5f9] px-3">
             <TabButton active={tab === "submission"} onClick={() => setTab("submission")}>
               Submission
             </TabButton>
-            <TabButton active={tab === "inputs"} onClick={() => setTab("inputs")}>
-              Inputs it consumed
-            </TabButton>
-            <TabButton active={tab === "grading"} onClick={() => setTab("grading")}>
-              Step activity
+            <TabButton active={tab === "background"} onClick={() => setTab("background")}>
+              Background &amp; history
               {card.history.length > 0 && (
                 <span className="ml-1.5 inline-flex items-center h-[15px] px-1 rounded bg-slate-100 text-slate-500 text-[9.5px] font-semibold align-middle">
                   {card.history.length}
@@ -230,28 +231,38 @@ function CardBody() {
             </TabButton>
           </div>
           <div className="max-h-[64vh] overflow-y-auto px-6 py-6">
-            {tab === "submission" && <Blocks blocks={card.blocks} />}
-            {tab === "inputs" && (
+            {tab === "submission" && (
               <div>
-                <p className="text-[12.5px] text-slate-500 mb-3">
-                  What this step consumed, per the gate register.
-                </p>
-                <ul className="space-y-1.5">
-                  {card.priorOutputs.map((input) => (
-                    <li key={input} className="rounded-lg border border-[#e6eaf0] px-3 py-2 text-[12.5px] text-slate-700">
-                      {input}
-                    </li>
-                  ))}
-                </ul>
+                <TheAsk brief={card.brief} title={card.activityTitle} />
+                <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-3">
+                  What they submitted · revision {card.revision} · {formatSubmitted(card.submittedAt)}
+                </div>
+                <Blocks blocks={card.blocks} />
               </div>
             )}
-            {tab === "grading" && (
+            {tab === "background" && (
               <div className="space-y-4">
-                <Field label="Activity">{card.activityTitle}</Field>
-                <Field label="Acceptance">{card.acceptance}</Field>
-                <Field label="Submitted">
-                  {formatSubmitted(card.submittedAt)} · revision {card.revision}
+                {/* The header carries the task code; this is the only place the task is named. */}
+                <Field label="Task">
+                  {card.taskCode} — {card.taskName}
                 </Field>
+                <Field label="Gate acceptance">{card.acceptance}</Field>
+                <div>
+                  <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-1">
+                    Inputs it consumed
+                  </div>
+                  <ul className="text-[12.5px] text-slate-700 leading-relaxed">
+                    {card.priorOutputs.map((input) => (
+                      <li key={input} className="flex gap-2">
+                        <span className="text-slate-300 mt-1.5 shrink-0">•</span>
+                        <span>{input}</span>
+                      </li>
+                    ))}
+                    {card.priorOutputs.length === 0 && (
+                      <li className="text-slate-400">Nothing — this is the first step of the task.</li>
+                    )}
+                  </ul>
+                </div>
                 {card.grader.feedback && <Field label="Agent feedback">{card.grader.feedback}</Field>}
                 <div>
                   <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2">
@@ -366,6 +377,44 @@ function CardBody() {
             </button>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+/** The prompt the mentee actually read, above their answer. Without it the reviewer judges against
+ *  the gate register's org-agnostic wording while the mentee worked a rotated engagement — the
+ *  most common way a correct submission gets disapproved. The acceptance points collapse because
+ *  they are a re-read, not something needed on every card. */
+function TheAsk({ brief, title }: { brief?: Brief; title: string }) {
+  // Optional on purpose: backend and frontend deploy separately, so a card served by an older
+  // backend has no brief at all. Drop the panel rather than take the console down.
+  const { engagement = "", objective = "", whatToDo = [] } = brief ?? {};
+  if (!engagement && !objective) return null;
+  return (
+    <div className="rounded-xl border border-[#e0e7ff] bg-[#f6f7ff] px-4 py-3.5 mb-5">
+      <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
+        What the mentee was asked
+      </div>
+      <p className="text-[12.5px] text-slate-800 leading-relaxed">{objective || title}</p>
+      {engagement && (
+        <p className="text-[11.5px] text-slate-500 leading-relaxed mt-2">{engagement}</p>
+      )}
+      {whatToDo.length > 0 && (
+        <details className="mt-2 group">
+          <summary className="cursor-pointer list-none text-[11.5px] font-medium text-indigo-700 hover:text-indigo-900">
+            <span className="group-open:hidden">Show the {whatToDo.length} acceptance points they saw</span>
+            <span className="hidden group-open:inline">Hide acceptance points</span>
+          </summary>
+          <ul className="mt-1.5 space-y-1">
+            {whatToDo.map((item, i) => (
+              <li key={i} className="flex gap-2 text-[11.5px] text-slate-600 leading-snug">
+                <span className="text-indigo-300 mt-1 shrink-0">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );

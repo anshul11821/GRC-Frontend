@@ -102,6 +102,16 @@ export interface HistoryEntry {
   withdrawn: boolean;
 }
 
+/** The prompt the mentee actually read on the Working Desk, rendered into their own organisation.
+ *  Every learner rotates through a different org, asset and framing, so the gate register's
+ *  org-agnostic text is not what they were asked to do. */
+export interface Brief {
+  /** Task objective + engagement clause — organisation, scenario, lens, deliverable format. */
+  engagement: string;
+  objective: string;
+  whatToDo: string[];
+}
+
 export interface Card {
   submissionId: number;
   gateId: string;
@@ -114,6 +124,8 @@ export interface Card {
   taskCode: string;
   taskName: string;
   activityTitle: string;
+  /** Absent when served by a backend older than the brief — the card degrades, it does not break. */
+  brief?: Brief;
   why: string;
   checks: string[];
   acceptance: string;
