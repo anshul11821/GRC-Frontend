@@ -39,13 +39,17 @@ export function Nav({ active }: { active?: string }) {
         </nav>
         <div className="flex items-center gap-2.5">
           {/* Staff entry point, hidden in waitlist mode. Styled as a quiet secondary so it never
-              competes with the CTA. (/mentor itself stays reachable via proxy.ts.) */}
+              competes with the CTA. (/mentor itself stays reachable via proxy.ts.)
+              ponytail: below sm the label drops and it renders as a square shield — the header
+              can't fit three labelled controls on a phone, but the button itself must stay. */}
           {!WAITLIST_MODE && (
             <Link
               href="/mentor"
-              className="focus-ring hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg ring-1 ring-slate-200/70 bg-white text-[13px] font-medium text-slate-600 tracking-tight no-underline hover:text-slate-900 hover:ring-slate-300 transition-colors"
+              aria-label="Mentor sign-in"
+              className="focus-ring inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto sm:px-3 rounded-lg ring-1 ring-slate-200/70 bg-white text-[13px] font-medium text-slate-600 tracking-tight no-underline hover:text-slate-900 hover:ring-slate-300 transition-colors"
             >
-              <Icon name="shield" size={13} className="text-indigo-500" /> Mentor sign-in
+              <Icon name="shield" size={13} className="text-indigo-500" />
+              <span className="hidden sm:inline">Mentor sign-in</span>
             </Link>
           )}
           {!WAITLIST_MODE && (
@@ -68,8 +72,7 @@ export function SiteFooter() {
     // Pre-launch, the track pages and auth routes are unreachable — don't link into a redirect.
     ["Programme", [["GRC 101", WAITLIST_MODE ? null : "/tracks/grc-101"], ["GRC 301 — coming soon", null], ["GRC 501 — coming soon", null]]],
     ["Explore", [["Industries", "/#industries"], ["How it works", "/#program"], ["Tracks", "/#tracks"], ["FAQ", "/#faq"], ["Work with us", "/work-with-us"]]],
-    // The nav's mentor button is hidden below `sm` along with the rest of the nav, so the footer
-    // carries the only entry point a mentor on a phone will find.
+    // On a phone the nav's mentor button is icon-only, so this is the labelled entry point.
     WAITLIST_MODE
       ? ["Access", [["Enroll now", "/waitlist"], ["Universities", "/waitlist"]]]
       : ["Account", [["Sign in", "/signin"], ["Create account", "/signup"], ["Mentor sign-in", "/mentor"]]],
