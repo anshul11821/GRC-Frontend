@@ -18,17 +18,16 @@ export const metadata: Metadata = {
 // mentor account is validated against — keep the titles and NICE codes identical or an approved
 // applicant cannot be given the role they applied for. Load figures are derived from the gate
 // register (backend/_seed/grc101_gates.json); see docs/MENTOR_REVIEW.md.
-export const ROLES: { title: string; code: string; duty: string; gates: string; hours: string }[] = [
-  { title: "Compliance Manager", code: "OG-AUD-001", gates: "16 gates", hours: "3.3 h", duty: "Owns regulatory obligations, control mapping and compliance status reporting; runs internal compliance assessments." },
-  { title: "Information Security Auditor", code: "OG-AUD-002", gates: "10 gates", hours: "2.1 h", duty: "Plans and performs control testing; owns workpaper standards, evidence quality and audit readiness." },
-  { title: "Policy & Governance Analyst", code: "OG-PLA-001", gates: "10 gates", hours: "2.0 h", duty: "Drafts, reviews and publishes cybersecurity and data-privacy policy; owns the policy register and the governance document set." },
-  { title: "Data Protection Officer", code: "OG-PRI-001", gates: "6 gates", hours: "1.4 h", duty: "Statutory privacy role; owns RoPA, DPIA disposition, lawful basis and supervisory-authority interface. Decides the DPIA screening, retention-period and privacy-notice gates." },
-  { title: "Cybersecurity Program Manager", code: "OG-PMA-001", gates: "6 gates", hours: "1.3 h", duty: "Owns programme roadmaps, charters, resourcing and delivery governance." },
-  { title: "Security Awareness & Training Specialist", code: "OG-CUR-001", gates: "6 gates", hours: "1.1 h", duty: "Owns awareness content, delivery quality, knowledge assessment and training evidence." },
-  { title: "Cyber Risk Manager", code: "OG-RIS-001", gates: "4 gates", hours: "0.9 h", duty: "Owns the risk framework, scoring anchors, treatment decisions and the risk register review cycle." },
-  { title: "Vendor / Third-Party Risk Analyst", code: "OG-SCRM-001", gates: "4 gates", hours: "0.9 h", duty: "Owns supplier assessment, sub-processor governance and third-party contractual security terms." },
-  { title: "Business Continuity & Resilience Analyst", code: "OG-MAP-001", gates: "4 gates", hours: "0.8 h", duty: "Owns business impact analysis, RTO/RPO determination and ICT continuity documentation." },
-  { title: "Incident Response & Crisis Manager", code: "PD-IRM-001", gates: "4 gates", hours: "0.8 h", duty: "Owns incident procedure design, exercise facilitation and post-incident learning." },
+export const ROLES: { title: string; code: string; niceTitle: string; duty: string; gates: string; reviewed: string }[] = [
+  { title: "GRC Programme Manager", code: "OG-PMA-001", niceTitle: "Cybersecurity Program Manager", gates: "18 gates · 9 tasks", reviewed: "11", duty: "Owns programme roadmaps, charters, resourcing and delivery governance." },
+  { title: "Compliance Manager", code: "OG-AUD-001", niceTitle: "Compliance Manager", gates: "10 gates · 5 tasks", reviewed: "6", duty: "Owns regulatory obligations, control mapping and compliance status reporting; runs internal compliance assessments." },
+  { title: "Internal Audit Lead", code: "OG-AUD-002", niceTitle: "Information Security Auditor", gates: "10 gates · 5 tasks", reviewed: "5", duty: "Plans and performs control testing; owns workpaper standards, evidence quality and audit readiness." },
+  { title: "Policy & Governance Analyst", code: "OG-PLA-001", niceTitle: "Policy & Governance Analyst", gates: "8 gates · 4 tasks", reviewed: "5", duty: "Drafts, reviews and publishes cybersecurity and data-privacy policy; owns the policy register and the governance document set." },
+  { title: "Privacy Compliance Analyst", code: "OG-PRI-002", niceTitle: "Privacy Compliance Analyst", gates: "6 gates · 3 tasks", reviewed: "3", duty: "Owns the record of processing, DPIA screening, lawful basis and the privacy notice — the gates where a wrong call is a statutory one." },
+  { title: "Cyber Risk Manager", code: "OG-RIS-001", niceTitle: "Cyber Risk Manager", gates: "6 gates · 3 tasks", reviewed: "3", duty: "Owns the risk framework, scoring anchors, treatment decisions and the risk register review cycle." },
+  { title: "Business Continuity Coordinator", code: "OG-MAP-001", niceTitle: "Business Continuity & Resilience Analyst", gates: "4 gates · 2 tasks", reviewed: "3", duty: "Owns business impact analysis, RTO/RPO determination and ICT continuity documentation." },
+  { title: "Security Awareness Lead", code: "OG-CUR-001", niceTitle: "Security Awareness & Training Specialist", gates: "4 gates · 2 tasks", reviewed: "2", duty: "Owns awareness content, delivery quality, knowledge assessment and training evidence." },
+  { title: "Third-Party Risk Analyst", code: "OG-SCRM-001", niceTitle: "Vendor / Third-Party Risk Analyst", gates: "4 gates · 2 tasks", reviewed: "2", duty: "Owns supplier assessment, sub-processor governance and third-party contractual security terms." },
 ];
 
 const DUTIES: { icon: IconName; title: string; body: string }[] = [
@@ -123,7 +122,7 @@ function Positions() {
           <div className="hidden md:grid grid-cols-[1.1fr_0.5fr_0.7fr_1.6fr] gap-6 px-6 py-3.5 bg-slate-900 text-white text-[11px] font-semibold tracking-[0.08em] uppercase">
             <div>Reviewer role</div>
             <div>NICE work role</div>
-            <div>Load per mentee</div>
+            <div>Gates per rotation</div>
             <div>Responsibility that qualifies them</div>
           </div>
           {ROLES.map((r) => (
@@ -131,8 +130,8 @@ function Positions() {
               <div className="text-[14px] font-semibold tracking-tight text-slate-900 leading-snug">{r.title}</div>
               <div className="font-mono text-[12px] text-indigo-600 md:pt-0.5">{r.code}</div>
               <div className="md:pt-0.5">
-                <div className="text-[12.5px] font-medium text-slate-700 tracking-tight">{r.hours}</div>
-                <div className="text-[11.5px] text-slate-400 tracking-tight">{r.gates}</div>
+                <div className="text-[12.5px] font-medium text-slate-700 tracking-tight">{r.gates}</div>
+                <div className="text-[11.5px] text-slate-400 tracking-tight">{r.reviewed} reach a reviewer</div>
               </div>
               <div className="text-[13px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{r.duty}</div>
             </div>

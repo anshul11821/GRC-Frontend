@@ -11,7 +11,7 @@
 import { chromium } from "playwright";
 
 const OUT = "C:/Users/Anshul/AppData/Local/Temp/claude/d--GRC-Mentor/257bcb29-8ea4-493a-baa9-0d2c1417f8d4/scratchpad";
-const EMAIL = "mentor.demo@example.com";
+const EMAIL = process.argv[3] ?? "mentor.demo@example.com";
 const PASSWORD = process.argv[2];
 
 const browser = await chromium.launch();
@@ -38,77 +38,49 @@ console.log("role filter visible:", await page.locator("text=All roles").isVisib
 await page.keyboard.press("j");
 await page.keyboard.press("Enter");
 await page.waitForURL("**/mentor/card/**", { timeout: 30000 });
-await page.waitForSelector("text=What to check", { timeout: 30000 });
+await page.waitForSelector("text=Your checklist", { timeout: 30000 });
 await page.screenshot({ path: `${OUT}/02-card.png`, fullPage: true });
 console.log("card open:", await page.locator("h1").first().innerText());
 
 // 4. tabs
-await page.click("text=Inputs it consumed");
-await page.waitForTimeout(200);
-console.log("inputs tab items:", await page.locator("main ul li").count());
-await page.click("text=Submission");
+// 4. The v3 review IS the checklist: six questions, answered Yes/No. Approve only unlocks once
+// every asked question is answered, and only if none of them failed.
+// Pre-cleared items render 'Reopen', not Yes/No — only the asked ones are answerable.
+const questions = page.locator('[data-check]:has(button:has-text("Yes"))');
+const preCleared = await page.locator('[data-check]:has-text("Pre-cleared")').count();
+const qCount = await questions.count();
+console.log(`checklist: ${qCount} asked, ${preCleared} pre-cleared by the grader`);
 
-// 5. expand the agent grading panel
-await page.click("text=Agent grading");
+// Scope to the decision panel: the (closed) reason sheet also holds a "Confirm Approve" button,
+// which is legitimately disabled and would be measured instead.
+const panel = page.locator("aside");
+const approve = panel.locator('button:has-text("Approve")').first();
+const returnBtn = panel.locator('button:has-text("Return with reasons")').first();
+console.log("approve disabled before answering:", await approve.isDisabled());
+console.log("return disabled with nothing failing:", await returnBtn.isDisabled());
+
+// 5. Answer everything Yes -> approve opens; one No -> return opens instead.
+for (let i = 0; i < qCount; i++) await questions.nth(i).locator('button:has-text("Yes")').click();
 await page.waitForTimeout(250);
-console.log("layer-1 rules shown:", await page.locator("text=Layer 1 — rules").isVisible());
-await page.screenshot({ path: `${OUT}/03-grading.png`, fullPage: true });
+console.log("approve enabled once all answered yes:", !(await approve.isDisabled()));
+console.log("return still disabled with none failing:", await returnBtn.isDisabled());
 
-// 6. hotkey D opens the disapprove sheet; digit 1 toggles reason 1
-await page.keyboard.press("d");
-await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+await questions.first().locator('button:has-text("No")').click();
+await page.waitForTimeout(250);
+console.log("one No -> approve blocked:", await approve.isDisabled());
+console.log("one No -> return enabled:", !(await returnBtn.isDisabled()));
+
+// 6. The failing item carries its own reason and correction into the sheet — the mentor never
+// picks a disapproval from a menu.
+await returnBtn.click();
+await page.waitForSelector('[role="dialog"]:not(.translate-x-full)', { timeout: 10000 });
 await page.waitForTimeout(400);
-console.log("sheet reasons:", await page.locator('[role="dialog"] button:has-text("Mentee sees:")').count());
-console.log("confirm disabled before selecting:", await page.locator('[role="dialog"] button:has-text("Confirm")').isDisabled());
-await page.keyboard.press("1");
-await page.keyboard.press("3");
-await page.waitForTimeout(250);
-await page.screenshot({ path: `${OUT}/04-sheet.png`, fullPage: true });
-const summary = await page.locator('[role="dialog"] >> text=/reason(s)? ·/').first().innerText().catch(() => "(none)");
-console.log("summary line:", summary);
-// Regression guard: escalation is driven by mentor returns at this gate, not by the submission's
-// revision number. This card is on a high revision from grader failures with no mentor return,
-// so it must offer a RETURN. Reading it off `revision` used to make this say "escalate".
-console.log("escalates on revision alone (must be false):", summary.includes("escalate"));
-console.log("confirm enabled after 2 reasons:", !(await page.locator('[role="dialog"] button:has-text("Confirm")').isDisabled()));
-
-// 7. digits typed into the note must NOT toggle reasons
-await page.click('[role="dialog"] textarea');
-await page.keyboard.type("2 assets missing owner");
-await page.waitForTimeout(200);
-const after = await page.locator('[role="dialog"] >> text=/reason(s)? ·/').first().innerText().catch(() => "(none)");
-console.log("summary after typing digits in note:", after);
-console.log("note hotkey suppression ok:", summary === after);
-
-// 8. Esc closes without deciding. The Drawer stays mounted and slides off-screen, so assert on
-// the transform class rather than isVisible().
+const sheet = await page.locator('[role="dialog"]:not(.translate-x-full)').innerText();
+console.log("sheet carries the item's correction:", /correction|mentee/i.test(sheet));
 await page.keyboard.press("Escape");
-await page.waitForTimeout(600);
-const cls = await page.locator('[role="dialog"]').getAttribute("class");
-console.log("sheet slid closed on Esc:", cls.includes("translate-x-full"));
-
-// 9. full decision + undo through the UI
-await page.keyboard.press("a");
 await page.waitForTimeout(500);
-await page.keyboard.press("1");
-await page.waitForTimeout(200);
-await page.click('[role="dialog"] button:has-text("Confirm")');
-await page.waitForSelector("text=/Undo \\(\\d+s\\)/", { timeout: 20000 });
-await page.screenshot({ path: `${OUT}/05-toast.png`, fullPage: true });
-console.log("undo toast:", await page.locator("text=/Undo \\(\\d+s\\)/").first().innerText());
-
-await page.keyboard.press("u");
-const dismissed = await page
-  .waitForFunction(() => !/Undo \(\d+s\)/.test(document.body.innerText), null, { timeout: 15000 })
-  .then(() => true)
-  .catch(() => false);
-console.log("toast dismissed after U:", dismissed);
-
-// 10. the undone card must be back in the queue
-await page.goto("http://localhost:3000/mentor", { waitUntil: "networkidle" });
-await page.waitForSelector("text=Needs your decision", { timeout: 30000 });
-const back = await page.locator('a[href^="/mentor/card/"]').count();
-console.log("cards in queue after undo:", back);
+const cls = await page.locator('[role="dialog"]').last().getAttribute("class");
+console.log("sheet slid closed on Esc:", cls.includes("translate-x-full"));
 
 console.log(errors.length ? "CONSOLE ERRORS:\n" + errors.join("\n") : "no console errors");
 await browser.close();

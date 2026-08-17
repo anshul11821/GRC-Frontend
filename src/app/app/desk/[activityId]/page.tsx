@@ -24,6 +24,8 @@ import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { MentorDecision } from "@/components/app/mentor-decision";
 import { ModelAnswer } from "@/components/app/model-answer";
 import { invalidateQuery } from "@/lib/use-query";
+import { gateSummary, type GateEntry } from "@/lib/gate-summary";
+import type { RuaTask } from "@/lib/rua-tasks";
 import type { TaskReference } from "@/lib/taskmeta";
 
 function ReviewPanel({ review }: { review: Review }) {
@@ -146,18 +148,23 @@ function fieldText(v: unknown, depth = 0): string {
   return String(v);
 }
 
-/** What the mentee actually sent for one submission — every graded field, any verb. */
-function SubmittedFields({ payload }: { payload?: ActivityPayload }) {
-  const entries = Object.entries(payload?.fields ?? {})
-    .filter(([k]) => !CONTROL_KEYS.has(k))
-    .map(([k, v]) => [k, fieldText(v)] as const)
-    .filter(([, t]) => t.trim() !== "");
+/** What the mentee actually sent for one submission — every graded field, any verb.
+ *  The two task-boundary gates lift positional progress arrays that the generic walker renders as
+ *  unlabelled bullets, so they get a purpose-built read-back (lib/gate-summary.ts) instead. */
+function SubmittedFields({ payload, verbId, taskCode, rua }: {
+  payload?: ActivityPayload; verbId: string; taskCode: string; rua?: RuaTask;
+}) {
+  const entries = gateSummary(verbId, payload?.fields ?? {}, taskCode, rua)
+    ?? Object.entries(payload?.fields ?? {})
+      .filter(([k]) => !CONTROL_KEYS.has(k))
+      .map(([k, v]) => [humanKey(k), fieldText(v)] as GateEntry)
+      .filter(([, t]) => t.trim() !== "");
   if (entries.length === 0) return null;
   return (
     <dl className="space-y-2.5">
       {entries.map(([k, text]) => (
         <div key={k}>
-          <dt className="text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-400">{humanKey(k)}</dt>
+          <dt className="text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-400">{k}</dt>
           <dd className="text-[12px] text-slate-700 leading-relaxed tracking-tight whitespace-pre-line mt-0.5">{text}</dd>
         </div>
       ))}
@@ -290,16 +297,14 @@ export default function ActivityWorkspace() {
   }, [activityId]);
 
   // Nothing floats over the page until the deliverable scrolls into view — then the HUD opens
-  // itself, and a manual dismiss is forgotten once you leave the deliverable again.
+  // itself, once. A manual dismiss sticks for the rest of the activity: scrolling out and back used
+  // to clear it, so the HUD kept reappearing over work the mentee had just pushed it off.
   // Re-attaches when the deliverable card mounts (after the activity loads).
   useEffect(() => {
     const el = deliverableRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        setAtDeliverable(entry.isIntersecting);
-        if (!entry.isIntersecting) setCriteriaHidden(false);
-      },
+      ([entry]) => setAtDeliverable(entry.isIntersecting),
       // Thin band right under the sticky header: fires once the "Your deliverable"
       // heading scrolls up to the top of the screen, and stays open while the (tall)
       // card still overlaps the band — i.e. for the rest of the activity.
@@ -904,7 +909,7 @@ export default function ActivityWorkspace() {
                             What you submitted
                           </summary>
                           <div className="px-3 pb-3 pt-2 border-t border-slate-200/70">
-                            <SubmittedFields payload={h.submission.payload} />
+                            <SubmittedFields payload={h.submission.payload} verbId={activity.verb.id} taskCode={activity.taskCode} rua={bundle?.rua} />
                           </div>
                         </details>
                         )}

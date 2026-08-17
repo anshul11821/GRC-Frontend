@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { MentorShell } from "@/components/mentor/shell";
 import { ReasonSheet } from "@/components/mentor/reason-sheet";
 import { UndoToast } from "@/components/mentor/undo-toast";
+import { SubmittedWork } from "@/components/mentor/submitted-work";
 import { ReferenceMaterial } from "@/components/app/reference-material";
 import { ApiError } from "@/lib/api";
 import {
@@ -16,7 +17,6 @@ import {
   itemAsReason,
   mentorApi,
   OUTCOME_LABEL,
-  type Block,
   type Brief,
   type Card,
   type DecisionResult,
@@ -279,10 +279,7 @@ function CardBody() {
             {tab === "submission" && (
               <div>
                 <TheAsk brief={card.brief} title={card.activityTitle} />
-                <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-3">
-                  What they submitted · revision {card.revision} · {formatSubmitted(card.submittedAt)}
-                </div>
-                <Blocks blocks={card.blocks} />
+                <SubmittedWork card={card} />
               </div>
             )}
             {tab === "chain" && <StepChain steps={card.stepChain} feedsInto={card.feedsInto} />}
@@ -524,6 +521,7 @@ function ReviewChecklist({
           return (
             <li
               key={item.id}
+              data-check={item.id}
               className={`rounded-xl border px-3 py-2.5 transition-colors ${
                 answer === "no"
                   ? "border-[#f0c2c2] bg-[#fdecec]"
@@ -880,65 +878,6 @@ function History({ entries }: { entries: HistoryEntry[] }) {
     </div>
   );
 }
-
-function Blocks({ blocks }: { blocks: Block[] }) {
-  return (
-    <div className="space-y-3">
-      {blocks.map((b, i) => {
-        if (b.t === "h")
-          return (
-            <h3 key={i} className="text-[13px] font-semibold text-slate-900 pt-2 first:pt-0">
-              {b.text}
-            </h3>
-          );
-        if (b.t === "p")
-          return (
-            <p key={i} className="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
-              {b.text}
-            </p>
-          );
-        if (b.t === "list")
-          return (
-            <ul key={i} className="space-y-1.5">
-              {(b.items ?? []).map((item, j) => (
-                <li key={j} className="flex gap-2 text-[12.5px] text-slate-700 leading-relaxed">
-                  <span className="text-slate-300 mt-1.5 shrink-0">•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          );
-        return (
-          <div key={i} className="overflow-x-auto rounded-lg border border-[#e6eaf0]">
-            <table className="w-full text-[11.5px] border-collapse">
-              <thead>
-                <tr className="bg-slate-50">
-                  {(b.head ?? []).map((h) => (
-                    <th key={h} className="text-left font-semibold text-slate-600 px-3 py-2 border-b border-[#e6eaf0] whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(b.rows ?? []).map((row, r) => (
-                  <tr key={r} className="border-b border-[#f1f5f9] last:border-0">
-                    {row.map((cell, c) => (
-                      <td key={c} className="px-3 py-2 text-slate-700 align-top">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function GraderPanel({ card }: { card: Card }) {
   const [open, setOpen] = useState(false);
   const g = card.grader;

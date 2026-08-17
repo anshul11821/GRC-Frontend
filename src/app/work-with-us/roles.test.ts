@@ -11,7 +11,7 @@ import { ROLES } from "./page";
 
 const seed = JSON.parse(
   readFileSync(join(import.meta.dirname, "../../../../backend/_seed/grc101_gates.json"), "utf8"),
-) as { roles: { code: string; name: string; nice: string }[]; gates: Record<string, { reviewer_role: string; budget_min: number }> };
+) as { roles: { code: string; name: string; nice: string }[]; gates: Record<string, { reviewer_role: string; task_code: string; tier: string }> };
 
 const pageTitles = ROLES.map((r) => r.title).sort();
 const seedNames = seed.roles.map((r) => r.name).sort();
@@ -23,19 +23,18 @@ for (const role of ROLES) {
 }
 
 // The advertised load has to be the real load, or applicants are recruited on a false prospectus.
+// v3 dropped per-gate time budgets, so the honest figures are gate and task counts plus how many
+// of them actually reach a human — everything else would be invented.
 const gates = Object.values(seed.gates);
 for (const role of ROLES) {
   const mine = gates.filter((g) => g.reviewer_role === role.title);
-  const mins = mine.reduce((n, g) => n + g.budget_min, 0);
-  const advertised = Number(role.hours.replace(/[^\d.]/g, ""));
-  assert.ok(
-    Math.abs(mins / 60 - advertised) < 0.05,
-    `${role.title}: page advertises ${advertised} h, register says ${(mins / 60).toFixed(1)} h`,
-  );
+  const [shownGates, shownTasks] = role.gates.match(/\d+/g)!.map(Number);
+  assert.equal(shownGates, mine.length, `${role.title}: page says ${role.gates}, register has ${mine.length}`);
+  assert.equal(shownTasks, new Set(mine.map((g) => g.task_code)).size, `${role.title}: task count wrong`);
   assert.equal(
-    Number(role.gates.replace(/\D+/g, "")),
-    mine.length,
-    `${role.title}: page says ${role.gates}, register has ${mine.length}`,
+    Number(role.reviewed),
+    mine.filter((g) => g.tier !== "T3").length,
+    `${role.title}: reviewed-gate count wrong`,
   );
 }
 // Every gate is decided by exactly one reviewer — no gate may be left unowned.

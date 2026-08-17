@@ -200,6 +200,12 @@ export interface Card {
   deliverableFormat: string;
   revision: number;
   submittedAt: string;
+  // The mentee's own workspace is replayed read-only on the card, so a mapping table reads as the
+  // table they filled in. `blocks` is the plain-text view and the fallback for a verb with no
+  // bespoke workspace.
+  verbId: string;
+  activityCode: string;
+  payload: { fields?: Record<string, unknown>; notes?: string; attachments?: unknown[] };
   blocks: Block[];
   grader: Grader;
   approve: Reason[];
@@ -251,6 +257,9 @@ export const mentorApi = {
   me: () => api.get<Mentor>("/mentor/me", opts()),
   queue: () => api.get<Queue>("/mentor/queue", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),
+  /** The mentee's rendered task bundle, for replaying the two gate workspaces on the card. */
+  cardTaskContent: (submissionId: number) =>
+    api.get<unknown>(`/mentor/cards/${submissionId}/task-content`, opts()),
   decide: (
     submissionId: number,
     outcome: "approve" | "disapprove",

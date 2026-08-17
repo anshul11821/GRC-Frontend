@@ -10,7 +10,7 @@
 //   TASK_CONTENT[code]         -> bundle.overview
 //   ACTIVITY_CONTENT[code/act] -> bundle.activities[act]
 
-import { useEffect, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useState } from "react";
 import { api, ApiError } from "./api";
 import { isGateVerb } from "./verbs";
 import type { RuaTask } from "./rua-tasks";
@@ -29,17 +29,54 @@ export interface TaskBundle {
 
 const cache = new Map<string, Promise<TaskBundle>>();
 
+/**
+ * Where a bundle comes from. The learner's own gated endpoint by default; the mentor console
+ * swaps in a fetcher that reads the *mentee's* rendered bundle for the card being reviewed, so
+ * the two gate workspaces can be replayed on the review card without a learner token.
+ *
+ * A context rather than a prop because `useTaskBundle` is called inside the workspaces
+ * themselves — threading a fetcher through would mean touching all 24 of them.
+ */
+export interface TaskBundleSource {
+  /** Cache namespace. Two sources may hold different renderings of the same task code. */
+  key: string;
+  fetch: (taskCode: string) => Promise<TaskBundle>;
+}
+
+const LEARNER_SOURCE: TaskBundleSource = {
+  key: "me",
+  fetch: (taskCode) => api.get<TaskBundle>(`/me/task-content/${taskCode}`),
+};
+
+const SourceContext = createContext<TaskBundleSource>(LEARNER_SOURCE);
+
+export function TaskBundleSourceProvider({
+  source,
+  children,
+}: {
+  source: TaskBundleSource;
+  children: React.ReactNode;
+}) {
+  return createElement(SourceContext.Provider, { value: source }, children);
+}
+
 // The bundle the backend returns is rendered into this learner's own organisation and scope
 // objects, so it is per-user content on a per-user session — caching it by task code alone is
 // still correct, and it is dropped when the tab goes.
-export function fetchTaskBundle(taskCode: string): Promise<TaskBundle> {
-  let p = cache.get(taskCode);
+export function fetchTaskBundle(
+  taskCode: string,
+  source: TaskBundleSource = LEARNER_SOURCE,
+): Promise<TaskBundle> {
+  // Namespaced by source: the mentor's copy is rendered into the mentee's organisation and scope
+  // objects, so it must never be served to a learner from the same cache slot, or vice versa.
+  const cacheKey = `${source.key}:${taskCode}`;
+  let p = cache.get(cacheKey);
   if (!p) {
-    p = api.get<TaskBundle>(`/me/task-content/${taskCode}`).catch((err) => {
-      cache.delete(taskCode); // don't cache failures — allow a retry
+    p = source.fetch(taskCode).catch((err) => {
+      cache.delete(cacheKey); // don't cache failures — allow a retry
       throw err;
     });
-    cache.set(taskCode, p);
+    cache.set(cacheKey, p);
   }
   return p;
 }
@@ -86,6 +123,7 @@ export interface TaskBundleState {
 
 /** Fetch (and cache) one task's curriculum bundle. `undefined` taskCode → idle, no fetch. */
 export function useTaskBundle(taskCode: string | undefined): TaskBundleState {
+  const source = useContext(SourceContext);
   const [state, setState] = useState<TaskBundleState>({
     bundle: undefined,
     loading: !!taskCode,
@@ -99,12 +137,12 @@ export function useTaskBundle(taskCode: string | undefined): TaskBundleState {
     }
     let live = true;
     setState((s) => ({ ...s, loading: true, error: null }));
-    fetchTaskBundle(taskCode).then(
+    fetchTaskBundle(taskCode, source).then(
       (bundle) => { if (live) setState({ bundle, loading: false, error: null }); },
       (error) => { if (live) setState({ bundle: undefined, loading: false, error }); },
     );
     return () => { live = false; };
-  }, [taskCode]);
+  }, [taskCode, source]);
 
   return state;
 }
