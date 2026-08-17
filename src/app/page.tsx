@@ -6,6 +6,7 @@ import { Faq, type FaqEntry } from "@/components/landing/faq";
 import { CTA_HREF, Nav, SiteFooter } from "@/components/landing/chrome";
 import { GLOW, SOFT_TONES } from "@/lib/tones";
 import { WAITLIST_MODE } from "@/lib/flags";
+import { FOUNDATION_PRICE } from "@/lib/billing";
 
 // ============ CONTENT (ported from the mockup) ============
 // Industry photos served straight from the Unsplash CDN (sized + cropped via query params).
@@ -34,7 +35,7 @@ const PROGRAM: { title: string; icon: IconName; tone: string; body: string }[] =
 ];
 
 const TRACKS = [
-  { code: "GRC 101", title: "Foundations", years: "GRC Analyst · 0–2 years", price: "$250", body: "Maps control frameworks (e.g. NIST, ISO 27001) to business processes, conducts risk and compliance assessments, and helps prepare audit evidence." },
+  { code: "GRC 101", title: "Foundations", years: "GRC Analyst · 0–2 years", price: FOUNDATION_PRICE, body: "Maps control frameworks (e.g. NIST, ISO 27001) to business processes, conducts risk and compliance assessments, and helps prepare audit evidence." },
   { code: "GRC 301", title: "Advanced", years: "GRC Specialist · 2–4 years", price: null, body: "Leads risk assessments and assurance engagements across frameworks, manages third-party risk, and drives remediation to closure." },
   { code: "GRC 501", title: "Leadership", years: "GRC Leader · 5+ years", price: null, body: "Sets GRC strategy, designs the operating model, and reports risk posture to the board and executive leadership." },
 ];

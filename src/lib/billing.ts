@@ -5,7 +5,7 @@
 import type { IconName } from "@/components/ui/icon";
 
 // --- Foundations course price (placeholder — change here to update checkout + billing) ---
-export const FOUNDATION_PRICE = "£199";
+export const FOUNDATION_PRICE = "$101";
 export const FOUNDATION_PRICE_CAPTION = "One-time payment · lifetime access";
 
 export interface BillingPlanContent {

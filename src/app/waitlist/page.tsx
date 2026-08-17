@@ -10,6 +10,7 @@ import { useLinkedInVerify } from "@/lib/linkedin-verify";
 import { LinkedInGate } from "@/components/waitlist/linkedin-gate";
 import { useEmailVerify } from "@/lib/email-verify";
 import { EmailVerify } from "@/components/waitlist/email-verify";
+import { FOUNDATION_PRICE } from "@/lib/billing";
 
 // Standalone early-access waitlist. Not linked from anywhere — reachable by /waitlist only.
 // One page, two audiences (student / university) sharing a shell and one submit.
@@ -203,7 +204,7 @@ export default function WaitlistPage() {
                 <div className="mt-5 rounded-xl bg-slate-50/80 ring-1 ring-slate-200/70 px-4 py-3.5">
                   <div className="flex items-baseline justify-between gap-3">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[30px] font-semibold tracking-[-0.03em] tabular-nums leading-none text-slate-900">$250</span>
+                      <span className="text-[30px] font-semibold tracking-[-0.03em] tabular-nums leading-none text-slate-900">{FOUNDATION_PRICE}</span>
                       <span className="text-[12.5px] font-semibold text-slate-400">USD</span>
                     </div>
                     <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 bg-white ring-1 ring-slate-200/70 rounded-full px-2 py-1">
