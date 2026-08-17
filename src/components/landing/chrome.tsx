@@ -58,7 +58,7 @@ export function Nav({ active }: { active?: string }) {
             </Link>
           )}
           <Link href={CTA_HREF} className="focus-ring inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold tracking-tight no-underline hover:bg-indigo-700 transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.6)]">
-            {WAITLIST_MODE ? "Enroll now" : "Get started"} <Icon name="arrowRight" size={14} />
+            {WAITLIST_MODE ? "Enrol now" : "Get started"} <Icon name="arrowRight" size={14} />
           </Link>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function SiteFooter() {
     ["Explore", [["Industries", "/#industries"], ["How it works", "/#program"], ["Tracks", "/#tracks"], ["FAQ", "/#faq"], ["Work with us", "/work-with-us"]]],
     // On a phone the nav's mentor button is icon-only, so this is the labelled entry point.
     WAITLIST_MODE
-      ? ["Access", [["Enroll now", "/waitlist"], ["Universities", "/waitlist"]]]
+      ? ["Access", [["Enrol now", "/waitlist"], ["Universities", "/waitlist"]]]
       : ["Account", [["Sign in", "/signin"], ["Create account", "/signup"], ["Mentor sign-in", "/mentor"]]],
   ];
   return (

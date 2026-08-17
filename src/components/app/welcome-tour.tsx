@@ -44,7 +44,7 @@ function steps(showNav: () => void, goto: (href: string) => void): TourStep[] {
     },
     {
       title: "Your next move, always on top",
-      body: "This banner points at the exact task and step to continue, with your enrol status and certificate progress beside it. Continue jumps straight into the Working Desk.",
+      body: "This banner points at the exact task and step to continue, with your enrolment status and certificate progress beside it. Continue jumps straight into the Working Desk.",
       icon: "play",
       ...dash("dash-hero"),
     },

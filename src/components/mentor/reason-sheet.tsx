@@ -5,16 +5,21 @@ import { Drawer } from "@/components/ui/drawer";
 import { willEscalate, type Reason } from "@/lib/mentor";
 
 /**
- * Forces at least one documented reason code before a decision commits. Approve reasons carry no
- * corrective action; disapprove reasons show the text the mentee would be given for each.
+ * Forces at least one documented reason code before a decision commits.
  *
- * Hotkeys 1-6 toggle reasons, Esc cancels, Cmd/Ctrl+Enter confirms — but everything except Esc and
+ * Approve is a menu: the codes that apply to this gate, pre-selected, minus any the mentor
+ * deselects. Disapprove is `locked` — its reasons come from the checklist items answered "no", so
+ * they are shown, not chosen (v3 prototype: "you did not choose them from a menu; the checklist
+ * produced them").
+ *
+ * Hotkeys 1-9 toggle reasons, Esc cancels, Cmd/Ctrl+Enter confirms — but everything except Esc and
  * Cmd/Ctrl+Enter is suppressed while the note field has focus, so typing a digit in the note can
  * never silently toggle a reason.
  */
 export function ReasonSheet({
   mode,
   reasons,
+  locked = false,
   priorReturns,
   maxReturns,
   busy,
@@ -24,6 +29,8 @@ export function ReasonSheet({
 }: {
   mode: "approve" | "disapprove" | null;
   reasons: Reason[];
+  /** Reasons are derived, not picked: render them read-only and submit all of them. */
+  locked?: boolean;
   priorReturns: number;
   maxReturns: number;
   busy: boolean;
@@ -37,12 +44,14 @@ export function ReasonSheet({
   const open = mode !== null;
   const escalating = mode === "disapprove" && willEscalate(priorReturns, maxReturns);
 
-  // Clear the previous decision's selection during render when the sheet opens or switches mode,
-  // so an approve sheet can never paint holding a disapprove sheet's checked reasons.
+  // Reset during render when the sheet opens or switches mode, so an approve sheet can never paint
+  // holding a disapprove sheet's reasons. Both modes start with everything selected: approve codes
+  // are pre-selected from the items cleared (deselect what does not apply), and a locked
+  // disapproval submits exactly the reasons the checklist produced.
   const [prevMode, setPrevMode] = useState(mode);
   if (mode !== prevMode) {
     setPrevMode(mode);
-    setSelected([]);
+    setSelected(reasons.map((r) => r.code));
     setNote("");
     setRequireAck(false);
   }
@@ -64,7 +73,7 @@ export function ReasonSheet({
         if (selected.length && !busy) onConfirm(selected, note, requireAck && !!note.trim());
         return;
       }
-      if (typing) return; // Esc is handled by the Drawer itself
+      if (typing || locked) return; // Esc is handled by the Drawer itself
       if (/^[1-9]$/.test(e.key)) {
         const reason = reasons[Number(e.key) - 1];
         if (reason) {
@@ -105,10 +114,55 @@ export function ReasonSheet({
         </div>
       )}
 
+      <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
+        {locked
+          ? "These reasons come from the questions you answered no. You did not choose them from a menu; the checklist produced them."
+          : "The codes below are pre-selected from the items you cleared. Deselect any that do not apply."}
+      </p>
+
       <div className="space-y-1.5">
         {reasons.map((reason, i) => {
           const on = selected.includes(reason.code);
-          return (
+          const row = (
+            <>
+              {!locked && (
+                <span
+                  className={`mt-0.5 shrink-0 w-4 h-4 rounded border grid place-items-center ${
+                    on ? "bg-indigo-600 border-indigo-600" : "border-slate-300 bg-white"
+                  }`}
+                >
+                  {on && (
+                    <svg viewBox="0 0 24 24" className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3.5}>
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block font-mono text-[10.5px] text-slate-500">{reason.code}</span>
+                <span className="block text-[12.5px] text-slate-800 leading-snug mt-0.5">{reason.text}</span>
+                {reason.action && (
+                  <span className="block text-[11.5px] text-[#a3541d] leading-snug mt-1.5">
+                    <span className="font-semibold">
+                      {locked ? "Correction sent to the mentee:" : "Mentee sees:"}
+                    </span>{" "}
+                    {reason.action}
+                  </span>
+                )}
+              </span>
+              {!locked && (
+                <span className="shrink-0 self-start font-mono text-[10px] text-slate-400 mt-0.5">{i + 1}</span>
+              )}
+            </>
+          );
+          return locked ? (
+            <div
+              key={reason.code}
+              className="w-full text-left flex gap-3 rounded-xl border border-[#f0c2c2] bg-[#fdecec]/60 px-3.5 py-3"
+            >
+              {row}
+            </div>
+          ) : (
             <button
               key={reason.code}
               onClick={() => toggle(reason.code)}
@@ -116,27 +170,7 @@ export function ReasonSheet({
                 on ? "border-indigo-300 bg-indigo-50/60" : "border-[#e6eaf0] bg-white hover:bg-slate-50"
               }`}
             >
-              <span
-                className={`mt-0.5 shrink-0 w-4 h-4 rounded border grid place-items-center ${
-                  on ? "bg-indigo-600 border-indigo-600" : "border-slate-300 bg-white"
-                }`}
-              >
-                {on && (
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3.5}>
-                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-mono text-[10.5px] text-slate-500">{reason.code}</span>
-                <span className="block text-[12.5px] text-slate-800 leading-snug mt-0.5">{reason.text}</span>
-                {reason.action && (
-                  <span className="block text-[11.5px] text-[#a3541d] leading-snug mt-1.5">
-                    <span className="font-semibold">Mentee sees:</span> {reason.action}
-                  </span>
-                )}
-              </span>
-              <span className="shrink-0 self-start font-mono text-[10px] text-slate-400 mt-0.5">{i + 1}</span>
+              {row}
             </button>
           );
         })}
@@ -195,6 +229,12 @@ export function ReasonSheet({
                 .map((c) => c.split(".").pop())
                 .join(", ")}`}
         </div>
+        {locked && (
+          <div className="text-[11px] text-slate-400 mb-2.5">
+            Point at the row, the figure or the paragraph. General feedback produces a general
+            resubmission.
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <button
             onClick={onCancel}
@@ -216,7 +256,7 @@ export function ReasonSheet({
             {busy ? "Saving…" : `Confirm ${outcomeLabel}`}
           </button>
           <span className="ml-auto text-[10.5px] text-slate-400 font-mono hidden sm:block">
-            1–{Math.min(reasons.length, 9)} toggle · ⌘/Ctrl+Enter confirm · Esc cancel
+            {!locked && `1–${Math.min(reasons.length, 9)} toggle · `}⌘/Ctrl+Enter confirm · Esc cancel
           </span>
         </div>
       </div>

@@ -27,7 +27,7 @@ const STAGES = [
 const COPY: Record<Audience, { eyebrow: string; title: string; body: string }> = {
   student: {
     eyebrow: "Early access",
-    title: "Enroll now with grcmentor",
+    title: "Enrol now with grcmentor",
     body: "Hands-on GRC engagements, AI-graded, that compile into a CV, badges and a verifiable certificate. We're onboarding in batches — leave your details and we'll be in touch.",
   },
   university: {
@@ -328,7 +328,7 @@ export default function WaitlistPage() {
                     ? "Submitting…"
                     : audience === "university"
                       ? "Request partnership details"
-                      : "Enroll now"}
+                      : "Enrol now"}
                 </PrimaryBtn>
               </form>
               <p className="mt-4 text-center text-[11.5px] text-slate-400">

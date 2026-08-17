@@ -290,7 +290,7 @@ function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () =
             <h2 id="terms-title" className="text-[17px] font-semibold tracking-tight text-slate-900">
               Terms &amp; Conditions
             </h2>
-            <p className="mt-0.5 text-[12.5px] text-slate-500">Review and accept each term to continue.</p>
+            <p className="mt-0.5 text-[12.5px] text-slate-500">Tick each box below to accept and continue.</p>
           </div>
           <button
             type="button"
@@ -328,18 +328,21 @@ function TermsModal({ onClose, onAccept }: { onClose: () => void; onAccept: () =
                 type="button"
                 aria-pressed={on}
                 onClick={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
-                className={`w-full text-left flex items-start gap-3 rounded-xl p-3 ring-1 transition-colors ${
+                className={`group w-full text-left flex items-start gap-3 rounded-xl p-3 ring-1 transition-colors ${
                   on
                     ? "bg-indigo-50/60 ring-indigo-200"
                     : "bg-white ring-slate-200 hover:bg-slate-50 hover:ring-slate-300"
                 }`}
               >
+                {/* ponytail: styled span, not an <input> — the whole row is the button */}
                 <span
-                  className={`mt-0.5 shrink-0 grid place-items-center w-5 h-5 rounded-md text-[11px] font-semibold transition-colors ${
-                    on ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"
+                  className={`mt-0.5 shrink-0 grid place-items-center w-5 h-5 rounded-[5px] ring-1 transition-colors ${
+                    on
+                      ? "bg-indigo-600 ring-indigo-600 text-white"
+                      : "bg-white ring-slate-300 group-hover:ring-indigo-400"
                   }`}
                 >
-                  {on ? <Icon name="check" size={12} strokeWidth={3} /> : i + 1}
+                  {on && <Icon name="check" size={12} strokeWidth={3} />}
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[13px] font-medium tracking-tight text-slate-900">{t.title}</span>

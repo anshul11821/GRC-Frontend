@@ -14,6 +14,9 @@ export interface TabDef {
   done: boolean;
   /** Group heading shown above this tab in the rail (md+ only). */
   group?: string;
+  /** Not reachable yet — an earlier step is unfinished. Sequential gates set this; the research
+   *  gate's method tabs are deliberately pickable in any order and leave it undefined. */
+  locked?: boolean;
 }
 
 /** Left tab rail (md+) / horizontal chip row (mobile) + progress header. */
@@ -35,12 +38,13 @@ export function TabRail({ tabs, active, onSelect, progressLabel }: {
             {t.group && (
               <div className="hidden md:block px-2 pt-3 pb-1 first:pt-0 text-[9.5px] font-semibold tracking-[0.12em] uppercase text-slate-400">{t.group}</div>
             )}
-            <button onClick={() => onSelect(t.key)} aria-current={active === t.key ? "step" : undefined}
-              className={`w-auto md:w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer focus-ring transition-colors ${
+            <button onClick={() => onSelect(t.key)} disabled={t.locked} aria-current={active === t.key ? "step" : undefined}
+              title={t.locked ? "Finish the previous step first" : undefined}
+              className={`w-auto md:w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer focus-ring transition-colors disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:bg-transparent ${
                 active === t.key ? "bg-violet-50 ring-1 ring-violet-200 text-violet-800" : "text-slate-600 hover:bg-slate-100/70"}`}>
               <span className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
-                t.done ? "bg-emerald-100 text-emerald-600" : active === t.key ? "bg-violet-100 text-violet-600" : "bg-slate-100 text-slate-400"}`}>
-                <Icon name={t.done ? "check" : t.icon} size={13} strokeWidth={t.done ? 3 : 2} />
+                t.done ? "bg-emerald-100 text-emerald-600" : t.locked ? "bg-slate-100 text-slate-300" : active === t.key ? "bg-violet-100 text-violet-600" : "bg-slate-100 text-slate-400"}`}>
+                <Icon name={t.done ? "check" : t.locked ? "lock" : t.icon} size={13} strokeWidth={t.done ? 3 : 2} />
               </span>
               <span className="min-w-0">
                 <span className="block text-[12px] font-medium tracking-tight whitespace-nowrap md:whitespace-normal">{t.label}</span>
@@ -68,8 +72,10 @@ export function PaneNav({ tabs, active, onSelect }: { tabs: TabDef[]; active: st
         </button>
       ) : <span />}
       {next && (
-        <button onClick={() => onSelect(next.key)} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[12px] font-medium bg-violet-600 text-white hover:bg-violet-700 cursor-pointer focus-ring transition-colors shadow-[0_4px_14px_-4px_rgba(124,58,237,0.5)]">
-          Continue · {next.label} <Icon name="chevronRight" size={14} />
+        <button onClick={() => onSelect(next.key)} disabled={next.locked}
+          title={next.locked ? "Finish this step first" : undefined}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[12px] font-medium bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus-ring transition-colors shadow-[0_4px_14px_-4px_rgba(124,58,237,0.5)]">
+          {next.locked && <Icon name="lock" size={13} />} Continue · {next.label} <Icon name="chevronRight" size={14} />
         </button>
       )}
     </div>

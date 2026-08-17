@@ -42,13 +42,18 @@ const OFFSCREEN: Box = { top: -9999, left: -9999, width: 0, height: 0 }; // sent
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-/** driver.js-style placement: prefer the side with room (bottom→top→right→left); for missing or
- *  oversized targets, float the card at the bottom-centre (no arrow). Returns the arrow's cross-axis offset. */
+/** driver.js-style placement: prefer the side with room (bottom→top→right→left); for oversized
+ *  targets, float the card at the bottom-centre (no arrow), and with no target at all, dead-centre.
+ *  Returns the arrow's cross-axis offset. */
 function place(r: DOMRect | null, th: number): Pos {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const float: Pos = { side: "float", top: vh - th - 24, left: (vw - TIP_W) / 2, arrow: 0 };
-  if (!r || r.height > vh * 0.7 || r.width > vw * 0.85) return float;
+  const cx = (vw - TIP_W) / 2;
+  // No target (the welcome card) — nothing to keep in view, so centre it. An oversized target still
+  // floats at the bottom, where it covers least of what the step is pointing at.
+  if (!r) return { side: "float", top: clamp((vh - th) / 2, MARGIN, vh - th - MARGIN), left: cx, arrow: 0 };
+  const float: Pos = { side: "float", top: vh - th - 24, left: cx, arrow: 0 };
+  if (r.height > vh * 0.7 || r.width > vw * 0.85) return float;
 
   const space = { top: r.top, bottom: vh - r.bottom, left: r.left, right: vw - r.right };
   const fits: Record<Exclude<Side, "float">, boolean> = {
@@ -222,6 +227,9 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
       // A step whose onEnter navigates elsewhere has no target until that page mounts and loads.
       // Wait for it on a timer — polling a missing element at 60fps is pure burn.
       reposition(); // drop the previous step's hole straight away: dim everything while it loads
+      // Again once the card has painted: centring needs its real height, and on the first open
+      // there was no card to measure. Cheap — reposition only commits when something moved.
+      raf = requestAnimationFrame(reposition);
       // An optional step is one whose section may simply not exist for this user; give it just long
       // enough to appear, then move on rather than parking on a blank.
       const giveUp = performance.now() + (s.optional ? 600 : 4000);

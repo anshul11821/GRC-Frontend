@@ -71,14 +71,26 @@ export type InspectExerciseItem =
   | { kind: "columns"; prompt: string; picks: { label: string; belongs: boolean }[] }
   | { kind: "purpose"; prompt: string; options: string[]; answer: string };
 
+/**
+ * Columns lifted from OTHER GRC artefacts (risk register, finding log, incident record). Sibling
+ * templates are the better decoy source, but most tasks ship one field-bearing template at most —
+ * without a fallback bank the exercise renders with nothing wrong to leave unticked and passes on
+ * "select all". Each of these is unmistakably from a different artefact, so it stays teachable.
+ */
+const DECOY_FIELDS = [
+  "Risk Score", "Likelihood", "Impact Rating", "Treatment Option", "Residual Risk",
+  "Control Reference", "Finding ID", "Root Cause", "Corrective Action",
+  "Incident Severity", "Audit Evidence", "Test Result",
+];
+
 /** R2 Inspect — tick the fields that belong to THIS template (with decoys), or match its purpose. */
 export function inspectExercise(task: RuaTask, taskCode: string, tplIdx: number): InspectExerciseItem {
   const tpl = task.templates[tplIdx];
-  if (tpl.fields.length >= 3) {
-    const own = tpl.fields;
-    // ponytail: within-task decoy fields only — see microCheck note above.
-    const decoyPool = task.templates.filter((_, i) => i !== tplIdx).flatMap((t) => t.fields);
-    const decoys = [...new Set(decoyPool)].filter((f) => !own.includes(f));
+  const own = tpl.fields;
+  const decoyPool = [...task.templates.filter((_, i) => i !== tplIdx).flatMap((t) => t.fields), ...DECOY_FIELDS];
+  const decoys = [...new Set(decoyPool)].filter((f) => !own.includes(f));
+  // Under two decoys the exercise cannot be failed — fall through to the purpose match instead.
+  if (own.length >= 3 && decoys.length >= 2) {
     const picks = seededShuffle(
       [
         ...own.map((f) => ({ label: f, belongs: true })),
@@ -86,10 +98,25 @@ export function inspectExercise(task: RuaTask, taskCode: string, tplIdx: number)
       ],
       tpl.name,
     );
-    return { kind: "columns", prompt: `Tick every field that belongs in the ${tpl.name}.`, picks };
+    return { kind: "columns", prompt: `Tick every field that belongs in the ${tpl.name} — some of these belong to other artefacts.`, picks };
   }
   const purposes = seededShuffle(task.templates.map((t) => t.purpose || t.name), taskCode + tplIdx);
   return { kind: "purpose", prompt: `Which purpose matches the ${tpl.name}?`, options: purposes, answer: tpl.purpose || tpl.name };
+}
+
+/**
+ * Feedback for a failed field-tick exercise. Names the mistake the mentee actually made —
+ * ticking a decoy and leaving a real field unticked are different errors, and undershooting
+ * (the common case) is not "a decoy slipped in".
+ */
+export function inspectMiss(picks: { belongs: boolean }[], ticks: Record<number, boolean>): string | null {
+  const missing = picks.filter((pk, k) => pk.belongs && !ticks[k]).length;
+  const wrong = picks.filter((pk, k) => !pk.belongs && ticks[k]).length;
+  if (!missing && !wrong) return null;
+  const n = (c: number, one: string, many: string) => `${c} ${c === 1 ? one : many}`;
+  if (wrong && missing) return `${n(wrong, "ticked field doesn't belong", "ticked fields don't belong")} here, and ${n(missing, "real field is", "real fields are")} still unticked.`;
+  if (wrong) return `${n(wrong, "decoy is", "decoys are")} ticked — ${wrong === 1 ? "that field belongs" : "those fields belong"} to another template.`;
+  return `Not there yet — ${n(missing, "field is", "fields are")} still unticked.`;
 }
 
 export interface BoundaryItem { text: string; answer: "in" | "out" }
@@ -126,13 +153,24 @@ function taskPool(task: RuaTask): Set<string> {
 
 export interface ParaphraseGrade { pass: boolean; sim: number; wc: number; reasons: string[] }
 
+/**
+ * Layer 1 for every free-text card: the only two failures a heuristic can be certain about —
+ * there aren't enough words to grade, or the text is the source copied back. Anything that clears
+ * these goes to the AI mentor (lib/rua-ai.ts), because no word count can tell whether an answer is
+ * actually right. Returns the reasons to show; empty means "nothing objective to object to".
+ */
+export function preCheck(text: string, source: string, minWords = 12): string[] {
+  const reasons: string[] = [];
+  if (wordCount(text) < minWords) reasons.push(`Needs at least ~${minWords} words in your own words.`);
+  if (jaccard(new Set(tokenize(text)), new Set(tokenize(source))) > PARROT) reasons.push("Too close to the original wording — restate it your way.");
+  return reasons;
+}
+
 export function gradeParaphrase(text: string, source: string): ParaphraseGrade {
   const wc = wordCount(text);
   const sim = jaccard(new Set(tokenize(text)), new Set(tokenize(source)));
-  const reasons: string[] = [];
-  if (wc < 12) reasons.push("Needs at least ~12 words in your own words.");
-  if (sim > PARROT) reasons.push("Too close to the original wording — restate it your way.");
-  return { pass: wc >= 12 && sim <= PARROT, sim, wc, reasons };
+  const reasons = preCheck(text, source);
+  return { pass: reasons.length === 0, sim, wc, reasons };
 }
 
 export interface ExplainGrade { pass: boolean; avg: number; dims: number[]; reasons: string[] }
@@ -144,7 +182,11 @@ export function gradeExplain(explain: string, example: string, concept: string, 
   const wc = wordCount(explain);
   const orgHit = new RegExp(org.split(/\s+/)[0], "i").test(example || "") || wordCount(example) >= 8;
   const dAcc = cov >= 0.34 ? 4 : cov >= 0.22 ? 3 : cov >= 0.12 ? 2 : cov > 0 ? 1 : 0;
-  const dOwn = sim <= 0.45 ? 4 : sim <= PARROT ? 3 : sim <= 0.75 ? 2 : 1;
+  // "Own words" is scored from how little the answer copies the source — on its own that handed
+  // text sharing nothing with the concept (keyboard mash included) a perfect 4 for not copying.
+  // It can only run one point ahead of how much of the concept the answer actually covers.
+  const ownRaw = sim <= 0.45 ? 4 : sim <= PARROT ? 3 : sim <= 0.75 ? 2 : 1;
+  const dOwn = Math.min(ownRaw, dAcc + 1);
   const dLen = wc >= 45 ? 4 : wc >= 28 ? 3 : wc >= 16 ? 2 : wc > 0 ? 1 : 0;
   const dEx = orgHit && wordCount(example) >= 14 ? 4 : orgHit ? 3 : wordCount(example) >= 6 ? 2 : wordCount(example) > 0 ? 1 : 0;
   const dims = [dAcc, dOwn, dLen, dEx];
@@ -152,9 +194,15 @@ export function gradeExplain(explain: string, example: string, concept: string, 
   const pass = avg >= 3 && Math.min(...dims) >= 2;
   const reasons: string[] = [];
   if (dAcc < 2) reasons.push("Bring in the concept's core ideas and vocabulary.");
-  if (dOwn < 2) reasons.push("Use your own words — this reads as copied.");
+  // Judged on the raw similarity: a low `dOwn` now also means "off-topic", which dAcc already names.
+  if (ownRaw < 2) reasons.push("Use your own words — this reads as copied.");
   if (dLen < 2) reasons.push("Go a little deeper — one line isn't enough.");
   if (dEx < 2) reasons.push("Ground the example in this organisation.");
+  // A card can fail on the average with every dimension ≥ 2 — say why instead of showing nothing.
+  if (!pass && !reasons.length) {
+    const weakest = ["Bring in more of the concept's own vocabulary.", "Put more of it in your own words.", "Go deeper — add the reasoning, not just the definition.", "Make the example more specific to this organisation."][dims.indexOf(Math.min(...dims))];
+    reasons.push(`Close, but not yet to standard. ${weakest}`);
+  }
   return { pass, avg: Math.round(avg * 10) / 10, dims, reasons };
 }
 
@@ -178,6 +226,14 @@ export function gradeAnswer(answer: string, followupAnswer: string, task: RuaTas
   if (cov < 0.10) reasons.push("Use the task's real concepts and control language.");
   if (!(orgHit || fu >= 10)) reasons.push("Tie it back to this organisation in your follow-up.");
   return { outcome, score, cov: Math.round(cov * 100) / 100, reasons };
+}
+
+/**
+ * Sequential steps: a step opens only once everything before it is finished. An already-finished
+ * step stays open even if an earlier one re-opens, so completed work is never hidden behind a lock.
+ */
+export function lockSteps<T extends { done: boolean }>(steps: T[]): (T & { locked: boolean })[] {
+  return steps.map((s, i) => ({ ...s, locked: !s.done && steps.slice(0, i).some((e) => !e.done) }));
 }
 
 /* ── progress model + readiness ledger ── */

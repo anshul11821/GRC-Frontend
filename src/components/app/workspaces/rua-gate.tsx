@@ -6,8 +6,13 @@
 // R4 Clarify (graded paraphrase or query→resolution per step) · R5 Confirm (contract restatement
 // with anti-parrot meter + scope-boundary sort) · R6 Explain (concept deck, failed cards
 // re-queue) · R7 Answer (one-way exam session with follow-up probes) · R8 Attest (five-criterion
-// RAG ledger + gate decision). All checks run on the deterministic client engine
-// (lib/rua-engine.ts); the AI mentor still grades the submitted payload as Layer 2.
+// RAG ledger + gate decision).
+//
+// Two grading paths. Anything with an answer key — the comprehension checks, the field exercises,
+// the scope sort — is decided by the deterministic engine (lib/rua-engine.ts). The four free-text
+// cards (Clarify, Confirm, Explain, Answer) go to the AI mentor (lib/rua-ai.ts → POST
+// /me/rua-check), with the engine kept as Layer 1's objective floor and as the fallback when the
+// model is unreachable. The AI mentor grades the submitted payload again as Layer 2.
 
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -20,11 +25,12 @@ import { type RuaRef } from "@/lib/rua-refs";
 import { useTaskBundle } from "@/lib/task-bundle";
 import { TASK_META, type TaskReference } from "@/lib/taskmeta";
 import {
-  microCheck, inspectExercise, boundaryItems, followUp,
+  microCheck, inspectExercise, inspectMiss, boundaryItems, followUp, lockSteps, preCheck,
   gradeParaphrase, gradeExplain, gradeAnswer, computeLedger, emptyProgress,
   wordCount, tokenize, jaccard, PARROT,
-  type RuaProgress, type Ledger, type Rag, type GateDecision, type AnswerOutcome, type ExplainGrade, type AnswerGrade,
+  type RuaProgress, type Ledger, type Rag, type GateDecision, type AnswerOutcome,
 } from "@/lib/rua-engine";
+import { aiCheck, type AiDim, type AiGrade } from "@/lib/rua-ai";
 
 /* ── shared bits ── */
 
@@ -83,6 +89,73 @@ function VerbFooter({ done, doneLabel, nextLabel, onNext, hint }: { done: boolea
 
 const btnPrimary = "inline-flex items-center gap-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-semibold cursor-pointer focus-ring transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 const btnGhost = "inline-flex items-center gap-1.5 rounded-lg bg-white ring-1 ring-slate-200 hover:bg-slate-50 text-slate-600 font-semibold cursor-pointer focus-ring transition-colors";
+
+/* ── grading feedback, shared by the four free-text cards ── */
+
+/**
+ * One graded free-text answer, and which of the three paths graded it:
+ *   ai       — the mentor model read it.
+ *   fallback — the model was asked and couldn't answer; the workspace's own checks stood in.
+ *   floor    — Layer 1 rejected it before the model was ever asked (too short, or a verbatim
+ *              copy). Saying "the AI mentor was unavailable" here was simply untrue, and read as
+ *              a broken integration when nothing was wrong.
+ * The AI mentor fills `dims`; the deterministic paths have none to report for a paraphrase.
+ */
+interface CardGrade {
+  passed: boolean;
+  dims: AiDim[];
+  avg: number | null;
+  feedback: string;
+  reasons: string[];
+  by: "ai" | "fallback" | "floor";
+}
+
+const fromAi = (a: AiGrade): CardGrade => ({ passed: a.passed, dims: a.dims, avg: a.avg, feedback: a.feedback, reasons: [], by: "ai" });
+const fromFloor = (reasons: string[]): CardGrade => ({ passed: false, dims: [], avg: null, feedback: "", reasons, by: "floor" });
+const fromChecks = (passed: boolean, reasons: string[], dims: AiDim[] = [], avg: number | null = null): CardGrade =>
+  ({ passed, dims, avg, feedback: "", reasons, by: "fallback" });
+const EXPLAIN_DIMS = ["Accuracy", "Own words", "Depth", "Example"];
+
+/** The score, every dimension by name, what would raise each one, and who graded it. Bare numbers
+ *  in a row meant nothing on their own — a mentee could not tell what a "4" was measuring. */
+function GradePanel({ g }: { g: CardGrade }) {
+  const hints = g.dims.filter((d) => d.hint);
+  return (
+    <div className={`rounded-xl p-3.5 ring-1 ${g.passed ? "bg-emerald-50 ring-emerald-200" : "bg-amber-50 ring-amber-200"}`}>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <span className={`text-[12.5px] font-semibold ${g.passed ? "text-emerald-800" : "text-amber-800"}`}>
+          {g.passed ? "Passed" : "Below threshold — revise and resubmit"}{g.avg !== null && ` · avg ${g.avg}/4 (pass ≥ 3)`}
+        </span>
+        {g.dims.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {g.dims.map((d, k) => (
+              <span key={k} className={`inline-flex items-center gap-1 h-6 px-1.5 rounded-md text-[10px] font-semibold ${d.score >= 3 ? "bg-emerald-100 text-emerald-700" : d.score >= 2 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-600"}`}>
+                {d.label} <span className="font-bold tabular-nums">{d.score}/4</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      {g.feedback && <p className="mt-2 text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}>{g.feedback}</p>}
+      {(hints.length > 0 || g.reasons.length > 0) && (
+        <ul className="mt-2 space-y-1">
+          {hints.map((d, k) => (
+            <li key={`h${k}`} className="text-[12px] text-slate-700 flex items-start gap-1.5"><Icon name="arrowRight" size={12} className="mt-0.5 shrink-0 text-slate-400" /><span><span className="font-semibold">{d.label}:</span> {d.hint}</span></li>
+          ))}
+          {g.reasons.map((r, k) => (
+            <li key={`r${k}`} className="text-[12px] text-slate-700 flex items-start gap-1.5"><Icon name="arrowRight" size={12} className="mt-0.5 shrink-0 text-slate-400" />{r}</li>
+          ))}
+        </ul>
+      )}
+      <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-slate-400">
+        <Icon name={g.by === "ai" ? "bot" : "checkSquare"} size={11} />
+        {g.by === "ai" ? "Graded by the AI mentor"
+          : g.by === "floor" ? "Not sent to the mentor yet — fix the above first."
+          : "Graded by the workspace's own checks — the AI mentor was unavailable."}
+      </div>
+    </div>
+  );
+}
 
 type Patch = (mut: (p: RuaProgress) => void) => void;
 interface PaneProps {
@@ -307,12 +380,14 @@ function InspectExerciseBox({ task, taskCode, idx, passed, onPass }: { task: Rua
   const [ticks, setTicks] = useState<Record<number, boolean>>({});
   const [sel, setSel] = useState<number | null>(null);
   const [result, setResult] = useState<"ok" | "bad" | null>(passed ? "ok" : null);
+  const [miss, setMiss] = useState<string | null>(null);
   const boxCls = result === "ok" ? "ring-emerald-200 bg-emerald-50/40" : result === "bad" ? "ring-rose-200 bg-rose-50/40" : "ring-slate-200 bg-slate-50";
 
   if (ex.kind === "columns") {
     const check = () => {
-      const ok = ex.picks.every((pk, k) => !!ticks[k] === pk.belongs);
-      if (ok) { setResult("ok"); onPass(); } else setResult("bad");
+      const m = inspectMiss(ex.picks, ticks);
+      setMiss(m);
+      if (!m) { setResult("ok"); onPass(); } else setResult("bad");
     };
     return (
       <div className={`rounded-xl ring-1 p-3.5 ${boxCls}`}>
@@ -337,7 +412,7 @@ function InspectExerciseBox({ task, taskCode, idx, passed, onPass }: { task: Rua
           ? <div className="mt-2.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-700"><Icon name="checkCircle" size={14} /> Right — you&apos;ve mapped the template&apos;s real fields.</div>
           : <div className="mt-2.5 flex items-center gap-2">
               <button onClick={check} className={`${btnPrimary} h-9 px-4 text-[12px]`}>Check selection</button>
-              {result === "bad" && <span className="text-[12px] text-rose-600 font-medium">Some fields don&apos;t belong here — a couple of decoys slipped in.</span>}
+              {result === "bad" && miss && <span className="text-[12px] text-rose-600 font-medium">{miss}</span>}
             </div>}
       </div>
     );
@@ -364,7 +439,7 @@ function InspectExerciseBox({ task, taskCode, idx, passed, onPass }: { task: Rua
         ? <div className="mt-2.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-700"><Icon name="checkCircle" size={14} /> Correct.</div>
         : <div className="mt-2.5 flex items-center gap-2">
             <button onClick={check} disabled={sel === null} className={`${btnPrimary} h-9 px-4 text-[12px]`}>Check answer</button>
-            {result === "bad" && <span className="text-[12px] text-rose-600 font-medium">Try again.</span>}
+            {result === "bad" && <span className="text-[12px] text-rose-600 font-medium">That&apos;s another template&apos;s purpose — re-read what this one is for.</span>}
           </div>}
     </div>
   );
@@ -466,7 +541,7 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
 
 /* ================= R4 · Clarify ================= */
 
-function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
+function ClarifyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProps) {
   const understood = task.steps.filter((_, i) => p.clarify[i]?.state === "understood").length;
   const openQ = task.steps.filter((_, i) => p.clarify[i]?.state === "query").length;
   const allDone = understood === task.steps.length;
@@ -483,7 +558,7 @@ function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
       )}
       <div className="space-y-2.5">
         {task.steps.map((s, i) => (
-          <StepRow key={i} step={s} idx={i} rec={p.clarify[i]} patch={patch} refs={refs} openDoc={openDoc}
+          <StepRow key={i} step={s} idx={i} rec={p.clarify[i]} patch={patch} refs={refs} openDoc={openDoc} taskCode={taskCode}
             prevDone={i === 0 || p.clarify[i - 1]?.state === "understood"} />
         ))}
       </div>
@@ -492,32 +567,44 @@ function ClarifyPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
   );
 }
 
-function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
+function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc, taskCode }: {
   step: { verb: string; text: string }; idx: number; rec: RuaProgress["clarify"][number]; patch: Patch; prevDone: boolean;
-  refs: RuaRef[]; openDoc: (d: TaskReference) => void;
+  refs: RuaRef[]; openDoc: (d: TaskReference) => void; taskCode: string;
 }) {
   const state = rec?.state ?? "pending";
   const [mode, setMode] = useState<"para" | "query" | null>(null);
   const [para, setPara] = useState(rec?.paraphrase ?? "");
-  const [err, setErr] = useState<string | null>(null);
+  const [grade, setGrade] = useState<CardGrade | null>(null);
+  const [busy, setBusy] = useState(false);
   const [q, setQ] = useState(rec?.query ?? { unclear: "", think: "", checked: [] as string[] });
   const [resolution, setResolution] = useState(rec?.resolution ?? "");
   const scriptedReply = `This step is a “${step.verb}” action — its job is to move you toward the deliverable, not to be an artefact in itself.`;
 
-  function submitPara() {
-    const g = gradeParaphrase(para, step.text);
-    if (!g.pass) { setErr(g.reasons.join(" ")); return; }
-    setErr(null);
+  /** Layer 1 floor, then the AI mentor — a word count can't tell whether they understood the step. */
+  async function judge(text: string): Promise<CardGrade> {
+    const pre = preCheck(text, step.text);
+    if (pre.length) return fromFloor(pre);
+    setBusy(true);
+    const ai = await aiCheck({ taskCode, kind: "step", index: idx, text });
+    setBusy(false);
+    if (ai) return fromAi(ai);
+    const h = gradeParaphrase(text, step.text);
+    return fromChecks(h.pass, h.reasons);
+  }
+  async function submitPara() {
+    const g = await judge(para);
+    setGrade(g);
+    if (!g.passed) return;
     patch((n) => { n.clarify[idx] = { state: "understood", paraphrase: para }; });
     setMode(null);
   }
   function raiseQuery() {
     patch((n) => { n.clarify[idx] = { state: "query", query: q }; });
   }
-  function closeQuery() {
-    const g = gradeParaphrase(resolution, step.text);
-    if (!g.pass) { setErr(g.reasons.join(" ")); return; }
-    setErr(null);
+  async function closeQuery() {
+    const g = await judge(resolution);
+    setGrade(g);
+    if (!g.passed) return;
     patch((n) => { n.clarify[idx] = { state: "understood", resolution, wasQueried: true }; });
     setMode(null);
   }
@@ -539,22 +626,26 @@ function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
           <p className="text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{step.text}</Gloss></p>
           <div className="mt-1.5"><ItemDoc refs={refs} idx={idx} openDoc={openDoc} /></div>
 
-          {mode === null && state === "pending" && (
+          {/* The dimmed styling implied these were locked, but the buttons still worked — steps are
+              walked in order, so an unfinished step above really does hold this one shut. */}
+          {mode === null && state === "pending" && (prevDone ? (
             <div className="mt-2.5 flex flex-wrap gap-2">
               <button onClick={() => setMode("para")} className={`${btnPrimary} h-8 px-3 text-[12px]`}><Icon name="check" size={13} /> I understand this step</button>
               <button onClick={() => setMode("query")} className={`${btnGhost} h-8 px-3 text-[12px]`}><Icon name="messageSquare" size={13} /> Raise a query</button>
             </div>
-          )}
+          ) : (
+            <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11.5px] text-slate-400"><Icon name="lock" size={12} /> Finish the step above first — these are walked in order.</p>
+          ))}
 
           {mode === "para" && (
             <div className="mt-2.5">
               <textarea autoFocus value={para} onChange={(e) => setPara(e.target.value)} rows={2} placeholder="Restate this step in your own words (≥ 12 words, not a copy)…" className={wellCls} />
               <div className="mt-1.5 flex items-center gap-2">
-                <button onClick={submitPara} className={`${btnPrimary} h-8 px-3.5 text-[12px]`}>Submit paraphrase</button>
-                <button onClick={() => { setMode(null); setErr(null); }} className="text-[12px] text-slate-400 hover:text-slate-700 cursor-pointer">Cancel</button>
+                <button onClick={submitPara} disabled={busy} className={`${btnPrimary} h-8 px-3.5 text-[12px]`}>{busy ? "The mentor is reading…" : "Submit paraphrase"}</button>
+                <button onClick={() => { setMode(null); setGrade(null); }} className="text-[12px] text-slate-400 hover:text-slate-700 cursor-pointer">Cancel</button>
                 <span className="text-[10.5px] text-slate-400 ml-auto tabular-nums">{wordCount(para)} words</span>
               </div>
-              {err && <p className="mt-1 text-[11.5px] text-rose-600">{err}</p>}
+              {grade && <div className="mt-2"><GradePanel g={grade} /></div>}
             </div>
           )}
 
@@ -592,10 +683,10 @@ function StepRow({ step, idx, rec, patch, prevDone, refs, openDoc }: {
               </div>
               <textarea autoFocus value={resolution} onChange={(e) => setResolution(e.target.value)} rows={2} placeholder="Resolution — what the step means to you now (≥ 12 words)…" className={wellCls} />
               <div className="flex items-center gap-2">
-                <button onClick={closeQuery} className={`${btnPrimary} h-8 px-3.5 text-[12px]`}>Close query</button>
+                <button onClick={closeQuery} disabled={busy} className={`${btnPrimary} h-8 px-3.5 text-[12px]`}>{busy ? "The mentor is reading…" : "Close query"}</button>
                 <span className="text-[10.5px] text-slate-400 ml-auto tabular-nums">{wordCount(resolution)} words</span>
               </div>
-              {err && <p className="text-[11.5px] text-rose-600">{err}</p>}
+              {grade && <GradePanel g={grade} />}
             </div>
           )}
         </div>
@@ -632,21 +723,32 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
   const [bnd, setBnd] = useState<Record<number, "in" | "out">>(cf?.boundaries ?? {});
   const [pErr, setPErr] = useState<string | null>(null);
   const [aErr, setAErr] = useState<string | null>(null);
-  const [graded, setGraded] = useState<{ ok: boolean; msg?: string } | null>(cf?.accepted ? { ok: true } : null);
+  const [graded, setGraded] = useState<{ ok: boolean; g?: CardGrade } | null>(cf?.accepted ? { ok: true } : null);
+  const [busy, setBusy] = useState(false);
 
   const boundariesDone = items.every((_, i) => bnd[i]);
   const boundariesCorrect = items.every((it, i) => bnd[i] === it.answer);
   const simP = jaccard(new Set(tokenize(produce)), new Set(tokenize(task.acceptance)));
   const simA = jaccard(new Set(tokenize(acceptWhen)), new Set(tokenize(task.acceptance)));
 
-  function grade() {
-    const gp = gradeParaphrase(produce, task.acceptance);
-    const ga = gradeParaphrase(acceptWhen, task.acceptance);
-    setPErr(gp.pass ? null : gp.reasons.join(" "));
-    setAErr(ga.pass ? null : ga.reasons.join(" "));
-    if (gp.pass && ga.pass && boundariesDone && boundariesCorrect) setGraded({ ok: true });
-    else if (gp.pass && ga.pass && boundariesDone) setGraded({ ok: false, msg: "Your scope sort has a misclassified item — does it directly produce the deliverable, or merely touch it?" });
-    else setGraded({ ok: false, msg: "Restatement not yet accepted — see the notes below each field." });
+  async function grade() {
+    // Layer 1 per field, so the "too short / copied" note lands under the field it belongs to.
+    const pe = preCheck(produce, task.acceptance);
+    const ae = preCheck(acceptWhen, task.acceptance);
+    setPErr(pe.join(" ") || null);
+    setAErr(ae.join(" ") || null);
+    const scopeGap = boundariesCorrect ? [] : ["Your scope sort has a misclassified item — does it directly produce the deliverable, or merely touch it?"];
+    if (pe.length || ae.length) {
+      // Both halves can fail at once — report every one, not just the first.
+      setGraded({ ok: false, g: fromFloor(["Restatement not yet accepted — see the notes under each field.", ...scopeGap]) });
+      return;
+    }
+    setBusy(true);
+    // One call for the pair: the two fields are two halves of the same contract.
+    const ai = await aiCheck({ taskCode, kind: "contract", text: produce, text2: acceptWhen });
+    setBusy(false);
+    const g = ai ? fromAi(ai) : fromChecks(true, []);
+    setGraded({ ok: g.passed && boundariesCorrect, g: { ...g, reasons: [...g.reasons, ...scopeGap] } });
   }
   function accept() {
     patch((n) => { n.confirm = { produce, acceptWhen, boundaries: bnd, accepted: true }; });
@@ -704,9 +806,11 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
         </div>
 
         {!graded?.ok && (
-          <div className="flex items-center gap-3 flex-wrap">
-            <button onClick={grade} disabled={!produce.trim() || !acceptWhen.trim() || !boundariesDone} className={`${btnPrimary} h-10 px-4 text-[12.5px]`}>Grade restatement</button>
-            {graded && !graded.ok && <span className="text-[12px] text-rose-600 font-medium">{graded.msg}</span>}
+          <div className="space-y-3">
+            <button onClick={grade} disabled={busy || !produce.trim() || !acceptWhen.trim() || !boundariesDone} className={`${btnPrimary} h-10 px-4 text-[12.5px]`}>
+              {busy ? "The mentor is reading…" : "Grade restatement"}
+            </button>
+            {graded?.g && <GradePanel g={graded.g} />}
           </div>
         )}
         {graded?.ok && !cf?.accepted && (
@@ -726,28 +830,48 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
 
 /* ================= R6 · Explain ================= */
 
-function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
+function ExplainPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProps) {
   const total = task.concepts.length;
   const passedCount = task.concepts.filter((_, i) => p.explain[i]?.passed).length;
-  const [queue, setQueue] = useState<number[]>(() => task.concepts.map((_, i) => i).filter((i) => !p.explain[i]?.passed));
-  const idx = queue[0];
-  const allDone = passedCount === total;
+  // Sequential mastery: the card in hand is the first unmastered concept and stays in hand until it
+  // passes. Re-queuing a failed card behind the others let a mentee reach concept 5 with none
+  // mastered — and made the "Concept 1 of 5" counter (which counts passes) disagree with the card.
+  const idx = task.concepts.findIndex((_, i) => !p.explain[i]?.passed);
+  const allDone = idx === -1;
 
   const [explain, setExplain] = useState("");
   const [example, setExample] = useState("");
-  const [result, setResult] = useState<ExplainGrade | null>(null);
+  const [result, setResult] = useState<CardGrade | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  function submit() {
-    const g = gradeExplain(explain, example, task.concepts[idx], task.org);
+  async function submit() {
+    const concept = task.concepts[idx];
+    // Layer 1 first: too short or copied back is objectively true and costs no model call.
+    const pre = preCheck(explain, concept);
+    let g: CardGrade;
+    if (pre.length) {
+      g = fromFloor(pre);
+    } else {
+      setBusy(true);
+      const ai = await aiCheck({ taskCode, kind: "explain", index: idx, text: explain, text2: example });
+      setBusy(false);
+      if (ai) g = fromAi(ai);
+      else {
+        const h = gradeExplain(explain, example, concept, task.org);
+        g = fromChecks(h.pass, h.reasons, EXPLAIN_DIMS.map((label, k) => ({ label, score: h.dims[k], hint: "" })), h.avg);
+      }
+    }
     setResult(g);
     patch((n) => {
-      const attempts = (n.explain[idx]?.attempts ?? 0) + (g.pass ? 0 : 1);
-      n.explain[idx] = { passed: g.pass, attempts, score: g.avg, explain, example };
+      const attempts = (n.explain[idx]?.attempts ?? 0) + (g.passed ? 0 : 1);
+      n.explain[idx] = { passed: g.passed, attempts, score: g.avg ?? 0, explain, example };
     });
   }
   function advance() {
-    setQueue((qu) => (result?.pass ? qu.slice(1) : [...qu.slice(1), qu[0]]));
-    setExplain(""); setExample(""); setResult(null);
+    // On a pass the next card is a fresh sheet; on a fail keep their words so they can revise
+    // rather than retype.
+    if (result?.passed) { setExplain(""); setExample(""); }
+    setResult(null);
   }
 
   return (
@@ -774,8 +898,8 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
         <div className="rounded-2xl ring-1 ring-slate-200/80 bg-white overflow-hidden">
           <div className="px-4 pt-4 pb-3.5 border-b border-slate-100">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-violet-50 text-violet-700 ring-1 ring-violet-200 text-[10px] font-semibold">Concept {passedCount + 1} of {total}</span>
-              {(p.explain[idx]?.attempts ?? 0) > 0 && <span className="text-[11px] text-amber-600 font-medium">re-queued · attempt {(p.explain[idx]?.attempts ?? 0) + 1}</span>}
+              <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-violet-50 text-violet-700 ring-1 ring-violet-200 text-[10px] font-semibold">Concept {idx + 1} of {total}</span>
+              {(p.explain[idx]?.attempts ?? 0) > 0 && <span className="text-[11px] text-amber-600 font-medium">attempt {(p.explain[idx]?.attempts ?? 0) + 1} — this card stays until it passes</span>}
             </div>
             <h4 className="text-[15px] font-semibold text-slate-900 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{task.concepts[idx]}</Gloss></h4>
           </div>
@@ -796,37 +920,23 @@ function ExplainPane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
                 </div>
               ))}
               <div className="flex items-center gap-3 pt-1">
-                <button onClick={submit} disabled={!explain.trim() || !example.trim()} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}><Icon name="send" size={13} /> Submit for grading</button>
-                <span className="text-[11px] text-slate-400">No model answer shown first.</span>
+                <button onClick={submit} disabled={busy || !explain.trim() || !example.trim()} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>
+                  <Icon name={busy ? "refresh" : "send"} size={13} className={busy ? "animate-spin" : ""} /> {busy ? "The mentor is reading…" : "Submit for grading"}
+                </button>
+                <span className="text-[11px] text-slate-400">Graded by the AI mentor. No model answer shown first.</span>
               </div>
             </div>
           ) : (
             <div className="px-4 py-3.5 space-y-3.5">
-              <div className={`rounded-xl p-3.5 ring-1 ${result.pass ? "bg-emerald-50 ring-emerald-200" : "bg-amber-50 ring-amber-200"}`}>
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className={`text-[12.5px] font-semibold ${result.pass ? "text-emerald-800" : "text-amber-800"}`}>{result.pass ? "Passed" : "Below threshold — re-queued"} · avg {result.avg}/4</span>
-                  <div className="flex gap-1">
-                    {["Accuracy", "Own words", "Depth", "Example"].map((d, k) => (
-                      <span key={k} title={d} className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${result.dims[k] >= 3 ? "bg-emerald-100 text-emerald-700" : result.dims[k] >= 2 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-600"}`}>{result.dims[k]}</span>
-                    ))}
-                  </div>
-                </div>
-                {!result.pass && result.reasons.length > 0 && (
-                  <ul className="mt-2 space-y-1">{result.reasons.map((r, k) => <li key={k} className="text-[12px] text-amber-800/90 flex items-start gap-1.5"><Icon name="arrowRight" size={12} className="mt-0.5 shrink-0" />{r}</li>)}</ul>
-                )}
-              </div>
-              <div className="grid sm:grid-cols-2 gap-2.5">
-                <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-3">
-                  <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1.5">Model key points</div>
-                  <p className="text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{task.concepts[idx]}</Gloss></p>
-                </div>
-                <div className="rounded-xl bg-violet-50/70 p-3">
-                  <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-violet-600 mb-1.5">Your explanation</div>
-                  <p className="text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}>{explain}</p>
-                </div>
+              <GradePanel g={result} />
+              {/* "Model key points" reprinted the concept title verbatim — there is no model answer
+                  to show here (the worked reference is released only when a mentee is stuck). */}
+              <div className="rounded-xl bg-violet-50/70 p-3">
+                <div className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-violet-600 mb-1.5">Your explanation</div>
+                <p className="text-[12px] text-slate-700 leading-relaxed" style={{ textWrap: "pretty" }}>{explain}</p>
               </div>
               <div className="flex justify-end">
-                <button onClick={advance} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>{result.pass ? "Next concept" : "Try this again later"} <Icon name="arrowRight" size={13} /></button>
+                <button onClick={advance} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>{result.passed ? "Next concept" : "Revise this answer"} <Icon name="arrowRight" size={13} /></button>
               </div>
             </div>
           )}
@@ -848,11 +958,18 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
   const [answer, setAnswer] = useState("");
   const [fu, setFu] = useState("");
   const [conf, setConf] = useState(3);
-  const [local, setLocal] = useState<Record<number, { answer: string; fu: string; outcome: AnswerOutcome; res: AnswerGrade }>>({});
+  const [busy, setBusy] = useState(false);
+  const [local, setLocal] = useState<Record<number, { answer: string; fu: string; outcome: AnswerOutcome; res: CardGrade }>>({});
 
-  function scoreCurrent() {
-    const g = gradeAnswer(answer, fu, task);
-    setLocal((l) => ({ ...l, [qi]: { answer, fu, outcome: g.outcome, res: g } }));
+  async function scoreCurrent() {
+    setBusy(true);
+    // The examiner grades the answer and its follow-up together, as one response.
+    const ai = await aiCheck({ taskCode, kind: "answer", index: qi, text: answer, text2: fu });
+    setBusy(false);
+    const [outcome, res] = ai
+      ? [ai.outcome as AnswerOutcome, fromAi(ai)] as const
+      : (() => { const h = gradeAnswer(answer, fu, task); return [h.outcome, fromChecks(h.outcome === "pass", h.reasons)] as const; })();
+    setLocal((l) => ({ ...l, [qi]: { answer, fu, outcome, res } }));
     setStage("scored");
   }
   function nextQ() {
@@ -968,7 +1085,8 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
                 <span className="tabular-nums w-3">{conf}</span>
               </div>
               <span className="text-[10.5px] text-slate-400 ml-auto tabular-nums">{wordCount(answer)} words</span>
-              <button onClick={() => setStage("followup")} disabled={wordCount(answer) < 6} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>Submit answer <Icon name="arrowRight" size={13} /></button>
+              {/* 8 words is also the server's floor for spending a grading call — keep them equal. */}
+              <button onClick={() => setStage("followup")} disabled={wordCount(answer) < 8} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>Submit answer <Icon name="arrowRight" size={13} /></button>
             </div>
           </div>
         )}
@@ -981,21 +1099,17 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
             </div>
             <textarea autoFocus value={fu} onChange={(e) => setFu(e.target.value)} rows={3} placeholder="Respond to the probe…" aria-label="Follow-up response"
               className="w-full resize-none rounded-xl bg-slate-50 ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-500/40 px-3.5 py-3 text-[13px] text-slate-800 outline-none placeholder:text-slate-400" />
-            <div className="flex justify-end"><button onClick={scoreCurrent} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>Submit &amp; score</button></div>
+            <div className="flex justify-end"><button onClick={scoreCurrent} disabled={busy} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>{busy ? "The examiner is reading…" : "Submit & score"}</button></div>
           </div>
         )}
 
         {stage === "scored" && rec && (
           <div className="space-y-3">
-            <div className={`rounded-xl p-3.5 ring-1 ${rec.outcome === "pass" ? "bg-emerald-50 ring-emerald-200" : rec.outcome === "partial" ? "bg-amber-50 ring-amber-200" : "bg-rose-50 ring-rose-200"}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[12.5px] font-semibold ${rec.outcome === "pass" ? "text-emerald-800" : rec.outcome === "partial" ? "text-amber-800" : "text-rose-800"}`}>{rec.outcome === "pass" ? "Pass" : rec.outcome === "partial" ? "Partial" : "Fail"}</span>
-                <span className="text-[11px] text-slate-500">· concept coverage {Math.round(rec.res.cov * 100)}%</span>
-              </div>
-              {rec.res.reasons.length > 0
-                ? <ul className="space-y-1">{rec.res.reasons.map((r, k) => <li key={k} className="text-[12px] text-slate-600 flex items-start gap-1.5"><Icon name="arrowRight" size={12} className="mt-0.5 shrink-0" />{r}</li>)}</ul>
-                : <p className="text-[12px] text-slate-600">Solid — you applied the principle and tied it to the organisation.</p>}
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center h-[19px] px-2 rounded-full text-[10.5px] font-bold uppercase tracking-wide ${rec.outcome === "pass" ? "bg-emerald-100 text-emerald-700" : rec.outcome === "partial" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-600"}`}>{rec.outcome}</span>
+              <span className="text-[11px] text-slate-400">a partial still counts as answered; a fail must be retaken</span>
             </div>
+            <GradePanel g={rec.res} />
             <div className="flex justify-end"><button onClick={nextQ} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>{qi + 1 < N ? "Next question" : "Finish session"} <Icon name="arrowRight" size={13} /></button></div>
           </div>
         )}
@@ -1158,7 +1272,8 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
     attest: !!decision,
   };
 
-  const tabs: TabDef[] = [
+  // The eight steps are a pipeline — lockSteps closes every step behind the first unfinished one.
+  const tabs: TabDef[] = lockSteps([
     { key: "study", label: "Study", icon: "book", blurb: "Governing controls & cross-walk", done: doneMap.study, group: "A · Requirement Analysis" },
     { key: "inspect", label: "Inspect", icon: "table", blurb: "Every provided template", done: doneMap.inspect },
     { key: "acquire", label: "Acquire", icon: "download", blurb: "Prerequisite inputs & access", done: doneMap.acquire },
@@ -1167,7 +1282,7 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
     { key: "explain", label: "Explain", icon: "lightbulb", blurb: "Every concept, in your words", done: doneMap.explain, group: "B · Key Concepts" },
     { key: "answer", label: "Answer", icon: "chat", blurb: "Adaptive readiness Q&A", done: doneMap.answer, group: "C · Understanding Verification" },
     { key: "attest", label: "Attest", icon: "shield", blurb: "Request the gate decision", done: doneMap.attest, group: "D · Readiness Sign-off" },
-  ];
+  ]);
   const doneCount = tabs.filter((t) => t.done).length;
   // Reopening the gate resumes at the first unfinished step. Landing back on Study every time made
   // finished work look lost, even though the draft had restored it.

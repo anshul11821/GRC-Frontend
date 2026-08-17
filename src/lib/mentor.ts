@@ -9,6 +9,7 @@
  * in one browser without either one shadowing the other.
  */
 import { api, ApiError, type RequestOptions } from "./api";
+import type { TaskReference } from "./taskmeta";
 
 const KEY = "grc_mentor_token";
 
@@ -71,6 +72,35 @@ export interface Reason {
   action: string | null;
 }
 
+/** One step of the task in the card's step chain. */
+export interface Step {
+  n: number;
+  name: string;
+  state: "past" | "now" | "future";
+}
+
+/** One review question. Each carries its own disapprove code and correction, so answering "no"
+ *  produces both the reason and the instruction to the mentee without picking from a menu. */
+export interface ChecklistItem {
+  id: string;
+  slot: number;
+  layer: "CATEGORY" | "VERB-FAMILY" | "GATE-TYPE" | "UNIVERSAL" | "COORDINATE";
+  question: string;
+  disapproveCode: string;
+  reason: string;
+  correction: string;
+  testableBy: "HUMAN-ONLY" | "AGENT-TESTABLE";
+  /** T2/T3 render agent-testable items as already cleared, with the grader's result attached. */
+  preCleared: boolean;
+}
+
+/** A checklist item as a disapprove reason — its code, what went wrong, and the fix. */
+export const itemAsReason = (i: ChecklistItem): Reason => ({
+  code: i.disapproveCode,
+  text: i.reason,
+  action: i.correction,
+});
+
 export interface Block {
   t: "h" | "p" | "list" | "table";
   text: string | null;
@@ -110,6 +140,9 @@ export interface Brief {
   engagement: string;
   objective: string;
   whatToDo: string[];
+  /** The reference documents handed to the learner for this step, same shape the Working Desk
+   *  renders — so the console reuses <ReferenceMaterial> rather than growing a second renderer. */
+  references: TaskReference[];
 }
 
 export interface Card {
@@ -126,10 +159,28 @@ export interface Card {
   activityTitle: string;
   /** Absent when served by a backend older than the brief — the card degrades, it does not break. */
   brief?: Brief;
-  why: string;
-  checks: string[];
+  /** Review tier. Outside T1 the agent-testable questions arrive pre-cleared. */
+  tier: "T1" | "T2" | "T3";
+  /** 0–10. How far this determination reaches once it leaves the gate. */
+  impact: number;
+  archetype: string | null;
+  category: string;
+  verbFamily: string;
+  /** The task's steps in order, with this gate's marked — what a return actually costs. */
+  stepChain: Step[];
+  // The learner's own organisation, so the card is judged against the brief they were given.
+  orgRegulator: string;
+  orgIndustry: string;
+  orgContext: string;
+  mandatoryStandards: string;
+  scenario: string;
+  /** The six questions that *are* the review, in slot order. */
+  checklist: ChecklistItem[];
+  /** In scope but not among the six — library items the mentor can still disapprove on. */
+  reserve: ChecklistItem[];
+  /** This gate's hand-authored v2 reasons, more specific than any inherited item. */
+  legacyReserve: Reason[];
   acceptance: string;
-  budgetMin: number;
   remainingMin: number;
   outputId: string;
   artefact: string;
@@ -152,7 +203,6 @@ export interface Card {
   blocks: Block[];
   grader: Grader;
   approve: Reason[];
-  disapprove: Reason[];
   priorReturns: number;
   maxReturns: number;
   history: HistoryEntry[];
