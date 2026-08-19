@@ -4,13 +4,15 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { authApi, type User } from "@/lib/auth";
 import { ApiError, setRefreshHandler } from "@/lib/api";
 import { getAccessToken, setAccessToken } from "@/lib/token";
+import { invalidateQuery } from "@/lib/use-query";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   /** Store a fresh access token and load the current user. `remember` picks the storage location. */
   signIn: (accessToken: string, remember?: boolean) => Promise<User>;
-  signOut: () => Promise<void>;
+  /** Clears the session and hard-navigates to `to`. */
+  signOut: (to?: string) => Promise<void>;
   refreshUser: () => Promise<void>;
   setUser: (u: User) => void;
 }
@@ -75,6 +77,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(
     async (accessToken: string, remember = true) => {
+      // The query cache is module-level and keyed by data, not by user — anything left from a
+      // previous session would render under this one's name. Same on sign-out below.
+      invalidateQuery();
       setAccessToken(accessToken, remember);
       const me = await authApi.me();
       setUserState(me);
@@ -83,14 +88,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (to = "/") => {
     try {
       await authApi.logout();
     } catch {
       /* ignore — clear locally regardless */
     }
+    invalidateQuery();
     setAccessToken(null);
     setUserState(null);
+    // Hard navigation, not router.replace. A client-side route change keeps the JS module graph
+    // alive, so every module-level cache, in-flight refresh promise and memo from this account
+    // survives into the next one signing in on the same tab. Reloading drops the lot — including
+    // any cache added here later, which a hand-maintained list of invalidations would miss.
+    window.location.replace(to);
   }, []);
 
   const refreshUser = useCallback(() => loadUser(), [loadUser]);

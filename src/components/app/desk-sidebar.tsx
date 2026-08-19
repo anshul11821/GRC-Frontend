@@ -248,7 +248,7 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
 
 function SidebarShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   return (
-    <aside data-tour="desk-tree" className="w-[288px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
+    <aside data-tour="desk-tree" className="w-[288px] 2xl:w-[344px] 3xl:w-[380px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
       <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">{children}</div>
       {footer}
     </aside>

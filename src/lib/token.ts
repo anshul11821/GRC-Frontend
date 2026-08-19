@@ -47,6 +47,24 @@ export function setAccessToken(token: string | null, persist?: boolean): void {
   listeners.forEach((fn) => fn(token));
 }
 
+/**
+ * Stable per-account suffix for browser-storage keys. localStorage is per browser, so any key
+ * holding one account's state has to be scoped or the next account signing in on the same machine
+ * inherits it. Read from the token's `sub` claim (the email — see backend api/deps.py) rather than
+ * the auth context, so module-level stores can scope themselves without threading a user through
+ * React. Display/partitioning only — never a trust decision, so no signature check.
+ */
+export function userKey(): string {
+  const t = getAccessToken();
+  if (!t) return "anon";
+  try {
+    const b64 = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(b64)).sub || "anon";
+  } catch {
+    return "anon";
+  }
+}
+
 export function onTokenChange(fn: (t: string | null) => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);

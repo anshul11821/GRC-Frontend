@@ -69,7 +69,7 @@ export function SubmittedWork({ card }: { card: Card }) {
     <div>
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400">
-          What they submitted · revision {card.revision}
+          What they submitted
         </div>
         {!drifted && (
           <button
@@ -99,7 +99,17 @@ export function SubmittedWork({ card }: { card: Card }) {
         <TaskBundleSourceProvider source={source}>
           {/* disabled: the reviewer reads the work, never edits it. pointer-events stays on so
               the workspace's own tabs, rails and Open buttons still work for reading. */}
-          <fieldset disabled className="min-w-0 [&_*]:cursor-default">
+          {/* The workspace is built for the learner's full-width desk; in the review column its
+              inputs clip their own values, and a reviewer cannot judge a rationale they can only
+              see the first forty characters of. `field-sizing: content` lets each control grow to
+              its text, and the wrapper scrolls rather than squeezing the table. Where the browser
+              lacks it (Firefox, Safari today) the values still clip — "Show as plain text" renders
+              the whole submission and is the escape hatch. */}
+          <div className="overflow-x-auto">
+            <fieldset
+              disabled
+              className="min-w-0 [&_*]:cursor-default [&_input]:[field-sizing:content] [&_select]:[field-sizing:content] [&_textarea]:[field-sizing:content] [&_input]:!max-w-none [&_textarea]:!max-w-none"
+            >
             <VerbWorkspace
               verbId={card.verbId}
               taskCode={card.taskCode}
@@ -108,7 +118,8 @@ export function SubmittedWork({ card }: { card: Card }) {
               onChange={onLift}
               openRef={NOOP_REF}
             />
-          </fieldset>
+            </fieldset>
+          </div>
         </TaskBundleSourceProvider>
       )}
 

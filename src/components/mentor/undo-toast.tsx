@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { OUTCOME_LABEL, type Outcome } from "@/lib/mentor";
 
 /**
- * Sixty-second withdrawal window after a decision, also triggered by U. The countdown here is
+ * Sixty-second withdrawal window after a decision. The countdown here is
  * cosmetic — the server enforces the real window and rejects a late undo, so a paused tab or a
  * skewed clock cannot buy extra time.
  */
@@ -40,18 +40,6 @@ export function UndoToast({
     return () => clearTimeout(t);
   }, [left, onExpire]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.tagName === "TEXTAREA" || target?.tagName === "INPUT") return;
-      if (e.key === "u" || e.key === "U") {
-        e.preventDefault();
-        onUndo();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onUndo]);
 
   if (left <= 0) return null;
 

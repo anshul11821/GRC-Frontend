@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/primitives";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DVerb } from "@/components/ui/dverb";
 import { useCachedQuery } from "@/lib/use-query";
+import { userKey } from "@/lib/token";
 import { learningsApi } from "@/lib/learnings";
 import {
   deriveJobs,
@@ -43,22 +44,27 @@ const STD_STATE: Record<RespState, string> = {
 // ---- saved jobs (local, per-browser; backend persistence is a later phase) ----
 // Modelled as an external store so SSR + hydration stay consistent and we never
 // setState synchronously inside an effect.
-const SAVED_KEY = "grcmentor:saved-jobs";
+// Scoped per account: without the suffix the next person signing in on this browser inherits
+// the previous one's saved jobs.
+const savedKey = () => `grcmentor:saved-jobs:${userKey()}`;
 const EMPTY_SAVED: ReadonlySet<string> = new Set();
 const savedListeners = new Set<() => void>();
 let savedCache: ReadonlySet<string> = EMPTY_SAVED;
 let savedCacheJson: string | null = null;
+let savedCacheKey: string | null = null;
 
 function readSavedSnapshot(): ReadonlySet<string> {
+  const key = savedKey();
   let raw = "";
   try {
-    raw = localStorage.getItem(SAVED_KEY) ?? "";
+    raw = localStorage.getItem(key) ?? "";
   } catch {
     raw = "";
   }
   // Re-parse only when the underlying string changes, so the snapshot reference is stable.
-  if (raw !== savedCacheJson) {
+  if (raw !== savedCacheJson || key !== savedCacheKey) {
     savedCacheJson = raw;
+    savedCacheKey = key;
     try {
       savedCache = raw ? new Set(JSON.parse(raw) as string[]) : EMPTY_SAVED;
     } catch {
@@ -71,7 +77,7 @@ function readSavedSnapshot(): ReadonlySet<string> {
 function subscribeSaved(cb: () => void) {
   savedListeners.add(cb);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === SAVED_KEY) cb();
+    if (e.key === savedKey()) cb();
   };
   window.addEventListener("storage", onStorage);
   return () => {
@@ -85,7 +91,7 @@ function toggleSavedJob(id: string) {
   if (next.has(id)) next.delete(id);
   else next.add(id);
   try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify([...next]));
+    localStorage.setItem(savedKey(), JSON.stringify([...next]));
   } catch {
     /* ignore quota/availability errors */
   }
@@ -329,7 +335,7 @@ export default function JobsPage() {
   }, [allJobs, q, source, sort, saved]);
 
   return (
-    <div className="max-w-[1000px] mx-auto px-6 py-6 space-y-5">
+    <div className="max-w-[1000px] 2xl:max-w-[1400px] 3xl:max-w-[1640px] mx-auto px-6 py-6 space-y-5">
       <div className="flex items-start gap-3.5">
         <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">
           <Icon name="briefcase" size={20} />

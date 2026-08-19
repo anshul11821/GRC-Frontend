@@ -957,7 +957,6 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
   const [stage, setStage] = useState<"answer" | "followup" | "scored">("answer");
   const [answer, setAnswer] = useState("");
   const [fu, setFu] = useState("");
-  const [conf, setConf] = useState(3);
   const [busy, setBusy] = useState(false);
   const [local, setLocal] = useState<Record<number, { answer: string; fu: string; outcome: AnswerOutcome; res: CardGrade }>>({});
 
@@ -973,7 +972,7 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
     setStage("scored");
   }
   function nextQ() {
-    if (qi + 1 < N) { setQi(qi + 1); setStage("answer"); setAnswer(""); setFu(""); setConf(3); }
+    if (qi + 1 < N) { setQi(qi + 1); setStage("answer"); setAnswer(""); setFu(""); }
     else {
       patch((n) => {
         task.questions.forEach((_, i) => { const r = local[i]; if (r) n.answer[i] = { outcome: r.outcome, answer: r.answer, fu: r.fu }; });
@@ -986,7 +985,7 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
     if (fails.length === 0) return;
     setLocal((l) => { const nl = { ...l }; fails.forEach((i) => delete nl[i]); return nl; });
     patch((n) => { n.answerDone = false; fails.forEach((i) => { n.answer[i] = null; }); });
-    setStarted(true); setQi(fails[0]); setStage("answer"); setAnswer(""); setFu(""); setConf(3);
+    setStarted(true); setQi(fails[0]); setStage("answer"); setAnswer(""); setFu("");
   }
 
   // completed session view
@@ -1079,11 +1078,6 @@ function AnswerPane({ task, taskCode, p, patch, goVerb }: PaneProps) {
             <textarea autoFocus value={answer} onChange={(e) => setAnswer(e.target.value)} rows={5} placeholder="Your answer — reason it through and apply it to this organisation…" aria-label="Your answer"
               className="w-full resize-none rounded-xl bg-slate-50 ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-500/40 px-3.5 py-3 text-[13px] text-slate-800 outline-none placeholder:text-slate-400" />
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2 text-[11.5px] text-slate-500">
-                <span>Confidence</span>
-                <input type="range" min={1} max={5} value={conf} onChange={(e) => setConf(+e.target.value)} className="accent-violet-600" aria-label="Confidence" />
-                <span className="tabular-nums w-3">{conf}</span>
-              </div>
               <span className="text-[10.5px] text-slate-400 ml-auto tabular-nums">{wordCount(answer)} words</span>
               {/* 8 words is also the server's floor for spending a grading call — keep them equal. */}
               <button onClick={() => setStage("followup")} disabled={wordCount(answer) < 8} className={`${btnPrimary} h-9 px-4 text-[12.5px]`}>Submit answer <Icon name="arrowRight" size={13} /></button>

@@ -102,10 +102,7 @@ export default function CheckoutPage() {
       </div>
 
       <button
-        onClick={async () => {
-          await signOut();
-          router.replace("/signin");
-        }}
+        onClick={() => signOut("/signin")}
         className="mt-4 w-full text-center text-[12.5px] text-slate-400 hover:text-slate-600"
       >
         Sign out

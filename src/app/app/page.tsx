@@ -398,7 +398,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5 animate-pulse">
+      <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 space-y-5 animate-pulse">
         <div className="h-[290px] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Skeleton className="h-[76px] rounded-2xl" />
@@ -415,7 +415,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
+    <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 space-y-5">
       {/* Hero / continue — the track switcher lives in the header strip so there's no empty band up top */}
       <Reveal>
       <div data-tour="dash-hero" className="bg-brand-gradient relative overflow-hidden rounded-2xl text-white p-6 md:p-7 shadow-[0_12px_40px_-16px_rgba(79,70,229,0.55)]">

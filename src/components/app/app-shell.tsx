@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -38,7 +38,7 @@ function DashSidebar({
         mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
         // Desktop (md+): part of the flex flow, collapsible width, never translated.
         "md:static md:z-auto md:translate-x-0 md:shadow-none md:h-full md:shrink-0 md:transition-all",
-        collapsed ? "md:w-[68px]" : "md:w-[244px]",
+        collapsed ? "md:w-[68px]" : "md:w-[244px] 2xl:w-[276px]",
       ].join(" ")}
     >
       <div className="h-[68px] flex items-center px-4 gap-3 border-b border-slate-200/60">
@@ -74,7 +74,12 @@ function DashSidebar({
               onClick={closeMobile}
               data-tour={`nav-${item.id}`}
               title={item.soon ? `${item.label} — coming soon` : item.label}
+              // The rail is far taller than 11 links on a big screen, so the last one is pushed to
+              // the floor — the column is then anchored at both ends and the slack reads as a gap
+              // between groups instead of a blank band under the buttons.
               className={`focus-ring group w-full flex-1 min-h-0 max-h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
+                item.id === DASH_NAV[DASH_NAV.length - 1].id ? "mt-auto" : ""
+              } ${
                 active ? "bg-indigo-50/80 text-indigo-700" : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
               }`}
             >
@@ -101,7 +106,6 @@ function DashSidebar({
 
 function UserMenu() {
   const { user, signOut } = useAuth();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -116,10 +120,7 @@ function UserMenu() {
   const initials = initialsOf(user?.firstName, user?.lastName, user?.email);
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "";
 
-  const onSignOut = async () => {
-    await signOut();
-    router.replace("/");
-  };
+  const onSignOut = () => signOut("/");
 
   return (
     <div className="relative pl-3 ml-1 border-l border-slate-200/70" ref={ref}>

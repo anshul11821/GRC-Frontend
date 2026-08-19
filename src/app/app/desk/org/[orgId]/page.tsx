@@ -23,7 +23,7 @@ export default function OrgContext() {
 
   if (loading) {
     return (
-      <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5 animate-pulse">
+      <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5 animate-pulse">
         <Skeleton className="h-7 w-2/3 max-w-md" />
         <div className="space-y-2.5">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
@@ -45,7 +45,7 @@ export default function OrgContext() {
   }
 
   return (
-    <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7">
+    <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-5 sm:px-8 py-6 sm:py-7">
       <OrgDetail
         org={org}
         action={

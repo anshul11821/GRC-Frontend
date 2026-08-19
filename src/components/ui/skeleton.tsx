@@ -67,7 +67,7 @@ export function SkeletonForm({ fields = 3 }: { fields?: number }) {
 /** Generic content-page skeleton: heading + a responsive grid of card placeholders. */
 export function PageSkeleton({ cards = 6 }: { cards?: number }) {
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-6 animate-pulse">
+    <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 animate-pulse">
       <Skeleton className="h-7 w-48 mb-2" />
       <Skeleton className="h-3.5 w-80 max-w-full mb-6 opacity-70" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

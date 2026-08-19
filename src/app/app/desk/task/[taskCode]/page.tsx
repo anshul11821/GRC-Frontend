@@ -68,7 +68,7 @@ export default function TaskOverview() {
 
   if (loading) {
     return (
-      <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5 animate-pulse">
+      <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5 animate-pulse">
         <Skeleton className="h-3 w-40" />
         <Skeleton className="h-7 w-2/3 max-w-md" />
         <Skeleton className="h-24 w-full rounded-2xl" />
@@ -80,7 +80,7 @@ export default function TaskOverview() {
   }
 
   return (
-    <div className="max-w-[920px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5">
+    <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-5 sm:px-8 py-6 sm:py-7 space-y-5">
       {/* standard banner — one per task: framework, domain, task description; controls chip opens the drawer */}
       <div data-tour="task-banner">
         <StandardBanner taskCode={taskCode} onControls={reg && reg.controls.length > 0 ? () => setControlsOpen(true) : undefined} />

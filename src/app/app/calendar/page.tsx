@@ -197,7 +197,7 @@ export default function CalendarPage() {
 
   if (loading && !data) {
     return (
-      <div className="max-w-[1180px] mx-auto px-6 py-6 animate-pulse">
+      <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 animate-pulse">
         <div className="h-6 w-40 rounded bg-slate-200 mb-1.5" />
         <div className="h-3 w-72 rounded bg-slate-100 mb-5" />
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
@@ -221,7 +221,7 @@ export default function CalendarPage() {
       initial={reduce ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="max-w-[1180px] mx-auto px-6 py-6 space-y-5"
+      className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 space-y-5"
     >
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 flex-wrap">

@@ -60,7 +60,7 @@ function Hero() {
         <div className="absolute top-10 right-10 w-[380px] h-[380px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.14), transparent 70%)" }} />
         <div className="absolute -bottom-10 left-10 w-[320px] h-[320px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%)" }} />
       </div>
-      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-10 text-center">
+      <div className="relative max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 pt-16 pb-10 text-center">
         <div className="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-white ring-1 ring-slate-200/70 text-[12px] font-medium text-slate-600 tracking-tight">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Hands-on GRC mentorship
         </div>
@@ -87,7 +87,7 @@ function Frameworks() {
   const items = ["ISO/IEC 27001", "NIST CSF 2.0", "CIS Controls v8", "SOC 2", "GDPR"];
   return (
     <section className="bg-[#FAFAF7]">
-      <div className="max-w-[1140px] mx-auto px-6 pt-4 pb-10">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 pt-4 pb-10">
         <div className="flex flex-col items-center gap-4">
           <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold tracking-[0.14em] uppercase text-slate-500">
             <Icon name="shield" size={13} className="text-emerald-500" /> Aligned with industry standards
@@ -115,7 +115,7 @@ function Industries() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
       <div className="pointer-events-none absolute -top-24 left-1/4 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.22), transparent 70%)" }} />
       <div className="pointer-events-none absolute -bottom-28 right-1/4 w-[420px] h-[420px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.18), transparent 70%)" }} />
-      <div className="relative max-w-[1140px] mx-auto px-6 py-20">
+      <div className="relative max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
         <SectionHead dark eyebrow="Where you'll work" icon="grid" sub="Engagements span the industries that hire GRC talent — practise in the context you'll actually be employed in.">
           Industries you&apos;ll <span className="text-indigo-400">work</span> with
         </SectionHead>
@@ -148,7 +148,7 @@ function Industries() {
 function Program() {
   return (
     <section id="program" className="relative" style={{ background: "linear-gradient(180deg, #ffffff, #f3f4fb)" }}>
-      <div className="max-w-[1140px] mx-auto px-6 py-20">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
         <SectionHead eyebrow="How it works" icon="sparkle" sub="A mentorship model built around doing the work — not watching lectures.">
           Our <span className="text-indigo-600">Mentorship</span> Program
         </SectionHead>
@@ -174,7 +174,7 @@ function Program() {
 function Tracks() {
   return (
     <section id="tracks" className="bg-white">
-      <div className="max-w-[1140px] mx-auto px-6 py-20">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
         <SectionHead eyebrow="Career tracks" icon="rocket" sub="A progression from practitioner to leader — start where you are and grow with mentor-graded work.">
           Choose your <span className="text-indigo-600">track</span>
         </SectionHead>
@@ -223,7 +223,7 @@ function CtaFooter() {
   return (
     <>
       <section className="bg-white">
-        <div className="max-w-[1140px] mx-auto px-6 py-16">
+        <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-16">
           <div className="bg-brand-gradient relative overflow-hidden rounded-3xl text-white px-8 py-12 md:px-14 md:py-14 text-center">
             <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
             <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />

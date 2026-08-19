@@ -337,7 +337,21 @@ export default function ActivityWorkspace() {
   // e.g. the Request conversation) or `ready` (every required field filled). While either is
   // present and not yet true, submitting is blocked — otherwise a workspace that also lifts its
   // given/scripted data reads as "has content" and an untouched deliverable can be sent for grading.
-  const objectiveBlocked = values.objectiveMet === false || values.ready === false;
+  const workspaceBlocked = values.objectiveMet === false || values.ready === false;
+  // Escape hatch. Every recovery path (gate_lifted's forced pass on the final attempt, the answer
+  // key from _model_answer_if_stuck) triggers on attempts *spent* — so a workspace that never lets
+  // Submit fire leaves a stuck mentee with no way out at all. After a while on an unmet objective
+  // they may send it as it stands: honest Layer 1 miss, attempt burned, third one passes them on.
+  // ponytail: a 10-minute timer, not a per-workspace "you got it wrong N times" signal — only
+  // some workspaces count slips. Wire those in if the wait reads as arbitrary.
+  const [override, setOverride] = useState(false);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    setOverride(false); setStuck(false);
+    const t = setTimeout(() => setStuck(true), 10 * 60_000);
+    return () => clearTimeout(t);
+  }, [activityId]);
+  const objectiveBlocked = workspaceBlocked && !override;
   const blockedHint = values.objectiveMet === false
     ? "Complete the guided steps successfully to submit."
     : "Complete every required field in the deliverable to submit.";
@@ -411,7 +425,7 @@ export default function ActivityWorkspace() {
 
   if (loading) {
     return (
-      <div className="max-w-[920px] mx-auto px-6 py-6 animate-pulse">
+      <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-6 py-6 animate-pulse">
         {/* header */}
         <div className="mb-5">
           <div className="h-3 w-56 rounded bg-slate-200 mb-3" />
@@ -545,7 +559,7 @@ export default function ActivityWorkspace() {
 
   return (
     <div
-      className="max-w-[920px] mx-auto px-6 py-6"
+      className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-6 py-6"
       // Autosave only after the mentee actually touches the page — workspaces seed their scripted
       // defaults into `values` on mount, and that must not be mistaken for typed work.
       onPointerDownCapture={() => { touched.current = true; }}
@@ -755,7 +769,17 @@ export default function ActivityWorkspace() {
                 </button>
               )}
               {savedAt && <span className="text-[11.5px] text-slate-400">Saved {savedAt}</span>}
-              {objectiveBlocked && <span className="text-[11.5px] text-amber-600">{blockedHint}</span>}
+              {objectiveBlocked && (
+                <span className="text-[11.5px] text-amber-600">
+                  {blockedHint}
+                  {stuck && (
+                    <button onClick={() => setOverride(true)} className="focus-ring ml-2 underline underline-offset-2 hover:text-amber-700">
+                      Stuck? Submit as it stands — uses an attempt
+                    </button>
+                  )}
+                </span>
+              )}
+              {override && workspaceBlocked && <span className="text-[11.5px] text-amber-600">Submitting incomplete work — this uses an attempt and is graded as it stands.</span>}
             </div>
           )}
         </div>

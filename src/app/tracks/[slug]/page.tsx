@@ -111,7 +111,7 @@ export function generateStaticParams() {
 function CourseHeader() {
   return (
     <header className="sticky top-0 z-50 bg-[#FAFAF7]/80 backdrop-blur-xl border-b border-slate-200/60">
-      <div className="max-w-[1140px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 h-16 flex items-center justify-between">
         <Logo />
         <div className="flex items-center gap-2.5">
           <Link href="/#tracks" className="hidden sm:inline-flex items-center gap-1.5 text-[13.5px] font-medium text-slate-600 hover:text-slate-900 tracking-tight no-underline">
@@ -171,7 +171,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           <section className="relative overflow-hidden" style={{ background: "linear-gradient(165deg, #312e81 0%, #1e1b3a 55%, #0f172a 100%)" }}>
             <div className="pointer-events-none absolute -top-16 -right-10 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.4), transparent 70%)" }} />
             <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-            <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-20">
+            <div className="relative max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 pt-16 pb-20">
               <span className="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-white/10 ring-1 ring-white/15 text-[12px] font-medium text-indigo-100 tracking-tight">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Available now · {course.role}
               </span>
@@ -194,7 +194,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {/* Overview + what you'll learn */}
           <section className="bg-white border-b border-slate-200/60">
-            <div className="max-w-[1140px] mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-5 gap-10">
+            <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-5 gap-10">
               <div className="lg:col-span-2">
                 <div className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-[0.14em] uppercase text-indigo-600"><Icon name="info" size={14} /> About this course</div>
                 <p className="mt-3 text-[15px] text-slate-600 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>{course.overview}</p>
@@ -215,7 +215,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {/* Inside the course — engagements */}
           <section className="bg-[#FAFAF7]">
-            <div className="max-w-[1140px] mx-auto px-6 py-20">
+            <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
               <SectionHead eyebrow="Curriculum" icon="layers" sub="Three simulated enterprise engagements, each a complete project → task → activity workflow graded by your AI mentor.">
                 Inside the <span className="text-indigo-600">course</span>
               </SectionHead>
@@ -238,7 +238,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {/* What you'll get */}
           <section className="bg-white border-y border-slate-200/60">
-            <div className="max-w-[1140px] mx-auto px-6 py-20">
+            <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
               <SectionHead eyebrow="Outcomes" icon="rocket" sub="Everything you complete turns into proof of capability you can show employers.">
                 What you&apos;ll <span className="text-indigo-600">walk away with</span>
               </SectionHead>
@@ -256,7 +256,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {/* Standards + who it's for */}
           <section className="bg-[#FAFAF7]">
-            <div className="max-w-[1140px] mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-10">
               <div>
                 <div className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-[0.14em] uppercase text-indigo-600"><Icon name="shield" size={14} /> Standards you&apos;ll work with</div>
                 <div className="mt-4 flex flex-wrap gap-2.5">
@@ -276,7 +276,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {/* CTA */}
           <section className="bg-white border-t border-slate-200/60">
-            <div className="max-w-[1140px] mx-auto px-6 py-16">
+            <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-16">
               <div className="relative overflow-hidden rounded-3xl px-8 py-12 text-center text-white" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%)" }}>
                 <div className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
                 <h2 className="relative text-[26px] md:text-[32px] font-semibold tracking-[-0.02em]">Ready to start {course.code}?</h2>
@@ -291,7 +291,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       )}
 
       <footer className="bg-[#0b1120] text-slate-400">
-        <div className="max-w-[1140px] mx-auto px-6 py-8 flex items-center justify-between flex-wrap gap-3">
+        <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-8 flex items-center justify-between flex-wrap gap-3">
           <span className="text-[12px]">grcmentor · GRC 101 → 301 → 501</span>
           <Link href="/#tracks" className="text-[12px] no-underline hover:text-slate-200">← Back to all tracks</Link>
         </div>

@@ -31,10 +31,7 @@ export default function CompleteProfilePage() {
       </div>
       <ProfileForm />
       <button
-        onClick={async () => {
-          await signOut();
-          router.replace("/signin");
-        }}
+        onClick={() => signOut("/signin")}
         className="mt-5 w-full text-center text-[12.5px] text-slate-400 hover:text-slate-600"
       >
         Sign out

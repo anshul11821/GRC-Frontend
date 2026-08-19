@@ -18,6 +18,21 @@
    hardcoded and repeated across surfaces. See design-system/grcmentor/MASTER.md.
    ========================================================================== */
 
+/* Big-screen breakpoint. Tailwind stops at 2xl (1536px), so a 1920px+ monitor got the same
+   container as a 1536px laptop and the extra width became margin. Page shells step up at
+   `2xl:` and `3xl:`. */
+@theme {
+  --breakpoint-3xl: 112.5rem; /* 1800px — under a 1920 monitor's ~1903px innerWidth, and rem so it sorts after Tailwind's rem-based 2xl (96rem) */
+}
+
+/* Hairlines. The app draws nearly every edge with slate-200 at 50–80% alpha; on a large or
+   high-DPI display that hairline over the #FAFAF7 canvas washes out to nothing. Darkening the
+   token itself fixes every border/ring/divider at once instead of 300 call sites. */
+@theme {
+  --color-slate-100: #ecf1f6; /* was #f1f5f9 — 30% of the way to slate-200 */
+  --color-slate-200: #dae1eb; /* was #e2e8f0 — 35% of the way to slate-300 */
+}
+
 /* Signature brand gradient — hero / CTA / dashboard banner. */
 @utility bg-brand-gradient {
   background-image: linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%);

@@ -34,9 +34,8 @@ await page.screenshot({ path: `${OUT}/01-queue.png`, fullPage: true });
 console.log("queue rendered:", (await page.locator('a[href^="/mentor/card/"]').count()), "cards");
 console.log("role filter visible:", await page.locator("text=All roles").isVisible());
 
-// 3. keyboard: J then Enter opens the highlighted card
-await page.keyboard.press("j");
-await page.keyboard.press("Enter");
+// 3. open a card from the queue
+await page.locator('a[href^="/mentor/card/"]').first().click();
 await page.waitForURL("**/mentor/card/**", { timeout: 30000 });
 await page.waitForSelector("text=Your checklist", { timeout: 30000 });
 await page.screenshot({ path: `${OUT}/02-card.png`, fullPage: true });
@@ -80,7 +79,7 @@ console.log("sheet carries the item's correction:", /correction|mentee/i.test(sh
 await page.keyboard.press("Escape");
 await page.waitForTimeout(500);
 const cls = await page.locator('[role="dialog"]').last().getAttribute("class");
-console.log("sheet slid closed on Esc:", cls.includes("translate-x-full"));
+console.log("sheet slid closed on Esc (Drawer's own handler):", cls.includes("translate-x-full"));
 
 console.log(errors.length ? "CONSOLE ERRORS:\n" + errors.join("\n") : "no console errors");
 await browser.close();

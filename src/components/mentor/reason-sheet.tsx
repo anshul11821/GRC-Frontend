@@ -5,7 +5,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { willEscalate, type Reason } from "@/lib/mentor";
 
 /**
- * Forces at least one documented reason code before a decision commits.
+ * Forces at least one documented reason code, and a written note, before a decision commits.
  *
  * Approve is a menu: the codes that apply to this gate, pre-selected, minus any the mentor
  * deselects. Disapprove is `locked` — its reasons come from the checklist items answered "no", so
@@ -43,6 +43,10 @@ export function ReasonSheet({
   const [requireAck, setRequireAck] = useState(false);
   const open = mode !== null;
   const escalating = mode === "disapprove" && willEscalate(priorReturns, maxReturns);
+  // The note is compulsory. The reason codes say which rule was missed; only the mentor can say
+  // what they actually looked at, and a decision the mentee cannot interrogate is not feedback.
+  const noted = note.trim().length > 0;
+  const canConfirm = selected.length > 0 && noted;
 
   // Reset during render when the sheet opens or switches mode, so an approve sheet can never paint
   // holding a disapprove sheet's reasons. Both modes start with everything selected: approve codes
@@ -70,7 +74,7 @@ export function ReasonSheet({
       const typing = target?.tagName === "TEXTAREA" || target?.tagName === "INPUT";
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        if (selected.length && !busy) onConfirm(selected, note, requireAck && !!note.trim());
+        if (canConfirm && !busy) onConfirm(selected, note, requireAck && !!note.trim());
         return;
       }
       if (typing || locked) return; // Esc is handled by the Drawer itself
@@ -178,13 +182,13 @@ export function ReasonSheet({
 
       <label className="block mt-4">
         <span className="block text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-400 mb-1.5">
-          Note (optional)
+          Your note to the mentee
         </span>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
-          placeholder="Anything the reason codes do not capture."
+          placeholder="In your own words: what you looked at, and why this is the decision."
           className="w-full rounded-xl border border-[#e6eaf0] bg-white px-3 py-2.5 text-[12.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-300"
         />
       </label>
@@ -225,9 +229,11 @@ export function ReasonSheet({
         <div className="text-[11.5px] text-slate-500 mb-2.5">
           {selected.length === 0
             ? "Select at least one reason."
-            : `${outcomeLabel} · ${selected.length} reason${selected.length > 1 ? "s" : ""} · ${selected
-                .map((c) => c.split(".").pop())
-                .join(", ")}`}
+            : !noted
+              ? "Write your note — it is what the mentee reads first."
+              : `${outcomeLabel} · ${selected.length} reason${selected.length > 1 ? "s" : ""} · ${selected
+                  .map((c) => c.split(".").pop())
+                  .join(", ")}`}
         </div>
         {locked && (
           <div className="text-[11px] text-slate-400 mb-2.5">
@@ -244,9 +250,9 @@ export function ReasonSheet({
           </button>
           <button
             onClick={() => onConfirm(selected, note, requireAck && !!note.trim())}
-            disabled={selected.length === 0 || busy}
+            disabled={!canConfirm || busy}
             className={`h-9 px-4 rounded-lg text-[12.5px] font-semibold transition-colors ${
-              selected.length === 0 || busy
+              !canConfirm || busy
                 ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                 : mode === "approve"
                   ? "bg-[#1e7a46] text-white hover:bg-[#1a6b3d]"

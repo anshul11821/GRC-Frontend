@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { MentorShell } from "@/components/mentor/shell";
 import {
@@ -25,10 +24,8 @@ export default function MentorQueuePage() {
 }
 
 function QueueBody() {
-  const router = useRouter();
   const [queue, setQueue] = useState<Queue | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cursor, setCursor] = useState(0);
   const [role, setRole] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -53,37 +50,10 @@ function QueueBody() {
     [queue, role],
   );
 
-  // Reset the keyboard cursor during render when the role filter changes, rather than in an
-  // effect — an effect would let one frame paint with a cursor pointing past the filtered list.
-  const [prevRole, setPrevRole] = useState(role);
-  if (role !== prevRole) {
-    setPrevRole(role);
-    setCursor(0);
-  }
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
-      if (!rows.length) return;
-      if (e.key === "j" || e.key === "ArrowDown") {
-        e.preventDefault();
-        setCursor((c) => Math.min(rows.length - 1, c + 1));
-      } else if (e.key === "k" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setCursor((c) => Math.max(0, c - 1));
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        router.push(`/mentor/card/${rows[cursor].submissionId}`);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [rows, cursor, router]);
 
   if (!queue) {
     return (
-      <div className="mx-auto max-w-[1320px] px-6 pt-7">
+      <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-7">
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-[68px] rounded-2xl border border-[#e6eaf0] bg-white animate-pulse" />
@@ -94,7 +64,7 @@ function QueueBody() {
   }
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 pt-7 pb-16">
+    <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-7 pb-16">
       <div className="flex items-start justify-between gap-6 mb-6">
         <div>
           <h1 className="text-[22px] font-semibold tracking-tight text-slate-900">Your review queue</h1>
@@ -117,11 +87,12 @@ function QueueBody() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+      {/* Only the two that say something the sections do not: "awaiting you" and "decided today"
+          just restated the counts on "Needs your decision" and "Recently decided". A reviewer's own
+          record lives in the account menu, where it is theirs rather than a scoreboard on the work. */}
+      <div className="grid grid-cols-2 gap-3 mb-7 max-w-[420px]">
         <Stat label="Overdue" value={queue.stats.overdue} tone={queue.stats.overdue > 0 ? "danger" : "plain"} />
         <Stat label="Due today" value={queue.stats.dueToday} />
-        <Stat label="Awaiting you" value={queue.stats.awaitingYou} />
-        <Stat label="Decided today" value={queue.stats.decidedToday} />
       </div>
 
       {multiRole && (
@@ -143,8 +114,8 @@ function QueueBody() {
           <Empty>Nothing is waiting on you. New submissions at your gates land here.</Empty>
         ) : (
           <div className="space-y-1.5">
-            {rows.map((row, i) => (
-              <Row key={row.submissionId} row={row} active={i === cursor} showRole={multiRole} />
+            {rows.map((row) => (
+              <Row key={row.submissionId} row={row} showRole={multiRole} />
             ))}
           </div>
         )}
@@ -169,24 +140,7 @@ function QueueBody() {
           </div>
         </Section>
       )}
-
-      <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-xl border border-[#e6eaf0] bg-white px-4 py-2.5 text-[11px] text-slate-500">
-        <Key k="J / K">move</Key>
-        <Key k="Enter">open</Key>
-        <Key k="A">approve</Key>
-        <Key k="D">disapprove</Key>
-        <Key k="U">undo</Key>
-      </div>
     </div>
-  );
-}
-
-function Key({ k, children }: { k: string; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{k}</span>
-      {children}
-    </span>
   );
 }
 
@@ -259,7 +213,7 @@ function GateBadge({ type }: { type: string }) {
   );
 }
 
-function Row({ row, active, readOnly, showRole }: { row: QueueRow; active?: boolean; readOnly?: boolean; showRole?: boolean }) {
+function Row({ row, readOnly, showRole }: { row: QueueRow; readOnly?: boolean; showRole?: boolean }) {
   const overdue = row.remainingMin < 0;
   const body = (
     <>
@@ -268,30 +222,12 @@ function Row({ row, active, readOnly, showRole }: { row: QueueRow; active?: bool
         <span className="flex items-center gap-2 flex-wrap">
           <span className="text-[14.5px] font-semibold text-slate-900 truncate">{row.gateName}</span>
           <span className="font-mono text-[11px] text-slate-500">{row.gateId}</span>
-          {row.revision > 1 && (
-            <span className="inline-flex items-center h-[17px] px-1.5 rounded bg-[#fdf1e6] text-[#a3541d] text-[10px] font-semibold">
-              Revision {row.revision}
-            </span>
-          )}
         </span>
         {showRole && <span className="block text-[10.5px] text-slate-400 mt-0.5">{row.reviewerRole}</span>}
       </span>
       <span className="hidden md:block w-[150px] shrink-0 text-right">
         <span className="block text-[12px] text-slate-700 truncate">{row.menteeName}</span>
         <span className="block text-[10.5px] text-slate-400">{formatSubmitted(row.submittedAt)}</span>
-      </span>
-      <span className="hidden sm:block w-[70px] shrink-0 text-center">
-        <span
-          className={`inline-flex items-center h-[19px] px-1.5 rounded text-[10px] font-semibold ${
-            row.grader === "PASS"
-              ? "bg-[#e8f5ee] text-[#1e7a46]"
-              : row.grader === "FAIL"
-                ? "bg-[#fdecec] text-[#a31d1d]"
-                : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          {row.grader}
-        </span>
       </span>
       <span
         className={`hidden lg:block w-[132px] shrink-0 text-right text-[11.5px] ${overdue ? "text-[#a31d1d] font-medium" : "text-slate-500"}`}
@@ -306,9 +242,8 @@ function Row({ row, active, readOnly, showRole }: { row: QueueRow; active?: bool
     </>
   );
 
-  const shell = `w-full flex items-center gap-3 rounded-[14px] border bg-white px-4 py-3 text-left ${
-    active ? "border-indigo-300 ring-2 ring-indigo-100" : "border-[#e6eaf0]"
-  }`;
+  const shell =
+    "w-full flex items-center gap-3 rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3 text-left";
 
   if (readOnly) {
     return <div className={`${shell} opacity-70`}>{body}</div>;

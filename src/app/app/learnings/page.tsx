@@ -435,7 +435,7 @@ export default function LearningsPage() {
   const error = lErr ? (lErr instanceof ApiError ? lErr.message : "Couldn't load learnings.") : null;
 
   return (
-    <div className="max-w-[1140px] mx-auto px-6 py-6 space-y-7">
+    <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 space-y-7">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5">

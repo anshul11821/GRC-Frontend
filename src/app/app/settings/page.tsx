@@ -366,7 +366,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState("profile");
 
   return (
-    <div className="max-w-[1080px] mx-auto px-6 py-7">
+    <div className="max-w-[1080px] 2xl:max-w-[1400px] 3xl:max-w-[1640px] mx-auto px-6 py-7">
       <div className="mb-6">
         <Link href="/app" className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-2">
           <Icon name="chevronLeft" size={14} />Back to dashboard

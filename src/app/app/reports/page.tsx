@@ -241,7 +241,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-6 space-y-5">
+    <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-6 space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3.5">
           <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(79,70,229,0.6)] shrink-0">

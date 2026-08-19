@@ -20,7 +20,7 @@ const NAV_LINKS: [string, string][] = [
 export function Nav({ active }: { active?: string }) {
   return (
     <header className="sticky top-0 z-50 bg-[#FAFAF7]/80 backdrop-blur-xl border-b border-slate-200/60">
-      <div className="max-w-[1140px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 h-16 flex items-center justify-between">
         <Logo />
         <nav className="hidden md:flex items-center gap-7">
           {NAV_LINKS.map(([href, label]) => (
@@ -79,7 +79,7 @@ export function SiteFooter() {
   ];
   return (
     <footer className="bg-[#FAFAF7] border-t border-slate-200/60">
-      <div className="max-w-[1140px] mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
         <div className="col-span-2 md:col-span-1">
           <Logo />
           <p className="mt-3 text-[12.5px] text-slate-500 leading-relaxed tracking-tight max-w-[220px]">
@@ -104,7 +104,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-slate-200/60">
-        <div className="max-w-[1140px] mx-auto px-6 py-5 flex items-center justify-between flex-wrap gap-3">
+        <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-5 flex items-center justify-between flex-wrap gap-3">
           <span className="text-[12px] text-slate-500">© 2026 grcmentor · All rights reserved.</span>
           <div className="flex items-center gap-4 text-[12px] text-slate-500">
             <a href="#" className="focus-ring rounded-md px-1 py-0.5 no-underline hover:text-slate-700">Privacy</a>

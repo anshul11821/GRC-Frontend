@@ -112,6 +112,11 @@ async function rawRequest(
 
   return fetch(buildUrl(path, opts.query), {
     credentials: "include",
+    // Belt to the server's no-store braces: these URLs are identical for every account, so a
+    // cache entry stored before that header existed would still be served to the next account
+    // signing in on this browser. Bypassing the cache here retires those entries without asking
+    // anyone to hard-refresh.
+    cache: "no-store",
     ...opts.init,
     method,
     headers,

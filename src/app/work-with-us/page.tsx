@@ -53,7 +53,7 @@ function Hero() {
         <div className="absolute -top-24 left-1/3 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.18), transparent 70%)" }} />
         <div className="absolute top-10 right-10 w-[380px] h-[380px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.14), transparent 70%)" }} />
       </div>
-      <div className="relative max-w-[1140px] mx-auto px-6 pt-16 pb-12 text-center">
+      <div className="relative max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 pt-16 pb-12 text-center">
         <div className="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-white ring-1 ring-slate-200/70 text-[12px] font-medium text-slate-600 tracking-tight">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Now recruiting reviewers
         </div>
@@ -88,7 +88,7 @@ function WhatTheBoardDoes() {
     <section className="relative overflow-hidden border-y border-white/5" style={{ background: "linear-gradient(180deg, #0b1120 0%, #0f172a 55%, #0b1120 100%)" }}>
       <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
       <div className="pointer-events-none absolute -top-24 left-1/4 w-[460px] h-[460px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.22), transparent 70%)" }} />
-      <div className="relative max-w-[1140px] mx-auto px-6 py-20">
+      <div className="relative max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
         <SectionHead dark eyebrow="What the board does" icon="clipboard" sub="Mentees complete simulated enterprise engagements inside our application, and an AI grader scores every step. You are pulled in at the 70 steps out of 280 where a determination is inherited by everything after it, or where the artefact stops being an exercise and goes out as real.">
           Review real submissions, <span className="text-indigo-400">not exam papers</span>
         </SectionHead>
@@ -114,7 +114,7 @@ function WhatTheBoardDoes() {
 function Positions() {
   return (
     <section id="positions" className="scroll-mt-16 bg-white">
-      <div className="max-w-[1140px] mx-auto px-6 py-20">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20">
         <SectionHead eyebrow="Open positions" icon="briefcase" sub="Each reviewer role maps to a NICE work role. Apply for the one your day job qualifies you to judge — the load shown is what a single mentee generates for that seat across a full 35-task rotation.">
           Reviewer <span className="text-indigo-600">roles</span>
         </SectionHead>
@@ -151,7 +151,7 @@ function Positions() {
 function Apply() {
   return (
     <section id="apply" className="scroll-mt-16 bg-[#F4F5F8] border-t border-slate-200/60">
-      <div className="max-w-[1140px] mx-auto px-6 py-20 grid lg:grid-cols-[0.85fr_1.15fr] gap-12 items-start">
+      <div className="max-w-[1140px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-6 py-20 grid lg:grid-cols-[0.85fr_1.15fr] gap-12 items-start">
         <div>
           <SectionHead center={false} eyebrow="Application" icon="send" sub="Tell us who you are and which reviewer position you want. We verify your background against the work role, then you decide five archived submissions with known outcomes as a calibration set before your first live card.">
             Apply to join the <span className="text-indigo-600">board</span>

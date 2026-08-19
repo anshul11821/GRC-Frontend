@@ -19,7 +19,7 @@ function DeskFooter() {
   const activeOrg = orgs.find((o) => o.status === "active") ?? orgs[0];
   return (
     <footer className="shrink-0 border-t border-slate-200/60 bg-white/40 backdrop-blur-sm">
-      <div className="max-w-[920px] mx-auto px-6 h-12 flex items-center justify-between gap-4">
+      <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-6 h-12 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0 text-[11.5px] text-slate-500">
           {activeOrg ? (
             <>

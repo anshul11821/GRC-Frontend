@@ -113,7 +113,7 @@ export default function GuidePage() {
   }, []);
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 md:px-6 py-6 md:py-8">
+    <div className="max-w-[1180px] 2xl:max-w-[1500px] 3xl:max-w-[1760px] mx-auto px-4 md:px-6 py-6 md:py-8">
       {/* Hero */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 text-white px-6 py-7 md:px-8 md:py-8 shadow-[0_20px_50px_-25px_rgba(99,102,241,0.8)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">User guide</p>

@@ -14,7 +14,6 @@ import type { TaskReference } from "./taskmeta";
 const KEY = "grc_mentor_token";
 
 export type Outcome = "approve" | "approve_note" | "disapprove_return" | "disapprove_escalate";
-export type GraderResult = "PASS" | "FAIL" | "PENDING";
 
 export interface Mentor {
   id: string;
@@ -34,7 +33,6 @@ export interface QueueRow {
   menteeName: string;
   menteeId: string;
   revision: number;
-  grader: GraderResult;
   submittedAt: string;
   remainingMin: number;
 }
@@ -56,6 +54,18 @@ export interface Role {
   /** NICE work role — what qualifies someone to hold this reviewer role. */
   nice: string;
   responsibility: string;
+}
+
+export interface MentorStats {
+  decidedTotal: number;
+  decidedToday: number;
+  decidedWeek: number;
+  approved: number;
+  returned: number;
+  escalated: number;
+  withdrawn: number;
+  gatesInScope: number;
+  roles: number;
 }
 
 export interface Queue {
@@ -90,8 +100,6 @@ export interface ChecklistItem {
   reason: string;
   correction: string;
   testableBy: "HUMAN-ONLY" | "AGENT-TESTABLE";
-  /** T2/T3 render agent-testable items as already cleared, with the grader's result attached. */
-  preCleared: boolean;
 }
 
 /** A checklist item as a disapprove reason — its code, what went wrong, and the fix. */
@@ -107,17 +115,6 @@ export interface Block {
   items: string[] | null;
   head: string[] | null;
   rows: string[][] | null;
-}
-
-export interface Grader {
-  available: boolean;
-  result: GraderResult;
-  layer1: { rule: string; passed: boolean; note: string }[];
-  mean: number | null;
-  min: number | null;
-  minDim: string | null;
-  dims: { label: string; score: number; justification: string }[];
-  feedback: string;
 }
 
 export interface HistoryEntry {
@@ -159,7 +156,7 @@ export interface Card {
   activityTitle: string;
   /** Absent when served by a backend older than the brief — the card degrades, it does not break. */
   brief?: Brief;
-  /** Review tier. Outside T1 the agent-testable questions arrive pre-cleared. */
+  /** Review tier — how much a wrong decision here costs. */
   tier: "T1" | "T2" | "T3";
   /** 0–10. How far this determination reaches once it leaves the gate. */
   impact: number;
@@ -207,7 +204,6 @@ export interface Card {
   activityCode: string;
   payload: { fields?: Record<string, unknown>; notes?: string; attachments?: unknown[] };
   blocks: Block[];
-  grader: Grader;
   approve: Reason[];
   priorReturns: number;
   maxReturns: number;
@@ -256,6 +252,7 @@ export const mentorApi = {
     ),
   me: () => api.get<Mentor>("/mentor/me", opts()),
   queue: () => api.get<Queue>("/mentor/queue", opts()),
+  stats: () => api.get<MentorStats>("/mentor/stats", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),
   /** The mentee's rendered task bundle, for replaying the two gate workspaces on the card. */
   cardTaskContent: (submissionId: number) =>

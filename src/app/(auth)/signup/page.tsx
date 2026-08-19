@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProfileForm } from "@/components/auth/profile-form";
 import { authApi, passwordRules } from "@/lib/auth";
-import { setAccessToken } from "@/lib/token";
 import { getCaptchaToken } from "@/lib/recaptcha";
 import { Field, TextInput, PrimaryBtn } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/icon";
@@ -14,7 +13,7 @@ import { Icon } from "@/components/ui/icon";
 type Step = "account" | "verify" | "profile";
 
 export default function SignUpPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, signIn } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("account");
@@ -91,7 +90,9 @@ export default function SignUpPage() {
     e.preventDefault();
     run(async () => {
       const { accessToken } = await authApi.signupVerifyEmail({ email, otp });
-      setAccessToken(accessToken);
+      // signIn, not setAccessToken: the token must never get ahead of the context user, or
+      // ProfileForm below seeds its fields from the *previous* account's profile.
+      await signIn(accessToken);
       setStep("profile");
     });
   };

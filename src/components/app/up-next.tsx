@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useCachedQuery } from "@/lib/use-query";
+import { userKey } from "@/lib/token";
 import { calendarApi } from "@/lib/calendar";
 import { deskApi } from "@/lib/desk";
 import { buildUpNext } from "@/lib/up-next";
@@ -11,14 +12,16 @@ import { SOFT_TONES } from "@/lib/tones";
 import { DropdownPanel } from "@/components/ui/motion";
 
 const PROGRAM = "grc101";
-const SEEN_KEY = "grcmentor:upnext-seen";
+// Scoped per account — an unscoped key lets one learner's dismissals silence the next learner's
+// bell on the same browser, including a blocking mentor note.
+const seenKey = () => `grcmentor:upnext-seen:${userKey()}`;
 
 /** IDs the mentee has already seen in the dropdown. Storing IDs (not a timestamp) means a
  *  brand-new overdue item or revision still lights the badge even if you opened it earlier. */
 function readSeen(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
-    return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"));
+    return new Set(JSON.parse(localStorage.getItem(seenKey()) ?? "[]"));
   } catch {
     return new Set();
   }
@@ -55,7 +58,7 @@ export function UpNext() {
         // Mark everything currently shown as seen; overwrite (not merge) so storage stays
         // bounded to the live list — resolved items drop out on their own.
         const ids = items.map((x) => x.id);
-        if (typeof window !== "undefined") localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+        if (typeof window !== "undefined") localStorage.setItem(seenKey(), JSON.stringify(ids));
         setSeen(new Set(ids));
       }
       return next;

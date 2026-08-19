@@ -20,7 +20,6 @@ import {
   type Brief,
   type Card,
   type DecisionResult,
-  type Grader,
   type HistoryEntry,
   type Step,
 } from "@/lib/mentor";
@@ -39,11 +38,10 @@ type Tab = "submission" | "chain" | "deliverable" | "background";
 
 type Answer = "yes" | "no";
 
-/* Answering the six questions IS the review (prototype v3). A "no" produces its own reason code and
-   the correction the mentee receives, so the mentor never picks a disapproval from a menu.
-   Agent-testable items arrive pre-cleared outside T1; reopening one puts it back in the asked set. */
-const askable = (card: Card, reopened: string[]) =>
-  card.checklist.filter((i) => !i.preCleared || reopened.includes(i.id));
+/* Answering the six questions IS the review. A "no" produces its own reason code and the
+   correction the mentee receives, so the mentor never picks a disapproval from a menu.
+   Every question is the reviewer's own: nothing is pre-cleared, and no agent result is shown. */
+const askable = (card: Card) => card.checklist;
 const failingItems = (card: Card, answers: Record<string, Answer>) =>
   card.checklist.filter((i) => answers[i.id] === "no");
 
@@ -56,7 +54,6 @@ function CardBody() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("submission");
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
-  const [reopened, setReopened] = useState<string[]>([]);
   const [sheet, setSheet] = useState<"approve" | "disapprove" | null>(null);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -77,26 +74,6 @@ function CardBody() {
     setSheetError(null);
     setSheet(mode);
   }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
-      if (sheet || toast || raced) return;
-      if (e.key === "a" || e.key === "A") {
-        e.preventDefault();
-        openSheet("approve");
-      } else if (e.key === "d" || e.key === "D") {
-        e.preventDefault();
-        openSheet("disapprove");
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        router.push("/mentor");
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [sheet, toast, raced, openSheet, router]);
 
   async function confirm(codes: string[], note: string, requireAck: boolean) {
     if (!card || !sheet) return;
@@ -143,7 +120,7 @@ function CardBody() {
 
   if (!card) {
     return (
-      <div className="mx-auto max-w-[1320px] px-6 pt-7">
+      <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-7">
         <div className="h-[120px] rounded-2xl border border-[#e6eaf0] bg-white animate-pulse" />
       </div>
     );
@@ -151,21 +128,16 @@ function CardBody() {
 
   const overdue = card.remainingMin < 0;
   const decisionBlocked = card.decidedBy !== null || raced;
-  // Reopening a pre-cleared item records it as failing, per the prototype — the mentor is saying
-  // they disagree with the grader. They can still flip it to yes once they have looked.
-  const setAnswer = (itemId: string, value: Answer) => {
-    setReopened((r) => (r.includes(itemId) ? r : [...r, itemId]));
+  const setAnswer = (itemId: string, value: Answer) =>
     setAnswers((a) => ({ ...a, [itemId]: value }));
-  };
 
-  const asked = askable(card, reopened);
+  const asked = askable(card);
   const askableCount = asked.length;
   const answeredCount = asked.filter((i) => answers[i.id]).length;
-  const preClearedCount = card.checklist.length - askableCount;
   const failing = failingItems(card, answers);
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 pt-6 pb-20">
+    <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-6 pb-20">
       <Link
         href="/mentor"
         className="inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 hover:text-slate-800 transition-colors mb-4"
@@ -188,33 +160,13 @@ function CardBody() {
               <span className="text-[11px] text-slate-400">
                 {card.taskCode} · {card.category}
               </span>
-              <Pill title={TIER_HINT[card.tier]}>{card.tier}</Pill>
-              <Pill>Impact {card.impact.toFixed(1)} / 10</Pill>
-              {card.revision > 1 && <Pill>Revision {card.revision}</Pill>}
-              <span
-                className="inline-flex items-center h-[17px] px-1.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold"
-                title={`${card.reviewerRole} · NICE ${card.reviewerRoleNice}`}
-              >
-                {card.reviewerRoleCode}
-              </span>
             </div>
             <h1 className="text-[22px] font-semibold tracking-tight text-slate-900 mt-1">{card.gateName}</h1>
             <div className="text-[11.5px] text-slate-500 mt-0.5">
-              {card.activityTitle} · {card.gateType} gate at step {card.step}
+              {card.activityTitle}
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <span
-              className={`inline-flex items-center h-[20px] px-2 rounded text-[10.5px] font-semibold ${
-                card.grader.result === "PASS"
-                  ? "bg-[#e8f5ee] text-[#1e7a46]"
-                  : card.grader.result === "FAIL"
-                    ? "bg-[#fdecec] text-[#a31d1d]"
-                    : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              Agent {card.grader.result}
-            </span>
             <div className={`text-[11.5px] mt-1 ${overdue ? "text-[#a31d1d] font-medium" : "text-slate-500"}`}>
               {formatRemaining(card.remainingMin)}
             </div>
@@ -228,12 +180,6 @@ function CardBody() {
         <Banner tone="slate">
           This gate is Tier 3. It is in your queue because it was sampled, not because every
           submission at this gate is reviewed.
-        </Banner>
-      )}
-      {card.grader.result === "FAIL" && (
-        <Banner tone="amber">
-          The agent returned FAIL on Layer 2. It has not established whether the weakness is the
-          mentee&apos;s understanding or the evidence their organisation could give.
         </Banner>
       )}
       {card.priorReturns > 0 && (
@@ -323,7 +269,6 @@ function CardBody() {
                     )}
                   </ul>
                 </div>
-                {card.grader.feedback && <Field label="Agent feedback">{card.grader.feedback}</Field>}
                 <div>
                   <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2">
                     Revision history at this gate
@@ -336,8 +281,6 @@ function CardBody() {
         </div>
 
         <aside className="space-y-3 lg:sticky lg:top-[76px] lg:self-start">
-          <Checklist checks={card.grader.layer1} />
-
           <div className="rounded-[14px] border border-[#e0e7ff] bg-[#eef2ff] px-4 py-3.5">
             <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
               What this output feeds
@@ -347,13 +290,10 @@ function CardBody() {
 
           <ReviewChecklist card={card} answers={answers} onAnswer={setAnswer} />
 
-          <GraderPanel card={card} />
-
           <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-4">
             <div className="flex items-center justify-between text-[11.5px] text-slate-500 mb-2.5">
               <span>
                 <b className="text-slate-800">{answeredCount}</b> of {askableCount} answered
-                {preClearedCount > 0 && ` (${preClearedCount} pre-cleared)`}
               </span>
               <span>
                 {failing.length > 0 ? (
@@ -369,14 +309,14 @@ function CardBody() {
                 disabled={decisionBlocked || failing.length > 0 || answeredCount < askableCount}
                 className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
               >
-                Approve <span className="font-mono text-[11px] opacity-70">A</span>
+                Approve
               </button>
               <button
                 onClick={() => openSheet("disapprove")}
                 disabled={decisionBlocked || failing.length === 0}
                 className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
               >
-                Return with reasons <span className="font-mono text-[11px] opacity-70">D</span>
+                Return with reasons
               </button>
             </div>
             {decisionBlocked ? (
@@ -509,15 +449,12 @@ function ReviewChecklist({
       </div>
       <p className="text-[11px] text-slate-500 leading-relaxed mt-1">
         Answering these is the review. Every “no” carries its own reason code and the correction the
-        mentee receives.
-        {card.tier !== "T1" &&
-          " Items the grader can test are shown pre-cleared at this tier — reopen any of them if you want to look."}
+        mentee receives. Every question is yours to answer — nothing is decided for you.
       </p>
 
       <ul className="mt-3 space-y-2">
         {card.checklist.map((item) => {
           const answer = answers[item.id];
-          const cleared = item.preCleared && !answer;
           return (
             <li
               key={item.id}
@@ -538,24 +475,9 @@ function ReviewChecklist({
               </div>
               <div className="mt-1.5 pl-[28px] font-mono text-[10px] uppercase tracking-wide text-slate-400">
                 {item.layer}
-                {item.layer === "COORDINATE" && " · resolved from this task's coordinate"} ·{" "}
-                {item.testableBy.toLowerCase().replace("-", " ")}
+                {item.layer === "COORDINATE" && " · resolved from this task's coordinate"}
               </div>
               <div className="mt-2 pl-[28px] flex items-center gap-1.5">
-                {cleared ? (
-                  <>
-                    <span className="inline-flex items-center h-6 px-2 rounded-md bg-[#e8f5ee] text-[10.5px] font-semibold text-[#1e7a46]">
-                      Pre-cleared by the grader
-                    </span>
-                    <button
-                      onClick={() => onAnswer(item.id, "no")}
-                      className="h-6 px-2 rounded-md border border-[#e6eaf0] text-[11px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      Reopen
-                    </button>
-                  </>
-                ) : (
-                  <>
                     <button
                       aria-pressed={answer === "yes"}
                       onClick={() => onAnswer(item.id, "yes")}
@@ -578,8 +500,6 @@ function ReviewChecklist({
                     >
                       No
                     </button>
-                  </>
-                )}
               </div>
               {answer === "no" && (
                 <div className="mt-2 pl-[28px] text-[11px] leading-relaxed text-slate-600">
@@ -618,97 +538,25 @@ function ReviewChecklist({
   );
 }
 
-function Checklist({ checks }: { checks: Grader["layer1"] }) {
-  if (checks.length === 0) return null;
-  const met = checks.filter((c) => c.passed).length;
-  const allMet = met === checks.length;
-  return (
-    <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3.5">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 flex-1">
-          Acceptance checklist
-        </span>
-        <span className={`text-[12px] font-semibold tabular-nums ${allMet ? "text-[#1e7a46]" : "text-slate-600"}`}>
-          {met}
-          <span className="text-slate-400 mx-px">/</span>
-          {checks.length}
-        </span>
-      </div>
-      <div className="space-y-1.5">
-        {checks.map((c, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <span
-              className={`mt-px shrink-0 w-[15px] h-[15px] rounded-full grid place-items-center text-white text-[9px] font-bold ${
-                c.passed ? "bg-[#1e7a46]" : "bg-[#a31d1d]"
-              }`}
-            >
-              {c.passed ? "✓" : "✕"}
-            </span>
-            <span className="text-[12px] leading-snug text-slate-700">
-              {c.rule}
-              {c.note && <span className="text-slate-400"> — {c.note}</span>}
-            </span>
-          </div>
-        ))}
-      </div>
-      <p className="text-[10.5px] text-slate-400 mt-2.5">
-        The criteria the mentee wrote against, with the automatic Layer 1 result. Your decision is
-        independent of it.
-      </p>
-    </div>
-  );
-}
-
-const TIER_HINT: Record<string, string> = {
-  T1: "Tier 1 — every submission at this gate is reviewed.",
-  T2: "Tier 2 — reviewed, with the agent-testable questions pre-cleared.",
-  T3: "Tier 3 — reviewed only when sampled or escalated.",
-};
-
-function Pill({ children, title }: { children: React.ReactNode; title?: string }) {
-  return (
-    <span
-      title={title}
-      className="inline-flex items-center h-[17px] px-1.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold"
-    >
-      {children}
-    </span>
-  );
-}
-
 /* The v3 context pack: six lines by default, the rest behind one control. Every learner works a
    different organisation, so the register's org-agnostic text is not what this mentee read. */
 function ContextPack({ card }: { card: Card }) {
   const [open, setOpen] = useState(false);
-  const later = card.stepChain.filter((s) => s.state === "future").length;
+  // Counted, not hard-coded: the pack has been trimmed twice and the label drifted both times.
+  const hidden = 3;
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden">
-        <Meta
-          label="This gate"
-          value={
-            card.gateType === "FOUNDATION"
-              ? `A determination the later steps inherit and none re-tests`
-              : "The artefact leaves the exercise and is acted on"
-          }
-        />
-        <Meta label="Mentee" value={card.menteeName} sub={card.menteeRotation} />
+      {/* gap-px over a border-coloured background draws the hairlines, so an unfilled cell
+          shows as a grey block — the last item spans the remainder to close the row. */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
         <Meta label="Organisation" value={card.orgName} sub={card.orgIndustry} />
         <Meta label="Office" value={card.orgHeadOffice || "—"} />
         <Meta label="Regulator" value={card.orgRegulator || "—"} />
-        <Meta
-          label="Trigger and format"
-          value={card.scenario ? `Picked up ${card.scenario}` : "—"}
-          sub={card.deliverableFormat}
-        />
       </div>
       {open && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-px rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-px rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
           <Meta label="Mandatory standards" value={card.mandatoryStandards || "—"} />
-          <Meta label="Analytical lens" value={card.analyticalLens || "—"} />
-          <Meta label="Scope objects" value={card.scopeAsset || "—"} sub={card.scopeVendor} />
           <Meta label="Artefact" value={card.artefact} sub={card.outputId} mono={false} />
-          <Meta label="Archetype" value={card.archetype || "—"} sub={card.verbFamily} />
           <Meta label="Reviewer" value={card.reviewerRole} sub={`NICE ${card.reviewerRoleNice}`} />
         </div>
       )}
@@ -716,15 +564,8 @@ function ContextPack({ card }: { card: Card }) {
         onClick={() => setOpen((o) => !o)}
         className="mt-2 text-[11.5px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
       >
-        {open ? "Hide the rest of the context pack" : "Show the full context pack (6 more fields)"}
+        {open ? "Hide the rest of the context pack" : `Show the full context pack (${hidden} more fields)`}
       </button>
-      <div className="mt-2 rounded-lg bg-[#f8fafc] border border-[#e6eaf0] px-3 py-2.5 text-[11.5px] text-slate-600 leading-relaxed">
-        <b className="text-slate-800">What depends on this decision.</b>{" "}
-        {later > 0
-          ? `${later} later step${later === 1 ? "" : "s"} and the final deliverable.`
-          : "The final deliverable."}{" "}
-        {card.feedsInto && <span className="text-slate-500">Feeds: {card.feedsInto}</span>}
-      </div>
     </>
   );
 }
@@ -852,7 +693,6 @@ function History({ entries }: { entries: HistoryEntry[] }) {
             >
               {OUTCOME_LABEL[e.outcome]}
             </span>
-            <span className="text-[11px] text-slate-500">revision {e.revision}</span>
             <span className="text-[11px] text-slate-400">
               {e.mentorName} · {formatSubmitted(e.decidedAt)}
             </span>
@@ -875,64 +715,6 @@ function History({ entries }: { entries: HistoryEntry[] }) {
           {e.note && <p className="mt-2 text-[11.5px] text-slate-500 italic leading-relaxed">{e.note}</p>}
         </div>
       ))}
-    </div>
-  );
-}
-function GraderPanel({ card }: { card: Card }) {
-  const [open, setOpen] = useState(false);
-  const g = card.grader;
-
-  return (
-    <div className="rounded-[14px] border border-[#e6eaf0] bg-white">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-4 py-3 text-left"
-      >
-        <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 flex-1">
-          Agent grading
-        </span>
-        <Icon name="chevronDown" size={14} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {!g.available ? (
-        <div className="px-4 pb-4">
-          <div className="rounded-lg border border-[#e8c48a] bg-[#fdf1e6] px-3 py-2.5 text-[12px] text-[#7c4a10]">
-            Agent grading unavailable for this submission.
-          </div>
-        </div>
-      ) : (
-        open && (
-          <div className="px-4 pb-4 space-y-4">
-            {/* Layer 1 lives in the Acceptance checklist panel above — it is the mentee's criteria,
-                not a grading footnote. Only the rubric and the written feedback remain here. */}
-            {g.dims.length > 0 && (
-              <div>
-                <div className="text-[10.5px] font-semibold text-slate-500 mb-1.5">
-                  Layer 2 — rubric · mean {g.mean} · low {g.min} ({g.minDim})
-                </div>
-                <div className="space-y-1.5">
-                  {g.dims.map((d) => (
-                    <div key={d.label} className="flex items-center gap-2">
-                      <span className="w-[120px] shrink-0 text-[11px] text-slate-600 truncate">{d.label}</span>
-                      <span className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                        <span
-                          className="block h-full rounded-full bg-indigo-500"
-                          style={{ width: `${Math.min(100, (d.score / 5) * 100)}%` }}
-                        />
-                      </span>
-                      <span className="w-7 shrink-0 text-right font-mono text-[10.5px] text-slate-500">{d.score}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <p className="text-[10.5px] text-slate-400 leading-relaxed border-t border-[#f1f5f9] pt-2.5">
-              Shown for information. Your decision is independent of it.
-            </p>
-          </div>
-        )
-      )}
     </div>
   );
 }
