@@ -514,9 +514,9 @@ export const FORM_TASKS: Record<string, FormTask> = {
     items: [
       // Objectives written as observable behaviour, not "understand" — otherwise the knowledge
       // check in step 5 has nothing it can actually test against.
-      { id: 1, label: "Phishing — what the learner will be able to DO afterwards" },
-      { id: 2, label: "Passwords — what the learner will be able to DO afterwards" },
-      { id: 3, label: "Data handling — what the learner will be able to DO afterwards" },
+      { id: 1, label: "Phishing — what the end user will be able to DO afterwards" },
+      { id: 2, label: "Passwords — what the end user will be able to DO afterwards" },
+      { id: 3, label: "Data handling — what the end user will be able to DO afterwards" },
       { id: 4, label: "How each objective will be evidenced as met" },
     ],
   },
@@ -1054,7 +1054,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       // Art. 12 is a standalone obligation: a notice can contain every Art. 13 element and still
       // fail because nobody can understand it.
       { id: 4, label: "Why unclear-but-present is an Art. 12 failure in its own right" },
-      { id: 5, label: "Where the audience includes children or vulnerable readers, and what changes" },
+      { id: 5, label: "Where the audience includes children or vulnerable individuals, and what changes" },
     ],
   },
 
@@ -1071,7 +1071,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 3, label: "Q3 result — pass rate across the group" },
       { id: 4, label: "Q4 result — pass rate across the group" },
       { id: 5, label: "Q5 result — pass rate across the group" },
-      // A question most of the room fails is usually a teaching failure, not a learner failure.
+      // A question most of the room fails is usually a teaching failure, not a end user failure.
       { id: 6, label: "Any question the group failed — is the question wrong, or the teaching?" },
     ],
   },

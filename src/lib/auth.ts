@@ -35,6 +35,9 @@ export interface User {
   startWindowEndsOn: string | null;
   /** True once the one-time LinkedIn-share access extension has been claimed. */
   linkedinShareClaimed: boolean;
+  /** Holds a free GRC 101 seat. Granted at signup while seats remain under the backend's
+   *  FREE_ACCESS_LIMIT, and never withdrawn once given. */
+  freeAccess: boolean;
   createdAt: string;
 }
 

@@ -12,7 +12,7 @@ export interface Certificate {
   eyebrow: string;
   programTitle: string;
   blurb: string;
-  status: "issued" | "preview";
+  status: "issued" | "expired" | "preview";
   statusNote: string;
   recipient: string;
   recipientInitials: string;
@@ -27,6 +27,9 @@ export interface Certificate {
   credentialId?: string | null;
   verifyUrl?: string | null;
   issueDate?: string | null;
+  expiryDate?: string | null;
+  expired: boolean;
+  validityYears: number;
   issueYear?: string | null;
   issueMonth?: string | null;
   mentor: CertSignatory;
@@ -36,12 +39,16 @@ export interface Certificate {
 export interface CertVerifyStat { label: string; value: string }
 export interface CertVerify {
   valid: boolean;
+  expired: boolean;
   credentialId: string;
   recipient: string;
   programTitle: string;
   code: string;
   issueDate: string;
   issuedAt: string;
+  expiryDate: string;
+  expiresAt: string;
+  verifyUrl: string;
   stats: CertVerifyStat[];
   standards: string[];
 }

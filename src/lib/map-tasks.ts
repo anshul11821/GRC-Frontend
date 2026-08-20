@@ -12,11 +12,11 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
     feedsNext: "Feeds Step 3.4 (RoPA entry) and Step 3.5 (Art. 35 screening).",
     rows: [
       // The test throughout: if you could not stop on withdrawal, it was never consent.
-      { id: 1, cells: ["Subscriber name and email — to provide the subscription they bought"], outcome: "Contract" },
+      { id: 1, cells: ["Customer name and email — to provide the service they bought"], outcome: "Contract" },
       { id: 2, cells: ["Payment reference — to take payment for the subscription"], outcome: "Contract" },
       { id: 3, cells: ["Marketing preferences — to send optional newsletters"], outcome: "Consent" },
       { id: 4, cells: ["Employee tax records — retained for the statutory period"], outcome: "Legal obligation" },
-      { id: 5, cells: ["Audience analytics joined to subscriber records — to improve content"], outcome: "Legitimate interests" },
+      { id: 5, cells: ["Usage analytics joined to customer records — to improve the service"], outcome: "Legitimate interests" },
       { id: 6, cells: ["Access logs for in-scope systems — to detect misuse"], outcome: "Legitimate interests" },
       { id: 7, cells: ["Right-to-work documents — required before employment starts"], outcome: "Legal obligation" },
       { id: 8, cells: ["Cookie-based ad targeting — no consent record exists"], outcome: "Not defined — gap" },
@@ -73,7 +73,7 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 2, cells: ["IT Manager — must deliver the access recertification"], outcome: "Manage Closely (high influence, high interest)" },
       { id: 3, cells: ["Finance Director — approves the budget, indifferent to the detail"], outcome: "Keep Satisfied (high influence, low interest)" },
       { id: 4, cells: ["Legal — can veto contractual clauses, otherwise uninvolved"], outcome: "Keep Satisfied (high influence, low interest)" },
-      { id: 5, cells: ["Newsroom editors — affected daily, no authority over delivery"], outcome: "Keep Informed (low influence, high interest)" },
+      { id: 5, cells: ["Core service editors — affected daily, no authority over delivery"], outcome: "Keep Informed (low influence, high interest)" },
       { id: 6, cells: ["Service desk staff — will field the questions, cannot change scope"], outcome: "Keep Informed (low influence, high interest)" },
       { id: 7, cells: ["Facilities — no in-scope systems, no stake in the outcome"], outcome: "Monitor (low influence, low interest)" },
       { id: 8, cells: ["Marketing — outside scope, occasionally curious"], outcome: "Monitor (low influence, low interest)" },

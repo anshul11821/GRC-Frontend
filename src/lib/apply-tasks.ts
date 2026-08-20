@@ -43,7 +43,7 @@ export const APPLY_TASKS: Record<string, ApplyTask> = {
       { id: 2, cells: ["IT Manager — high influence, high interest"], outcome: "Manage Closely" },
       { id: 3, cells: ["Finance Director — high influence, low interest"], outcome: "Keep Satisfied" },
       { id: 4, cells: ["Legal — high influence, low interest"], outcome: "Keep Satisfied" },
-      { id: 5, cells: ["Newsroom editors — low influence, high interest"], outcome: "Keep Informed" },
+      { id: 5, cells: ["Core service editors — low influence, high interest"], outcome: "Keep Informed" },
       { id: 6, cells: ["Service desk staff — low influence, high interest"], outcome: "Keep Informed" },
       { id: 7, cells: ["Facilities — low influence, low interest"], outcome: "Monitor" },
       { id: 8, cells: ["Marketing — low influence, low interest"], outcome: "Monitor" },
