@@ -8,7 +8,12 @@
 
 /** Flags a workspace lifts to tell the backend how to grade — not part of the deliverable, so they
  *  never count as content and are never shown as submitted fields. */
-export const CONTROL_KEYS = new Set(["objectiveMet", "scripted", "ready"]);
+// `decision` is the judgment call. It is a graded input, but it has its own panel on the desk
+// and its own panel on the review card, so it is filtered out of the generic field renderers
+// here rather than shown twice as a raw object. Mirrors CONTROL_KEYS in
+// backend/app/services/mentor_review.py — the two must agree or the mentor reviews a longer
+// document than the learner submitted.
+export const CONTROL_KEYS = new Set(["objectiveMet", "scripted", "ready", "slips", "decision"]);
 
 /** Non-empty test. Booleans count as filled only when true; objects/arrays when something inside is. */
 export function isFilled(v: unknown): boolean {

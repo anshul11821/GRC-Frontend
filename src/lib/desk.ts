@@ -83,6 +83,53 @@ export interface ModelAnswer {
   acknowledgeDecisionId: number | null;
 }
 
+/**
+ * The judgment call: one step in each task carries a situation with no clean answer, four courses
+ * of action and a box for the reasoning. Two or three of the options are genuinely defensible —
+ * which, deliberately, this type cannot tell you. The grade is on the reasoning, not the pick,
+ * and the answer key stays on the server (backend/app/services/judgment.py).
+ */
+export interface JudgmentOption {
+  key: string;
+  text: string;
+}
+export interface JudgmentPrompt {
+  slot: string;
+  /** What the dilemma is about, e.g. "Where the assessment population stops". */
+  name: string;
+  competence: string;
+  competenceLabel: string;
+  situation: string;
+  question: string;
+  options: JudgmentOption[];
+}
+export interface JudgmentDimension {
+  label: string;
+  score: number;
+  hint: string;
+}
+export interface JudgmentResult {
+  slot: string;
+  competence: string;
+  competenceLabel: string;
+  option: string;
+  /** Whether the option taken was one of the defensible ones. Told after grading, never before. */
+  defensible: boolean;
+  justification: string;
+  score: number;
+  passed: boolean;
+  dimensions: JudgmentDimension[];
+  feedback: string;
+  /** "fallback" when the model was unreachable and the mentor will read the reasoning instead. */
+  gradedBy: string;
+}
+
+/** What the workspace lifts into `payload.fields.decision`. */
+export interface DecisionAnswer {
+  option: string;
+  justification: string;
+}
+
 export interface ActivityDetail {
   id: string;
   code: string;
@@ -100,6 +147,10 @@ export interface ActivityDetail {
    */
   mentorReview: MentorReview | null;
   modelAnswer: ModelAnswer | null;
+  /** Set only on the one step per task that carries a judgment call. */
+  judgment: JudgmentPrompt | null;
+  /** How they answered it last time, if they have. */
+  judgmentResult: JudgmentResult | null;
   attemptsUsed: number;
   attemptsRemaining: number;
   maxAttempts: number;
@@ -109,6 +160,7 @@ export interface SubmitResponse {
   submissionId: number;
   layer1: Layer1Result;
   review: Review | null;
+  judgmentResult: JudgmentResult | null;
   attemptsUsed: number;
   attemptsRemaining: number;
   maxAttempts: number;

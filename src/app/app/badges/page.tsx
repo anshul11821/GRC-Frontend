@@ -96,6 +96,18 @@ export default function BadgesPage() {
                   </div>
                   <div className="font-mono text-[11px] text-slate-400 mt-1">{b.code}</div>
                   <p className="text-[12px] text-slate-500 tracking-tight mt-2 leading-relaxed" style={{ textWrap: "pretty" }}>{b.blurb}</p>
+                  {/* What the badge says about their judgment, not their throughput. Task count
+                      is what earns it; this is what it means. */}
+                  <p className="text-[11.5px] text-slate-600 tracking-tight mt-2 leading-relaxed" style={{ textWrap: "pretty" }}>
+                    <span className="font-medium text-slate-700">Certifies:</span> {b.certifies}
+                  </p>
+                  <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                    {b.competences.map((c) => (
+                      <span key={c} className="inline-flex items-center h-[19px] px-2 rounded-full bg-violet-50 text-violet-700 ring-1 ring-violet-200/70 text-[10.5px] font-medium tracking-tight">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                   <div className="mt-3 flex items-center gap-2">
                     <Bar pct={b.pct || 2} tone={b.state === "earned" ? "emerald" : b.state === "in-progress" ? "indigo" : "slate"} className="flex-1" />
                     <span className="text-[11px] font-medium text-slate-500 tabular-nums shrink-0">{b.done}/{b.total} tasks</span>

@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import QRCode from "qrcode";
+
 import type { Certificate } from "@/lib/certificate";
 
 const SERIF = "var(--font-cormorant), 'Cormorant Garamond', Georgia, serif";
@@ -24,29 +27,38 @@ function Seal() {
   );
 }
 
-/** Deterministic QR-style verification matrix seeded from the credential id. */
-function FauxQR({ seed, size = 54 }: { seed: string; size?: number }) {
-  const n = 21;
-  const cell = size / n;
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const rng = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
-  const inFinder = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
-  const mods: [number, number][] = [];
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { if (inFinder(r, c)) continue; if (rng() > 0.52) mods.push([r, c]); }
-  const Finder = ({ r, c }: { r: number; c: number }) => (
-    <div style={{ position: "absolute", left: c * cell, top: r * cell, width: cell * 7, height: cell * 7 }}>
-      <div style={{ position: "absolute", inset: 0, border: `${cell}px solid #1e1b3a` }} />
-      <div style={{ position: "absolute", inset: cell * 2, background: "#1e1b3a" }} />
-    </div>
-  );
+/**
+ * Real, scannable QR of the public verification URL. Not decoration — a printed certificate is
+ * the one place a reader has no link to click, so the code has to actually resolve.
+ */
+function VerifyQR({ url, size = 54 }: { url?: string | null; size?: number }) {
+  const qr = useMemo(() => {
+    if (!url) return null;
+    try {
+      return QRCode.create(url, { errorCorrectionLevel: "M" }).modules;
+    } catch {
+      return null;
+    }
+  }, [url]);
+
+  if (!qr) {
+    return (
+      <div style={{ width: size, height: size, border: "1px dashed rgba(49,46,129,0.3)", borderRadius: 4 }} />
+    );
+  }
+
+  const n = qr.size;
+  const rects: string[] = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (qr.data[r * n + c]) rects.push(`M${c} ${r}h1v1h-1z`);
+    }
+  }
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
-      {mods.map(([r, c], i) => (
-        <div key={i} style={{ position: "absolute", left: c * cell, top: r * cell, width: cell + 0.4, height: cell + 0.4, background: "#1e1b3a" }} />
-      ))}
-      <Finder r={0} c={0} /><Finder r={0} c={n - 7} /><Finder r={n - 7} c={0} />
-    </div>
+    <svg width={size} height={size} viewBox={`0 0 ${n} ${n}`} shapeRendering="crispEdges" role="img" aria-label="Scan to verify this credential">
+      <rect width={n} height={n} fill="#FCFBF6" />
+      <path d={rects.join("")} fill="#1e1b3a" />
+    </svg>
   );
 }
 
@@ -54,28 +66,29 @@ export interface CertStat { value: string; label: string }
 
 /**
  * The certificate document. Fixed 1000px design width — the caller scales it to fit.
- * `preview` watermarks the sheet when the credential has not yet been issued.
+ * `preview` watermarks the sheet when the credential has not yet been issued; a lapsed
+ * credential watermarks itself from `cert.expired`.
  */
 export function CertificateSheet({
   cert,
   stats,
   preview = false,
 }: {
-  cert: Pick<Certificate, "eyebrow" | "programTitle" | "blurb" | "recipient" | "standards" | "credentialId" | "verifyUrl" | "issueDate" | "mentor" | "issuer">;
+  cert: Pick<Certificate, "eyebrow" | "programTitle" | "blurb" | "recipient" | "standards" | "credentialId" | "verifyUrl" | "issueDate" | "mentor" | "issuer"> & Partial<Pick<Certificate, "expiryDate" | "expired">>;
   stats: CertStat[];
   preview?: boolean;
 }) {
   const credentialId = cert.credentialId ?? "— pending completion —";
-  const verifyUrl = cert.verifyUrl ?? "issued at 100% completion";
+  const verifyLabel = cert.verifyUrl?.replace(/^https?:\/\//, "") ?? "issued at 100% completion";
   return (
     <div id="cert-sheet" className="relative" style={{ width: 1000, background: "#FCFBF6", fontFamily: "var(--font-geist-sans), sans-serif" }}>
       <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(1200px 500px at 50% -10%, rgba(79,70,229,0.05), transparent 60%), radial-gradient(800px 500px at 50% 120%, rgba(201,154,63,0.06), transparent 60%)" }} />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none" style={{ opacity: 0.035 }}>
         <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 460, color: "#312e81", lineHeight: 1 }}>G</span>
       </div>
-      {preview && (
+      {(preview || cert.expired) && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none" style={{ transform: "rotate(-24deg)" }}>
-          <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 150, letterSpacing: "0.1em", color: "rgba(49,46,129,0.06)" }}>PREVIEW</span>
+          <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 150, letterSpacing: "0.1em", color: preview ? "rgba(49,46,129,0.06)" : "rgba(190,18,60,0.08)" }}>{preview ? "PREVIEW" : "EXPIRED"}</span>
         </div>
       )}
 
@@ -105,9 +118,15 @@ export function CertificateSheet({
           has successfully completed the <span style={{ fontWeight: 600, color: "#1e1b3a" }}>{cert.programTitle}</span>, {cert.blurb}
         </p>
 
+        {/* The sheet is a fixed-width document, so a fifth stat tightens the gutter rather than
+            wrapping the row. */}
         <div className="flex items-stretch justify-center" style={{ gap: 0, marginTop: 22 }}>
           {stats.map((s, i) => (
-            <div key={s.label} className="flex flex-col items-center" style={{ padding: "0 22px", borderLeft: i ? "1px solid rgba(49,46,129,0.14)" : "none" }}>
+            <div
+              key={s.label}
+              className="flex flex-col items-center"
+              style={{ padding: stats.length > 4 ? "0 15px" : "0 22px", borderLeft: i ? "1px solid rgba(49,46,129,0.14)" : "none" }}
+            >
               <span style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 28, color: "#4f46e5", lineHeight: 1 }}>{s.value}</span>
               <span style={{ fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b6680", marginTop: 5 }}>{s.label}</span>
             </div>
@@ -133,11 +152,11 @@ export function CertificateSheet({
           <div className="flex flex-col items-center" style={{ marginBottom: 2 }}>
             <Seal />
             <div className="flex items-center gap-2.5" style={{ marginTop: 16 }}>
-              <FauxQR seed={credentialId} size={54} />
+              <VerifyQR url={cert.verifyUrl} size={54} />
               <div className="text-left">
                 <div style={{ fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9a7320", fontWeight: 600 }}>Credential ID</div>
                 <div style={{ fontFamily: MONO, fontSize: 10, color: "#3a3647", marginTop: 1 }}>{credentialId}</div>
-                <div style={{ fontFamily: MONO, fontSize: 8.5, color: "#6b6680", marginTop: 2 }}>{verifyUrl}</div>
+                <div style={{ fontFamily: MONO, fontSize: 8.5, color: "#6b6680", marginTop: 2 }}>{verifyLabel}</div>
               </div>
             </div>
           </div>
@@ -150,12 +169,13 @@ export function CertificateSheet({
           </div>
         </div>
 
-        <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#9a7320", marginTop: 22 }}>
+        <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: cert.expired ? "#be123c" : "#9a7320", marginTop: 22 }}>
           {cert.issueDate ? `Issued ${cert.issueDate}` : "Issued on completion"}
+          {cert.expiryDate ? ` · ${cert.expired ? "Expired" : "Valid until"} ${cert.expiryDate}` : ""}
         </div>
       </div>
     </div>
   );
 }
 
-export { Seal, FauxQR };
+export { Seal, VerifyQR };

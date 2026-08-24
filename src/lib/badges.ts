@@ -12,6 +12,14 @@ export interface BadgeDef {
   level: number;
   blurb: string;
   taskCodes: string[];
+  /**
+   * What the badge certifies about the holder's *judgment*, from the v4 judgment library's own
+   * badge map (backend `_seed/grc101_judgment.json` → `badges`). Static here for the same reason
+   * `taskCodes` is: badges are derived on the frontend from task completion and need no backend
+   * call. Keep in step with the seed — `scripts/build_judgment.py` prints the mapping.
+   */
+  certifies: string;
+  competences: string[];
 }
 
 /** Rank bands: levels 01–05 Foundation, 06–11 Practitioner, 12–16 Mastery. */
@@ -34,6 +42,8 @@ export const BADGES: BadgeDef[] = [
     level: 1,
     blurb: "Discover GRC maturity, metrics and stakeholder needs across a function.",
     taskCodes: ["GRM-003", "MM-001", "CA-001", "CA-002", "CA-003", "KT-002"],
+    certifies: "Can establish what applies, to what, and show that the population is complete.",
+    competences: ["Scoping", "Standards application", "Completeness discipline"],
   },
   {
     id: "foundation-discovery",
@@ -43,6 +53,8 @@ export const BADGES: BadgeDef[] = [
     level: 1,
     blurb: "Plan and charter a GRC initiative from the ground up.",
     taskCodes: ["SPA-001", "SPA-002", "PE-001"],
+    certifies: "Can scope an initiative and state what it commits the organisation to.",
+    competences: ["Scoping", "Stakeholder framing", "Consequence awareness"],
   },
   {
     id: "process-mapping",
@@ -52,6 +64,8 @@ export const BADGES: BadgeDef[] = [
     level: 2,
     blurb: "Catalogue and classify an organisation's information assets end to end.",
     taskCodes: ["AA-001"],
+    certifies: "Can determine where controls sit in real work and evidence the determination.",
+    competences: ["Determination", "Completeness discipline", "Evidence sufficiency"],
   },
   {
     id: "documentation-excellence",
@@ -61,6 +75,8 @@ export const BADGES: BadgeDef[] = [
     level: 2,
     blurb: "Produce clear, standard-aligned GRC policies, procedures and guides.",
     taskCodes: ["GRM-002", "DD-001", "DD-002", "DD-003", "IE-002", "QA-001", "KT-001"],
+    certifies: "Can write a controlled document a stranger can operate from.",
+    competences: ["Stakeholder framing", "Completeness discipline", "Standards application"],
   },
   {
     id: "risk-assessment",
@@ -70,6 +86,8 @@ export const BADGES: BadgeDef[] = [
     level: 2,
     blurb: "Identify, register and rate operational and third-party risk.",
     taskCodes: ["GRM-001", "MM-002", "BCRP-001", "TPRM-001", "TPRM-002"],
+    certifies: "Can produce a rating a second assessor would reproduce, and state its limits.",
+    competences: ["Determination", "Quantification", "Consequence awareness"],
   },
   {
     id: "audit-prep",
@@ -79,6 +97,8 @@ export const BADGES: BadgeDef[] = [
     level: 3,
     blurb: "Support control testing, audit evidence and incident drills.",
     taskCodes: ["TV-001", "TV-002", "RR-001", "PE-002", "QA-002"],
+    certifies: "Can assemble evidence that supports the conclusion rather than accompanying it.",
+    competences: ["Evidence sufficiency", "Completeness discipline", "Quantification"],
   },
   {
     id: "control-framework",
@@ -88,6 +108,8 @@ export const BADGES: BadgeDef[] = [
     level: 3,
     blurb: "Map and assess security controls against ISO 27001, CIS v8 and SOC 2.",
     taskCodes: ["AA-002", "CRM-002", "CRM-003", "IE-001", "BCRP-002"],
+    certifies: "Can apply a framework's intent, not its wording, and defend the reading.",
+    competences: ["Standards application", "Determination", "Defensibility"],
   },
   {
     id: "compliance-readiness",
@@ -97,5 +119,7 @@ export const BADGES: BadgeDef[] = [
     level: 3,
     blurb: "Demonstrate regulatory and privacy compliance fundamentals.",
     taskCodes: ["AA-003", "CRM-001", "LRC-001"],
+    certifies: "Can determine applicability and knows which determinations are not theirs.",
+    competences: ["Standards application", "Escalation judgment", "Consequence awareness"],
   },
 ];

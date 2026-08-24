@@ -19,7 +19,10 @@ import { mentorApi, type Block, type Card } from "@/lib/mentor";
  */
 /** Keys match ignoring case and separators: payloads carry both `objectiveMet` and `objective_met`. */
 const norm = (k: string) => k.replace(/[_-]/g, "").toLowerCase();
-const CONTROL = new Set(["objectivemet", "scripted", "ready", "slips"]);
+// `decision` is the judgment call. It rides in the same payload but has its own panel on the
+// card, so it is excluded here — otherwise the drift check below reads it as a field the
+// workspace failed to represent and warns the reviewer about a submission that is fine.
+const CONTROL = new Set(["objectivemet", "scripted", "ready", "slips", "decision"]);
 
 export function SubmittedWork({ card }: { card: Card }) {
   const [raw, setRaw] = useState(false);

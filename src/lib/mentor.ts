@@ -142,6 +142,42 @@ export interface Brief {
   references: TaskReference[];
 }
 
+/**
+ * The judgment call on this step, with the answer key attached. The learner sees the situation,
+ * the question and the four option texts and nothing else; the reviewer sees which options the
+ * library considers defensible, why, and the reference position the practitioner who authored
+ * the dilemma wrote for it.
+ *
+ * That reference position is guidance, not a mark scheme. Two or three options are defensible
+ * and the reviewer is the authority on whether THIS mentee defended one of them.
+ */
+export interface JudgmentReviewOption {
+  key: string;
+  text: string;
+  defensible: boolean;
+  basis: string;
+}
+export interface JudgmentReview {
+  slot: string;
+  name: string;
+  competence: string;
+  competenceLabel: string;
+  situation: string;
+  question: string;
+  options: JudgmentReviewOption[];
+  referencePosition: string;
+  hardestWhen: string;
+  /** The mentee's answer. Empty when this revision predates the judgment call. */
+  chose: string;
+  choseDefensible: boolean;
+  justification: string;
+  aiScore: number;
+  aiPassed: boolean;
+  aiDimensions: { label: string; score: number; hint: string }[];
+  aiFeedback: string;
+  gradedBy: string;
+}
+
 export interface Card {
   submissionId: number;
   gateId: string;
@@ -204,6 +240,8 @@ export interface Card {
   activityCode: string;
   payload: { fields?: Record<string, unknown>; notes?: string; attachments?: unknown[] };
   blocks: Block[];
+  /** Set only on the one step per task that carries a judgment call. */
+  judgment: JudgmentReview | null;
   approve: Reason[];
   priorReturns: number;
   maxReturns: number;

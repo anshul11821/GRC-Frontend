@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
 import { UpNext } from "./up-next";
+import { FeedbackWidget } from "./feedback-widget";
 import { DropdownPanel } from "@/components/ui/motion";
 
 function DashSidebar({
@@ -359,6 +360,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden print:overflow-visible print:h-auto">{children}</main>
       </div>
       <CollapseMenuHint collapsed={collapsed} />
+      <FeedbackWidget />
       <div className="print:hidden"><WelcomeTour openNav={() => setMobileOpen(true)} /></div>
     </div>
   );

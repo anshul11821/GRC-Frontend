@@ -43,6 +43,28 @@ export interface CvExperienceOrg {
 }
 
 export interface CvSkill { id: string; label: string; value: number }
+/**
+ * One of the ten judgment competences, and what this mentee's decisions showed on it. Scored 0-4
+ * over roughly three or four observations, which is enough to separate "has not shown it" from
+ * "cannot do it" and not enough to support a finer claim — hence `observations` travels with the
+ * value and the sheet prints both.
+ */
+export interface CvCompetence {
+  id: string;
+  label: string;
+  what: string;
+  value: number;
+  observations: number;
+}
+export interface CvJudgment {
+  /** Judgment calls answered and verified. */
+  calls: number;
+  /** How many of those took one of the defensible options. Context, not the grade. */
+  defensible: number;
+  average: number;
+  competences: CvCompetence[];
+}
+
 export interface CvVerbs { done: string[]; active: string[] }
 export interface CvStandard { label: string; tone: string }
 export interface CvEndorsement { quote: string; name: string; role: string; initials: string }
@@ -56,6 +78,7 @@ export interface Cv {
   completedTaskCodes: string[];
   experience: CvExperienceOrg[];
   skills: CvSkill[];
+  judgment?: CvJudgment | null;
   verbs: CvVerbs;
   standards: CvStandard[];
   endorsement?: CvEndorsement | null;

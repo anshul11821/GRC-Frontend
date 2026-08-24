@@ -4,18 +4,18 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Loader } from "@/components/ui/loader";
-import { FauxQR } from "@/components/cert/certificate-sheet";
+import { VerifyQR } from "@/components/cert/certificate-sheet";
 import { certificateApi, type CertVerify } from "@/lib/certificate";
 
 export default function VerifyPage({ params }: { params: Promise<{ credentialId: string }> }) {
   const { credentialId } = use(params);
   const [data, setData] = useState<CertVerify | null>(null);
-  const [state, setState] = useState<"loading" | "valid" | "invalid">("loading");
+  const [state, setState] = useState<"loading" | "found" | "invalid">("loading");
 
   useEffect(() => {
     let cancelled = false;
     certificateApi.verify(credentialId)
-      .then((d) => { if (!cancelled) { setData(d); setState("valid"); } })
+      .then((d) => { if (!cancelled) { setData(d); setState("found"); } })
       .catch(() => { if (!cancelled) setState("invalid"); });
     return () => { cancelled = true; };
   }, [credentialId]);
@@ -39,13 +39,22 @@ export default function VerifyPage({ params }: { params: Promise<{ credentialId:
           </div>
         )}
 
-        {state === "valid" && data && (
+        {state === "found" && data && (
           <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_50px_-24px_rgba(15,23,42,0.18)]">
-            <div className="px-7 py-5 bg-emerald-50/60 border-b border-emerald-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><Icon name="check" size={20} strokeWidth={3} /></div>
+            {/* An expired credential is still authentic — the header says lapsed, not fake. */}
+            <div className={`px-7 py-5 border-b flex items-center gap-3 ${data.expired ? "bg-amber-50/60 border-amber-100" : "bg-emerald-50/60 border-emerald-100"}`}>
+              <div className={`w-10 h-10 rounded-full text-white flex items-center justify-center shrink-0 ${data.expired ? "bg-amber-500" : "bg-emerald-500"}`}>
+                <Icon name={data.expired ? "history" : "check"} size={20} strokeWidth={data.expired ? 2 : 3} />
+              </div>
               <div>
-                <div className="text-[14px] font-semibold text-emerald-800 tracking-tight">Verified credential</div>
-                <div className="text-[12px] text-emerald-700/80 tracking-tight">Authentic, issued by grcmentor</div>
+                <div className={`text-[14px] font-semibold tracking-tight ${data.expired ? "text-amber-800" : "text-emerald-800"}`}>
+                  {data.expired ? "Expired credential" : "Verified credential"}
+                </div>
+                <div className={`text-[12px] tracking-tight ${data.expired ? "text-amber-700/80" : "text-emerald-700/80"}`}>
+                  {data.expired
+                    ? `Authentic and issued by grcmentor, but lapsed on ${data.expiryDate}`
+                    : `Authentic, issued by grcmentor · valid to ${data.expiryDate}`}
+                </div>
               </div>
             </div>
 
@@ -72,11 +81,13 @@ export default function VerifyPage({ params }: { params: Promise<{ credentialId:
               )}
 
               <div className="flex items-center gap-4 mt-6 pt-5 border-t border-slate-100">
-                <FauxQR seed={data.credentialId} size={56} />
+                <VerifyQR url={data.verifyUrl} size={56} />
                 <div className="min-w-0">
                   <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-amber-700">Credential ID</div>
                   <div className="font-mono text-[12px] text-slate-700 mt-0.5">{data.credentialId}</div>
-                  <div className="text-[11.5px] text-slate-400 tracking-tight mt-1">Issued {data.issueDate}</div>
+                  <div className="text-[11.5px] text-slate-400 tracking-tight mt-1">
+                    Issued {data.issueDate} · {data.expired ? "expired" : "valid until"} {data.expiryDate}
+                  </div>
                 </div>
               </div>
             </div>

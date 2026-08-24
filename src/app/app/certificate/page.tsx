@@ -15,7 +15,7 @@ function ShareMenu({ cert }: { cert: Certificate }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const certUrl = `https://${cert.verifyUrl}`;
+  const certUrl = cert.verifyUrl ?? "";
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -135,18 +135,26 @@ export default function CertificatePage() {
         { value: `${badgesEarned}`, label: "Badges earned" },
         { value: `${cert.verbsPracticed}/${cert.verbsTotal}`, label: "Method verbs" },
         { value: `${cert.avgScore} / 5`, label: "Mentor score" },
+        // The stat that separates this credential from a completion certificate. Only printed
+        // once there is something to print — an early cohort with none reads better at four.
+        ...(cert.judgment?.calls
+          ? [{ value: `${cert.judgment.calls}`, label: "Judgment calls" }]
+          : []),
       ]
     : [];
 
+  const certVerifyLabel = cert?.verifyUrl?.replace(/^https?:\/\//, "") ?? "";
   const locked = CERT_LOCKED.find((l) => l.id === tab);
   const isLocked = !!locked;
   const recipient = cert?.recipient ?? "—";
   const statusNote = isLocked ? locked!.statusNote : cert?.statusNote ?? "";
-  const chipTone = !isLocked && cert?.status === "issued"
-    ? "bg-emerald-50 ring-emerald-100 text-emerald-700"
-    : !isLocked
-      ? "bg-amber-50 ring-amber-100 text-amber-700"
-      : "bg-slate-100 ring-slate-200/70 text-slate-500";
+  const chipTone = isLocked
+    ? "bg-slate-100 ring-slate-200/70 text-slate-500"
+    : cert?.status === "issued"
+      ? "bg-emerald-50 ring-emerald-100 text-emerald-700"
+      : cert?.status === "expired"
+        ? "bg-rose-50 ring-rose-100 text-rose-700"
+        : "bg-amber-50 ring-amber-100 text-amber-700";
 
   const tabs = [{ id: "grc101", code: "GRC 101", locked: false }, ...CERT_LOCKED.map((l) => ({ id: l.id, code: l.code, locked: true }))];
 
@@ -173,7 +181,7 @@ export default function CertificatePage() {
               );
             })}
           </div>
-          {!isLocked && cert?.status === "issued" && <ShareMenu cert={cert} />}
+          {!isLocked && cert && cert.status !== "preview" && <ShareMenu cert={cert} />}
         </div>
       </div>
 
@@ -190,16 +198,18 @@ export default function CertificatePage() {
       ) : cert ? (
         <>
           <CertStage dep={`${tab}-${cert.status}`}>
-            <CertificateSheet preview={cert.status !== "issued"} stats={stats} cert={cert} />
+            <CertificateSheet preview={cert.status === "preview"} stats={stats} cert={cert} />
           </CertStage>
           <div className="text-center text-[11px] text-slate-400 pt-5 pb-2 cert-noprint">
-            {cert.status === "issued" ? (
-              <>Verifiable at {cert.verifyUrl}</>
-            ) : (
+            {cert.status === "preview" ? (
               <>Issues automatically at 100% completion · {cert.completionPct}% complete</>
+            ) : cert.expired ? (
+              <>This credential lapsed on {cert.expiryDate}. It stays verifiable at {certVerifyLabel} as a record of completed work.</>
+            ) : (
+              <>Verifiable at {certVerifyLabel} · valid for {cert.validityYears} years, until {cert.expiryDate}</>
             )}
           </div>
-          {cert.status === "issued" && (
+          {cert.status !== "preview" && (
             <div className="max-w-[720px] mx-auto mt-2 cert-noprint">
               <ExtendAccessCard kind="certificate" />
             </div>

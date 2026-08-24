@@ -193,6 +193,47 @@ export function CvSheet({ cv }: { cv: Cv }) {
                 </section>
               </>
             )}
+
+            {/* judgment — decisions, not deliverables */}
+            {!!cv.judgment?.calls && (
+              <>
+                <div className="h-px bg-slate-100" />
+                <section>
+                  <Head
+                    icon="bullseye"
+                    action={
+                      <span className="text-[11px] text-slate-400">
+                        {cv.judgment.calls} call{cv.judgment.calls === 1 ? "" : "s"} · rated / 4
+                      </span>
+                    }
+                  >
+                    Judgment
+                  </Head>
+                  {/* The line that says what this section is for. A hiring manager reading a
+                      training CV assumes coursework; this is the part that is not. */}
+                  <p className="-mt-1 mb-3 text-[11.5px] text-slate-500 leading-relaxed" style={{ textWrap: "pretty" }}>
+                    Recorded decisions from live fieldwork where more than one course of action was
+                    defensible. Scored on the reasoning given, not the option taken.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                    {cv.judgment.competences.map((c) => (
+                      <div key={c.id} title={c.what}>
+                        <div className="flex items-center justify-between mb-1 gap-2">
+                          <span className="text-[12px] text-slate-600 tracking-tight truncate">{c.label}</span>
+                          <span className="shrink-0 text-[11.5px] font-semibold text-slate-900 tabular-nums">
+                            {c.value.toFixed(1)}
+                            <span className="ml-1 font-normal text-slate-400">
+                              ({c.observations})
+                            </span>
+                          </span>
+                        </div>
+                        <Bar pct={(c.value / 4) * 100} tone={skillTone((c.value / 4) * 5)} />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
           </div>
 
           <div className="lg:col-span-5 space-y-8">

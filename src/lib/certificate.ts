@@ -23,6 +23,8 @@ export interface Certificate {
   avgScore: number;
   completionPct: number;
   completedTaskCodes: string[];
+  /** Judgment calls defended, and the competences they showed. Snapshotted at issue. */
+  judgment?: { calls: number; average: number; competences: string[] } | null;
   standards: string[];
   credentialId?: string | null;
   verifyUrl?: string | null;

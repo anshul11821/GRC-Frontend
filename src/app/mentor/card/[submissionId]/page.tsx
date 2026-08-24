@@ -8,6 +8,7 @@ import { MentorShell } from "@/components/mentor/shell";
 import { ReasonSheet } from "@/components/mentor/reason-sheet";
 import { UndoToast } from "@/components/mentor/undo-toast";
 import { SubmittedWork } from "@/components/mentor/submitted-work";
+import { JudgmentPanel, JudgmentSummary } from "@/components/mentor/judgment-review";
 import { ReferenceMaterial } from "@/components/app/reference-material";
 import { ApiError } from "@/lib/api";
 import {
@@ -34,7 +35,7 @@ export default function MentorCardPage() {
 
 // The submission opens; the prototype's other two views (step chain, deliverable) sit beside it,
 // and everything from the gate register that isn't needed to judge the work stays under Background.
-type Tab = "submission" | "chain" | "deliverable" | "background";
+type Tab = "submission" | "chain" | "deliverable" | "judgment" | "background";
 
 type Answer = "yes" | "no";
 
@@ -210,6 +211,11 @@ function CardBody() {
             <TabButton active={tab === "deliverable"} onClick={() => setTab("deliverable")}>
               Deliverable
             </TabButton>
+            {card.judgment && (
+              <TabButton active={tab === "judgment"} onClick={() => setTab("judgment")}>
+                Judgment call
+              </TabButton>
+            )}
             <TabButton active={tab === "background"} onClick={() => setTab("background")}>
               Background &amp; history
               {card.history.length > 0 && (
@@ -226,6 +232,9 @@ function CardBody() {
               <div>
                 <TheAsk brief={card.brief} title={card.activityTitle} />
                 <SubmittedWork card={card} />
+                {card.judgment && (
+                  <JudgmentSummary j={card.judgment} onOpen={() => setTab("judgment")} />
+                )}
               </div>
             )}
             {tab === "chain" && <StepChain steps={card.stepChain} feedsInto={card.feedsInto} />}
@@ -246,6 +255,7 @@ function CardBody() {
                 <Field label="Gate acceptance">{card.acceptance}</Field>
               </div>
             )}
+            {tab === "judgment" && card.judgment && <JudgmentPanel j={card.judgment} />}
             {tab === "background" && (
               <div className="space-y-4">
                 {/* The header carries the task code; this is the only place the task is named. */}

@@ -13,6 +13,8 @@ import { Gloss, TermsUsed } from "@/components/app/glossary";
 import { VERBS, GATE_VERBS, isGateVerb } from "@/lib/verbs";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
 import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
+import { JudgmentCall, JudgmentAnswer, JudgmentVerdict, decisionReady } from "@/components/app/judgment-call";
+import type { DecisionAnswer } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
 import { CONTROL_KEYS, checklistStates, isFilled } from "@/lib/checklist";
@@ -249,6 +251,16 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
   );
 }
 
+/** The submission a completed step reads back: highest scored, newest on a tie (history is
+ *  newest-first, and `>` keeps the one seen first). Scores re-roll between attempts, so the last
+ *  attempt is not necessarily the best one. */
+function bestSubmission(history: SubmissionDetail[]): ActivityPayload | undefined {
+  return history.reduce<SubmissionDetail | undefined>(
+    (best, h) => (!best || (h.review?.overallScore ?? 0) > (best.review?.overallScore ?? 0) ? h : best),
+    undefined,
+  )?.submission.payload;
+}
+
 export default function ActivityWorkspace() {
   const { activityId } = useParams<{ activityId: string }>();
   const { learnings, refresh: refreshTree, scheduleByActivity } = useDeskLearnings();
@@ -258,6 +270,10 @@ export default function ActivityWorkspace() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [values, setValues] = useState<Record<string, unknown>>({});
+  // The judgment call lives OUTSIDE `values` on purpose. VerbWorkspace owns `values` through
+  // useLift, which replaces the whole object on every keystroke — anything a sibling wrote into
+  // it would be wiped on the next character typed. The two are merged only at payload time.
+  const [decision, setDecision] = useState<DecisionAnswer>({ option: "", justification: "" });
   const [focusRefId, setFocusRefId] = useState<string | null>(null);
   // reference documents opened as draggable floating windows
   const fw = useFloatingDocs();
@@ -285,6 +301,14 @@ export default function ActivityWorkspace() {
   const checklistHudRef = useRef<HTMLDivElement>(null);
   const checklistInlineRef = useRef<HTMLDivElement>(null);
 
+  // `decision` is round-tripped inside the same fields blob, so lift it back out and keep it out
+  // of `values` — leaving it there would render it as a stray deliverable field.
+  const seed = (p?: ActivityPayload | null) => {
+    const { decision: saved, ...rest } = (p?.fields ?? {}) as Record<string, unknown>;
+    setValues(rest);
+    setDecision(saved && typeof saved === "object" ? (saved as DecisionAnswer) : { option: "", justification: "" });
+  };
+
   useEffect(() => {
     let cancelled = false;
     setTourStep(-1); // close the tour during navigation so it never shows a stale step
@@ -294,10 +318,10 @@ export default function ActivityWorkspace() {
         setActivity(a);
         setHistory(h);
         setResubmit(false);
-        // Only an unsubmitted draft refills the workspace. Past submissions are *not* replayed into
-        // the form — they're read back under "What you submitted" in the feedback drawer — so a
-        // reopened activity starts from the scripted blank state, same as the first attempt.
-        if (a.draft) setValues(a.draft.fields ?? {});
+        // An unsubmitted draft refills the workspace to carry on with. Failing that, a step that
+        // has been submitted reads its own work back — frozen once it passed, until Resubmit
+        // blanks it for a fresh attempt.
+        seed(a.draft ?? bestSubmission(h));
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
       .finally(() => !cancelled && setLoading(false));
@@ -338,7 +362,11 @@ export default function ActivityWorkspace() {
   // not bundled — see task-bundle.ts. Fetches once activity (hence taskCode) is loaded.
   const { bundle } = useTaskBundle(activity?.taskCode);
 
-  const payload = (): ActivityPayload => ({ fields: values, notes: "", attachments: [] });
+  const payload = (): ActivityPayload => ({
+    fields: activity?.judgment ? { ...values, decision } : values,
+    notes: "",
+    attachments: [],
+  });
   const openRef = (id?: string) => { setFocusRefId(id ?? null); setBriefOpen(true); };
   const hasContent = Object.entries(values).some(([k, v]) => !CONTROL_KEYS.has(k) && isFilled(v));
   // Workspaces that judge their own completion lift a flag: `objectiveMet` (answer-key validated,
@@ -359,8 +387,17 @@ export default function ActivityWorkspace() {
     const t = setTimeout(() => setStuck(true), 10 * 60_000);
     return () => clearTimeout(t);
   }, [activityId]);
-  const objectiveBlocked = workspaceBlocked && !override;
-  const blockedHint = values.objectiveMet === false
+  // A step carrying a judgment call cannot be submitted without one. The server has its own floor
+  // (services/judgment.FLOOR) and would fail the step anyway — blocking here spends no attempt.
+  // Not covered by `override`: the escape hatch exists for a workspace whose objective the mentee
+  // cannot meet, and there is no way to be unable to state why you chose something.
+  const judgmentBlocked = !decisionReady(activity?.judgment ?? null, decision);
+  const objectiveBlocked = (workspaceBlocked && !override) || judgmentBlocked;
+  const blockedHint = judgmentBlocked
+    ? (decision.option
+        ? "Say why you chose it — the judgment call is graded on the reasoning."
+        : "Answer the judgment call below to submit.")
+    : values.objectiveMet === false
     ? "Complete the guided steps successfully to submit."
     : "Complete every required field in the deliverable to submit.";
 
@@ -373,25 +410,29 @@ export default function ActivityWorkspace() {
   useEffect(() => { savedSnapshot.current = null; touched.current = false; }, [activityId]);
   useEffect(() => {
     if (!activity || activity.attemptsRemaining <= 0) return; // not loaded, or read-only
-    const snapshot = JSON.stringify(values);
+    if (activity.status === "complete" && !resubmit) return; // reading a passed step back, not editing it
+    // The judgment call rides in the same draft blob as the deliverable, so an answer typed and
+    // then abandoned survives a closed tab exactly as the rest of the work does.
+    const fields = activity.judgment ? { ...values, decision } : values;
+    const snapshot = JSON.stringify(fields);
     // First run after the activity loads is the seeded draft, not something the mentee typed.
     if (savedSnapshot.current === null) { savedSnapshot.current = snapshot; return; }
     if (!touched.current || snapshot === savedSnapshot.current) return;
     const id = setTimeout(() => {
       // Chained, so a slow save can never land after — and overwrite — a newer one.
       saveChain.current = saveChain.current
-        .then(() => deskApi.saveDraft(activityId, { fields: values, notes: "", attachments: [] }))
+        .then(() => deskApi.saveDraft(activityId, { fields, notes: "", attachments: [] }))
         .then(() => { savedSnapshot.current = snapshot; setSavedAt(new Date().toLocaleTimeString()); })
         .catch(() => {}); // keep the stale snapshot so the next edit retries; the button still reports errors
     }, 2000);
     return () => clearTimeout(id);
-  }, [values, activity, activityId]);
+  }, [values, decision, activity, activityId, resubmit]);
 
   const saveDraft = async () => {
     setBusy(true); setError(null);
     try {
       await deskApi.saveDraft(activityId, payload());
-      savedSnapshot.current = JSON.stringify(values);
+      savedSnapshot.current = JSON.stringify(payload().fields);
       setSavedAt(new Date().toLocaleTimeString());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save draft.");
@@ -402,6 +443,7 @@ export default function ActivityWorkspace() {
   // grading, and remount the workspace so its internal state re-seeds from the blank value.
   const startResubmit = () => {
     setValues({});
+    setDecision({ option: "", justification: "" });
     setResult(null);
     setError(null);
     setSavedAt(null);
@@ -418,7 +460,7 @@ export default function ActivityWorkspace() {
       setResult(res);
       setFeedbackOpen(true); // surface the graded result immediately
       deskApi.submissions(activityId).then(setHistory).catch(() => {});
-      setActivity((a) => (a ? { ...a, attemptsUsed: res.attemptsUsed, attemptsRemaining: res.attemptsRemaining, maxAttempts: res.maxAttempts } : a));
+      setActivity((a) => (a ? { ...a, attemptsUsed: res.attemptsUsed, attemptsRemaining: res.attemptsRemaining, maxAttempts: res.maxAttempts, judgmentResult: res.judgmentResult ?? a.judgmentResult } : a));
       if (res.review) {
         setActivity((a) => (a ? { ...a, status: res.review!.decision === "pass" ? "complete" : "in-progress", latestReview: res.review } : a));
         if (res.review.decision === "pass") {
@@ -483,14 +525,19 @@ export default function ActivityWorkspace() {
   const content = bundle ? activityBrief(bundle, activity.code, activity.verb.id) : undefined;
   const layer1 = result?.layer1;
   const review = result?.review ?? activity.latestReview;
+  // Same precedence as `review`: this submit's verdict if there was one, else the last stored one.
+  const judgmentResult = result?.judgmentResult ?? activity.judgmentResult;
   const passed = review?.decision === "pass" || activity.status === "complete";
   const attemptsRemaining = result?.attemptsRemaining ?? activity.attemptsRemaining;
   const attemptsUsed = result?.attemptsUsed ?? activity.attemptsUsed;
   const maxAttempts = result?.maxAttempts ?? activity.maxAttempts;
   const noAttemptsLeft = attemptsRemaining <= 0;
-  // Attempts exhausted → the workspace goes read-only. A passed step stays interactive (you can
-  // still Resubmit, and the gate workspaces need their tab rails to stay clickable).
-  const locked = noAttemptsLeft;
+  // Attempts exhausted → the workspace goes read-only. So does a passed step: it shows the work
+  // that earned the pass, frozen, until Resubmit blanks it. The two task-boundary gates are
+  // excluded — their tab rail is buttons, and a disabled fieldset would strand the mentee on
+  // whichever tab loaded first with no way to read the rest of what they wrote.
+  const readback = passed && !resubmit;
+  const locked = noAttemptsLeft || (readback && !isGateVerb(activity.verb.id));
   const hasFeedback = !!(layer1 || review || activity.mentorReview);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
@@ -687,7 +734,11 @@ export default function ActivityWorkspace() {
               )}
             </div>
             {/* Every term this step's brief uses, defined in full — hover is opt-in, this isn't. */}
-            <TermsUsed texts={[content?.objective ?? "", ...(content?.whatToDo ?? []), verb?.when ?? "", ...(verb?.layer1 ?? [])]} className="mt-4" />
+            {/* The judgment call's prose is fed in here too. Its option text cannot be glossed
+                inline — a glossary term renders a button, and the options are buttons — so this
+                list is what keeps the page-level guarantee true for it: a term in the dilemma is
+                still defined on the page. */}
+            <TermsUsed texts={[content?.objective ?? "", ...(content?.whatToDo ?? []), verb?.when ?? "", ...(verb?.layer1 ?? []), activity.judgment?.situation ?? "", activity.judgment?.question ?? "", ...(activity.judgment?.options ?? []).map((o) => o.text)]} className="mt-4" />
             </div>
           </div>
         </div>
@@ -731,6 +782,29 @@ export default function ActivityWorkspace() {
           <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
         </fieldset>
 
+        {/* The judgment call sits AFTER the deliverable, not before it: the dilemmas are written
+            for someone who has already done the work ("you have drafted the test plan…"), and
+            asking for the decision first would invite them to answer it in the abstract. */}
+        {activity.judgment && (
+          <JudgmentCall
+            key={`${activity.judgment.slot}/${attemptKey}`}
+            prompt={activity.judgment}
+            value={decision}
+            onChange={setDecision}
+            // A resubmit blanks the answer, so the verdict for the answer they no longer have on
+            // screen goes with it — same reason `startResubmit` drops the previous grading.
+            result={resubmit && !result ? null : judgmentResult}
+            locked={locked}
+          />
+        )}
+
+        {readback && !noAttemptsLeft && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg bg-emerald-50/70 ring-1 ring-emerald-200/70 px-3 py-2 text-[12px] text-emerald-800 tracking-tight">
+            <Icon name="check" size={13} strokeWidth={3} className="text-emerald-600 shrink-0 mt-px" />
+            <span>This is the work you submitted{review ? ` — graded ${review.overallScore.toFixed(1)} / 5` : ""}. It&apos;s read-only; Resubmit starts a fresh attempt from a blank deliverable.</span>
+          </div>
+        )}
+
         {noAttemptsLeft && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2 text-[12px] text-slate-600 tracking-tight">
             <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
@@ -773,7 +847,7 @@ export default function ActivityWorkspace() {
               </button>
               <AttemptsMeter used={attemptsUsed} max={maxAttempts} />
               {passed && resubmit && (
-                <button onClick={() => setResubmit(false)} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 text-[13px] font-medium tracking-tight hover:bg-slate-50 disabled:opacity-50">
+                <button onClick={() => { setResubmit(false); seed(bestSubmission(history)); }} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 text-[13px] font-medium tracking-tight hover:bg-slate-50 disabled:opacity-50">
                   Cancel
                 </button>
               )}
@@ -905,6 +979,22 @@ export default function ActivityWorkspace() {
             !layer1 && <p className="text-[12.5px] text-slate-500">No feedback yet — submit your deliverable to get graded.</p>
           )}
 
+          {/* The judgment call is graded on its own scale by its own prompt, so it gets its own
+              section rather than being folded into the Layer 2 rubric it has nothing to do with. */}
+          {activity.judgment && judgmentResult && (
+            <section>
+              <h3 className="text-[13px] font-semibold tracking-tight text-slate-900 mb-1">Judgment call</h3>
+              <p className="text-[11.5px] text-slate-500 tracking-tight mb-2.5">
+                {activity.judgment.name} · {activity.judgment.competenceLabel}
+              </p>
+              <JudgmentAnswer
+                decision={{ option: judgmentResult.option, justification: judgmentResult.justification }}
+                prompt={activity.judgment}
+              />
+              <JudgmentVerdict result={judgmentResult} />
+            </section>
+          )}
+
           {history.length > 0 && (
             <section>
               <h3 className="text-[13px] font-semibold tracking-tight text-slate-900 mb-3">Revision history</h3>
@@ -941,7 +1031,13 @@ export default function ActivityWorkspace() {
                             <Icon name="chevronDown" size={12} className="transition-transform group-open:rotate-0 -rotate-90" />
                             What you submitted
                           </summary>
-                          <div className="px-3 pb-3 pt-2 border-t border-slate-200/70">
+                          <div className="px-3 pb-3 pt-2 border-t border-slate-200/70 space-y-3">
+                            {/* `decision` is a CONTROL_KEY, so SubmittedFields skips it — render
+                                the attempt's own answer here instead of losing it. */}
+                            <JudgmentAnswer
+                              decision={(h.submission.payload?.fields?.decision ?? {}) as DecisionAnswer}
+                              prompt={activity.judgment}
+                            />
                             <SubmittedFields payload={h.submission.payload} verbId={activity.verb.id} taskCode={activity.taskCode} rua={bundle?.rua} />
                           </div>
                         </details>

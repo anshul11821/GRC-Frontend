@@ -10,7 +10,7 @@ import { Field, TextInput, Select, PrimaryBtn } from "@/components/ui/forms";
 import { UniversitySelect } from "@/components/ui/university-select";
 import { COUNTRIES, DIAL_CODES, findCountry } from "@/lib/countries";
 import { CURRENT_PLAN, UPCOMING_PLANS, FOUNDATION_PRICE } from "@/lib/billing";
-import { usePaid, paidAt } from "@/lib/entitlement";
+import { isEntitled } from "@/lib/entitlement";
 import { formatAccessDate } from "@/components/app/access-chip";
 
 const TABS: { id: string; label: string; icon: IconName; desc: string }[] = [
@@ -223,11 +223,11 @@ function PasswordPanel() {
 function BillingPanel() {
   const { user } = useAuth();
   const plan = CURRENT_PLAN;
-  const paid = usePaid(user?.email);
-  const purchasedIso = paidAt(user?.email);
-  const purchasedDate = purchasedIso
-    ? new Date(purchasedIso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-    : null;
+  const paid = isEntitled(user);
+  // The "invoice" is the free seat, so it is dated from when the account was opened.
+  const joinedDate = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+    : "—";
   const accessLabel = formatAccessDate(user?.accessExpiresOn ?? null);
   const accessExpired = !!user?.accessExpiresOn && new Date(user.accessExpiresOn) < new Date();
   return (
@@ -245,8 +245,8 @@ function BillingPanel() {
               <p className="text-[12.5px] text-indigo-100 mt-0.5">{plan.blurb}</p>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-[26px] font-semibold tracking-tight">{plan.price}</div>
-              <div className="text-[11.5px] text-indigo-200">{plan.cycle}</div>
+              <div className="text-[26px] font-semibold tracking-tight">{paid ? "Free" : plan.price}</div>
+              <div className="text-[11.5px] text-indigo-200">{paid ? "Beta · full track access" : plan.cycle}</div>
             </div>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4">
@@ -261,7 +261,8 @@ function BillingPanel() {
         <div className="bg-white px-6 py-3.5 space-y-2">
           <div className="flex items-center gap-2 text-[12px] text-slate-500">
             <Icon name="check" size={14} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
-            Foundations course purchased{purchasedDate ? ` on ${purchasedDate}` : ""} — your certificate and completed work stay yours for life.
+            Foundations course unlocked free for the beta — your certificate and completed work
+            stay yours for life.
           </div>
           {accessLabel && (
             <div className="flex items-start gap-2 text-[12px] text-slate-500">
@@ -339,8 +340,8 @@ function BillingPanel() {
                 <div className="text-[13px] font-medium text-slate-800 font-mono">GRC101-FND</div>
                 <div className="text-[11.5px] text-slate-500 truncate">Foundations Course — lifetime access</div>
               </div>
-              <span className="text-[12.5px] text-slate-600">{purchasedDate ?? "—"}</span>
-              <span className="text-[13px] font-medium text-slate-800">{FOUNDATION_PRICE}</span>
+              <span className="text-[12.5px] text-slate-600">{joinedDate}</span>
+              <span className="text-[13px] font-medium text-slate-800">{paid ? "$0.00" : FOUNDATION_PRICE}</span>
               <span>
                 <span className="inline-flex items-center gap-1 px-1.5 h-[19px] rounded text-[10.5px] font-medium bg-emerald-100 text-emerald-700">
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />Paid
