@@ -7,7 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
 import { OrgLogo } from "@/components/app/org-logo";
-import { TASK_META, METHOD_CATEGORY_ORDER } from "@/lib/taskmeta";
+import { TASK_META } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
 import { useDeskLearnings } from "./desk-context";
@@ -183,10 +183,13 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
     if (!byCat.has(cat)) byCat.set(cat, []);
     byCat.get(cat)!.push(t);
   });
-  const cats = [...byCat.keys()].sort((a, b) => {
-    const ia = METHOD_CATEGORY_ORDER.indexOf(a), ib = METHOD_CATEGORY_ORDER.indexOf(b);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
+  // Categories are emitted in the order their first task appears, NOT in taxonomy order — the same
+  // rule `regroup_orgs` applies to organisations, and for the same reason. Progression unlocks
+  // tasks in tree order, so sorting the groups by METHOD_CATEGORY_ORDER silently reordered the
+  // programme on screen: a learner whose first unlocked task sat in a late category (Project
+  // Execution is 14th of 16) saw three locked categories stacked above the one task they could
+  // actually start. Map preserves insertion order, and `tasks` is already in unlock order.
+  const cats = [...byCat.keys()];
 
   const pct = tasks.length ? (doneTasks / tasks.length) * 100 : 0;
   const expandable = !locked && tasks.length > 0;
