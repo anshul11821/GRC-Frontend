@@ -27,7 +27,7 @@ export interface IdentifyTask {
 }
 
 export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
-  "AA-001/1.6": {
+  "AA-001/6": {
     title: "Identify Ownerless Assets",
     standard: "ISO 27001 A.5.9 Inventory; A.5.2 Roles & responsibilities",
     criterion: "Flag any asset where the Owner field is blank or 'Unassigned'.",
@@ -61,7 +61,7 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 24, cells: ["Code signing keys", "Chief Information Security Officer"], shouldFlag: false },
     ],
   },
-  "CRM-002/8.7": {
+  "CRM-002/7": {
     title: "Identify Top Uncontrolled Risks",
     standard: "ISO 27001:2022 — Annex A (93 controls, 4 themes)",
     criterion: "Flag risks where control coverage = Gap AND exposure = High.",
@@ -89,7 +89,7 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 18, cells: ["No change approval", "Software release", "Partial", "Low"], shouldFlag: false },
     ],
   },
-  "CRM-003/9.4": {
+  "CRM-003/4": {
     title: "Identify Unmapped SOC 2 Criteria",
     standard: "SOC 2 Type II (AICPA TSC) — CC1–CC9",
     criterion: "Flag any CC point where 'Internal control mapped?' = N.",
@@ -182,13 +182,13 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
   // Several of these steps read as "select N items with the mentor", which has no answer key
   // unless the criterion is made objective. Each criterion below is therefore written as a rule
   // the dataset can be tested against, so the selection is defensible rather than a preference.
-  "CRM-002/8.1": {
+  "CRM-002/1": {
     title: "Select In-Scope Business Processes",
     standard: "ISO 27001 Cl 4.3 Scope; A.5.9 Inventory",
     criterion: "Flag a process only where it BOTH handles in-scope information AND has a named process owner. A process with no owner cannot be assessed against a control, and one that touches no in-scope information is out of scope however important it is.",
     columns: ["Business process", "Handles in-scope information?", "Named process owner"],
     owners: ["Compliance Manager", "IT Manager", "HR Manager", "Head of Engineering", "Financial Controller"],
-    feedsNext: "Feeds Step 8.2 (control applicability) and 8.3 (mapping).",
+    feedsNext: "Feeds Step 2 (control applicability) and 3 (mapping).",
     rows: [
       { id: 1, cells: ["User onboarding / joiner access", "Yes — identity and HR data", "IT Manager"], shouldFlag: true },
       { id: 2, cells: ["Software release and deployment", "Yes — source and production config", "Head of Engineering"], shouldFlag: true },
@@ -202,13 +202,13 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 10, cells: ["Payroll processing", "Yes — but operated by the parent entity", "Not ours — group Payroll"], shouldFlag: false },
     ],
   },
-  "CRM-002/8.2": {
+  "CRM-002/2": {
     title: "Identify Applicable Annex A Controls",
     standard: "ISO 27001 Annex A (all four themes); Cl 6.1.3 Statement of Applicability",
     criterion: "Flag a control where at least one of the five in-scope processes could not operate securely without it. Applicability follows the process, not the theme — a control is not applicable merely because the organisation is large enough to have heard of it.",
     columns: ["Annex A control", "Theme", "Touches an in-scope process?"],
     owners: ["Compliance Manager", "IT Manager", "CISO", "Head of Engineering"],
-    feedsNext: "Feeds Step 8.3 (mapping) and 8.4 (implementation status).",
+    feedsNext: "Feeds Step 3 (mapping) and 4 (implementation status).",
     rows: [
       { id: 1, cells: ["A.5.18 Access rights", "Organisational", "Yes — user onboarding"], shouldFlag: true },
       { id: 2, cells: ["A.8.2 Privileged access rights", "Technological", "Yes — deployment and backup"], shouldFlag: true },
@@ -224,13 +224,13 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 12, cells: ["A.8.24 Use of cryptography", "Technological", "Yes — backup and customer data"], shouldFlag: true },
     ],
   },
-  "CRM-001/7.6": {
+  "CRM-001/6": {
     title: "Identify Obligation Gaps",
     standard: "ISO 27001 A.5.31 Legal and contractual requirements",
     criterion: "Flag an obligation where there is NO named control owner, OR no evidence that compliance is actually demonstrated. Either one alone is a gap: an owner with no evidence cannot prove compliance, and evidence with no owner will not survive that person leaving.",
     columns: ["Obligation", "Control owner", "Evidence of compliance"],
     owners: ["Compliance Manager", "DPO", "CISO", "Financial Controller"],
-    feedsNext: "Feeds Step 7.7 (mentor review) and 7.8 (register and review scheduling).",
+    feedsNext: "Feeds Step 7 (mentor review) and 8 (register and review scheduling).",
     rows: [
       { id: 1, cells: ["GDPR Art. 30 — records of processing", "DPO", "RoPA maintained, last reviewed this quarter"], shouldFlag: false },
       { id: 2, cells: ["GDPR Art. 33 — breach notification within 72h", "CISO", "None — no documented notification procedure"], shouldFlag: true },
@@ -244,13 +244,13 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 10, cells: ["Vendor contract — right to audit exercised annually", "Compliance Manager", "None — never exercised"], shouldFlag: true },
     ],
   },
-  "GRM-003/6.6": {
+  "GRM-003/6": {
     title: "Identify Gaps Against Tier 2",
     standard: "NIST CSF 2.0 Implementation Tiers; ISO 27001 Cl 10.2",
     criterion: "Flag any CSF Function currently assessed below Tier 2 (Risk-Informed). Tier 2 is the stated minimum target, so a Function at Tier 1 is a gap by definition — regardless of how well the department performs elsewhere.",
     columns: ["CSF Function / Category", "Assessed Tier", "Evidence behind the score"],
     owners: ["GRC Program Manager", "Department Head", "CISO", "IT Manager"],
-    feedsNext: "Feeds Step 6.7 (improvement roadmap) and 6.8 (presentation).",
+    feedsNext: "Feeds Step 7 (improvement roadmap) and 8 (presentation).",
     rows: [
       { id: 1, cells: ["GOVERN — roles and responsibilities", "Tier 2", "Named owners, reviewed annually"], shouldFlag: false },
       { id: 2, cells: ["GOVERN — risk management strategy", "Tier 1", "No documented appetite or strategy"], shouldFlag: true },
@@ -357,13 +357,13 @@ export const IDENTIFY_TASKS: Record<string, IdentifyTask> = {
       { id: 8, cells: ["Access logs for in-scope systems", "ISO 27001 A.8.15 Logging", "Indefinitely — no end defined"], shouldFlag: true },
     ],
   },
-  "GRM-002/5.2": {
+  "GRM-002/2": {
     title: "Select the Policy Type to Draft",
     standard: "ISO 27001 Cl 5.2 Policy; A.5.1 Policies for information security",
     criterion: "Flag a policy type where the organisation has a live, evidenced control gap AND no current policy covers it. Drafting a policy that duplicates an existing one creates a contradiction; drafting one with no underlying gap creates shelfware.",
     columns: ["Candidate policy", "Live control gap evidenced?", "Existing policy covers it?"],
     owners: ["Policy & Governance Analyst", "CISO", "HR Manager", "IT Manager"],
-    feedsNext: "Feeds Step 5.3 (drafting) and Step 5.5 (circulation for review).",
+    feedsNext: "Feeds Step 3 (drafting) and Step 5 (circulation for review).",
     rows: [
       { id: 1, cells: ["Acceptable Use Policy", "Yes — no stated rules on personal device use", "No"], shouldFlag: true },
       { id: 2, cells: ["Remote Working Policy", "Yes — laptops unencrypted off-site", "No"], shouldFlag: true },

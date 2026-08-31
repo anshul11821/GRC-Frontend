@@ -86,34 +86,49 @@ export function WTextArea({ value, onChange, placeholder, rows = 4, hint }: {
 
 /** A small "given" hint line — the scripted instruction telling the mentee what is pre-loaded.
  *  Glossed here rather than at the ~48 call sites, so every verb workspace gets it for free. */
+/** Given context — the study-card form (03), the only borderless one. The missing border is
+ *  load-bearing: it says nothing is owed here, you are reading, not filling anything in. The
+ *  moment this acquires a button it has to become a step marker or a prompt well instead. */
 export function GivenNote({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2 text-[11.5px] text-slate-500 tracking-tight">
-      <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
+    <div className="flex items-start gap-2 rounded-xl bg-sky-50/70 px-3.5 py-2.5 text-[12px] text-slate-600 tracking-tight">
+      <Icon name="info" size={13} className="text-sky-600/70 shrink-0 mt-px" />
       <span style={{ textWrap: "pretty" }}><Gloss>{children}</Gloss></span>
     </div>
   );
 }
 
 /**
- * The "Open" reference box — a labelled card for a scripted artefact (Scope Statement, Asset
- * Register, etc.) with an Open button that opens that doc in the Reference-material panel.
- * This is the pattern from the Sign-off card in the mockup.
+ * The source folio (form 07) — a document the organisation supplied, with an Open button that
+ * puts it in the Reference-material panel.
+ *
+ * Ochre and the filing tab are not decoration: ochre means "this is theirs", which is the cue
+ * that invites the mentee to test the material rather than obey it. The provenance line is
+ * mandatory — a folio without one is a bug, because a document whose currency you cannot check
+ * is a document you cannot rely on, and saying so is half of what this task teaches.
  */
-export function RefBox({ title, meta, icon = "file", refId, openRef, children }: {
-  title: string; meta?: string; icon?: IconName; refId: string; openRef: (id?: string) => void; children?: React.ReactNode;
+export function RefBox({ title, meta, tab = "Supplied by org", icon = "file", refId, openRef, children }: {
+  title: string; meta?: string; tab?: string; icon?: IconName; refId: string; openRef: (id?: string) => void; children?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+    <div className="relative mt-[22px] rounded-[0_8px_8px_8px] bg-amber-50/70 border border-amber-200/80">
+      {/* The filing tab, drawn as a real tab: same fill and edge, no bottom border, sitting above. */}
+      <span className="absolute -top-[21px] -left-px h-[21px] px-3 flex items-center bg-amber-50/70 border border-b-0 border-amber-200/80 rounded-t-md font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+        {tab}
+      </span>
+      <div className="px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0"><Icon name={icon} size={14} /></span>
+          <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0"><Icon name={icon} size={14} /></span>
           <div className="min-w-0">
-            <div className="text-[12.5px] font-medium text-slate-900 tracking-tight truncate">{title}</div>
-            {meta && <div className="text-[10.5px] text-slate-500 font-mono truncate">{meta}</div>}
+            <div className="text-[13px] font-medium text-slate-900 tracking-tight truncate">{title}</div>
+            {/* No `meta &&` guard: a missing provenance line should look like the defect it is,
+                not disappear. */}
+            <div className={`text-[10px] font-mono uppercase tracking-[0.06em] truncate ${meta ? "text-amber-700" : "text-slate-400"}`}>
+              {meta ?? "provenance not recorded"}
+            </div>
           </div>
         </div>
-        <button onClick={() => openRef(refId)} className="shrink-0 h-8 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 flex items-center gap-1.5 transition-colors">
+        <button onClick={() => openRef(refId)} className="shrink-0 h-8 px-2.5 rounded-md text-[11.5px] font-medium text-amber-900 bg-amber-100 hover:bg-amber-200 flex items-center gap-1.5 transition-colors">
           <Icon name="arrowUpRight" size={13} /> Open
         </button>
       </div>
@@ -122,7 +137,13 @@ export function RefBox({ title, meta, icon = "file", refId, openRef, children }:
   );
 }
 
-/** A scripted stakeholder Q&A transcript — read-only, no free message input. */
+/**
+ * The dialogue script (form 14) — something you perform with a person, in real time.
+ *
+ * Deliberately not a chat: chat bubbles say "this happened, read it", and a script says "this is
+ * how the conversation goes, run it". The label column carries who speaks; the dotted rail is
+ * what stops it reading as a transcript. If it could be completed at a desk it was authored wrong.
+ */
 export function ScriptedExchange({ title, turns }: {
   title: string;
   turns: { who: "you" | "stakeholder"; initials: string; name?: string; text: string }[];
@@ -130,14 +151,16 @@ export function ScriptedExchange({ title, turns }: {
   return (
     <div>
       <SectionLabel>{title}</SectionLabel>
-      <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
+      <div className="relative rounded-[16px_4px_4px_16px] bg-white ring-1 ring-slate-200/70 px-4 py-3">
+        <span aria-hidden className="absolute left-[110px] top-2.5 bottom-2.5 border-l border-dotted border-slate-200" />
         {turns.map((t, i) => {
           const mine = t.who === "you";
           return (
-            <div key={i} className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
-              {!mine && <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{t.initials}</div>}
-              <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[80%] leading-relaxed ring-1 ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}><Gloss>{t.text}</Gloss></div>
-              {mine && <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10.5px] font-semibold mt-0.5 shrink-0">{t.initials}</div>}
+            <div key={i} className="grid grid-cols-[96px_1fr] gap-4 items-baseline py-1.5 text-[13px]">
+              <span className={`font-mono text-[9.5px] uppercase tracking-[0.08em] text-right ${mine ? "text-sky-700" : "text-slate-400"}`}>
+                {mine ? "You say" : t.name ?? t.initials}
+              </span>
+              <p className={`m-0 leading-relaxed ${mine ? "text-slate-900" : "text-slate-600"}`}><Gloss>{t.text}</Gloss></p>
             </div>
           );
         })}

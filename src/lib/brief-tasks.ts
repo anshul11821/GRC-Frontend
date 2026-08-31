@@ -29,7 +29,7 @@ export const BRIEF_TASKS: Record<string, BriefTask> = {
       "What I need: a 30-minute slot this fortnight, and one example of GRC getting in your way.",
     ],
   },
-  "CRM-003/9.8": {
+  "CRM-003/8": {
     title: "SOC 2 Awareness (IT team)", standard: "SOC 2 Type II", format: "≤2 pages",
     audience: "IT team (non-audit)", ask: "Send your team's access-review and change-tickets evidence to the GRC inbox by 31 July.",
     messages: ["SOC 2 is a customer-trust audit of how we keep their data safe — it checks our day-to-day controls.", "We are mostly ready: 16 of 20 control areas are in good shape.", "The main gap is security monitoring — we don't yet watch system logs for problems.", "To pass, we need each team to keep simple evidence: who has access, and a record of changes.", "What we need from you: send your access-review and change records to the GRC inbox by month-end."],

@@ -17,7 +17,7 @@ export interface ReviewTask {
 }
 
 export const REVIEW_TASKS: Record<string, ReviewTask> = {
-  "AA-001/1.7": {
+  "AA-001/7": {
     title: "Information Asset Register", standard: "ISO 27001 A.5.9 Inventory; A.5.12 Classification", reviewer: "Policy & Governance Analyst · Analytical Sleuth",
     artefact: "Information Asset Register v1.0 (185 assets, classified, owners assigned)", attempt: "1 of 3",
     coverExample: "First submission. All 185 assets recorded and classified; 8 ownerless assets flagged with remediation owners; CIA rationale added for all Confidential items.",
@@ -32,7 +32,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     aggregate: "3.4", lowest: "3", outcome: "SIGN-OFF",
     coaching: "You classified well — but ask yourself: are two of your 'Internal' shared drives really free of personal data? Walk me through how you'd confirm that before we sign off.", feedsNext: "Present the register for sign-off.",
   },
-  "GRM-001/4.7": {
+  "GRM-001/7": {
     title: "Basic Risk Register", standard: "ISO 27001 Clause 6.1.2/6.1.3 (risk assessment & treatment)", reviewer: "Cyber Risk Manager · Analytical Sleuth",
     artefact: "Basic Risk Register v2.0 (30 risks, 5×5 scored, treatments drafted)", attempt: "2 of 3",
     coverExample: "Revised after round-1 feedback: added threat sources to all risks, corrected 3 mis-banded categories, and added treatment owners + target dates.",
@@ -47,7 +47,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     aggregate: "3.8", lowest: "3", outcome: "SIGN-OFF",
     coaching: "Strong recovery from round 1. Before you present: which single risk would you escalate first, and can you justify it from the matrix alone? Rehearse that answer.", feedsNext: "Present the top-5 risks to management.",
   },
-  "CRM-002/8.8": {
+  "CRM-002/8": {
     title: "ISO 27001 Control Matrix", standard: "ISO 27001 Annex A (93 controls, 4 themes)", reviewer: "Compliance Manager · Analytical Sleuth",
     artefact: "ISO 27001 Control Matrix v1.0 (5 processes × 93 controls)", attempt: "1 of 3",
     coverExample: "First submission. Applicability marked for all 5 processes; implementation status and evidence type documented; top-5 uncontrolled risks identified.",
@@ -112,7 +112,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
   // These open a task rather than close one: the mentee reviews source material and produces a
   // reading note. `feedback` is empty because there is no prior attempt to have addressed — the
   // gate is the cover note. The rubric is the mentor's demo grade on the note itself.
-  "GRM-001/4.1": {
+  "GRM-001/1": {
     title: "Risk Surface Note", standard: "ISO 27001 Cl 6.1.2 Risk assessment; A.5.9 Inventory",
     reviewer: "Cyber Risk Manager · Analytical Sleuth",
     artefact: "Risk surface note derived from the asset register", attempt: "1 of 3",
@@ -127,9 +127,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.6", lowest: "3", outcome: "SIGN-OFF",
     coaching: "You grouped by attacker value rather than asset type, which is the right instinct. Now push it: which single asset, if it went, takes two other functions with it? That dependency is the risk the register does not show you.",
-    feedsNext: "Feeds Step 4.2 (risk identification workshop).",
+    feedsNext: "Feeds Step 2 (risk identification workshop).",
   },
-  "AA-002/2.1": {
+  "AA-002/1": {
     title: "IG1 Safeguard Familiarisation", standard: "CIS Controls v8 IG1",
     reviewer: "Compliance Manager · Compliance Sentinel",
     artefact: "IG1 Safeguard familiarisation note, scoped to the organisation", attempt: "1 of 3",
@@ -144,9 +144,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.4", lowest: "3", outcome: "SIGN-OFF",
     coaching: "You marked four Safeguards inapplicable. Before the assessment, test one of them properly: what would have to be true about this organisation for that Safeguard to genuinely not apply — and can you evidence it?",
-    feedsNext: "Feeds Step 2.2 (evidence request) and 2.3 (assessment).",
+    feedsNext: "Feeds Step 2 (evidence request) and 3 (assessment).",
   },
-  "GRM-002/5.1": {
+  "GRM-002/1": {
     title: "Policy Convention Analysis", standard: "ISO 27001 Cl 5.2 Policy; Cl 7.5.2",
     reviewer: "Policy & Governance Analyst · Bridge Builder",
     artefact: "Convention analysis of two existing policies", attempt: "1 of 3",
@@ -161,9 +161,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.4", lowest: "3", outcome: "SIGN-OFF",
     coaching: "Good catch on the inconsistency. Here is the harder question: the two policies phrase obligations differently — 'must' in one, 'should' in the other. Which one would you follow if you were an employee, and what does that tell you about which convention to adopt?",
-    feedsNext: "Feeds Step 5.2 (drafting) and Step 5.8 (Policy Register).",
+    feedsNext: "Feeds Step 2 (drafting) and Step 8 (Policy Register).",
   },
-  "CRM-001/7.1": {
+  "CRM-001/1": {
     title: "Regulatory Landscape Scan", standard: "ISO 27001 A.5.31 Legal and contractual requirements",
     reviewer: "Compliance Manager · Compliance Sentinel",
     artefact: "Regulatory landscape scan", attempt: "1 of 3",
@@ -178,7 +178,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.6", lowest: "3", outcome: "SIGN-OFF",
     coaching: "You caught that obligations follow the customer, not just the office. Push once more: which of those obligations would still bind us if we closed the local entity tomorrow — and which would not?",
-    feedsNext: "Feeds Step 7.3 (obligations long-list).",
+    feedsNext: "Feeds Step 3 (obligations long-list).",
   },
   "DD-003/2": {
     title: "Legal Retention Research", standard: "GDPR Art. 5(1)(e); local employment and tax law",
@@ -197,7 +197,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     coaching: "You separated the legal minimum from the business preference, which most people conflate. Now the trap: where a legal minimum and a data-minimisation duty point in opposite directions, which wins — and how would you word the schedule so nobody has to guess?",
     feedsNext: "Feeds Step 4 (retention schedule) and Step 5 (triggers).",
   },
-  "GRM-003/6.1": {
+  "GRM-003/1": {
     title: "NIST CSF Tier Calibration", standard: "NIST CSF 2.0 Implementation Tiers",
     reviewer: "GRC Program Manager · Operational Maestro",
     artefact: "NIST CSF 2.0 Tier familiarisation, calibrated to the organisation", attempt: "1 of 3",
@@ -212,7 +212,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.4", lowest: "3", outcome: "SIGN-OFF",
     coaching: "Calibrating the Tiers before scoring is exactly right — it is what stops the assessment becoming an opinion poll. Your Tier 3/4 boundary is still soft: what would this department have to be doing that it demonstrably is not, for a 4 to be honest?",
-    feedsNext: "Feeds Step 6.2 (questionnaire adaptation) and 6.5 (scoring).",
+    feedsNext: "Feeds Step 2 (questionnaire adaptation) and 5 (scoring).",
   },
   "DD-001/1": {
     title: "Existing Incident Material Review", standard: "ISO 27001 A.5.24 Incident management planning",
@@ -231,7 +231,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     coaching: "Treating undocumented practice as evidence rather than absence is the mature read — most people start from a blank page and write something nobody follows. Now: which part of that de facto path only works because one specific person knows it?",
     feedsNext: "Feeds Step 2 (procedure drafting) and Step 4 (quick reference card).",
   },
-  "CRM-003/9.1": {
+  "CRM-003/1": {
     title: "SOC 2 Type II Report — Annotated Reading", standard: "SOC 2 Type II (AICPA TSC)",
     reviewer: "Information Security Auditor · Guardian Watchdog",
     artefact: "Annotated reading of the SOC 2 Type II report", attempt: "1 of 3",
@@ -246,7 +246,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.6", lowest: "3", outcome: "SIGN-OFF",
     coaching: "You spotted the carve-out, which most first readers miss entirely. Follow it through: if the sub-service organisation is carved out, whose controls are actually being relied on for that criterion — and who has tested them?",
-    feedsNext: "Feeds Step 9.2 (Common Criteria listing) and 9.3 (mapping).",
+    feedsNext: "Feeds Step 2 (Common Criteria listing) and 3 (mapping).",
   },
   "DD-002/1": {
     title: "Onboarding and Guidance Review", standard: "ISO 27001 A.6.3 Awareness, education and training",
@@ -372,7 +372,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
   // These close a task: a near-final artefact goes to the named reviewer. `feedback` carries the
   // prior round's comments, so the mentee confirms each was actioned before resubmitting — the
   // gate is that confirmation plus a cover note that says what changed.
-  "AA-003/3.7": {
+  "AA-003/7": {
     title: "RoPA Entry and Screening Form", standard: "GDPR Art. 30; Art. 35 DPIA screening",
     reviewer: "Data Protection Officer · Compliance Sentinel",
     artefact: "RoPA entry v0.2 and Article 35 screening form", attempt: "2 of 3",
@@ -392,9 +392,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.6", lowest: "3", outcome: "SIGN-OFF",
     coaching: "The consent-to-contract correction was the important one — consent you cannot honour a withdrawal of was never consent. Before we file it: if a data subject withdrew today, what in this entry tells the service desk what to do?",
-    feedsNext: "Feeds Step 3.8 (sign-off) and DD-003, LRC-001, TPRM-001.",
+    feedsNext: "Feeds Step 8 (sign-off) and DD-003, LRC-001, TPRM-001.",
   },
-  "GRM-002/5.5": {
+  "GRM-002/5": {
     title: "Policy Draft — Consolidated Review Returns", standard: "ISO 27001 Cl 5.2 Policy",
     reviewer: "IT Manager, HR representative and Legal · Bridge Builder",
     artefact: "Information Security Policy v0.3 with consolidated review comments", attempt: "2 of 3",
@@ -414,9 +414,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.4", lowest: "3", outcome: "REVISE",
     coaching: "Escalating the IT/Legal disagreement rather than picking a side was right — that is an approver's decision, not a drafter's. Now make it decidable: put the two options in front of them with the consequence of each, so the meeting takes two minutes rather than twenty.",
-    feedsNext: "Feeds Step 5.6 (revision) and Step 5.7 (approval).",
+    feedsNext: "Feeds Step 6 (revision) and Step 7 (approval).",
   },
-  "CRM-001/7.7": {
+  "CRM-001/7": {
     title: "Obligations Register", standard: "ISO 27001 A.5.31 Legal and contractual requirements",
     reviewer: "Compliance Manager · Compliance Sentinel",
     artefact: "Obligations Register v1.0 with control mapping", attempt: "2 of 3",
@@ -435,9 +435,9 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.6", lowest: "3", outcome: "SIGN-OFF",
     coaching: "Putting the unmapped obligations back in as gaps was the right call — dropping them made the register look complete and left the exposure invisible. Which of those four gaps would bite first, and is anyone currently accountable for it?",
-    feedsNext: "Feeds Step 7.8 (register and review scheduling).",
+    feedsNext: "Feeds Step 8 (register and review scheduling).",
   },
-  "CRM-003/9.7": {
+  "CRM-003/7": {
     title: "SOC 2 Control Awareness Summary", standard: "SOC 2 Type II (AICPA TSC)",
     reviewer: "Information Security Auditor · Guardian Watchdog",
     artefact: "SOC 2 Control Awareness Summary with RAG dashboard", attempt: "2 of 3",
@@ -456,7 +456,7 @@ export const REVIEW_TASKS: Record<string, ReviewTask> = {
     ],
     aggregate: "3.8", lowest: "3", outcome: "SIGN-OFF",
     coaching: "The design-versus-operating distinction is what makes this readable as a readiness position rather than a checklist. One thing to carry into the briefing: the IT team will hear 'not ready' as criticism. How do you say it so they hear a plan?",
-    feedsNext: "Feeds Step 9.8 (IT team briefing) and PE-002.",
+    feedsNext: "Feeds Step 8 (IT team briefing) and PE-002.",
   },
   "SPA-001/7": {
     title: "12-Month GRC Roadmap", standard: "ISO 27001 Cl 6.2 Objectives and planning",

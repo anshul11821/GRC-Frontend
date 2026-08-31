@@ -49,7 +49,7 @@ export const APPLY_TASKS: Record<string, ApplyTask> = {
       { id: 8, cells: ["Marketing — low influence, low interest"], outcome: "Monitor" },
     ],
   },
-  "AA-001/1.4": {
+  "AA-001/4": {
     title: "Information Asset Inventory & Classification",
     standard: "ISO/IEC 27001:2022 — A.5.12 Classification; A.5.9 Inventory; A.8.1 Endpoint devices",
     columns: ["Asset ID", "Asset Name", "Asset Type", "Owner (role)", "Personal data?"],
@@ -91,7 +91,7 @@ export const APPLY_TASKS: Record<string, ApplyTask> = {
       { id: 30, cells: ["AST-0030", "Vendor / supplier contracts", "Document Store", "Procurement Manager", "N"], outcome: "Confidential" },
     ],
   },
-  "GRM-001/4.5": {
+  "GRM-001/5": {
     title: "Operational Risk Identification & Basic Risk Register",
     standard: "ISO/IEC 27001:2022 — Clause 6.1.2/6.1.3 (risk assessment & treatment); Annex A 5.9",
     columns: ["Risk ID", "Risk description", "Threat source", "Control domain", "L (1-5)", "I (1-5)", "Score"],
@@ -238,7 +238,7 @@ export const APPLY_TASKS: Record<string, ApplyTask> = {
       { id: 14, cells: ["Source of the data (where not collected from the subject)", "14(2)(f)"], outcome: "Absent" },
     ],
   },
-  "AA-003/3.5": {
+  "AA-003/5": {
     title: "Privacy Data-Flow Mapping & GDPR Applicability",
     standard: "GDPR (EU) 2016/679 — Art 35 (DPIA) + EDPB nine-criteria; Art 4/13/14/30",
     columns: ["Process", "EDPB criterion"],

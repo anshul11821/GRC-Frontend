@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
+import { markTourSeen } from "./guided-tour";
 import { UpNext } from "./up-next";
 import { FeedbackWidget } from "./feedback-widget";
 import { DropdownPanel } from "@/components/ui/motion";
@@ -226,28 +227,45 @@ function DashTopBar({ openMobile }: { openMobile: () => void }) {
  *  to collapse the main menu the first time they land there. Lives in AppShell because AppShell
  *  owns `collapsed`; the desk layout can't reach it. Desktop only: on mobile the menu is a drawer
  *  and already out of the way. */
-// Waved off for this page load only. ponytail: module-level, not persisted — a nudge that comes
-// back next session is cheaper to live with than one that silently never returns.
-let dismissed = false;
+// Shown once per mentee, then never again. Keyed per user like the tours (localStorage is per
+// browser — an unsuffixed flag would hide the hint from the next account on the same machine).
+const COLLAPSE_HINT_KEY = "grcmentor.collapseHint";
+// Separate flag from the hint's: someone who has collapsed the menu by hand (so the hint is
+// retired) has still never had the desk do it for them.
+const DESK_AUTOCOLLAPSE_KEY = "grcmentor.deskAutoCollapse";
+// Decided once per page load (see AppShell) — module-level so a remount can't re-read the flag it
+// just wrote and conclude the collapse already happened.
+let autoCollapse: boolean | null = null;
+
+const seen = (key: string, who: string | null | undefined) => {
+  if (!who) return true; // no identity yet — don't act, and don't burn the flag on nobody
+  try {
+    return !!localStorage.getItem(`${key}:${who}`);
+  } catch {
+    return false; // storage unavailable — repeating beats broken
+  }
+};
 
 function CollapseMenuHint({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const who = user?.email;
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     // Collapsing *is* taking the hint — never coach them again, not even if they reopen the menu
     // while still on the desk.
-    if (collapsed) dismissed = true;
-    if (dismissed || !pathname.startsWith("/app/desk")) {
+    if (collapsed) markTourSeen(COLLAPSE_HINT_KEY, who);
+    if (seen(COLLAPSE_HINT_KEY, who) || !pathname.startsWith("/app/desk")) {
       setShow(false);
       return;
     }
     const t = setTimeout(() => setShow(true), 700);
     return () => clearTimeout(t);
-  }, [pathname, collapsed]);
+  }, [pathname, collapsed, who]);
 
   const close = () => {
-    dismissed = true;
+    markTourSeen(COLLAPSE_HINT_KEY, who);
     setShow(false);
   };
 
@@ -329,6 +347,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useAuth();
+  const autoCollapsed = useRef(false);
+
+  // First time a mentee reaches the desk, collapse the menu for them rather than asking — the desk
+  // wants the width. CollapseMenuHint then has nobody left to coach.
+  //
+  // The verdict is read from storage once per page load and cached in a module variable, NOT
+  // re-read here: Strict Mode mounts, unmounts and remounts this in dev, so an effect that both
+  // stamped the flag and set state spent the one shot on the throwaway mount — the flag stuck, the
+  // collapse was discarded with the state, and it never fired again for that account. The ref
+  // keeps it to once per mount so re-expanding the menu and moving between desk pages sticks.
+  useEffect(() => {
+    if (autoCollapsed.current || !pathname.startsWith("/app/desk") || !user?.email) return;
+    if (autoCollapse === null) {
+      autoCollapse = !seen(DESK_AUTOCOLLAPSE_KEY, user.email);
+      if (autoCollapse) markTourSeen(DESK_AUTOCOLLAPSE_KEY, user.email);
+    }
+    autoCollapsed.current = true;
+    if (autoCollapse) setCollapsed(true);
+  }, [pathname, user?.email]);
 
   // Close the mobile drawer on navigation and on Escape.
   useEffect(() => setMobileOpen(false), [pathname]);

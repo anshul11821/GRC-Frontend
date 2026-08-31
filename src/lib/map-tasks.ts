@@ -4,12 +4,12 @@
 import type { ApplyTask } from "./apply-tasks";
 
 export const MAP_TASKS: Record<string, ApplyTask> = {
-  "AA-003/3.3": {
+  "AA-003/3": {
     title: "Data Elements → Lawful Basis", standard: "GDPR Art. 6 lawful basis; Art. 30 records",
     columns: ["Data element and why it is processed"],
     outcomes: ["Consent", "Contract", "Legal obligation", "Legitimate interests", "Not defined — gap"],
     clean: null, noteMode: "all", noteLabel: "Why this basis, and what breaks if it is withdrawn",
-    feedsNext: "Feeds Step 3.4 (RoPA entry) and Step 3.5 (Art. 35 screening).",
+    feedsNext: "Feeds Step 4 (RoPA entry) and Step 5 (Art. 35 screening).",
     rows: [
       // The test throughout: if you could not stop on withdrawal, it was never consent.
       { id: 1, cells: ["Customer name and email — to provide the service they bought"], outcome: "Contract" },
@@ -24,12 +24,12 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 10, cells: ["Breach notification to the supervisory authority"], outcome: "Legal obligation" },
     ],
   },
-  "CRM-002/8.6": {
+  "CRM-002/6": {
     title: "Processes → Control Implementation Status", standard: "ISO 27001 Annex A; Cl 6.1.3 SoA",
     columns: ["In-scope process and the control that governs it"],
     outcomes: ["Implemented", "Partial", "Not implemented", "Not applicable"],
     clean: null, noteMode: "all", noteLabel: "Evidence that supports this status",
-    feedsNext: "Feeds Step 8.7 (gap flagging) and Step 8.8 (matrix sign-off).",
+    feedsNext: "Feeds Step 7 (gap flagging) and Step 8 (matrix sign-off).",
     rows: [
       { id: 1, cells: ["User onboarding × A.5.18 Access rights — joiner tickets with approver"], outcome: "Implemented" },
       { id: 2, cells: ["User onboarding × A.8.5 Secure authentication — MFA and SSO enforced"], outcome: "Implemented" },
@@ -43,12 +43,12 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 10, cells: ["Customer backup × A.8.24 Use of cryptography — KMS encryption at rest"], outcome: "Implemented" },
     ],
   },
-  "GRM-003/6.5": {
+  "GRM-003/5": {
     title: "CSF Functions → Current and Target Tier", standard: "NIST CSF 2.0 Implementation Tiers",
     columns: ["CSF Function and the evidence behind its score"],
     outcomes: ["Tier 1 Partial", "Tier 2 Risk-Informed", "Tier 3 Repeatable", "Tier 4 Adaptive"],
     clean: null, noteMode: "all", noteLabel: "Target tier, and what would have to change to reach it",
-    feedsNext: "Feeds Step 6.6 (gap identification) and Step 6.7 (improvement roadmap).",
+    feedsNext: "Feeds Step 6 (gap identification) and Step 7 (improvement roadmap).",
     rows: [
       { id: 1, cells: ["GOVERN — named owners exist and are reviewed annually"], outcome: "Tier 2 Risk-Informed" },
       { id: 2, cells: ["GOVERN risk strategy — no documented appetite or strategy"], outcome: "Tier 1 Partial" },
@@ -79,7 +79,7 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 8, cells: ["Marketing — outside scope, occasionally curious"], outcome: "Monitor (low influence, low interest)" },
     ],
   },
-  "GRM-001/4.4": {
+  "GRM-001/4": {
     title: "Risks → Annex A Control Domains", standard: "ISO 27001 Cl 6.1.2; Annex A themes",
     columns: ["Operational risk"],
     outcomes: ["Organisational (A.5)", "People (A.6)", "Physical (A.7)", "Technological (A.8)"],
@@ -100,7 +100,7 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 12, cells: ["Office tailgating / unauthorised entry"], outcome: "Physical (A.7)" },
     ],
   },
-  "GRM-002/5.4": {
+  "GRM-002/4": {
     title: "Policy Statements → Annex A Controls", standard: "ISO 27001 Annex A controls",
     columns: ["Policy statement"],
     outcomes: ["A.5.10 Acceptable use of information", "A.5.12 Classification of information", "A.5.17 Authentication information", "A.6.7 Remote working", "A.6.8 Information security event reporting", "A.7.7 Clear desk and clear screen", "A.8.1 User endpoint devices", "A.8.12 Data leakage prevention", "A.8.19 Installation of software", "A.8.5 Secure authentication"],
@@ -119,7 +119,7 @@ export const MAP_TASKS: Record<string, ApplyTask> = {
       { id: 10, cells: ["Follow data classification & labelling rules"], outcome: "A.5.12 Classification of information" },
     ],
   },
-  "CRM-001/7.5": {
+  "CRM-001/5": {
     title: "Obligations → ISO Clauses/Controls", standard: "ISO 27001 Cl 4.1; Annex A",
     columns: ["Regulatory obligation"],
     outcomes: ["A.5.19 Supplier relationships", "A.5.2 Information security roles", "A.5.26 Response to incidents", "A.5.33 Protection of records", "A.5.34 Privacy & protection of PII", "A.6.3 Awareness, education & training", "A.8.3 Information access restriction"],

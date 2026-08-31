@@ -49,6 +49,13 @@ export function JudgmentSummary({ j, onOpen }: { j: JudgmentReview; onOpen: () =
             Judgment call
           </span>
           <span className="text-[11px] text-slate-500 truncate">{j.competenceLabel}</span>
+          {/* Say so plainly. A reviewer reading a decision that belongs to an earlier step needs
+              to know that before they weigh it against the work in front of them. */}
+          {!j.onThisStep && j.answeredOnStep && (
+            <span className="shrink-0 text-[10.5px] text-slate-500 bg-white ring-1 ring-slate-200 rounded-full px-2 h-[18px] inline-flex items-center">
+              answered at step {j.answeredOnStep}
+            </span>
+          )}
         </div>
         <button
           onClick={onOpen}
@@ -59,6 +66,12 @@ export function JudgmentSummary({ j, onOpen }: { j: JudgmentReview; onOpen: () =
       </div>
 
       <div className="px-4 py-3">
+        {!j.onThisStep && (
+          <p className="mb-2 text-[11.5px] text-slate-500 leading-relaxed">
+            This task&apos;s judgment call could not be placed on a gated step, so it is reviewed
+            here — the first gate that reaches it. Your decision on this gate should account for it.
+          </p>
+        )}
         <p className="text-[12px] text-slate-500 tracking-tight">{j.question}</p>
         <div className="mt-2 flex items-start gap-2.5">
           <span className="shrink-0 mt-px w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10.5px] font-semibold uppercase">
@@ -110,6 +123,7 @@ export function JudgmentPanel({ j }: { j: JudgmentReview }) {
         </div>
         <div className="mt-0.5 text-[11.5px] text-slate-400">
           {j.slot} · competence {j.competence} — {j.competenceLabel}
+          {j.answeredOnStep && ` · answered at step ${j.answeredOnStep}`}
         </div>
         <p className="mt-2.5 text-[13px] text-slate-800 leading-relaxed">{j.situation}</p>
         <p className="mt-2 text-[13px] font-semibold text-slate-900">{j.question}</p>

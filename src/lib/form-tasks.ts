@@ -13,7 +13,7 @@ export interface FormTask {
 }
 
 export const FORM_TASKS: Record<string, FormTask> = {
-  "AA-002/2.6": {
+  "AA-002/6": {
     kind: "recommend", title: "CIS Gap Remediation", standard: "CIS Controls v8 IG1", itemLabel: "gap",
     owners: ["Compliance Manager", "IT Manager", "Operations Manager"],
     feedsNext: "Feeds the Compile / Present step.",
@@ -26,7 +26,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "No secure-config baseline" },
     ],
   },
-  "GRM-001/4.6": {
+  "GRM-001/6": {
     kind: "recommend", title: "Risk Treatment Options", standard: "ISO 27001 Cl 6.1.3", itemLabel: "gap",
     owners: ["Cyber Risk Manager", "IT Manager", "Vendor Risk Analyst"],
     feedsNext: "Feeds the Compile / Present step.",
@@ -62,7 +62,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "CR-06 Approval signatures obtained" },
     ],
   },
-  "AA-002/2.7": {
+  "AA-002/7": {
     kind: "validate", title: "Gap Findings before Issue", standard: "CIS Controls v8 IG1", itemLabel: "finding",
     feedsNext: "Feeds the Recommend / Draft step.",
     items: [
@@ -74,7 +74,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "No secure-config baseline (gap)" },
     ],
   },
-  "GRM-002/5.3": {
+  "GRM-002/3": {
     kind: "draft", title: "Acceptable Use Policy", standard: "ISO 27001 Cl 5.2; A.5.1; A.6.7; A.8.1", itemLabel: "section",
     feedsNext: "Feeds the Review (mentor sign-off) / Present step.",
     items: [
@@ -163,7 +163,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 8, label: "Document Control" },
     ],
   },
-  "AA-002/2.2": {
+  "AA-002/2": {
     kind: "schedule", title: "Evidence Walkthroughs", standard: "CIS Controls v8 IG1", itemLabel: "interaction",
     feedsNext: "Confirmed calendar entry persisted; reminder armed.",
     items: [
@@ -205,7 +205,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 4, label: "IT (AV test)", options: { time: ["Thu 13:30", "Thu 13:45"] } },
     ],
   },
-  "AA-002/2.8": {
+  "AA-002/8": {
     kind: "compile", title: "CIS Gap Analysis Report", standard: "CIS Controls v8 IG1", itemLabel: "section",
     feedsNext: "The assembled deliverable is the task's primary audit artefact.",
     items: [
@@ -283,7 +283,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 7, label: "Sign-off" },
     ],
   },
-  "AA-003/3.6": {
+  "AA-003/6": {
     kind: "document", title: "Data-Flow Findings", standard: "GDPR Art 30/35", itemLabel: "section",
     feedsNext: "The documented artefact feeds future Compile / Review steps.",
     items: [
@@ -295,7 +295,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "References" },
     ],
   },
-  "CRM-002/8.3": {
+  "CRM-002/3": {
     kind: "document", title: "Control Applicability Record", standard: "ISO 27001 Annex A", itemLabel: "section",
     feedsNext: "The documented artefact feeds future Compile / Review steps.",
     items: [
@@ -307,7 +307,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "References" },
     ],
   },
-  "AA-003/3.8": {
+  "AA-003/8": {
     kind: "signoff", title: "RoPA/DPIA (Process Owner)", standard: "GDPR Art 30/35", itemLabel: "decision",
     feedsNext: "The Approval Record gates the next task.",
     items: [
@@ -316,7 +316,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 3, label: "Lawful-basis documentation" },
     ],
   },
-  "GRM-002/5.7": {
+  "GRM-002/7": {
     kind: "signoff", title: "InfoSec Policy (Management)", standard: "ISO 27001 Cl 5.2; A.5.1", itemLabel: "decision",
     feedsNext: "The Approval Record gates the next task.",
     items: [
@@ -363,7 +363,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 5, label: "Incident reporting", weight: 1 },
     ],
   },
-  "GRM-003/6.4": {
+  "GRM-003/4": {
     kind: "score", title: "CSF Maturity Rubric", standard: "NIST CSF 2.0", itemLabel: "dimension",
     feedsNext: "The scored rubric feeds Prioritise / Compile.",
     items: [
@@ -375,7 +375,7 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "Recover", weight: 1 },
     ],
   },
-  "CRM-003/9.6": {
+  "CRM-003/6": {
     kind: "assess", title: "SOC 2 Readiness (RAG)", standard: "SOC 2 Type II (AICPA TSC)", itemLabel: "item",
     scale: [{ label: "Red", value: 1 }, { label: "Amber", value: 2 }, { label: "Green", value: 3 }],
     feedsNext: "The assessment feeds Prioritise / Recommend / Compile.",
@@ -393,10 +393,10 @@ export const FORM_TASKS: Record<string, FormTask> = {
   // `kind: "draft"` gives each item a section body plus an optional standards citation, so the
   // items ARE the document's sections. Where a step revises rather than authors, the items are
   // the things that must be shown to have changed — a revision with no diff is not a revision.
-  "GRM-002/5.6": {
+  "GRM-002/6": {
     kind: "draft", title: "Policy Revision — Review Feedback Incorporated",
     standard: "ISO 27001 Cl 5.2; Cl 7.5.2 Creating and updating", itemLabel: "change",
-    feedsNext: "Feeds Step 5.7 (approval) and Step 5.8 (Policy Register entry).",
+    feedsNext: "Feeds Step 7 (approval) and Step 8 (Policy Register entry).",
     items: [
       { id: 1, label: "Change 1 — what the reviewer said, and the wording now" },
       { id: 2, label: "Change 2 — what the reviewer said, and the wording now" },
@@ -405,10 +405,10 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 5, label: "Version history entry for this revision" },
     ],
   },
-  "GRM-003/6.2": {
+  "GRM-003/2": {
     kind: "draft", title: "Maturity Questionnaire — Departmental Adaptation",
     standard: "NIST CSF 2.0 Functions; ISO 27001 Cl 4.1 Context", itemLabel: "function",
-    feedsNext: "Feeds Step 6.3 (assessment interviews) and Step 6.5 (scoring).",
+    feedsNext: "Feeds Step 3 (assessment interviews) and Step 5 (scoring).",
     items: [
       { id: 1, label: "GOVERN — questions adapted to this department's decision rights" },
       { id: 2, label: "IDENTIFY — questions adapted to the assets this department actually holds" },
@@ -418,10 +418,10 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 6, label: "Generic questions removed, and why they did not apply here" },
     ],
   },
-  "GRM-003/6.7": {
+  "GRM-003/7": {
     kind: "draft", title: "Maturity Improvement Roadmap (one page)",
     standard: "ISO 27001 Cl 6.2 Objectives and planning; Cl 10.2", itemLabel: "section",
-    feedsNext: "Feeds Step 6.8 (presentation) and SPA-001.",
+    feedsNext: "Feeds Step 8 (presentation) and SPA-001.",
     items: [
       { id: 1, label: "Current maturity position, in one sentence" },
       { id: 2, label: "Gap 1 — action, owner, target maturity level, date" },
@@ -972,10 +972,10 @@ export const FORM_TASKS: Record<string, FormTask> = {
   // ── Document steps ────────────────────────────────────────────────────────────────────────
   // `kind: "document"` requires a cross-reference on every section, so each piece of the record
   // points back at the artefact it derives from rather than standing as an unsupported assertion.
-  "CRM-001/7.4": {
+  "CRM-001/4": {
     kind: "document", title: "Obligation Detail Records",
     standard: "ISO 27001 A.5.31 Legal and contractual requirements", itemLabel: "obligation",
-    feedsNext: "Feeds Step 7.5 (control mapping) and Step 7.6 (gap identification).",
+    feedsNext: "Feeds Step 5 (control mapping) and Step 6 (gap identification).",
     items: [
       { id: 1, label: "Obligation 1 — source, requirement, applicability rationale, owner, status, review date" },
       { id: 2, label: "Obligation 2 — source, requirement, applicability rationale, owner, status, review date" },
@@ -986,10 +986,10 @@ export const FORM_TASKS: Record<string, FormTask> = {
       { id: 5, label: "For each: why it applies to THIS organisation specifically" },
     ],
   },
-  "CRM-003/9.3": {
+  "CRM-003/3": {
     kind: "document", title: "Common Criteria Mapping",
     standard: "SOC 2 Type II (AICPA TSC) CC1–CC9", itemLabel: "criterion cluster",
-    feedsNext: "Feeds Step 9.4 (gap list), 9.5 (ISO cross-reference) and 9.6 (RAG dashboard).",
+    feedsNext: "Feeds Step 4 (gap list), 5 (ISO cross-reference) and 6 (RAG dashboard).",
     items: [
       { id: 1, label: "CC1–CC2 — description, example audit test, expected evidence, internal control or GAP" },
       { id: 2, label: "CC3–CC4 — description, example audit test, expected evidence, internal control or GAP" },

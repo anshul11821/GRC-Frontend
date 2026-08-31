@@ -99,7 +99,7 @@ export const CONDUCT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "AA-001/1.2": {
+  "AA-001/2": {
     roleAgent: "Operations Team Lead", interview: "Asset-Discovery Interview",
     openings: [
       { id: "A", text: "Thanks for your time — I'm building the asset register for your unit; no wrong answers. Could you walk me through the main systems and data your team uses day to day?", routesTo: "cooperative", correct: true, coaching: "Sets a cooperative interviewee." },
@@ -125,7 +125,7 @@ export const CONDUCT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "GRM-001/4.2": {
+  "GRM-001/2": {
     roleAgent: "Business-Unit Manager", interview: "Risk-Identification Workshop",
     openings: [
       { id: "A", text: "This is a no-blame session to surface risks in your unit — could you walk me through what could realistically go wrong with your client data and delivery?", routesTo: "cooperative", correct: true, coaching: "Sets a cooperative interviewee." },
@@ -151,7 +151,7 @@ export const CONDUCT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "CRM-002/8.5": {
+  "CRM-002/5": {
     roleAgent: "Process Owner", interview: "Process Control Walk-through",
     openings: [
       { id: "A", text: "I'm validating which security controls apply to your release process — could you walk me through the steps from a code change to production?", routesTo: "cooperative", correct: true, coaching: "Sets a cooperative interviewee." },

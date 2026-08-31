@@ -1,10 +1,10 @@
 // Run: npx tsx src/lib/workspace-keys.test.ts
 //
-// Every workspace map is keyed "<taskCode>/<activityCode>", and the activity code half is easy to
-// get wrong: the catalogue numbers activities two different ways. Nine tasks use "<n>.1".."<n>.8"
-// (AA-001 is 1.1–1.8, AA-002 is 2.1–2.8, GRM-001 is 4.1–4.8) while the other 26 use a bare
-// "1".."8". So "AA-002/3" and "BCRP-001/2.3" both look plausible and both silently resolve to
-// undefined — the mentee gets a blank workspace instead of the scripted one, with no error.
+// Every workspace map is keyed "<taskCode>/<activityCode>". Every task now numbers its activities
+// the same way — "0" (RUA gate), "1".."8", "9" (research gate). Nine tasks used to carry a
+// task-ordinal prefix ("AA-001/1.3", "GRM-001/4.3"); a leftover key in that shape still looks
+// plausible and silently resolves to undefined — the mentee gets a blank workspace instead of the
+// scripted one, with no error.
 //
 // One check over every map, against the catalogue the backend actually serves.
 import assert from "node:assert/strict";
@@ -56,8 +56,7 @@ for (const [mapName, map] of Object.entries(MAPS)) {
     const steps = stepsByTask.get(taskCode);
     assert.ok(steps, `${mapName}["${key}"]: no task "${taskCode}" in the catalogue`);
 
-    // The whole point: name the numbering scheme this task actually uses, so a wrong key is a
-    // one-line fix rather than a hunt.
+    // Name the activities the task actually has, so a wrong key is a one-line fix, not a hunt.
     assert.ok(
       steps.has(activityCode),
       `${mapName}["${key}"]: task ${taskCode} has no activity "${activityCode}" — ` +

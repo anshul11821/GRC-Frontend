@@ -123,7 +123,7 @@ export default function SignUpPage() {
             </Field>
             <Field label="Password">
               <div className="relative">
-                <TextInput icon="lock" type={show ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a strong password" />
+                <TextInput icon="lock" type={show ? "text" : "password"} name="password" id="signup-password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a strong password" />
                 <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   <Icon name="eye" size={16} />
                 </button>
@@ -143,6 +143,8 @@ export default function SignUpPage() {
               <TextInput
                 icon="lock"
                 type={show ? "text" : "password"}
+                name="confirm-password"
+                id="signup-confirm-password"
                 autoComplete="new-password"
                 required
                 value={confirmPassword}

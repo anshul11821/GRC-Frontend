@@ -28,7 +28,7 @@ export interface XRefTask {
 }
 
 export const XREF_TASKS: Record<string, XRefTask> = {
-  "AA-001/1.5": {
+  "AA-001/5": {
     title: "Asset Register ↔ Network/Application Inventory",
     standard: "ISO/IEC 27001:2022 — A.5.9 Inventory of assets; A.8.1 Endpoint devices",
     sources: "A = Information Asset Register · B = Network diagrams & application inventories",
@@ -66,7 +66,7 @@ export const XREF_TASKS: Record<string, XRefTask> = {
       { id: 26, cells: ["Staging database", "Y", "Y"], status: "Match" },
     ],
   },
-  "CRM-003/9.5": {
+  "CRM-003/5": {
     title: "SOC 2 Common Criteria ↔ ISO 27001 Control Matrix",
     standard: "SOC 2 Type II (AICPA TSC) CC1–CC9 · ISO 27001 Annex A control matrix (CRM-002)",
     sources: "A = SOC 2 Common Criteria points · B = ISO 27001 Control Matrix",

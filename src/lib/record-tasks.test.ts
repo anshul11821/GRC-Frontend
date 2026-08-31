@@ -43,7 +43,7 @@ for (const [key, task] of Object.entries(RECORD_TASKS)) {
     }
   }
 
-  // The brief and the register must not contradict each other. AA-001/1.3 told the mentee to
+  // The brief and the register must not contradict each other. AA-001/3 told the mentee to
   // "leave classification blank for now — that's the next step" while making a CIA-class column
   // required, so following the instruction made the step unsubmittable.
   const brief = `${activity.objective ?? ""} ${(activity.whatToDo ?? []).join(" ")}`.toLowerCase();

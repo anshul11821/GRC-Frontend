@@ -43,7 +43,7 @@ export const CALC_TASKS: Record<string, CalcTask> = {
       { id: 4, instance: "After Optimise (month 12)", inputs: [{ label: "Implemented", value: "39" }, { label: "Applicable", value: "56" }], expected: 69.6 },
     ],
   },
-  "AA-002/2.4": {
+  "AA-002/4": {
     title: "CIS Compliance % per Control Group", standard: "CIS Controls v8 IG1", metric: "CIS compliance % per Control group",
     formulaId: "F-CIS-COMP", formula: "Compliance% = Implemented ÷ Applicable × 100", unit: "%",
     inputCols: ["Implemented", "Applicable"],

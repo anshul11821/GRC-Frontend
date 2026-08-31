@@ -89,7 +89,7 @@ export const PRESENT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "AA-001/1.8": {
+  "AA-001/8": {
     roleAgent: "Department Head", interview: "Present Asset Register for Sign-off",
     prep: { deck: "Information Asset Register — 185 assets classified Public/Internal/Confidential, owners assigned, 8 ownerless flagged.", qa: ["Q1: Are all assets owned? Prepared A: All but 8; those are flagged with proposed owners for your confirmation.", "Q2: How did you classify them? Prepared A: ISO 27001 A.5.12 three-tier; personal-data items are never Public.", "Q3: What do you need from me? Prepared A: Your sign-off, and confirmation of the 8 proposed owners."] },
     openings: [
@@ -104,7 +104,7 @@ export const PRESENT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "GRM-001/4.8": {
+  "GRM-001/8": {
     roleAgent: "Business-Unit Management", interview: "Present Top Risks to Management",
     prep: { deck: "Top 5 operational risks (5×5 scored) — 1 Critical, 3 High; recommended treatments (mitigate/transfer).", qa: ["Q1: What's the top risk? Prepared A: Mis-sent client emails — scored 16 (High); no DLP control today.", "Q2: What will treatment cost? Prepared A: DLP ~€X/yr; laptop encryption is free via existing MDM.", "Q3: What do you need? Prepared A: Acceptance of the risks and approval of two treatments."] },
     openings: [
@@ -119,7 +119,7 @@ export const PRESENT_TASKS: Record<string, ConductTask> = {
     },
     metEnd: MET, missEnd: MISS,
   },
-  "GRM-003/6.8": {
+  "GRM-003/8": {
     roleAgent: "Department Head", interview: "Present Maturity Findings to Dept Head",
     prep: { deck: "NIST CSF current-state profile — strong Identify/Protect, weak Detect/Respond; ~Tier 1-2; proposed target Tier 2.", qa: ["Q1: Where are we weakest? Prepared A: Detect and Respond — no monitoring, no incident plan.", "Q2: What's realistic? Prepared A: Tier 2 (Risk-Informed) within 6-12 months.", "Q3: What do you need? Prepared A: Acceptance of the profile and agreement on the Tier 2 target."] },
     openings: [

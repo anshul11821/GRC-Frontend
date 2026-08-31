@@ -1,6 +1,6 @@
 // Prioritise worked tasks. Source: Prioritise_Verb_Task_Register.xlsx. Mentee scores each item per
 // criterion; the aggregate + rank compute live; ties require a documented tiebreaker (Layer 1).
-// AA-002/2.5 and SPA-001/2 are the `prioritise`-tagged catalog steps.
+// AA-002/5 and SPA-001/2 are the `prioritise`-tagged catalog steps.
 
 export interface PrioTask {
   title: string;
@@ -36,7 +36,7 @@ export const PRIORITISE_TASKS: Record<string, PrioTask> = {
       { id: 10, label: "Warehouse columns unclassified, roles not derived from them (A.5.12)" },
     ],
   },
-  "AA-002/2.5": {
+  "AA-002/5": {
     title: "Prioritise top CIS control gaps by risk exposure",
     standard: "CIS Controls v8 IG1",
     criteria: ["Exploitability", "Impact", "Prevalence"],

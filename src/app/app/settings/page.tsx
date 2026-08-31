@@ -188,18 +188,18 @@ function PasswordPanel() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Current password" className="sm:col-span-2 max-w-[420px]">
-            <TextInput icon="lock" type={show ? "text" : "password"} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="••••••••••" />
+            <TextInput icon="lock" type={show ? "text" : "password"} name="current-password" id="settings-current-password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="••••••••••" />
           </Field>
           <Field label="New password">
             <div className="relative">
-              <TextInput icon="lock" type={show ? "text" : "password"} value={next} onChange={(e) => setNext(e.target.value)} placeholder="Enter new password" />
+              <TextInput icon="lock" type={show ? "text" : "password"} name="new-password" id="settings-new-password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} placeholder="Enter new password" />
               <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <Icon name="eye" size={16} />
               </button>
             </div>
           </Field>
           <Field label="Confirm new password">
-            <TextInput icon="lock" type={show ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter new password" />
+            <TextInput icon="lock" type={show ? "text" : "password"} name="confirm-new-password" id="settings-confirm-password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter new password" />
           </Field>
         </div>
         <ul className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-1.5">

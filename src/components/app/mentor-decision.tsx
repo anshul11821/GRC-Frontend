@@ -24,37 +24,38 @@ export function MentorDecision({
   const approved = review.outcome === "approve" || review.outcome === "approve_note";
   const escalated = review.outcome === "disapprove_escalate";
   const tone = approved
-    ? { ring: "ring-emerald-200", bg: "bg-emerald-50/60", text: "text-emerald-800", icon: "checkCircle" as const }
-    : { ring: "ring-rose-200", bg: "bg-rose-50/60", text: "text-rose-800", icon: "flag" as const };
+    ? { ring: "ring-emerald-200", bg: "bg-emerald-50/60", band: "bg-emerald-700", icon: "checkCircle" as const }
+    : { ring: "ring-rose-200", bg: "bg-rose-50/60", band: "bg-rose-700", icon: "flag" as const };
+  const headline = review.needsAcknowledgement
+    ? "Your mentor approved this — with something to read"
+    : approved
+      ? "Your mentor approved this step"
+      : escalated
+        ? "Your mentor escalated this step"
+        : "Your mentor returned this step";
 
   return (
-    <div className={`rounded-2xl ring-1 ${tone.ring} ${tone.bg} p-5`}>
-      <div className="flex items-start gap-3">
-        <span className={`mt-0.5 shrink-0 ${tone.text}`}>
-          <Icon name={tone.icon} size={18} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className={`text-[15px] font-semibold tracking-tight ${tone.text}`}>
-              {review.needsAcknowledgement
-                ? "Your mentor approved this — with something to read"
-                : approved
-                  ? "Your mentor approved this step"
-                  : escalated
-                    ? "Your mentor escalated this step"
-                    : "Your mentor returned this step"}
-            </h3>
-            <span className="text-[11.5px] text-slate-500">{review.gateName}</span>
-          </div>
-          <p className="mt-0.5 text-[12px] text-slate-500 tracking-tight">
-            {review.reviewerName} · {review.reviewerRole} ·{" "}
-            {new Date(review.decidedAt).toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "short",
-            })}
-          </p>
+    // A solid band, a human timestamp and a signature rule — the three things the form language
+    // reserves for a decision a person actually made, and that machine-note.tsx is barred from
+    // wearing. The scarcest thing in the programme is mentor attention; the card should show it.
+    <div className={`rounded-2xl ring-1 ${tone.ring} bg-white overflow-hidden`}>
+      <div className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 ${tone.band} text-white`}>
+        <Icon name={tone.icon} size={14} />
+        <b className="text-[11px] font-bold uppercase tracking-[0.05em]">{headline}</b>
+        <time
+          dateTime={review.decidedAt}
+          className="ml-auto shrink-0 text-[10.5px] tabular-nums opacity-85"
+        >
+          {new Date(review.decidedAt).toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+          })}
+        </time>
+      </div>
 
-          <ul className="mt-3 space-y-2">
+      <div className={`${tone.bg} p-5`}>
+        <div className="min-w-0 flex-1">
+          <ul className="space-y-2">
             {review.reasons.map((r) => (
               <li key={r.text}>
                 <div className="flex gap-2 text-[13px] text-slate-700 leading-relaxed">
@@ -120,6 +121,15 @@ export function MentorDecision({
               You have been given an extra attempt for it.
             </p>
           )}
+
+          {/* The signature rule. A person put their name to this, and the gate it was decided at
+              is part of the record — both belong at the foot of the decision, not beside a heading. */}
+          <div className="mt-4 pt-2.5 border-t border-slate-200/70 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.06em] text-slate-500">
+            <span>
+              {review.reviewerName} · {review.reviewerRole}
+            </span>
+            <span className="ml-auto">{review.gateName}</span>
+          </div>
         </div>
       </div>
     </div>

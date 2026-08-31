@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
 import { Gloss } from "@/components/app/glossary";
+import { MachineTag } from "@/components/app/machine-note";
 import { TabRail, PaneNav, type TabDef } from "./gates";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
 import { type RuaTask } from "@/lib/rua-tasks";
@@ -147,12 +148,19 @@ function GradePanel({ g }: { g: CardGrade }) {
           ))}
         </ul>
       )}
-      <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-slate-400">
-        <Icon name={g.by === "ai" ? "bot" : "checkSquare"} size={11} />
-        {g.by === "ai" ? "Graded by the AI mentor"
-          : g.by === "floor" ? "Not sent to the mentor yet — fix the above first."
-          : "Graded by the workspace's own checks — the AI mentor was unavailable."}
-      </div>
+      {/* Both branches are machine output, so both wear the same provenance tag the rubric and the
+          judgment verdict wear — a gate grade must never be mistaken for a mentor's decision. */}
+      {g.by === "floor" ? (
+        <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-slate-400">
+          <Icon name="checkSquare" size={11} />
+          Not sent to the mentor yet — fix the above first.
+        </div>
+      ) : (
+        <MachineTag
+          className="mt-2.5"
+          label={g.by === "ai" ? "Generated · not a mentor decision" : "Generated · workspace checks · model unavailable"}
+        />
+      )}
     </div>
   );
 }
@@ -488,18 +496,27 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
           const m = ACQ_META[a.type] ?? ACQ_META.context;
           const done = !!p.acquire[i];
           return (
-            <div key={i} className={`rounded-2xl ring-1 px-4 py-3 flex items-start gap-3 ${done ? "ring-emerald-200 bg-emerald-50/30" : "ring-slate-200/80 bg-white"}`}>
-              <span className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${done ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"}`}>
-                <Icon name={done ? "check" : m.icon} size={16} strokeWidth={done ? 2.5 : 2} />
-              </span>
-              <div className="flex-1 min-w-0">
+            // The prerequisite ticket (form 09): dashed, because dashed means "not yet in your
+            // possession", and a torn-off stub carrying the only two states there are — held or
+            // not. All four subtypes share this one shape; the subtype is a word in the body, not
+            // a different silhouette. (No notched edges: the spec's notches are page-ground
+            // circles and these tickets sit on a raised pane, where they would read as holes.)
+            <div key={i} className={`rounded-md border border-dashed flex items-stretch ${done ? "border-emerald-300 bg-emerald-50/30" : "border-slate-300 bg-white"}`}>
+              <div className={`shrink-0 w-[92px] border-r border-dashed flex flex-col items-center justify-center gap-0.5 px-2 py-3 ${done ? "border-emerald-300" : "border-slate-300"}`}>
+                <Icon name={done ? "check" : m.icon} size={15} strokeWidth={done ? 2.5 : 2} className={done ? "text-emerald-600" : "text-amber-700"} />
+                <b className={`block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] ${done ? "text-emerald-600" : "text-amber-700"}`}>
+                  {done ? "Have it" : "Need it"}
+                </b>
+                <small className="font-mono text-[9.5px] text-slate-400">ACQ-{String(i + 1).padStart(2, "0")}</small>
+              </div>
+              <div className="flex-1 min-w-0 px-4 py-3">
                 <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full ring-1 text-[10px] font-semibold ${m.chip}`}>{m.label}</span>
                 <p className="mt-1 text-[12.5px] text-slate-700 tracking-tight leading-snug" style={{ textWrap: "pretty" }}><Gloss>{a.label}</Gloss></p>
                 <div className="mt-1.5"><ItemDoc refs={refs} idx={i} openDoc={openDoc} /></div>
               </div>
-              <div className="shrink-0 self-center">
+              <div className="shrink-0 self-center pr-3">
                 {done
-                  ? <span className="text-[11.5px] font-medium text-emerald-600 inline-flex items-center gap-1"><Icon name="check" size={13} /> {a.type === "access" ? "confirmed" : a.type === "artefact" ? "retrieved" : a.type === "context" ? "read" : "reviewed"}</span>
+                  ? <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-emerald-600">{a.type === "access" ? "confirmed" : a.type === "artefact" ? "retrieved" : a.type === "context" ? "read" : "reviewed"}</span>
                   : <button onClick={() => patch((n) => { n.acquire[i] = true; })}
                       className={`h-8 px-3 rounded-lg text-[12px] font-semibold text-white cursor-pointer focus-ring transition-colors ${a.type === "access" ? "bg-amber-500 hover:bg-amber-600" : "bg-violet-600 hover:bg-violet-700"}`}>
                       {a.type === "access" ? "Confirm availability" : a.type === "artefact" ? "Retrieve" : "Mark reviewed"}

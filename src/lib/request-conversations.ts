@@ -122,8 +122,8 @@ export function routeMood(input: {
 /* ─────────────────────────────── Authored conversations ─────────────────────────────── */
 
 export const REQUEST_CONVERSATIONS: Record<string, RequestConversation> = {
-  /* ════════════ AA-001 · Information Asset Inventory — Step 1.1 ════════════ */
-  "AA-001/1.1": {
+  /* ════════════ AA-001 · Information Asset Inventory — Step 1 ════════════ */
+  "AA-001/1": {
     recipient: "IT / Operations Manager",
     subject: "Request: System & Application Inventory for Asset Register (ISO 27001 A.5.9)",
     purpose:
@@ -853,8 +853,8 @@ export const REQUEST_CONVERSATIONS: Record<string, RequestConversation> = {
     },
   },
 
-  /* ════════════ AA-003 · Privacy Data-Flow Mapping — Step 3.1 (agree scope with mentor) ════════════ */
-  "AA-003/3.1": {
+  /* ════════════ AA-003 · Privacy Data-Flow Mapping — Step 1 (agree scope with mentor) ════════════ */
+  "AA-003/1": {
     recipient: "Mentor (engagement supervisor)",
     subject: "Request: Agreement on the data-heavy process to map for GDPR scoping",
     purpose:
@@ -957,8 +957,8 @@ export const REQUEST_CONVERSATIONS: Record<string, RequestConversation> = {
     },
   },
 
-  /* ════════════ AA-003 · Privacy Data-Flow Mapping — Step 3.2 (flow detail from owner) ════════════ */
-  "AA-003/3.2": {
+  /* ════════════ AA-003 · Privacy Data-Flow Mapping — Step 2 (flow detail from owner) ════════════ */
+  "AA-003/2": {
     recipient: "Admissions / Student Records Lead",
     subject: "Request: Data-flow detail for the admissions process (GDPR mapping)",
     purpose:
@@ -1062,8 +1062,8 @@ export const REQUEST_CONVERSATIONS: Record<string, RequestConversation> = {
     },
   },
 
-  /* ════════════ CRM-001 · Regulatory Requirements Inventory — Step 7.2 (scope confirmation) ════════════ */
-  "CRM-001/7.2": {
+  /* ════════════ CRM-001 · Regulatory Requirements Inventory — Step 2 (scope confirmation) ════════════ */
+  "CRM-001/2": {
     recipient: "Legal / Compliance Officer + IT Manager",
     subject: "Request: Confirmation of regulatory scope for the obligations register",
     purpose:
@@ -1375,8 +1375,8 @@ export const REQUEST_CONVERSATIONS: Record<string, RequestConversation> = {
     },
   },
 
-  /* ════════════ GRM-003 · GRC Maturity Assessment — Step 6.3 (maturity evidence) ════════════ */
-  "GRM-003/6.3": {
+  /* ════════════ GRM-003 · GRC Maturity Assessment — Step 3 (maturity evidence) ════════════ */
+  "GRM-003/3": {
     recipient: "Department Head + IT Lead",
     subject: "Request: Evidence to support the departmental GRC maturity rating",
     purpose:

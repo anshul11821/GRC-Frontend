@@ -38,15 +38,15 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
   // Columns mirror the step's own brief and source document (see grc101_content.json AA-001 → 1.3):
   // "asset name, data held, location, and a named owner", one row per asset in the intake notes.
   // Classification is deliberately NOT here — the brief says "leave classification blank for now,
-  // that's the next step", and step 1.4 (Apply) is that step. It used to be a *required* CIA column,
+  // that's the next step", and step 4 (Apply) is that step. It used to be a *required* CIA column,
   // so a mentee who followed the instruction could never submit.
-  "AA-001/1.3": {
+  "AA-001/3": {
     title: "Information Asset Register",
     standard: "ISO 27001 A.5.9 Inventory",
     registerName: "Information Asset Register",
     requiredRows: 8, // the intake notes list 8 distinct assets; the brief says one row per asset
     source: "CloudTech — Asset Intake Notes",
-    feedsNext: "Feeds Step 1.4 (Apply classification) and Step 1.5 (Cross-reference).",
+    feedsNext: "Feeds Step 4 (Apply classification) and Step 5 (Cross-reference).",
     columns: [
       { key: "assetId", label: "Asset ID", type: "text", required: true, idFormat: { pattern: "^AST-\\d{4}$", example: "AST-0001" }, unique: true },
       { key: "name", label: "Asset Name", type: "text", required: true },
@@ -77,7 +77,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
   },
 
   // ── Risk, assessment and privacy registers ────────────────────────────────────────────────
-  "GRM-001/4.3": {
+  "GRM-001/3": {
     title: "Operational Risk Register",
     standard: "ISO 27001 Cl. 6.1.2 Risk assessment",
     registerName: "Risk Register v1.0",
@@ -97,7 +97,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "owner", label: "Risk Owner (role)", type: "text", required: true, notDepartment: true },
     ],
   },
-  "AA-002/2.3": {
+  "AA-002/3": {
     title: "CIS IG1 Safeguard Assessment",
     standard: "CIS Controls v8 IG1",
     registerName: "IG1 Assessment Worksheet",
@@ -115,7 +115,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "naRationale", label: "Not-Applicable Rationale", type: "text", condReq: { key: "state", equals: "Not Applicable" } },
     ],
   },
-  "AA-003/3.4": {
+  "AA-003/4": {
     title: "Article 30 Record of Processing",
     standard: "GDPR Art. 30 (and local equivalent)",
     registerName: "RoPA",
@@ -135,7 +135,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "owner", label: "Accountable Role", type: "text", required: true, notDepartment: true },
     ],
   },
-  "CRM-001/7.3": {
+  "CRM-001/3": {
     title: "Regulatory Obligations Long-List",
     standard: "ISO 27001 A.5.31 Legal & contractual requirements",
     registerName: "Obligations Register",
@@ -150,7 +150,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "owner", label: "Accountable Role", type: "text", required: true, notDepartment: true },
     ],
   },
-  "CRM-002/8.4": {
+  "CRM-002/4": {
     title: "Control Implementation Status",
     standard: "ISO 27001 Annex A · Cl. 6.1.3 Statement of Applicability",
     registerName: "Control Implementation Matrix",
@@ -199,7 +199,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "verification", label: "How Disposal Is Evidenced", type: "text", required: true },
     ],
   },
-  "CRM-001/7.8": {
+  "CRM-001/8": {
     title: "Obligations Register — Registration & Review",
     standard: "ISO 27001 Cl. 7.5.3 Control of documented information",
     registerName: "Policy Register",
@@ -215,7 +215,7 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "nextReview", label: "Next Review Date", type: "date", required: true },
     ],
   },
-  "GRM-002/5.8": {
+  "GRM-002/8": {
     title: "Policy Register Entry",
     standard: "ISO 27001 Cl. 5.2 Policy · Cl. 7.5.3 Documented information",
     registerName: "Policy Register",
@@ -231,13 +231,13 @@ export const RECORD_TASKS: Record<string, RecordTask> = {
       { key: "audience", label: "Audience & Communication Route", type: "text", required: true },
     ],
   },
-  "CRM-003/9.2": {
+  "CRM-003/2": {
     title: "SOC 2 Common Criteria Control Points",
     standard: "SOC 2 Type II (AICPA TSC) — CC1–CC9",
     registerName: "Common Criteria Listing",
     requiredRows: 9,
     source: "Common Criteria CC1–CC9",
-    feedsNext: "Feeds Step 9.3 (mapping), 9.4 (gaps) and 9.5 (ISO cross-reference).",
+    feedsNext: "Feeds Step 3 (mapping), 4 (gaps) and 5 (ISO cross-reference).",
     columns: [
       { key: "cc", label: "CC Point", type: "text", required: true, unique: true },
       { key: "title", label: "Criterion Title", type: "text", required: true },

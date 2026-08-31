@@ -15,6 +15,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Gloss } from "@/components/app/glossary";
+import { MachineTag } from "@/components/app/machine-note";
 import type { DecisionAnswer, JudgmentPrompt, JudgmentResult } from "@/lib/desk";
 
 /** Below this the reasoning is not a defence and the server's floor will fail it anyway. Telling
@@ -47,6 +48,13 @@ export function JudgmentVerdict({ result }: { result: JudgmentResult }) {
     : "bg-amber-50 ring-amber-200/70";
   return (
     <div className={`mt-4 rounded-xl ring-1 p-4 ${tone}`}>
+      {/* The pass/fail tint stays — a learner needs to read the outcome at a glance — but the
+          provenance tag says who produced it. A mentor reading the same reasoning at the gate can
+          still return the step, and this is what keeps the two from looking like one verdict. */}
+      <MachineTag
+        className="mb-2.5"
+        label={result.gradedBy === "fallback" ? "Generated · fallback grade" : "Generated · not a mentor decision"}
+      />
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Icon
@@ -119,16 +127,22 @@ export function JudgmentCall({
   const short = touched && !!value.option && words > 0 && words < MIN_JUSTIFICATION_WORDS;
 
   return (
-    <section className="mt-6 min-w-0 rounded-2xl ring-1 ring-violet-200/70 bg-violet-50/40 overflow-hidden">
-      <header className="px-4 sm:px-5 py-3.5 border-b border-violet-200/60 bg-violet-50/60">
+    // The prompt well (form 10): recessed, not raised — a hole in the page rather than an object
+    // on it, and the only form below the surface. Everything else on the desk is something you
+    // are given; this is the one place the page stops and waits for you.
+    //
+    // Steel, not violet. Violet now means machine-generated and nothing else (machine-note.tsx),
+    // and a dilemma the programme authored is the opposite of machine output.
+    <section className="mt-6 min-w-0 rounded-[10px_10px_3px_3px] border border-slate-200 border-b-[3px] border-b-sky-700 bg-transparent shadow-[inset_0_3px_10px_rgba(19,28,40,0.09)]">
+      <header className="px-4 sm:px-5 pt-4">
         <div className="flex items-start gap-2.5">
-          <span className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center shrink-0 mt-px">
+          <span className="w-7 h-7 rounded-lg bg-sky-700 text-white flex items-center justify-center shrink-0 mt-px">
             <Icon name="bullseye" size={14} />
           </span>
           <div className="min-w-0">
             <div className="flex items-baseline gap-2 flex-wrap">
               <h3 className="text-[13px] font-semibold tracking-tight text-slate-900">Judgment call</h3>
-              <span className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-violet-700">
+              <span className="text-[10.5px] font-medium tracking-[0.08em] uppercase text-sky-700">
                 {prompt.competenceLabel}
               </span>
             </div>
@@ -175,14 +189,14 @@ export function JudgmentCall({
                 onClick={() => onChange({ ...value, option: o.key })}
                 className={`w-full min-w-0 text-left flex items-start gap-3 rounded-xl p-3 transition-all ring-1 ${
                   picked
-                    ? "bg-white ring-violet-400 shadow-[0_2px_10px_-4px_rgba(124,58,237,0.45)]"
+                    ? "bg-white ring-sky-600 shadow-[0_2px_10px_-4px_rgba(3,105,161,0.45)]"
                     : "bg-white/70 ring-slate-200/80 hover:bg-white hover:ring-slate-300"
                 } ${locked ? "cursor-default" : "cursor-pointer"}`}
               >
                 <span
                   aria-hidden
                   className={`shrink-0 mt-px w-5 h-5 rounded-full flex items-center justify-center text-[10.5px] font-semibold uppercase ring-1 ${
-                    picked ? "bg-violet-600 text-white ring-violet-600" : "bg-slate-50 text-slate-500 ring-slate-200"
+                    picked ? "bg-sky-700 text-white ring-sky-700" : "bg-slate-50 text-slate-500 ring-slate-200"
                   }`}
                 >
                   {o.key}
@@ -208,7 +222,7 @@ export function JudgmentCall({
           >
             Why this one
           </label>
-          <div className="rounded-xl bg-white ring-1 ring-slate-200/80 focus-within:ring-2 focus-within:ring-violet-500/40 transition-all">
+          <div className="rounded-xl bg-white ring-1 ring-slate-200/80 focus-within:ring-2 focus-within:ring-sky-600/40 transition-all">
             <textarea
               id={`why-${prompt.slot}`}
               disabled={locked}
@@ -260,11 +274,11 @@ export function JudgmentAnswer({
   const chosen = prompt?.options.find((o) => o.key === decision.option);
   return (
     <div className="min-w-0">
-      <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-violet-700 mb-1.5">
+      <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-sky-700 mb-1.5">
         Judgment call
       </div>
       <div className="flex items-start gap-2.5">
-        <span className="shrink-0 mt-px w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10.5px] font-semibold uppercase">
+        <span className="shrink-0 mt-px w-5 h-5 rounded-full bg-sky-700 text-white flex items-center justify-center text-[10.5px] font-semibold uppercase">
           {decision.option || "—"}
         </span>
         <span className="min-w-0 text-[12.5px] text-slate-800 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>

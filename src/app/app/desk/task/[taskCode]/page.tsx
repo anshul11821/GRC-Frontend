@@ -187,17 +187,46 @@ export default function TaskOverview() {
             </Link>
           )}
         </div>
-        <div className="space-y-1.5">
+        {/* Step markers (form 05). The silhouette is a left rail plus a pin that hangs off the
+            edge, and it never changes — only elevation and colour do. Exactly one step is on
+            stage: the one in progress carries the shadow and the steel rail, done steps keep the
+            shape and give up both, and steps not yet reached stay flat. */}
+        <div className="space-y-1.5 pl-4">
           {task?.steps.map((s) => {
             const done = s.status === "complete";
+            const current = s.status === "in-progress";
             const gate = isGateVerb(s.verb);
             const sd = scheduleByActivity.get(s.id);
             return (
-              <Link key={s.id} href={`/app/desk/${s.id}`} className={`focus-ring flex items-center gap-3 px-3 py-2.5 rounded-xl ring-1 no-underline transition-all duration-200 group ${gate ? "ring-violet-200/70 bg-violet-50/40 hover:bg-violet-50" : "ring-slate-200/60 bg-white hover:bg-slate-50 hover:ring-indigo-200/70"}`}>
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center ring-1 shrink-0 ${done ? "bg-emerald-50 text-emerald-600 ring-emerald-100" : gate ? "bg-violet-50 text-violet-600 ring-violet-100" : s.status === "in-progress" ? "bg-indigo-50 text-indigo-600 ring-indigo-100" : "bg-slate-50 text-slate-300 ring-slate-200/60"}`}>
-                  <Icon name={done ? "check" : gate ? (s.verb === "rua" ? "shield" : "globe") : "minus"} size={11} strokeWidth={done ? 3 : 2} />
+              <Link
+                key={s.id}
+                href={`/app/desk/${s.id}`}
+                className={`focus-ring relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-r-xl border border-l-0 no-underline transition-all duration-200 group ${
+                  current
+                    ? "border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05),0_6px_18px_-6px_rgba(15,23,42,0.25)]"
+                    : done
+                      ? "border-slate-200/60 bg-white opacity-[0.66] hover:opacity-100"
+                      : "border-slate-200/60 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`absolute left-0 top-0 bottom-0 w-[3px] ${current ? "bg-sky-700" : done ? "bg-emerald-500" : "bg-slate-200"}`}
+                />
+                <span
+                  className={`absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-mono text-[11px] font-semibold tabular-nums ${
+                    current
+                      ? "bg-sky-700 text-white shadow-[0_4px_12px_-4px_rgba(3,105,161,0.7)]"
+                      : done
+                        ? "bg-emerald-500 text-white"
+                        : "bg-slate-100 text-slate-400 ring-1 ring-slate-200"
+                  }`}
+                >
+                  {/* The code stays in the pin in every state. Swapping it for a tick on done
+                      steps cost the learner the one place the `0`–`9` numbering is visible on
+                      this page — colour already says the step is finished. */}
+                  {s.code}
                 </span>
-                <span className="font-mono text-[10.5px] text-slate-400 w-7 shrink-0">{s.code}</span>
                 <DVerb verbId={s.verb} />
                 <span className="text-[12.5px] text-slate-700 tracking-tight truncate flex-1">{s.title}</span>
                 {gate && <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-violet-50 ring-1 ring-violet-200 text-violet-600 text-[9px] font-semibold tracking-[0.08em] shrink-0">{s.verb === "rua" ? "RUA" : "RESEARCH"}</span>}

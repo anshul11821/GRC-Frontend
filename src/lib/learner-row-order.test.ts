@@ -7,12 +7,12 @@ type Row = { id: number; cells: string[]; shouldFlag: boolean };
 const ROWS: Row[] = Array.from({ length: 18 }, (_, i) => ({
   id: i + 1,
   cells: [`item-${i + 1}`],
-  // mirrors CRM-003/9.4: rows 5, 7, 11, 12, 15, 17 are the key
+  // mirrors CRM-003/4: rows 5, 7, 11, 12, 15, 17 are the key
   shouldFlag: [5, 7, 11, 12, 15, 17].includes(i + 1),
 }));
 
-const A = learnerRowOrder(ROWS, "user-a", "CRM-003", "9.4");
-const B = learnerRowOrder(ROWS, "user-b", "CRM-003", "9.4");
+const A = learnerRowOrder(ROWS, "user-a", "CRM-003", "4");
+const B = learnerRowOrder(ROWS, "user-b", "CRM-003", "4");
 
 // --- the key travels with the row ---------------------------------------------------------
 // Validation everywhere is `rows.filter(r => r.shouldFlag)`, so the SET of correct rows must be
@@ -37,14 +37,14 @@ assert.notDeepEqual(A.map((r) => r.id), B.map((r) => r.id));
 // --- stable for one learner ------------------------------------------------------------------
 // A moving table would make a revision harder than the first attempt.
 assert.deepEqual(
-  learnerRowOrder(ROWS, "user-a", "CRM-003", "9.4").map((r) => r.id),
+  learnerRowOrder(ROWS, "user-a", "CRM-003", "4").map((r) => r.id),
   A.map((r) => r.id),
   "same learner, same step, same order across visits",
 );
 
 // different step, same learner -> different order, so one task's layout leaks nothing about another
 assert.notDeepEqual(
-  learnerRowOrder(ROWS, "user-a", "CRM-003", "9.5").map((r) => r.id),
+  learnerRowOrder(ROWS, "user-a", "CRM-003", "5").map((r) => r.id),
   A.map((r) => r.id),
 );
 
