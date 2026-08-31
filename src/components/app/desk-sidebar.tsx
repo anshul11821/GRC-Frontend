@@ -10,7 +10,7 @@ import { OrgLogo } from "@/components/app/org-logo";
 import { TASK_META } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
-import { useDeskLearnings } from "./desk-context";
+import { useDeskBase, useDeskLearnings } from "./desk-context";
 import { dueChip } from "@/lib/schedule";
 
 type TaskState = "complete" | "current" | "locked";
@@ -36,6 +36,7 @@ const taskComplete = (t: LearningTask) => taskState(t) === "complete";
 const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "current" ? "bg-amber-500" : "bg-slate-300");
 
 function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTask; state: TaskState; activeId?: string; activeTaskCode?: string }) {
+  const base = useDeskBase();
   const meta = TASK_META[task.code];
   const { scheduleByActivity } = useDeskLearnings();
   const onThisTask = task.code === activeTaskCode || task.steps.some((s) => s.id === activeId);
@@ -66,7 +67,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
         <button onClick={() => setOpen((o) => !o)} className="w-6 h-7 flex items-center justify-center shrink-0 text-slate-400 hover:text-slate-600" aria-label="Toggle actions">
           <Icon name="chevronRight" size={13} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
-        <Link href={`/app/desk/task/${task.code}`} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
+        <Link href={`${base}/task/${task.code}`} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
           <div className="flex items-center gap-1.5">
             <span className={`inline-flex items-center h-[16px] px-1.5 rounded text-[9.5px] font-medium ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{meta?.standardLabel ?? task.standards}</span>
             {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
@@ -112,7 +113,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
             return ss === "locked" ? (
               <div key={s.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-not-allowed opacity-70" title="Complete the previous step first">{inner}</div>
             ) : (
-              <Link key={s.id} href={`/app/desk/${s.id}`} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
+              <Link key={s.id} href={`${base}/${s.id}`} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
             );
           })}
         </div>
@@ -165,6 +166,7 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   contextActive: boolean;
   lockedHint: string;
 }) {
+  const base = useDeskBase();
   const state = orgDisplayState(org);
   const locked = state === "locked";
   const [open, setOpen] = useState(defaultOpen);
@@ -218,7 +220,7 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
         {locked ? (
           <div title={lockedHint} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
         ) : (
-          <Link href={`/app/desk/org/${org.id}`} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl no-underline hover:bg-slate-100/50 transition-colors">{header}</Link>
+          <Link href={`${base}/org/${org.id}`} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl no-underline hover:bg-slate-100/50 transition-colors">{header}</Link>
         )}
         {expandable && (
           <button

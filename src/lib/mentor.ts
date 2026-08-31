@@ -1,8 +1,9 @@
 /**
  * Mentor review console — types, token store and API client.
  *
- * Shadow mode: a mentor's decision is recorded and shown back to them, and changes nothing for
- * the learner. Nothing here writes to a learner's submission or grade.
+ * A mentor's decision is authoritative (reversal, 2026-08-10): a return, an escalation or an
+ * unread note drops the gate out of the learner's passed set and re-locks what followed. A
+ * *pending* review blocks nothing — the AI's pass stands provisionally.
  *
  * The console keeps its own token, separate from the learner's, under its own storage key. The
  * backend refuses a mentor token on learner routes and vice versa, so the two sessions can coexist
@@ -10,6 +11,8 @@
  */
 import { api, ApiError, type RequestOptions } from "./api";
 import type { TaskReference } from "./taskmeta";
+import type { Learnings } from "./learnings";
+import type { ActivityDetail } from "./desk";
 
 const KEY = "grc_mentor_token";
 
@@ -30,6 +33,8 @@ export interface QueueRow {
   gateType: string;
   reviewerRole: string;
   taskCode: string;
+  /** The gate step's method verb — what action the mentor is being asked to review. */
+  verbId: string;
   menteeName: string;
   menteeId: string;
   revision: number;
@@ -66,14 +71,79 @@ export interface MentorStats {
   withdrawn: number;
   gatesInScope: number;
   roles: number;
+  /** Learners currently assigned to this mentor. */
+  mentees: number;
+  /** When they joined the bench — tenure, for the profile. */
+  memberSince: string | null;
+  /** Learners of theirs holding a certificate. The one figure about somebody else's outcome. */
+  menteesCertified: number;
+  /** Reviewer roles held, with the NICE work role each maps to. */
+  roleDetail: Role[];
 }
 
 export interface Queue {
   stats: { overdue: number; dueToday: number; awaitingYou: number; decidedToday: number };
   roles: Role[];
   needsDecision: QueueRow[];
-  waiting: QueueRow[];
   decided: DecidedRow[];
+  /** Opaque keyset cursor for the next page; null at the end of the worklist. */
+  nextCursor: string | null;
+}
+
+/** One learner on the Review Desk roster. */
+export interface MenteeRow {
+  userId: string;
+  name: string;
+  email: string;
+  passedSteps: number;
+  totalSteps: number;
+  /** Gates of theirs sitting in this mentor's worklist right now. */
+  awaitingYou: number;
+  lastSubmittedAt: string | null;
+  startedOn: string | null;
+}
+
+/** One of a learner's review gates, and the card that opens it. */
+export interface MenteeGate {
+  activityId: string;
+  activityCode: string;
+  taskCode: string;
+  gateId: string;
+  gateName: string;
+  gateType: string;
+  verbId: string;
+  /** Null until they submit — there is no card to open yet. */
+  submissionId: number | null;
+  submittedAt: string | null;
+  revision: number;
+  state: "not_submitted" | "awaiting" | "decided";
+  outcome: Outcome | null;
+  decidedAt: string | null;
+  decidedBy: string | null;
+}
+
+export interface MenteeList {
+  mentees: MenteeRow[];
+  /** Total assigned, so the roster can say "25 of 250" without a second request. */
+  total: number;
+  nextCursor: string | null;
+}
+
+export interface EarningsPeriod {
+  month: string;
+  reviews: number;
+  /** Null when no rate is set — the page shows the volume and says so. */
+  amount: number | null;
+}
+
+export interface Earnings {
+  currency: string;
+  ratePerReview: number;
+  reviewsTotal: number;
+  reviewsThisMonth: number;
+  amountTotal: number | null;
+  amountThisMonth: number | null;
+  months: EarningsPeriod[];
 }
 
 export interface Reason {
@@ -167,6 +237,10 @@ export interface JudgmentReview {
   options: JudgmentReviewOption[];
   referencePosition: string;
   hardestWhen: string;
+  /** The step of the task the learner answered it on, e.g. "4". */
+  answeredOnStep: string;
+  /** False when the dilemma sits on an earlier step than the one under review. */
+  onThisStep: boolean;
   /** The mentee's answer. Empty when this revision predates the judgment call. */
   chose: string;
   choseDefensible: boolean;
@@ -289,7 +363,26 @@ export const mentorApi = {
       { noAuth: true },
     ),
   me: () => api.get<Mentor>("/mentor/me", opts()),
-  queue: () => api.get<Queue>("/mentor/queue", opts()),
+  queue: (cursor?: string | null) =>
+    api.get<Queue>(`/mentor/queue${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`, opts()),
+  /** The Review Desk roster. Paged and searched server-side — a mentor at scale has hundreds. */
+  mentees: (params: { q?: string; waitingOnly?: boolean; cursor?: string | null } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.waitingOnly) qs.set("waiting_only", "true");
+    if (params.cursor) qs.set("cursor", params.cursor);
+    const tail = qs.toString();
+    return api.get<MenteeList>(`/mentor/mentees${tail ? `?${tail}` : ""}`, opts());
+  },
+  /** That learner's engagement tree, from the learner's own builder. */
+  menteeLearnings: (userId: string) =>
+    api.get<Learnings>(`/mentor/mentees/${userId}/learnings`, opts()),
+  /** That learner's gates, fetched once per desk so a gate step can open its own card. */
+  menteeGates: (userId: string) =>
+    api.get<MenteeGate[]>(`/mentor/mentees/${userId}/gates`, opts()),
+  menteeActivity: (userId: string, activityId: string) =>
+    api.get<ActivityDetail>(`/mentor/mentees/${userId}/activities/${activityId}`, opts()),
+  earnings: () => api.get<Earnings>("/mentor/earnings", opts()),
   stats: () => api.get<MentorStats>("/mentor/stats", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),
   /** The mentee's rendered task bundle, for replaying the two gate workspaces on the card. */

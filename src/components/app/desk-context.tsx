@@ -21,38 +21,89 @@ const DeskLearningsContext = createContext<DeskLearningsValue>({
 });
 
 /**
+ * Where the desk gets its tree from.
+ *
+ * Defaults to the signed-in learner's own. A mentor reviewing somebody's work mounts the same desk
+ * pointed at *that* learner — same components, same rendering, so the mentor cannot be looking at
+ * a different desk from the one the mentee worked in. Same shape as `TaskBundleSourceProvider` in
+ * `lib/task-bundle`, which already does this for the review card's workspace replay.
+ */
+export interface DeskSource {
+  /** Cache key. Must be distinct per learner or one mentee's tree is served for another. */
+  key: string;
+  fetch: () => Promise<Learnings>;
+  /** A mentor's view has no schedule of its own — deadlines belong to the learner. */
+  schedule?: { key: string; fetch: () => Promise<ScheduleItem[]> } | null;
+}
+
+const OWN_DESK: DeskSource = {
+  key: "learnings:grc101",
+  fetch: () => learningsApi.get("grc101"),
+  schedule: { key: "schedule:grc101", fetch: () => scheduleApi.get("grc101") },
+};
+
+/**
  * Shares the engagement tree across the whole Working Desk (sidebar, overview, redirect),
  * via the app-wide cache key ("learnings:grc101") — so it's also shared with the Dashboard
  * and My Learnings pages, making navigation between them instant.
  */
-export function DeskLearningsProvider({ children }: { children: React.ReactNode }) {
-  const { data, loading, mutate } = useCachedQuery("learnings:grc101", () => learningsApi.get("grc101"));
-  const { data: schedule, mutate: mutateSchedule } = useCachedQuery("schedule:grc101", () => scheduleApi.get("grc101"));
+export function DeskLearningsProvider({
+  children,
+  source = OWN_DESK,
+  basePath = "/app/desk",
+}: {
+  children: React.ReactNode;
+  source?: DeskSource;
+  basePath?: string;
+}) {
+  const { data, loading, mutate } = useCachedQuery(source.key, source.fetch);
+  const sched = source.schedule;
+  const { data: schedule, mutate: mutateSchedule } = useCachedQuery(
+    sched ? sched.key : null,
+    sched ? sched.fetch : async () => [] as ScheduleItem[],
+  );
 
   const scheduleByActivity = useMemo(
     () => new Map((schedule ?? []).map((s) => [s.activityId, s])),
     [schedule],
   );
 
-  // After a submit unlocks the next step, pull fresh data and update the shared cache.
+  // After a submit unlocks the next step, pull fresh data and update the shared cache. On a
+  // mentor's view the same call re-reads that learner's tree after a gate decision, which is
+  // exactly what has to happen: a return re-locks the step underneath them.
   const refresh = useCallback(async () => {
     try {
-      const [l, s] = await Promise.all([learningsApi.get("grc101"), scheduleApi.get("grc101")]);
+      const [l, s] = await Promise.all([
+        source.fetch(),
+        sched ? sched.fetch() : Promise.resolve([] as ScheduleItem[]),
+      ]);
       mutate(l);
       mutateSchedule(s);
     } catch {
       /* keep prior data on transient errors */
     }
-  }, [mutate, mutateSchedule]);
+  }, [source, sched, mutate, mutateSchedule]);
 
   return (
-    <DeskLearningsContext.Provider value={{ learnings: data ?? null, loading, refresh, scheduleByActivity }}>
-      {children}
-    </DeskLearningsContext.Provider>
+    <DeskBaseContext.Provider value={basePath}>
+      <DeskLearningsContext.Provider value={{ learnings: data ?? null, loading, refresh, scheduleByActivity }}>
+        {children}
+      </DeskLearningsContext.Provider>
+    </DeskBaseContext.Provider>
   );
 }
 
 export const useDeskLearnings = () => useContext(DeskLearningsContext);
+
+/**
+ * Route prefix the desk links against. The learner's desk lives at `/app/desk`; a mentor viewing
+ * a mentee's desk lives at `/mentor/desk/<menteeId>`. Everything below — the tree, the task list,
+ * the step links — is the same components either way, so the one thing that genuinely differs is
+ * where a click goes. A context rather than a prop because the sidebar threads links three levels
+ * deep and every level would otherwise have to pass it on.
+ */
+const DeskBaseContext = createContext("/app/desk");
+export const useDeskBase = () => useContext(DeskBaseContext);
 
 /** Show/hide the activity tree from outside DeskLayout — the walkthrough runs on a child route but
  *  has to spotlight the tree, which is an off-canvas drawer on small screens. No-op on md+, where

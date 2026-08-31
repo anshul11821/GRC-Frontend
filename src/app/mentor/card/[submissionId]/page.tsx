@@ -9,6 +9,8 @@ import { ReasonSheet } from "@/components/mentor/reason-sheet";
 import { UndoToast } from "@/components/mentor/undo-toast";
 import { SubmittedWork } from "@/components/mentor/submitted-work";
 import { JudgmentPanel, JudgmentSummary } from "@/components/mentor/judgment-review";
+import { VerbBadge, verbMeta } from "@/components/mentor/verb-badge";
+import type { VerbMeta } from "@/lib/verbs";
 import { ReferenceMaterial } from "@/components/app/reference-material";
 import { ApiError } from "@/lib/api";
 import {
@@ -33,9 +35,12 @@ export default function MentorCardPage() {
   );
 }
 
-// The submission opens; the prototype's other two views (step chain, deliverable) sit beside it,
-// and everything from the gate register that isn't needed to judge the work stays under Background.
-type Tab = "submission" | "chain" | "deliverable" | "judgment" | "background";
+// The submission opens. Everything else a reviewer might want — where the step sits, what the
+// deliverable was meant to be, what has happened at this gate before — is reference, not the
+// review, so it shares one tab. It used to be three (chain / deliverable / background), which
+// repeated the acceptance text and "what this feeds" across two of them and made the mentor hunt
+// for which tab held a field.
+type Tab = "submission" | "judgment" | "context";
 
 type Answer = "yes" | "no";
 
@@ -132,6 +137,7 @@ function CardBody() {
   const setAnswer = (itemId: string, value: Answer) =>
     setAnswers((a) => ({ ...a, [itemId]: value }));
 
+  const verb = verbMeta(card.verbId);
   const asked = askable(card);
   const askableCount = asked.length;
   const answeredCount = asked.filter((i) => answers[i.id]).length;
@@ -157,6 +163,10 @@ function CardBody() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
+              {/* The verb, first. The gate's own wording describes the deliverable; the verb says
+                  what kind of action is being judged, and a Record judged as a Draft fails for the
+                  wrong reasons. It was on the learner's desk and nowhere on this card. */}
+              <VerbBadge verbId={card.verbId} />
               <span className="font-mono text-[11px] text-slate-500">{card.gateId}</span>
               <span className="text-[11px] text-slate-400">
                 {card.taskCode} · {card.category}
@@ -166,8 +176,19 @@ function CardBody() {
             <div className="text-[11.5px] text-slate-500 mt-0.5">
               {card.activityTitle}
             </div>
+            {verb && (
+              <p className="text-[11.5px] text-slate-500 leading-relaxed mt-1.5">
+                <b className="font-semibold text-slate-700">{verb.label}</b> — {verb.when}
+              </p>
+            )}
           </div>
+          {/* Whose work, which attempt. The card carried neither, so a reviewer could not tell a
+              first submission from a third, or one learner's card from the next. */}
           <div className="shrink-0 text-right">
+            <div className="text-[12.5px] font-medium text-slate-800">{card.menteeName}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              Revision {card.revision} · submitted {formatSubmitted(card.submittedAt)}
+            </div>
             <div className={`text-[11.5px] mt-1 ${overdue ? "text-[#a31d1d] font-medium" : "text-slate-500"}`}>
               {formatRemaining(card.remainingMin)}
             </div>
@@ -205,19 +226,13 @@ function CardBody() {
             <TabButton active={tab === "submission"} onClick={() => setTab("submission")}>
               Submission
             </TabButton>
-            <TabButton active={tab === "chain"} onClick={() => setTab("chain")}>
-              Step chain
-            </TabButton>
-            <TabButton active={tab === "deliverable"} onClick={() => setTab("deliverable")}>
-              Deliverable
-            </TabButton>
             {card.judgment && (
               <TabButton active={tab === "judgment"} onClick={() => setTab("judgment")}>
                 Judgment call
               </TabButton>
             )}
-            <TabButton active={tab === "background"} onClick={() => setTab("background")}>
-              Background &amp; history
+            <TabButton active={tab === "context"} onClick={() => setTab("context")}>
+              Context &amp; history
               {card.history.length > 0 && (
                 <span className="ml-1.5 inline-flex items-center h-[15px] px-1 rounded bg-slate-100 text-slate-500 text-[9.5px] font-semibold align-middle">
                   {card.history.length}
@@ -237,66 +252,22 @@ function CardBody() {
                 )}
               </div>
             )}
-            {tab === "chain" && <StepChain steps={card.stepChain} feedsInto={card.feedsInto} />}
-            {tab === "deliverable" && (
-              <div className="space-y-4">
-                <Field label="Artefact under review">
-                  {card.artefact}
-                  {card.outputId && (
-                    <span className="font-mono text-[11px] text-slate-400"> · {card.outputId}</span>
-                  )}
-                </Field>
-                <Field label="Deliverable format">{card.deliverableFormat || "—"}</Field>
-                <Field label="Analytical lens">{card.analyticalLens || "—"}</Field>
-                <Field label="Scope objects">
-                  {[card.scopeAsset, card.scopeVendor].filter(Boolean).join(" · ") || "—"}
-                </Field>
-                <Field label="What this output feeds">{card.feedsInto || "—"}</Field>
-                <Field label="Gate acceptance">{card.acceptance}</Field>
-              </div>
-            )}
             {tab === "judgment" && card.judgment && <JudgmentPanel j={card.judgment} />}
-            {tab === "background" && (
-              <div className="space-y-4">
-                {/* The header carries the task code; this is the only place the task is named. */}
-                <Field label="Task">
-                  {card.taskCode} — {card.taskName}
-                </Field>
-                <Field label="Gate acceptance">{card.acceptance}</Field>
-                <div>
-                  <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-1">
-                    Inputs it consumed
-                  </div>
-                  <ul className="text-[12.5px] text-slate-700 leading-relaxed">
-                    {card.priorOutputs.map((input) => (
-                      <li key={input} className="flex gap-2">
-                        <span className="text-slate-300 mt-1.5 shrink-0">•</span>
-                        <span>{input}</span>
-                      </li>
-                    ))}
-                    {card.priorOutputs.length === 0 && (
-                      <li className="text-slate-400">Nothing — this is the first step of the task.</li>
-                    )}
-                  </ul>
-                </div>
-                <div>
-                  <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2">
-                    Revision history at this gate
-                  </div>
-                  <History entries={card.history} />
-                </div>
-              </div>
-            )}
+            {tab === "context" && <Context card={card} verb={verb} />}
           </div>
         </div>
 
         <aside className="space-y-3 lg:sticky lg:top-[76px] lg:self-start">
-          <div className="rounded-[14px] border border-[#e0e7ff] bg-[#eef2ff] px-4 py-3.5">
-            <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
-              What this output feeds
+          {/* The stakes, on every tab: what a wrong approval here reaches. Dropped rather than
+              drawn empty when the register has no downstream for this gate. */}
+          {card.feedsInto && (
+            <div className="rounded-[14px] border border-[#e0e7ff] bg-[#eef2ff] px-4 py-3.5">
+              <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
+                What this output feeds
+              </div>
+              <p className="text-[12px] text-[#3730a3]/90 leading-relaxed">{card.feedsInto}</p>
             </div>
-            <p className="text-[12px] text-[#3730a3]/90 leading-relaxed">{card.feedsInto}</p>
-          </div>
+          )}
 
           <ReviewChecklist card={card} answers={answers} onAnswer={setAnswer} />
 
@@ -548,40 +519,108 @@ function ReviewChecklist({
   );
 }
 
-/* The v3 context pack: six lines by default, the rest behind one control. Every learner works a
-   different organisation, so the register's org-agnostic text is not what this mentee read. */
+/* Whose organisation the work was done for. Every learner rotates through a different one, so the
+   register's org-agnostic text is not what this mentee read.
+
+   Three fields, no toggle: the toggle hid the *standards* — the field that decides whether a
+   submission is compliant — behind a "show 3 more fields" button, while showing head office, which
+   decides nothing. The rest moved to the Context tab. */
 function ContextPack({ card }: { card: Card }) {
-  const [open, setOpen] = useState(false);
-  // Counted, not hard-coded: the pack has been trimmed twice and the label drifted both times.
-  const hidden = 3;
   return (
-    <>
-      {/* gap-px over a border-coloured background draws the hairlines, so an unfilled cell
-          shows as a grey block — the last item spans the remainder to close the row. */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
-        <Meta label="Organisation" value={card.orgName} sub={card.orgIndustry} />
-        <Meta label="Office" value={card.orgHeadOffice || "—"} />
-        <Meta label="Regulator" value={card.orgRegulator || "—"} />
-      </div>
-      {open && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-px rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
-          <Meta label="Mandatory standards" value={card.mandatoryStandards || "—"} />
-          <Meta label="Artefact" value={card.artefact} sub={card.outputId} mono={false} />
-          <Meta label="Reviewer" value={card.reviewerRole} sub={`NICE ${card.reviewerRoleNice}`} />
-        </div>
-      )}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="mt-2 text-[11.5px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
-      >
-        {open ? "Hide the rest of the context pack" : `Show the full context pack (${hidden} more fields)`}
-      </button>
-    </>
+    // gap-px over a border-coloured background draws the hairlines, so an unfilled cell
+    // shows as a grey block — the last item spans the remainder to close the row.
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
+      <Meta label="Organisation" value={card.orgName} sub={card.orgIndustry} />
+      <Meta label="Regulator" value={card.orgRegulator || "—"} />
+      <Meta label="Mandatory standards" value={card.mandatoryStandards || "—"} />
+    </div>
   );
 }
 
-/** Where this gate sits in the task — a return reopens everything downstream, not just this step. */
-function StepChain({ steps, feedsInto }: { steps: Step[]; feedsInto: string }) {
+/** Everything that is reference rather than review: where the step sits, what the deliverable was
+ *  meant to be, and what has happened at this gate before. One tab, each fact once. */
+function Context({ card, verb }: { card: Card; verb?: VerbMeta }) {
+  return (
+    <div className="space-y-6">
+      <StepChain steps={card.stepChain} />
+
+      {verb && (
+        <Group title={`The ${verb.label} verb`}>
+          <p className="text-[12.5px] text-slate-700 leading-relaxed">{verb.when}</p>
+          <ul className="mt-2 space-y-1">
+            {verb.layer1.map((c) => (
+              <li key={c} className="flex gap-2 text-[12px] text-slate-600 leading-snug">
+                <span className="text-slate-300 mt-1.5 shrink-0">&bull;</span>
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
+            What every submission of this verb is held to, whatever the gate. Your checklist is the
+            review; this is the floor underneath it.
+          </p>
+        </Group>
+      )}
+
+      <Group title="The deliverable">
+        <div className="space-y-4">
+          <Field label="Task">
+            {card.taskCode} — {card.taskName}
+          </Field>
+          <Field label="Artefact under review">
+            {card.artefact}
+            {card.outputId && (
+              <span className="font-mono text-[11px] text-slate-400"> · {card.outputId}</span>
+            )}
+          </Field>
+          <Field label="Deliverable format">{card.deliverableFormat || "—"}</Field>
+          <Field label="Analytical lens">{card.analyticalLens || "—"}</Field>
+          <Field label="Scope objects">
+            {[card.scopeAsset, card.scopeVendor].filter(Boolean).join(" · ") || "—"}
+          </Field>
+          <Field label="Gate acceptance">{card.acceptance}</Field>
+          <Field label="Inputs it consumed">
+            {card.priorOutputs.length === 0 ? (
+              <span className="text-slate-400">Nothing — this is the first step of the task.</span>
+            ) : (
+              <ul>
+                {card.priorOutputs.map((input) => (
+                  <li key={input} className="flex gap-2">
+                    <span className="text-slate-300 mt-1.5 shrink-0">&bull;</span>
+                    <span>{input}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Field>
+          <Field label="You are reviewing as">
+            {card.reviewerRole}
+            <span className="text-slate-400"> · NICE {card.reviewerRoleNice}</span>
+          </Field>
+        </div>
+      </Group>
+
+      <Group title="Revision history at this gate">
+        <History entries={card.history} />
+      </Group>
+    </div>
+  );
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-[#f1f5f9] pt-5 first:border-0 first:pt-0">
+      <h3 className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2.5">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+/** Where this gate sits in the task — a return reopens everything downstream, not just this step.
+ *  "Feeds into" is the sticky panel in the rail, on every tab; it is not repeated here. */
+function StepChain({ steps }: { steps: Step[] }) {
   if (steps.length === 0) {
     return <p className="text-[12.5px] text-slate-400">No step chain for this task.</p>;
   }
@@ -623,11 +662,6 @@ function StepChain({ steps, feedsInto }: { steps: Step[]; feedsInto: string }) {
           </li>
         ))}
       </ol>
-      {feedsInto && (
-        <p className="mt-4 text-[11.5px] text-slate-500 leading-relaxed">
-          <b className="text-slate-700">Feeds into:</b> {feedsInto}
-        </p>
-      )}
     </div>
   );
 }

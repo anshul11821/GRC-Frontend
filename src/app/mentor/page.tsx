@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { MentorShell } from "@/components/mentor/shell";
+import { VerbBadge } from "@/components/mentor/verb-badge";
 import {
   formatRemaining,
   formatSubmitted,
@@ -15,16 +16,29 @@ import {
   type QueueRow,
 } from "@/lib/mentor";
 
-export default function MentorQueuePage() {
+/**
+ * The mentor's Dashboard — their equivalent of the learner's, and the surface they land on.
+ *
+ * The flat worklist lives here rather than on the Review Desk deliberately. A mentor carries
+ * roughly a quarter of the learner base (four reviewers, round-robin at signup), so at a thousand
+ * users that is ~250 mentees and at ten thousand it is ~2,500. Finding today's work by opening
+ * mentees one at a time is the thing that quietly multiplies a reviewer's day. The roster is for
+ * "how is Priyanshi getting on"; this is for "what do I do next", and it arrives sorted by how
+ * overdue it is.
+ */
+export default function MentorDashboardPage() {
   return (
     <MentorShell>
-      <QueueBody />
+      <DashboardBody />
     </MentorShell>
   );
 }
 
-function QueueBody() {
+function DashboardBody() {
   const [queue, setQueue] = useState<Queue | null>(null);
+  const [extra, setExtra] = useState<QueueRow[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
 
@@ -33,23 +47,40 @@ function QueueBody() {
       .queue()
       .then((q) => {
         setQueue(q);
+        setExtra([]);
+        setCursor(q.nextCursor);
         setError(null);
       })
       .catch((e) => {
-        if (!isAuthError(e)) setError("Could not load the queue.");
+        if (!isAuthError(e)) setError("Could not load your worklist.");
       });
   }, []);
 
   useEffect(load, [load]);
 
-  // A single-role mentor sees exactly the designed screen; the filter only appears when a mentor
-  // actually holds more than one role and cannot otherwise tell why a card is theirs.
-  const multiRole = (queue?.roles.length ?? 0) > 1;
-  const rows = useMemo(
-    () => (queue?.needsDecision ?? []).filter((r) => !role || r.reviewerRole === role),
-    [queue, role],
-  );
+  // Paged, not infinite-scrolled: the mentor asks for the next page. An automatic fetch-on-scroll
+  // over a 2,500-item worklist is a way to read a caseload by accident.
+  async function loadMore() {
+    if (!cursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const next = await mentorApi.queue(cursor);
+      setExtra((rows) => [...rows, ...next.needsDecision]);
+      setCursor(next.nextCursor);
+    } catch (e) {
+      if (!isAuthError(e)) setError("Could not load more.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
+  // The filter only appears when a mentor holds more than one role and cannot otherwise tell why
+  // a card is theirs. It filters what has been loaded — the server orders by SLA, not by role.
+  const multiRole = (queue?.roles.length ?? 0) > 1;
+  const rows = useMemo(() => {
+    const all = [...(queue?.needsDecision ?? []), ...extra];
+    return role ? all.filter((r) => r.reviewerRole === role) : all;
+  }, [queue, extra, role]);
 
   if (!queue) {
     return (
@@ -63,14 +94,17 @@ function QueueBody() {
     );
   }
 
+  const shown = rows.length;
+  const total = queue.stats.awaitingYou;
+
   return (
     <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-7 pb-16">
       <div className="flex items-start justify-between gap-6 mb-6">
         <div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-slate-900">Your review queue</h1>
+          <h1 className="text-[22px] font-semibold tracking-tight text-slate-900">Dashboard</h1>
           <p className="text-[12.5px] text-slate-500 mt-1">
-            Submissions at gates you review, overdue first. Your decision is recorded for calibration
-            and does not change the mentee&rsquo;s result.
+            Everything waiting on you, most overdue first. Your decision is final: approving
+            releases the step, returning it reopens the step and everything below it.
           </p>
         </div>
       </div>
@@ -87,12 +121,13 @@ function QueueBody() {
         </div>
       )}
 
-      {/* Only the two that say something the sections do not: "awaiting you" and "decided today"
-          just restated the counts on "Needs your decision" and "Recently decided". A reviewer's own
-          record lives in the account menu, where it is theirs rather than a scoreboard on the work. */}
-      <div className="grid grid-cols-2 gap-3 mb-7 max-w-[420px]">
+      {/* Counted over the whole worklist server-side, not over the page on screen — a mentor needs
+          to know 40 things are overdue while looking at the first 50 rows. */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
+        <Stat label="Awaiting you" value={queue.stats.awaitingYou} />
         <Stat label="Overdue" value={queue.stats.overdue} tone={queue.stats.overdue > 0 ? "danger" : "plain"} />
         <Stat label="Due today" value={queue.stats.dueToday} />
+        <Stat label="Decided today" value={queue.stats.decidedToday} />
       </div>
 
       {multiRole && (
@@ -109,27 +144,28 @@ function QueueBody() {
         </div>
       )}
 
-      <Section title="Needs your decision" count={rows.length}>
+      <Section title="Needs your decision" count={total}>
         {rows.length === 0 ? (
           <Empty>Nothing is waiting on you. New submissions at your gates land here.</Empty>
         ) : (
-          <div className="space-y-1.5">
-            {rows.map((row) => (
-              <Row key={row.submissionId} row={row} showRole={multiRole} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-1.5">
+              {rows.map((row) => (
+                <Row key={row.submissionId} row={row} showRole={multiRole} />
+              ))}
+            </div>
+            {cursor && (
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="mt-3 w-full h-10 rounded-[14px] border border-dashed border-[#e6eaf0] bg-white/60 text-[12.5px] font-medium text-slate-600 hover:bg-white transition-colors disabled:text-slate-400"
+              >
+                {loadingMore ? "Loading…" : `Load more — showing ${shown} of ${total}`}
+              </button>
+            )}
+          </>
         )}
       </Section>
-
-      {queue.waiting.length > 0 && (
-        <Section title="Held by another mentor" count={queue.waiting.length}>
-          <div className="space-y-1.5">
-            {queue.waiting.map((row) => (
-              <Row key={row.submissionId} row={row} readOnly showRole={multiRole} />
-            ))}
-          </div>
-        </Section>
-      )}
 
       {queue.decided.length > 0 && (
         <Section title="Recently decided" count={queue.decided.length}>
@@ -172,7 +208,11 @@ function Stat({ label, value, tone = "plain" }: { label: string; value: number; 
   return (
     <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3.5">
       <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400">{label}</div>
-      <div className={`text-[26px] font-semibold tracking-tight mt-1 ${tone === "danger" ? "text-[#a31d1d]" : "text-slate-900"}`}>
+      <div
+        className={`text-[26px] font-semibold tracking-tight mt-1 tabular-nums ${
+          tone === "danger" ? "text-[#a31d1d]" : "text-slate-900"
+        }`}
+      >
         {value}
       </div>
     </div>
@@ -213,13 +253,18 @@ function GateBadge({ type }: { type: string }) {
   );
 }
 
-function Row({ row, readOnly, showRole }: { row: QueueRow; readOnly?: boolean; showRole?: boolean }) {
+function Row({ row, showRole }: { row: QueueRow; showRole?: boolean }) {
   const overdue = row.remainingMin < 0;
-  const body = (
-    <>
+  return (
+    <Link
+      href={`/mentor/card/${row.submissionId}`}
+      className="w-full flex items-center gap-3 rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3 text-left hover:bg-[#f8fafc] transition-colors"
+    >
       <GateBadge type={row.gateType} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 flex-wrap">
+          {/* The verb first: it says what kind of work this is before the gate's own wording does. */}
+          <VerbBadge verbId={row.verbId} />
           <span className="text-[14.5px] font-semibold text-slate-900 truncate">{row.gateName}</span>
           <span className="font-mono text-[11px] text-slate-500">{row.gateId}</span>
         </span>
@@ -234,23 +279,9 @@ function Row({ row, readOnly, showRole }: { row: QueueRow; readOnly?: boolean; s
       >
         {formatRemaining(row.remainingMin)}
       </span>
-      {!readOnly && (
-        <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600">
-          Review <Icon name="arrowRight" size={13} />
-        </span>
-      )}
-    </>
-  );
-
-  const shell =
-    "w-full flex items-center gap-3 rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3 text-left";
-
-  if (readOnly) {
-    return <div className={`${shell} opacity-70`}>{body}</div>;
-  }
-  return (
-    <Link href={`/mentor/card/${row.submissionId}`} className={`${shell} hover:bg-[#f8fafc] transition-colors`}>
-      {body}
+      <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600">
+        Review <Icon name="arrowRight" size={13} />
+      </span>
     </Link>
   );
 }

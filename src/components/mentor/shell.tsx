@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
+import { MENTOR_NAV, isNavActive } from "./nav";
 import {
   getMentorToken,
   isAuthError,
@@ -14,13 +15,21 @@ import {
 } from "@/lib/mentor";
 
 /**
- * Console chrome + auth gate. Kept out of the learner AppShell deliberately: mentors are staff,
- * they have no program, no schedule and no sidebar — sharing the learner shell would mean
- * teaching every one of its widgets to render for someone who has none of that state.
+ * Console chrome + auth gate.
+ *
+ * Its own shell rather than the learner's AppShell: a mentor has no program, no schedule, no
+ * up-next bell and no access window, and teaching every one of those widgets to render for
+ * somebody who has none of that state costs more than a second rail. But the *shape* is the
+ * learner's on purpose — same sidebar geometry, same collapse behaviour, same account menu — so
+ * the two consoles read as one product.
+ *
+ * Which items a mentor gets, and which of the learner's are dropped, is argued in `./nav`.
  */
 export function MentorShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mentor, setMentor] = useState<Mentor | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     // No synchronous setState here: the no-token path just redirects, and the resolved/rejected
@@ -54,14 +63,117 @@ export function MentorShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-[#FAFAF7]">
-      <TopBar mentor={mentor} onSignOut={signOut} />
-      <main>{children}</main>
+    <div className="h-dvh flex overflow-hidden bg-[#FAFAF7]">
+      <MentorSidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        mobileOpen={mobileOpen}
+        closeMobile={() => setMobileOpen(false)}
+      />
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/30 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <TopBar mentor={mentor} onSignOut={signOut} openMobile={() => setMobileOpen(true)} />
+        <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
+      </div>
     </div>
   );
 }
 
-function TopBar({ mentor, onSignOut }: { mentor: Mentor; onSignOut: () => void }) {
+function MentorSidebar({
+  collapsed,
+  setCollapsed,
+  mobileOpen,
+  closeMobile,
+}: {
+  collapsed: boolean;
+  setCollapsed: (v: boolean) => void;
+  mobileOpen: boolean;
+  closeMobile: () => void;
+}) {
+  const pathname = usePathname();
+  // Labels hide only on desktop when collapsed; the mobile drawer is always full width.
+  const hideWhenCollapsed = collapsed ? "md:hidden" : "";
+  return (
+    <aside
+      aria-label="Sidebar"
+      className={[
+        "bg-white/60 backdrop-blur-xl border-r border-[#e6eaf0] flex flex-col",
+        "fixed inset-y-0 left-0 z-50 w-[244px] transition-transform duration-300",
+        mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
+        "md:static md:z-auto md:translate-x-0 md:shadow-none md:h-full md:shrink-0 md:transition-all",
+        collapsed ? "md:w-[68px]" : "md:w-[244px] 2xl:w-[276px]",
+      ].join(" ")}
+    >
+      <div className="h-16 flex items-center px-4 gap-3 border-b border-[#e6eaf0]">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden md:flex w-9 h-9 rounded-lg items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Toggle sidebar"
+        >
+          <Icon name="menu" size={18} />
+        </button>
+        <button
+          onClick={closeMobile}
+          className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Close menu"
+        >
+          <Icon name="x" size={18} />
+        </button>
+        <Link href="/mentor" className={`flex items-baseline gap-0 no-underline ${hideWhenCollapsed}`}>
+          <span className="text-[17px] font-semibold tracking-[-0.02em] text-slate-900">grc</span>
+          <span className="text-[17px] font-semibold tracking-[-0.02em] text-indigo-600">mentor</span>
+        </Link>
+      </div>
+      <nav className="flex-1 min-h-0 p-3 flex flex-col gap-0.5">
+        {MENTOR_NAV.map((item) => {
+          const active = isNavActive(item.href, pathname);
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={closeMobile}
+              title={item.label}
+              className={`group w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all no-underline ${
+                active
+                  ? "bg-indigo-50/80 text-indigo-700"
+                  : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
+              }`}
+            >
+              <Icon name={item.icon} size={17} strokeWidth={active ? 2 : 1.6} className="shrink-0" />
+              <span
+                className={`text-[13.5px] tracking-tight truncate ${hideWhenCollapsed} ${active ? "font-medium" : ""}`}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+      {/* The one thing the learner's rail never has to say. */}
+      <div className={`p-3 border-t border-[#e6eaf0] ${hideWhenCollapsed}`}>
+        <p className="text-[10.5px] text-slate-400 leading-relaxed">
+          Your decisions are final. Approving releases a step; returning it reopens that step and
+          everything below.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+function TopBar({
+  mentor,
+  onSignOut,
+  openMobile,
+}: {
+  mentor: Mentor;
+  onSignOut: () => void;
+  openMobile: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [offline, setOffline] = useState(false);
 
@@ -79,17 +191,19 @@ function TopBar({ mentor, onSignOut }: { mentor: Mentor; onSignOut: () => void }
   const roleLine = mentor.roles.length === 1 ? mentor.roles[0] : `${mentor.roles.length} roles`;
 
   return (
-    <header className="sticky top-0 z-50 h-16 border-b border-[#e6eaf0] bg-white/85 backdrop-blur-md">
-      <div className="mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] h-full px-6 flex items-center gap-4">
-        <Link href="/mentor" className="flex items-center gap-2 shrink-0">
-          <span className="text-[17px] font-semibold tracking-tight">
-            <span className="text-slate-900">grc</span>
-            <span className="text-indigo-600">mentor</span>
-          </span>
-          <span className="inline-flex items-center h-[18px] px-1.5 rounded bg-slate-900 text-white text-[9.5px] font-semibold tracking-[0.12em]">
-            MENTOR
-          </span>
-        </Link>
+    <header className="relative z-30 h-16 shrink-0 border-b border-[#e6eaf0] bg-white/85 backdrop-blur-md">
+      <div className="h-full px-4 md:px-6 flex items-center gap-4">
+        {/* The brand lives in the rail now; the bar keeps only what identifies the console. */}
+        <button
+          onClick={openMobile}
+          className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Open menu"
+        >
+          <Icon name="menu" size={18} />
+        </button>
+        <span className="inline-flex items-center h-[18px] px-1.5 rounded bg-slate-900 text-white text-[9.5px] font-semibold tracking-[0.12em]">
+          MENTOR
+        </span>
 
         <div className="ml-auto flex items-center gap-3">
           {offline && (

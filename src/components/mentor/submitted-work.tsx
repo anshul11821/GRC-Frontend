@@ -7,12 +7,17 @@ import { TaskBundleSourceProvider, type TaskBundle, type TaskBundleSource } from
 import { mentorApi, type Block, type Card } from "@/lib/mentor";
 
 /**
- * The mentee's submission, replayed in their own workspace.
+ * The mentee's submission: their entries first, then their own workspace replayed around them.
  *
  * A mapping table, a risk matrix, a register — each verb has a bespoke workspace, and a flattened
  * transcription of its payload loses the thing the reviewer needs to judge: which value sat in
  * which column, against which row. So the card mounts the real workspace, seeded with the
  * submitted fields and disabled, rather than re-describing it.
+ *
+ * But the workspace cannot be the only view. Several verbs commit — once the request is sent or
+ * the interview run, the form is replaced by a scripted transcript and the mentee's words become
+ * static text inside it. There is then nothing on screen to mark as theirs. So the payload leads
+ * and the workspace explains it, never the other way round.
  *
  * The fieldset is what makes it read-only: every control inside inherits `disabled`, so there is
  * no per-workspace read-only mode to write or to keep in step across 24 of them.
@@ -25,7 +30,6 @@ const norm = (k: string) => k.replace(/[_-]/g, "").toLowerCase();
 const CONTROL = new Set(["objectivemet", "scripted", "ready", "slips", "decision"]);
 
 export function SubmittedWork({ card }: { card: Card }) {
-  const [raw, setRaw] = useState(false);
   // Set when the workspace turns out not to understand this submission — see `drifted` below.
   const [liftedKeys, setLiftedKeys] = useState<string[] | null>(null);
 
@@ -66,39 +70,61 @@ export function SubmittedWork({ card }: { card: Card }) {
     liftedKeys !== null &&
     submittedKeys.length > 0 &&
     !submittedKeys.some((k) => liftedKeys.some((l) => norm(l) === norm(k)));
-  const showWorkspace = !raw && !drifted;
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400">
-          What they submitted
+      {/* The mentee's entries, from the payload, always and first.
+        *
+        * This used to be the far side of a "Show as plain text" toggle, with the replayed
+        * workspace as the default view — and for a third of the verbs that hid the submission
+        * completely. A workspace commits: send the request, run the interview, and it re-renders
+        * what the mentee wrote as a static transcript bubble. There is then no control on screen
+        * holding their words, so nothing to mark up, and the reviewer is reading a scripted
+        * conversation trying to work out which lines are the work.
+        *
+        * `blocks` is the server's walk of payload.fields — only the graded input, every verb, no
+        * markup to depend on. So it leads, and the workspace follows as context. */}
+      {/* Marked header, white body: a submission runs to whole tables, and flooding those with the
+          highlight colour is harder to read than the thing it is trying to make stand out. */}
+      <div className="rounded-xl border border-[#e7d9a8] bg-white overflow-hidden">
+        <div className="px-4 py-2.5 bg-[#fefce8] border-b border-[#e7d9a8]/70 flex items-center gap-2">
+          <Icon name="edit" size={13} className="text-[#8a6d1f] shrink-0" />
+          <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#8a6d1f]">
+            What the mentee entered
+          </span>
         </div>
-        {!drifted && (
-          <button
-            onClick={() => setRaw((v) => !v)}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-[#e6eaf0] bg-white text-[11.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            <Icon name={raw ? "desk" : "list"} size={13} />
-            {raw ? "Show their workspace" : "Show as plain text"}
-          </button>
-        )}
+        <div className="px-4 py-3.5">
+          {empty ? (
+            <p className="text-[12.5px] text-slate-500">
+              The learner submitted no content for this step.
+            </p>
+          ) : (
+            <Blocks blocks={card.blocks} />
+          )}
+        </div>
       </div>
 
       {drifted && (
-        <div className="mb-3 rounded-xl border border-[#e8c48a] bg-[#fdf1e6] px-4 py-2.5 text-[12px] text-[#7c4a10] leading-relaxed">
+        <div className="mt-3 rounded-xl border border-[#e8c48a] bg-[#fdf1e6] px-4 py-2.5 text-[12px] text-[#7c4a10] leading-relaxed">
           This submission predates the current {card.verbId} workspace, so it cannot be replayed in
-          it. Everything the mentee sent is below.
+          it. Everything the mentee sent is above.
         </div>
       )}
 
-      {empty ? (
-        <p className="text-[12.5px] text-slate-500">
-          The learner submitted no content for this step.
-        </p>
-      ) : !showWorkspace ? (
-        <Blocks blocks={card.blocks} />
-      ) : (
+      {!empty && !drifted && (
+        <details open className="mt-4 group">
+          <summary className="cursor-pointer list-none flex items-center gap-2 text-[11.5px] font-medium text-slate-600 hover:text-slate-900">
+            <Icon
+              name="chevronDown"
+              size={13}
+              className="text-slate-400 transition-transform group-open:rotate-0 -rotate-90"
+            />
+            Their workspace, replayed
+            <span className="font-normal text-slate-400">
+              — the same form, so a mapping table reads as the table they filled in
+            </span>
+          </summary>
+          <div className="mt-3">
         <TaskBundleSourceProvider source={source}>
           {/* disabled: the reviewer reads the work, never edits it. pointer-events stays on so
               the workspace's own tabs, rails and Open buttons still work for reading. */}
@@ -106,12 +132,22 @@ export function SubmittedWork({ card }: { card: Card }) {
               inputs clip their own values, and a reviewer cannot judge a rationale they can only
               see the first forty characters of. `field-sizing: content` lets each control grow to
               its text, and the wrapper scrolls rather than squeezing the table. Where the browser
-              lacks it (Firefox, Safari today) the values still clip — "Show as plain text" renders
-              the whole submission and is the escape hatch. */}
+              lacks it (Firefox, Safari today) the values still clip — the panel above carries the
+              whole submission and is the escape hatch. */}
+          {/* Most of the workspace was handed to the mentee — scripted rows, transcripts,
+              reference cards — so the fields they could type into are tinted to separate the work
+              from the scaffolding. It only reaches controls that are still on screen: a workspace
+              that has committed shows their words as static text instead, which is why the panel
+              above is the authority on what was submitted, not this. */}
+          <p className="mb-3 flex items-center gap-2 text-[11.5px] text-slate-500 leading-relaxed">
+            <span className="shrink-0 inline-block w-3.5 h-3.5 rounded-[4px] bg-[#fefce8] shadow-[inset_0_0_0_1px_#fde68a]" />
+            Tinted fields are the mentee&rsquo;s; everything else the workspace supplied. A tinted
+            field left empty is one they did not fill in.
+          </p>
           <div className="overflow-x-auto">
             <fieldset
               disabled
-              className="min-w-0 [&_*]:cursor-default [&_input]:[field-sizing:content] [&_select]:[field-sizing:content] [&_textarea]:[field-sizing:content] [&_input]:!max-w-none [&_textarea]:!max-w-none"
+              className="mentee-entry min-w-0 [&_*]:cursor-default [&_input]:[field-sizing:content] [&_select]:[field-sizing:content] [&_textarea]:[field-sizing:content] [&_input]:!max-w-none [&_textarea]:!max-w-none"
             >
             <VerbWorkspace
               verbId={card.verbId}
@@ -124,6 +160,8 @@ export function SubmittedWork({ card }: { card: Card }) {
             </fieldset>
           </div>
         </TaskBundleSourceProvider>
+          </div>
+        </details>
       )}
 
       {notes && (
