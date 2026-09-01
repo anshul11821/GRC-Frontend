@@ -12,7 +12,7 @@
 import { api, ApiError, type RequestOptions } from "./api";
 import type { TaskReference } from "./taskmeta";
 import type { Learnings } from "./learnings";
-import type { ActivityDetail } from "./desk";
+import type { ActivityDetail, SubmissionDetail } from "./desk";
 
 const KEY = "grc_mentor_token";
 
@@ -385,6 +385,12 @@ export const mentorApi = {
     api.get<unknown>(`/mentor/mentees/${userId}/task-content/${taskCode}`, opts()),
   menteeActivity: (userId: string, activityId: string) =>
     api.get<ActivityDetail>(`/mentor/mentees/${userId}/activities/${activityId}`, opts()),
+  /** Their submissions at one step — the screen fills its workspace from these. */
+  menteeActivitySubmissions: (userId: string, activityId: string) =>
+    api.get<SubmissionDetail[]>(
+      `/mentor/mentees/${userId}/activities/${activityId}/submissions`,
+      opts(),
+    ),
   earnings: () => api.get<Earnings>("/mentor/earnings", opts()),
   stats: () => api.get<MentorStats>("/mentor/stats", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),

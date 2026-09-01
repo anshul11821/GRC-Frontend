@@ -43,31 +43,64 @@ const failingItems = (card: Card, answers: Record<string, Answer>) =>
   card.checklist.filter((i) => answers[i.id] === "no");
 
 /**
- * The review itself: the brief the mentee read, their submission replayed in their own workspace,
- * the six questions, and the decision.
- *
- * One component, two mountings. It is the whole of `/mentor/card/[submissionId]` — which the
- * Dashboard worklist still opens — and it is embedded directly into a gate step on the Review
- * Desk, so a mentor reading somebody's work does not get bounced to a different page to say what
- * they think of it. Sharing the component rather than the markup is what keeps the two identical:
- * a checklist that drifted between the two surfaces would be two different reviews.
+ * Load one review card. Split out so a surface can compose the review itself — the brief, the
+ * submission, the decision — in its own layout, rather than embedding the whole tabbed card and
+ * inheriting a second header with it.
  */
-export function ReviewCard({
-  submissionId,
-  /** Embedded in the desk: no page chrome, no back-link, and deciding stays where it is. */
-  embedded = false,
-  onDecided,
-}: {
-  submissionId: number;
-  embedded?: boolean;
-  onDecided?: () => void;
-}) {
-  const id = submissionId;
-  const router = useRouter();
-
+export function useReviewCard(submissionId: number | null) {
   const [card, setCard] = useState<Card | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("submission");
+  const [nonce, setNonce] = useState(0);
+
+  // Reset during render when the card changes, not inside the effect — walking down a task would
+  // otherwise paint the previous step's submission under the new step's heading for a frame.
+  const [prevId, setPrevId] = useState(submissionId);
+  if (submissionId !== prevId) {
+    setPrevId(submissionId);
+    setCard(null);
+    setLoadError(null);
+  }
+
+  useEffect(() => {
+    // Null on a step the learner has not submitted: there is no card, and asking for one would be
+    // a 404 for every unsubmitted step a reviewer walks past.
+    if (submissionId === null) return;
+    let live = true;
+    mentorApi
+      .card(submissionId)
+      .then((c) => {
+        if (live) setCard(c);
+      })
+      .catch((e) => {
+        if (!live || isAuthError(e)) return;
+        setLoadError(e instanceof ApiError ? e.message : "Could not load this card.");
+      });
+    return () => {
+      live = false;
+    };
+  }, [submissionId, nonce]);
+
+  return { card, loadError, reload: useCallback(() => setNonce((n) => n + 1), []) };
+}
+
+/**
+ * The decision: the gate's six questions, Approve / Return, and everything that hangs off them —
+ * the reason sheet, the undo window, and the race when somebody else closes the card first.
+ *
+ * Owns its own state so any layout can drop it in. The learner-shaped step page on the Review Desk
+ * puts it under the deliverable, where a mentee's Submit button sits; the standalone card puts it
+ * in the right-hand rail. Same component, so the two can never become two different reviews.
+ */
+export function ReviewDecision({
+  card,
+  onDecided,
+  className = "",
+}: {
+  card: Card;
+  onDecided?: () => void;
+  className?: string;
+}) {
+  const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [sheet, setSheet] = useState<"approve" | "disapprove" | null>(null);
   const [sheetError, setSheetError] = useState<string | null>(null);
@@ -75,23 +108,13 @@ export function ReviewCard({
   const [toast, setToast] = useState<DecisionResult | null>(null);
   const [raced, setRaced] = useState(false);
 
-  useEffect(() => {
-    mentorApi
-      .card(id)
-      .then(setCard)
-      .catch((e) => {
-        if (isAuthError(e)) return;
-        setLoadError(e instanceof ApiError ? e.message : "Could not load this card.");
-      });
-  }, [id]);
-
   const openSheet = useCallback((mode: "approve" | "disapprove") => {
     setSheetError(null);
     setSheet(mode);
   }, []);
 
   async function confirm(codes: string[], note: string, requireAck: boolean) {
-    if (!card || !sheet) return;
+    if (!sheet) return;
     setBusy(true);
     setSheetError(null);
     try {
@@ -120,6 +143,125 @@ export function ReviewCard({
     }
   }
 
+  const decisionBlocked = card.decidedBy !== null || raced;
+  const setAnswer = (itemId: string, value: Answer) =>
+    setAnswers((a) => ({ ...a, [itemId]: value }));
+  const asked = askable(card);
+  const askableCount = asked.length;
+  const answeredCount = asked.filter((i) => answers[i.id]).length;
+  const failing = failingItems(card, answers);
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      <ReviewChecklist card={card} answers={answers} onAnswer={setAnswer} />
+
+      <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-4">
+        <div className="flex items-center justify-between text-[11.5px] text-slate-500 mb-2.5">
+          <span>
+            <b className="text-slate-800">{answeredCount}</b> of {askableCount} answered
+          </span>
+          <span>
+            {failing.length > 0 ? (
+              <b className="text-[#a31d1d]">{failing.length} failing</b>
+            ) : (
+              "none failing"
+            )}
+          </span>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={() => openSheet("approve")}
+            disabled={decisionBlocked || failing.length > 0 || answeredCount < askableCount}
+            className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => openSheet("disapprove")}
+            disabled={decisionBlocked || failing.length === 0}
+            className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
+          >
+            Return with reasons
+          </button>
+        </div>
+        {decisionBlocked ? (
+          <p className="text-[11px] text-slate-500 mt-2.5">
+            {raced
+              ? "Decided elsewhere while you had it open. Nothing you selected was submitted."
+              : `Already decided by ${card.decidedBy}.`}
+          </p>
+        ) : (
+          answeredCount < askableCount && (
+            <p className="text-[11px] text-slate-500 mt-2.5">Answer every question to decide.</p>
+          )
+        )}
+      </div>
+
+      <ReasonSheet
+        mode={sheet}
+        reasons={sheet === "approve" ? card.approve : failing.map(itemAsReason)}
+        locked={sheet === "disapprove"}
+        priorReturns={card.priorReturns}
+        maxReturns={card.maxReturns}
+        busy={busy}
+        error={sheetError}
+        onCancel={() => setSheet(null)}
+        onConfirm={confirm}
+      />
+
+      {toast && (
+        <UndoToast
+          outcome={toast.outcome}
+          gateId={toast.gateId}
+          seconds={toast.undoSeconds}
+          onUndo={undo}
+          onExpire={() => (onDecided ? onDecided() : router.push("/mentor"))}
+        />
+      )}
+
+      {raced && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-900/40 px-6">
+          <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]">
+            <h2 className="text-[15px] font-semibold text-slate-900">This card was closed elsewhere</h2>
+            <p className="text-[12.5px] text-slate-600 leading-relaxed mt-2">
+              Another reviewer decided it while you had it open. Nothing you selected was submitted.
+            </p>
+            <button
+              onClick={() => (onDecided ? onDecided() : router.push("/mentor"))}
+              className="mt-5 w-full h-10 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              Return to queue
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The review itself: the brief the mentee read, their submission replayed in their own workspace,
+ * the six questions, and the decision.
+ *
+ * One component, two mountings. It is the whole of `/mentor/card/[submissionId]` — which the
+ * Dashboard worklist still opens — and it is embedded directly into a gate step on the Review
+ * Desk, so a mentor reading somebody's work does not get bounced to a different page to say what
+ * they think of it. Sharing the component rather than the markup is what keeps the two identical:
+ * a checklist that drifted between the two surfaces would be two different reviews.
+ */
+export function ReviewCard({
+  submissionId,
+  /** Embedded in the desk: no page chrome, no back-link, and deciding stays where it is. */
+  embedded = false,
+  onDecided,
+}: {
+  submissionId: number;
+  embedded?: boolean;
+  onDecided?: () => void;
+}) {
+  const { card, loadError } = useReviewCard(submissionId);
+  const [tab, setTab] = useState<Tab>("submission");
+
   if (loadError) {
     return (
       <div className={embedded ? "" : "mx-auto max-w-[900px] px-6 pt-10"}>
@@ -144,15 +286,7 @@ export function ReviewCard({
   }
 
   const overdue = card.remainingMin < 0;
-  const decisionBlocked = card.decidedBy !== null || raced;
-  const setAnswer = (itemId: string, value: Answer) =>
-    setAnswers((a) => ({ ...a, [itemId]: value }));
-
   const verb = verbMeta(card.verbId);
-  const asked = askable(card);
-  const askableCount = asked.length;
-  const answeredCount = asked.filter((i) => answers[i.id]).length;
-  const failing = failingItems(card, answers);
 
   return (
     <div
@@ -231,13 +365,7 @@ export function ReviewCard({
             : ` of ${card.maxReturns} allowed.`}
         </Banner>
       )}
-      {decisionBlocked && (
-        <Banner tone="red">
-          {raced
-            ? "This card was decided elsewhere while you had it open. Nothing you selected was submitted."
-            : `Already decided by ${card.decidedBy}.`}
-        </Banner>
-      )}
+      {card.decidedBy !== null && <Banner tone="red">Already decided by {card.decidedBy}.</Banner>}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-3 items-start">
         <div className="rounded-[14px] border border-[#e6eaf0] bg-white">
@@ -288,88 +416,10 @@ export function ReviewCard({
             </div>
           )}
 
-          <ReviewChecklist card={card} answers={answers} onAnswer={setAnswer} />
-
-          <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-4">
-            <div className="flex items-center justify-between text-[11.5px] text-slate-500 mb-2.5">
-              <span>
-                <b className="text-slate-800">{answeredCount}</b> of {askableCount} answered
-              </span>
-              <span>
-                {failing.length > 0 ? (
-                  <b className="text-[#a31d1d]">{failing.length} failing</b>
-                ) : (
-                  "none failing"
-                )}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => openSheet("approve")}
-                disabled={decisionBlocked || failing.length > 0 || answeredCount < askableCount}
-                className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => openSheet("disapprove")}
-                disabled={decisionBlocked || failing.length === 0}
-                className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
-              >
-                Return with reasons
-              </button>
-            </div>
-            {decisionBlocked ? (
-              <p className="text-[11px] text-slate-500 mt-2.5">This card is closed.</p>
-            ) : (
-              answeredCount < askableCount && (
-                <p className="text-[11px] text-slate-500 mt-2.5">
-                  Answer every question to decide.
-                </p>
-              )
-            )}
-          </div>
+          <ReviewDecision card={card} onDecided={onDecided} />
         </aside>
       </div>
 
-      <ReasonSheet
-        mode={sheet}
-        reasons={sheet === "approve" ? card.approve : failing.map(itemAsReason)}
-        locked={sheet === "disapprove"}
-        priorReturns={card.priorReturns}
-        maxReturns={card.maxReturns}
-        busy={busy}
-        error={sheetError}
-        onCancel={() => setSheet(null)}
-        onConfirm={confirm}
-      />
-
-      {toast && (
-        <UndoToast
-          outcome={toast.outcome}
-          gateId={toast.gateId}
-          seconds={toast.undoSeconds}
-          onUndo={undo}
-          onExpire={() => (onDecided ? onDecided() : router.push("/mentor"))}
-        />
-      )}
-
-      {raced && (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-900/40 px-6">
-          <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]">
-            <h2 className="text-[15px] font-semibold text-slate-900">This card was closed elsewhere</h2>
-            <p className="text-[12.5px] text-slate-600 leading-relaxed mt-2">
-              Another reviewer decided it while you had it open. Nothing you selected was submitted.
-            </p>
-            <button
-              onClick={() => (onDecided ? onDecided() : router.push("/mentor"))}
-              className="mt-5 w-full h-10 rounded-lg bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors"
-            >
-              Return to queue
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
