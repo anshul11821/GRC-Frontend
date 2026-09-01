@@ -80,8 +80,8 @@ function EarningsBody() {
           You have not decided any gates yet.
         </div>
       ) : (
-        <div className="rounded-[14px] border border-[#e6eaf0] bg-white overflow-hidden">
-          <table className="w-full text-[12.5px]">
+        <div className="rounded-[14px] border border-[#e6eaf0] bg-white overflow-x-auto">
+          <table className="w-full min-w-[420px] text-[12.5px]">
             <thead>
               <tr className="bg-slate-50 text-slate-500">
                 <th className="text-left font-semibold px-4 py-2.5">Month</th>

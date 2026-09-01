@@ -380,6 +380,9 @@ export const mentorApi = {
   /** That learner's gates, fetched once per desk so a gate step can open its own card. */
   menteeGates: (userId: string) =>
     api.get<MenteeGate[]>(`/mentor/mentees/${userId}/gates`, opts()),
+  /** One task's curriculum bundle in that learner's own variant — the brief they worked to. */
+  menteeTaskContent: (userId: string, taskCode: string) =>
+    api.get<unknown>(`/mentor/mentees/${userId}/task-content/${taskCode}`, opts()),
   menteeActivity: (userId: string, activityId: string) =>
     api.get<ActivityDetail>(`/mentor/mentees/${userId}/activities/${activityId}`, opts()),
   earnings: () => api.get<Earnings>("/mentor/earnings", opts()),

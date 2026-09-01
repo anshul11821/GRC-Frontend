@@ -160,7 +160,7 @@ function MenteeCard({ m }: { m: MenteeRow }) {
   return (
     <Link
       href={`/mentor/desk/${m.userId}`}
-      className="w-full flex items-center gap-3.5 rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3 no-underline hover:bg-[#f8fafc] transition-colors"
+      className="w-full flex items-center gap-3 sm:gap-3.5 rounded-[14px] border border-[#e6eaf0] bg-white px-3 sm:px-4 py-3 no-underline hover:bg-[#f8fafc] transition-colors"
     >
       <span className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-white text-[12px] font-semibold grid place-items-center">
         {initials}
@@ -184,7 +184,7 @@ function MenteeCard({ m }: { m: MenteeRow }) {
         </span>
       </span>
 
-      <span className="w-[104px] shrink-0 text-right">
+      <span className="w-[92px] sm:w-[104px] shrink-0 text-right">
         {m.awaitingYou > 0 ? (
           <span className="inline-flex items-center gap-1.5 h-[22px] px-2 rounded-full bg-[#fdecec] text-[#a31d1d] text-[11px] font-semibold">
             {m.awaitingYou} waiting

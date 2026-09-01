@@ -109,15 +109,21 @@ export function GateChip({ gate }: { gate: MenteeGate }) {
 }
 
 /**
- * The link that opens this gate's card. Rendered as plain text when there is nothing to open —
- * a learner who has not submitted has no submission, and therefore no card. Showing a dead
- * "Review" button there would be the same dead end in a different coat.
+ * The link that opens this gate for review. Rendered as plain text when there is nothing to open —
+ * a learner who has not submitted has no submission, and therefore nothing to review. Showing a
+ * dead "Review" button there would be the same dead end in a different coat.
+ *
+ * `href` lets the desk point at its own step page, which now carries the review inline, while the
+ * Dashboard worklist keeps opening the standalone card. Both render the same component; the
+ * difference is only whether the learner's tree is around it.
  */
 export function OpenCardLink({
   gate,
+  href,
   className = "",
 }: {
   gate: MenteeGate;
+  href?: string;
   className?: string;
 }) {
   if (gate.submissionId === null) {
@@ -127,14 +133,14 @@ export function OpenCardLink({
   }
   return (
     <Link
-      href={`/mentor/card/${gate.submissionId}`}
+      href={href ?? `/mentor/card/${gate.submissionId}`}
       className={`shrink-0 inline-flex items-center gap-1 text-[12px] font-medium no-underline transition-colors ${
         gate.state === "awaiting"
           ? "text-indigo-600 hover:text-indigo-800"
           : "text-slate-500 hover:text-slate-800"
       } ${className}`}
     >
-      {gate.state === "awaiting" ? "Review" : "Open card"}
+      {gate.state === "awaiting" ? "Review" : "Open"}
       <Icon name="arrowRight" size={13} />
     </Link>
   );

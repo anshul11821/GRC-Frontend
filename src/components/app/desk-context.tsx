@@ -51,10 +51,13 @@ export function DeskLearningsProvider({
   children,
   source = OWN_DESK,
   basePath = "/app/desk",
+  stepFilter = null,
 }: {
   children: React.ReactNode;
   source?: DeskSource;
   basePath?: string;
+  /** Activity ids the tree may show. Null = every step, which is the learner's desk. */
+  stepFilter?: Set<string> | null;
 }) {
   const { data, loading, mutate } = useCachedQuery(source.key, source.fetch);
   const sched = source.schedule;
@@ -86,9 +89,11 @@ export function DeskLearningsProvider({
 
   return (
     <DeskBaseContext.Provider value={basePath}>
+      <DeskStepFilterContext.Provider value={stepFilter}>
       <DeskLearningsContext.Provider value={{ learnings: data ?? null, loading, refresh, scheduleByActivity }}>
         {children}
       </DeskLearningsContext.Provider>
+      </DeskStepFilterContext.Provider>
     </DeskBaseContext.Provider>
   );
 }
@@ -104,6 +109,18 @@ export const useDeskLearnings = () => useContext(DeskLearningsContext);
  */
 const DeskBaseContext = createContext("/app/desk");
 export const useDeskBase = () => useContext(DeskBaseContext);
+
+/**
+ * Which steps the desk is allowed to show. Null — the default, and the learner's case — means all
+ * of them.
+ *
+ * A mentor is not working the engagement, they are reviewing it, and only 2 of a task's 10 steps
+ * carry a gate they can decide. Showing the other 8 in the tree makes them hunt for the two that
+ * are theirs. So the mentor desk passes the set of gate activity ids and the tree renders those,
+ * hiding tasks that contain none.
+ */
+const DeskStepFilterContext = createContext<Set<string> | null>(null);
+export const useDeskStepFilter = () => useContext(DeskStepFilterContext);
 
 /** Show/hide the activity tree from outside DeskLayout — the walkthrough runs on a child route but
  *  has to spotlight the tree, which is an off-canvas drawer on small screens. No-op on md+, where

@@ -10,7 +10,7 @@ import { OrgLogo } from "@/components/app/org-logo";
 import { TASK_META } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
-import { useDeskBase, useDeskLearnings } from "./desk-context";
+import { useDeskBase, useDeskLearnings, useDeskStepFilter } from "./desk-context";
 import { dueChip } from "@/lib/schedule";
 
 type TaskState = "complete" | "current" | "locked";
@@ -37,6 +37,10 @@ const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "c
 
 function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTask; state: TaskState; activeId?: string; activeTaskCode?: string }) {
   const base = useDeskBase();
+  // On a mentor's desk only the reviewable steps are listed — see useDeskStepFilter. The learner's
+  // own desk passes null and sees every step, unchanged.
+  const stepFilter = useDeskStepFilter();
+  const steps = stepFilter ? task.steps.filter((s) => stepFilter.has(s.id)) : task.steps;
   const meta = TASK_META[task.code];
   const { scheduleByActivity } = useDeskLearnings();
   const onThisTask = task.code === activeTaskCode || task.steps.some((s) => s.id === activeId);
@@ -87,7 +91,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
 
       {open && (
         <div data-tour={onThisTask ? "desk-steps" : undefined} className="ml-6 pl-2 border-l border-slate-200/70 py-0.5">
-          {task.steps.map((s) => {
+          {steps.map((s) => {
             const ss = stepState(s.status);
             const active = s.id === activeId;
             // Task-boundary gates (RUA readiness / Research Submission) get a distinct shield node
@@ -167,17 +171,22 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   lockedHint: string;
 }) {
   const base = useDeskBase();
+  const stepFilter = useDeskStepFilter();
   const state = orgDisplayState(org);
   const locked = state === "locked";
   const [open, setOpen] = useState(defaultOpen);
   useEffect(() => { if (defaultOpen) setOpen(true); }, [defaultOpen]);
 
   // Flatten this placement's tasks + derive per-task state and method-category grouping.
-  const tasks: LearningTask[] = [];
-  org.projects.forEach((p) => p.tasks.forEach((t) => tasks.push(t)));
+  // On a mentor's desk a task with no reviewable step is noise, so it is dropped here rather than
+  // rendered as an empty node — and a category whose tasks all drop goes with it, since `byCat` is
+  // built from this list. The learner's desk has no filter and keeps every task.
+  const all: LearningTask[] = [];
+  org.projects.forEach((p) => p.tasks.forEach((t) => all.push(t)));
+  const tasks = stepFilter ? all.filter((t) => t.steps.some((s) => stepFilter.has(s.id))) : all;
   const taskStates = new Map<string, TaskState>();
   tasks.forEach((t) => taskStates.set(t.code, taskState(t)));
-  const doneTasks = tasks.filter(taskComplete).length;
+  const doneTasks = all.filter(taskComplete).length;
 
   const byCat = new Map<string, LearningTask[]>();
   tasks.forEach((t) => {
@@ -193,7 +202,9 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   // actually start. Map preserves insertion order, and `tasks` is already in unlock order.
   const cats = [...byCat.keys()];
 
-  const pct = tasks.length ? (doneTasks / tasks.length) * 100 : 0;
+  // Against every task, not the filtered subset: this is the learner's progress through their
+  // engagement, and it would be a different number on the mentor's desk otherwise.
+  const pct = all.length ? (doneTasks / all.length) * 100 : 0;
   const expandable = !locked && tasks.length > 0;
 
   const header = (
@@ -263,12 +274,18 @@ function SidebarShell({ children, footer }: { children: React.ReactNode; footer?
 export function DeskSidebar() {
   const { learnings, loading } = useDeskLearnings();
   const pathname = usePathname();
-  const taskM = pathname.match(/^\/app\/desk\/task\/([^/]+)/);
-  const activeTaskCode = taskM ? decodeURIComponent(taskM[1]) : undefined;
-  const orgM = pathname.match(/^\/app\/desk\/org\/([^/]+)/);
-  const activeOrgPageId = orgM ? decodeURIComponent(orgM[1]) : undefined;
-  const actM = !taskM && !orgM ? pathname.match(/^\/app\/desk\/([^/]+)/) : null;
-  const activeId = actM ? actM[1] : undefined;
+  // Matched against the desk's own base, not the literal "/app/desk": on a mentor's Review Desk
+  // these live under /mentor/desk/<menteeId>, and hardcoding the learner prefix meant nothing was
+  // ever marked active there — no highlighted step, and the org and category holding the current
+  // task stayed collapsed, so the tree opened blank every time.
+  // Split on the base rather than matching a pattern built from it: the base is interpolated from
+  // a route param, and a regex built out of one is a regex you have to remember to escape.
+  const base = useDeskBase();
+  const rest = pathname.startsWith(`${base}/`) ? pathname.slice(base.length + 1).split("/") : [];
+  const activeTaskCode = rest[0] === "task" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
+  const activeOrgPageId = rest[0] === "org" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
+  const activeId =
+    rest[0] && rest[0] !== "task" && rest[0] !== "org" ? decodeURIComponent(rest[0]) : undefined;
 
   if (loading && !learnings) {
     return (

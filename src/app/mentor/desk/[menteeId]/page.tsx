@@ -153,7 +153,7 @@ function GatePanel({ menteeId }: { menteeId: string }) {
                 <span className="block font-mono text-[10.5px] text-slate-400">{g.gateId}</span>
               </Link>
               <GateChip gate={g} />
-              <OpenCardLink gate={g} />
+              <OpenCardLink gate={g} href={`/mentor/desk/${menteeId}/${g.activityId}`} />
             </div>
           ))}
         </div>
