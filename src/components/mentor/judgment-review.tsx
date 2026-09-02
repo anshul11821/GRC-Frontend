@@ -92,7 +92,7 @@ export function JudgmentSummary({ j, onOpen }: { j: JudgmentReview; onOpen: () =
 
         <div className="mt-3">
           <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500 mb-1">
-            Their reasoning
+            The mentee&rsquo;s reasoning
           </div>
           <p className="text-[12.5px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
             {j.justification || "—"}
@@ -156,7 +156,7 @@ export function JudgmentPanel({ j }: { j: JudgmentReview }) {
                       <Verdict tone={o.defensible ? "green" : "slate"}>
                         {o.defensible ? "Defensible" : "Not defensible"}
                       </Verdict>
-                      {picked && <Verdict tone="amber">Their choice</Verdict>}
+                      {picked && <Verdict tone="amber">Mentee&rsquo;s choice</Verdict>}
                     </div>
                     <p className="mt-1.5 text-[12.5px] text-slate-800 leading-relaxed">{o.text}</p>
                     <p className="mt-1.5 text-[11.5px] text-slate-500 leading-relaxed">{o.basis}</p>
@@ -189,7 +189,7 @@ export function JudgmentPanel({ j }: { j: JudgmentReview }) {
       {j.chose && (
         <div>
           <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500 mb-2">
-            Their reasoning, and how it graded
+            The mentee&rsquo;s reasoning, and how it graded
           </div>
           <p className="text-[12.5px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
             {j.justification || "—"}

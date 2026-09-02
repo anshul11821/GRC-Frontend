@@ -28,6 +28,8 @@ export interface Mentor {
 
 export interface QueueRow {
   submissionId: number;
+  /** Where this submission lives on the mentee's desk — the worklist opens there, not on a card. */
+  activityId: string;
   gateId: string;
   gateName: string;
   gateType: string;
@@ -35,6 +37,8 @@ export interface QueueRow {
   taskCode: string;
   /** The gate step's method verb — what action the mentor is being asked to review. */
   verbId: string;
+  /** The learner's own organisation for this task — every learner rotates through a different one. */
+  orgName: string;
   menteeName: string;
   menteeId: string;
   revision: number;
@@ -120,6 +124,13 @@ export interface MenteeGate {
   outcome: Outcome | null;
   decidedAt: string | null;
   decidedBy: string | null;
+}
+
+/** A mentee's desk: who it belongs to, and the gates on it. */
+export interface MenteeDesk {
+  menteeName: string;
+  menteeEmail: string;
+  gates: MenteeGate[];
 }
 
 export interface MenteeList {
@@ -252,6 +263,41 @@ export interface JudgmentReview {
   gradedBy: string;
 }
 
+/** One thing the mentee entered, addressable so a comment can hang off exactly it. */
+export interface SubmissionEntry {
+  anchor: string;
+  label: string;
+  kind: "text" | "list" | "table";
+  text: string | null;
+  items: string[] | null;
+  head: string[] | null;
+  rows: string[][] | null;
+  /** One per row, positionally. Empty for non-tables. */
+  rowAnchors: string[];
+  rowLabels: string[];
+}
+
+/** One thing the reviewer did to one entry, sent with the decision. */
+export interface ReviewMark {
+  kind: "comment" | "approve";
+  anchor: string;
+  anchorLabel: string;
+  body: string;
+}
+
+export interface ReviewComment {
+  id: number;
+  /** "comment" is a remark; "approve" is a bare tick that the entry was read and is fine. */
+  kind: "comment" | "approve";
+  anchor: string;
+  anchorLabel: string;
+  body: string;
+  createdAt: string;
+  /** Null while it is still a draft on this mentor's screen. */
+  sentAt: string | null;
+  mentorName: string;
+}
+
 export interface Card {
   submissionId: number;
   gateId: string;
@@ -311,9 +357,13 @@ export interface Card {
   // table they filled in. `blocks` is the plain-text view and the fallback for a verb with no
   // bespoke workspace.
   verbId: string;
+  activityId: string;
   activityCode: string;
   payload: { fields?: Record<string, unknown>; notes?: string; attachments?: unknown[] };
   blocks: Block[];
+  /** The submission as addressable entries — what a comment attaches to. */
+  entries: SubmissionEntry[];
+  comments: ReviewComment[];
   /** Set only on the one step per task that carries a judgment call. */
   judgment: JudgmentReview | null;
   approve: Reason[];
@@ -379,7 +429,7 @@ export const mentorApi = {
     api.get<Learnings>(`/mentor/mentees/${userId}/learnings`, opts()),
   /** That learner's gates, fetched once per desk so a gate step can open its own card. */
   menteeGates: (userId: string) =>
-    api.get<MenteeGate[]>(`/mentor/mentees/${userId}/gates`, opts()),
+    api.get<MenteeDesk>(`/mentor/mentees/${userId}/gates`, opts()),
   /** One task's curriculum bundle in that learner's own variant — the brief they worked to. */
   menteeTaskContent: (userId: string, taskCode: string) =>
     api.get<unknown>(`/mentor/mentees/${userId}/task-content/${taskCode}`, opts()),
@@ -397,16 +447,22 @@ export const mentorApi = {
   /** The mentee's rendered task bundle, for replaying the two gate workspaces on the card. */
   cardTaskContent: (submissionId: number) =>
     api.get<unknown>(`/mentor/cards/${submissionId}/task-content`, opts()),
+  /**
+   * Record the decision and, with it, the whole review.
+   *
+   * The marks travel here rather than being saved as they are written: a review in progress is
+   * the reviewer thinking, and it belongs in their browser until they commit to it.
+   */
   decide: (
     submissionId: number,
     outcome: "approve" | "disapprove",
-    reasonCodes: string[],
     note: string,
-    requireAck = false,
+    requireAck: boolean,
+    marks: ReviewMark[],
   ) =>
     api.post<DecisionResult>(
       `/mentor/cards/${submissionId}/decision`,
-      { outcome, reasonCodes, note, requireAck },
+      { outcome, reasonCodes: [], note, requireAck, marks },
       opts(),
     ),
   undo: (decisionId: number) =>

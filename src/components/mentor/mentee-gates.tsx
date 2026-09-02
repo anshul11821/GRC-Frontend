@@ -19,6 +19,9 @@ import { isAuthError, mentorApi, OUTCOME_LABEL, type MenteeGate } from "@/lib/me
 interface GatesValue {
   byActivity: Map<string, MenteeGate>;
   gates: MenteeGate[];
+  /** Whose desk this is. Empty until the fetch lands. */
+  menteeName: string;
+  menteeEmail: string;
   loading: boolean;
   refresh: () => void;
 }
@@ -26,6 +29,8 @@ interface GatesValue {
 const MenteeGatesContext = createContext<GatesValue>({
   byActivity: new Map(),
   gates: [],
+  menteeName: "",
+  menteeEmail: "",
   loading: true,
   refresh: () => {},
 });
@@ -38,6 +43,7 @@ export function MenteeGatesProvider({
   children: React.ReactNode;
 }) {
   const [gates, setGates] = useState<MenteeGate[]>([]);
+  const [who, setWho] = useState({ name: "", email: "" });
   const [loading, setLoading] = useState(true);
   const [nonce, setNonce] = useState(0);
 
@@ -48,6 +54,7 @@ export function MenteeGatesProvider({
   if (menteeId !== prevKey) {
     setPrevKey(menteeId);
     setGates([]);
+    setWho({ name: "", email: "" });
     setLoading(true);
   }
 
@@ -55,8 +62,10 @@ export function MenteeGatesProvider({
     let live = true;
     mentorApi
       .menteeGates(menteeId)
-      .then((g) => {
-        if (live) setGates(g);
+      .then((d) => {
+        if (!live) return;
+        setGates(d.gates);
+        setWho({ name: d.menteeName, email: d.menteeEmail });
       })
       .catch((e) => {
         // A desk that cannot load gate state is still a readable desk — degrade, don't blank.
@@ -72,8 +81,15 @@ export function MenteeGatesProvider({
 
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
   const value = useMemo<GatesValue>(
-    () => ({ byActivity: new Map(gates.map((g) => [g.activityId, g])), gates, loading, refresh }),
-    [gates, loading, refresh],
+    () => ({
+      byActivity: new Map(gates.map((g) => [g.activityId, g])),
+      gates,
+      menteeName: who.name,
+      menteeEmail: who.email,
+      loading,
+      refresh,
+    }),
+    [gates, who, loading, refresh],
   );
 
   return <MenteeGatesContext.Provider value={value}>{children}</MenteeGatesContext.Provider>;
@@ -113,9 +129,8 @@ export function GateChip({ gate }: { gate: MenteeGate }) {
  * a learner who has not submitted has no submission, and therefore nothing to review. Showing a
  * dead "Review" button there would be the same dead end in a different coat.
  *
- * `href` lets the desk point at its own step page, which now carries the review inline, while the
- * Dashboard worklist keeps opening the standalone card. Both render the same component; the
- * difference is only whether the learner's tree is around it.
+ * The caller supplies the destination because a gate is reachable from more than one place on the
+ * desk — the overview panel and the task step list — and both land on the same step screen.
  */
 export function OpenCardLink({
   gate,
@@ -123,7 +138,8 @@ export function OpenCardLink({
   className = "",
 }: {
   gate: MenteeGate;
-  href?: string;
+  /** Where reviewing happens for this gate — the mentee's own step on the desk. */
+  href: string;
   className?: string;
 }) {
   if (gate.submissionId === null) {
@@ -133,7 +149,7 @@ export function OpenCardLink({
   }
   return (
     <Link
-      href={href ?? `/mentor/card/${gate.submissionId}`}
+      href={href}
       className={`shrink-0 inline-flex items-center gap-1 text-[12px] font-medium no-underline transition-colors ${
         gate.state === "awaiting"
           ? "text-indigo-600 hover:text-indigo-800"

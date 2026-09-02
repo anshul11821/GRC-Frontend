@@ -52,6 +52,8 @@ export interface MentorReview {
   advisory: boolean;
   /** approve_note only: the step stays incomplete, and the next one locked, until acknowledged. */
   needsAcknowledgement: boolean;
+  /** Remarks on specific things you entered — anchored to a field, or to one row of a table. */
+  comments: { id: number; anchor: string; anchorLabel: string; body: string; sentAt: string | null }[];
 }
 
 /** A mentor decision as it appears in the Up-next bell. Full detail lives on the step itself. */

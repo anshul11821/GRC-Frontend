@@ -86,45 +86,45 @@ export function SubmittedWork({ card }: { card: Card }) {
         * markup to depend on. So it leads, and the workspace follows as context. */}
       {/* Marked header, white body: a submission runs to whole tables, and flooding those with the
           highlight colour is harder to read than the thing it is trying to make stand out. */}
-      <div className="rounded-xl border border-[#e7d9a8] bg-white overflow-hidden">
-        <div className="px-4 py-2.5 bg-[#fefce8] border-b border-[#e7d9a8]/70 flex items-center gap-2">
-          <Icon name="edit" size={13} className="text-[#8a6d1f] shrink-0" />
-          <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#8a6d1f]">
-            What the mentee entered
-          </span>
+      {(
+        <div className="rounded-xl border border-[#e7d9a8] bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#fefce8] border-b border-[#e7d9a8]/70 flex items-center gap-2">
+            <Icon name="edit" size={13} className="text-[#8a6d1f] shrink-0" />
+            <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#8a6d1f]">
+              What the mentee entered
+            </span>
+          </div>
+          <div className="px-4 py-3.5">
+            {empty ? (
+              <p className="text-[12.5px] text-slate-500">
+                The learner submitted no content for this step.
+              </p>
+            ) : (
+              <Blocks blocks={card.blocks} />
+            )}
+          </div>
         </div>
-        <div className="px-4 py-3.5">
-          {empty ? (
-            <p className="text-[12.5px] text-slate-500">
-              The learner submitted no content for this step.
-            </p>
-          ) : (
-            <Blocks blocks={card.blocks} />
-          )}
-        </div>
-      </div>
+      )}
 
       {drifted && (
         <div className="mt-3 rounded-xl border border-[#e8c48a] bg-[#fdf1e6] px-4 py-2.5 text-[12px] text-[#7c4a10] leading-relaxed">
-          This submission predates the current {card.verbId} workspace, so it cannot be replayed in
-          it. Everything the mentee sent is above.
+          This submission predates the current {card.verbId} workspace, so the form cannot be
+          replayed in it. Everything the mentee sent is above.
         </div>
       )}
 
       {!empty && !drifted && (
-        <details open className="mt-4 group">
-          <summary className="cursor-pointer list-none flex items-center gap-2 text-[11.5px] font-medium text-slate-600 hover:text-slate-900">
-            <Icon
-              name="chevronDown"
-              size={13}
-              className="text-slate-400 transition-transform group-open:rotate-0 -rotate-90"
-            />
-            Their workspace, replayed
-            <span className="font-normal text-slate-400">
-              — the same form, so a mapping table reads as the table they filled in
-            </span>
-          </summary>
-          <div className="mt-3">
+        <Disclosure
+          summary={
+            <>
+              The mentee&rsquo;s workspace, replayed
+              <span className="font-normal text-slate-400">
+                {" "}
+                — the same form, so a mapping table reads as the table they filled in
+              </span>
+            </>
+          }
+        >
         <TaskBundleSourceProvider source={source}>
           {/* disabled: the reviewer reads the work, never edits it. pointer-events stays on so
               the workspace's own tabs, rails and Open buttons still work for reading. */}
@@ -160,8 +160,7 @@ export function SubmittedWork({ card }: { card: Card }) {
             </fieldset>
           </div>
         </TaskBundleSourceProvider>
-          </div>
-        </details>
+        </Disclosure>
       )}
 
       {notes && (
@@ -192,6 +191,29 @@ export function SubmittedWork({ card }: { card: Card }) {
 }
 
 const NOOP_REF = () => {};
+
+/** The replayed form, collapsible. */
+function Disclosure({
+  summary,
+  children,
+}: {
+  summary: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <details open className="mt-4 group">
+      <summary className="cursor-pointer list-none flex items-center gap-2 text-[11.5px] font-medium text-slate-600 hover:text-slate-900">
+        <Icon
+          name="chevronDown"
+          size={13}
+          className="text-slate-400 transition-transform group-open:rotate-0 -rotate-90"
+        />
+        {summary}
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  );
+}
 
 /** The server-rendered flattening — kept as the plain-text view and the fallback for a verb with
  *  no bespoke workspace. */

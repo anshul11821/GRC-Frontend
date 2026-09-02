@@ -1,46 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Icon } from "@/components/ui/icon";
-import { ReasonSheet } from "@/components/mentor/reason-sheet";
 import { UndoToast } from "@/components/mentor/undo-toast";
-import { SubmittedWork } from "@/components/mentor/submitted-work";
-import { JudgmentPanel, JudgmentSummary } from "@/components/mentor/judgment-review";
-import { VerbBadge, verbMeta } from "@/components/mentor/verb-badge";
-import type { VerbMeta } from "@/lib/verbs";
-import { ReferenceMaterial } from "@/components/app/reference-material";
 import { ApiError } from "@/lib/api";
 import {
-  formatRemaining,
-  formatSubmitted,
   isAuthError,
-  itemAsReason,
   mentorApi,
-  OUTCOME_LABEL,
-  type Brief,
+  willEscalate,
   type Card,
   type DecisionResult,
-  type HistoryEntry,
-  type Step,
+  type ReviewMark,
 } from "@/lib/mentor";
-
-// The submission opens. Everything else a reviewer might want — where the step sits, what the
-// deliverable was meant to be, what has happened at this gate before — is reference, not the
-// review, so it shares one tab. It used to be three (chain / deliverable / background), which
-// repeated the acceptance text and "what this feeds" across two of them and made the mentor hunt
-// for which tab held a field.
-type Tab = "submission" | "judgment" | "context";
-
-type Answer = "yes" | "no";
-
-/* Answering the six questions IS the review. A "no" produces its own reason code and the
-   correction the mentee receives, so the mentor never picks a disapproval from a menu.
-   Every question is the reviewer's own: nothing is pre-cleared, and no agent result is shown. */
-const askable = (card: Card) => card.checklist;
-const failingItems = (card: Card, answers: Record<string, Answer>) =>
-  card.checklist.filter((i) => answers[i.id] === "no");
 
 /**
  * Load one review card. Split out so a surface can compose the review itself — the brief, the
@@ -95,39 +67,64 @@ export function ReviewDecision({
   card,
   onDecided,
   className = "",
+  /**
+   * Anchors still to be marked reviewed or commented on. While any remain the decision is not
+   * available: a mentor who has read three rows of a thirty-row register has not reviewed it, and
+   * the count is the only thing that can tell them apart.
+   */
+  outstanding = 0,
+  /** True when the reviewer has written at least one comment on the work. */
+  hasComments = false,
+  /** The whole review, held in the browser until this moment. */
+  marks = [],
 }: {
   card: Card;
   onDecided?: () => void;
   className?: string;
+  outstanding?: number;
+  hasComments?: boolean;
+  marks?: ReviewMark[];
 }) {
   const router = useRouter();
-  const [answers, setAnswers] = useState<Record<string, Answer>>({});
-  const [sheet, setSheet] = useState<"approve" | "disapprove" | null>(null);
-  const [sheetError, setSheetError] = useState<string | null>(null);
+  // Confirming happens in place. It was a right-hand drawer, which is a lot of machinery for
+  // "are you sure" — it covered the work being decided on, and the reviewer had just read the
+  // whole review in the panel below the buttons anyway.
+  const [confirming, setConfirming] = useState<"approve" | "disapprove" | null>(null);
+  const [note, setNote] = useState("");
+  const [requireAck, setRequireAck] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<DecisionResult | null>(null);
   const [raced, setRaced] = useState(false);
 
-  const openSheet = useCallback((mode: "approve" | "disapprove") => {
-    setSheetError(null);
-    setSheet(mode);
+  const open = useCallback((mode: "approve" | "disapprove") => {
+    setError(null);
+    setConfirming(mode);
   }, []);
 
-  async function confirm(codes: string[], note: string, requireAck: boolean) {
-    if (!sheet) return;
+  async function confirm() {
+    if (!confirming) return;
     setBusy(true);
-    setSheetError(null);
+    setError(null);
     try {
-      const res = await mentorApi.decide(card.submissionId, sheet, codes, note, requireAck);
-      setSheet(null);
+      // No reason codes: the checklist that produced them is gone, and the comments on the work
+      // are the reasons now.
+      const res = await mentorApi.decide(
+        card.submissionId,
+        confirming,
+        note,
+        requireAck && !!note.trim(),
+        marks,
+      );
+      setConfirming(null);
       setToast(res);
     } catch (e) {
       // 409 means someone else closed this card while it was open — the design's race case.
       if (e instanceof ApiError && e.status === 409) {
-        setSheet(null);
+        setConfirming(null);
         setRaced(true);
       } else {
-        setSheetError(e instanceof ApiError ? e.message : "Could not record the decision.");
+        setError(e instanceof ApiError ? e.message : "Could not record the decision.");
       }
     } finally {
       setBusy(false);
@@ -144,70 +141,138 @@ export function ReviewDecision({
   }
 
   const decisionBlocked = card.decidedBy !== null || raced;
-  const setAnswer = (itemId: string, value: Answer) =>
-    setAnswers((a) => ({ ...a, [itemId]: value }));
-  const asked = askable(card);
-  const askableCount = asked.length;
-  const answeredCount = asked.filter((i) => answers[i.id]).length;
-  const failing = failingItems(card, answers);
+  const incomplete = outstanding > 0;
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <ReviewChecklist card={card} answers={answers} onAnswer={setAnswer} />
-
+      {/* The six-question checklist is gone. It was inherited from the gate register's generic
+          library — "is the population complete", "is the owner a role" — and asked the same six
+          things of a stakeholder map and a risk calculation alike, so on most steps it did not
+          describe the work in front of the reviewer. The comments on the entries are the reasons
+          now, and the note is optional alongside them. */}
       <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-4">
-        <div className="flex items-center justify-between text-[11.5px] text-slate-500 mb-2.5">
-          <span>
-            <b className="text-slate-800">{answeredCount}</b> of {askableCount} answered
-          </span>
-          <span>
-            {failing.length > 0 ? (
-              <b className="text-[#a31d1d]">{failing.length} failing</b>
+        {confirming === null ? (
+          <>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => open("approve")}
+                disabled={decisionBlocked || incomplete}
+                className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => open("disapprove")}
+                disabled={decisionBlocked || incomplete || !hasComments}
+                title={
+                  !hasComments
+                    ? "Comment on what needs changing before returning the step"
+                    : undefined
+                }
+                className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
+              >
+                Return with reasons
+              </button>
+            </div>
+            {decisionBlocked ? (
+              <p className="text-[11px] text-slate-500 mt-2.5">
+                {raced
+                  ? "Decided elsewhere while you had it open. Nothing you selected was submitted."
+                  : `Already decided by ${card.decidedBy}.`}
+              </p>
+            ) : incomplete ? (
+              <p className="text-[11px] text-slate-500 mt-2.5">
+                {outstanding} {outstanding === 1 ? "entry has" : "entries have"} not been marked
+                reviewed or commented on yet.
+              </p>
             ) : (
-              "none failing"
+              !hasComments && (
+                <p className="text-[11px] text-slate-500 mt-2.5">
+                  Returning a step needs at least one comment — the mentee has to be told what to
+                  change.
+                </p>
+              )
             )}
-          </span>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() => openSheet("approve")}
-            disabled={decisionBlocked || failing.length > 0 || answeredCount < askableCount}
-            className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => openSheet("disapprove")}
-            disabled={decisionBlocked || failing.length === 0}
-            className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
-          >
-            Return with reasons
-          </button>
-        </div>
-        {decisionBlocked ? (
-          <p className="text-[11px] text-slate-500 mt-2.5">
-            {raced
-              ? "Decided elsewhere while you had it open. Nothing you selected was submitted."
-              : `Already decided by ${card.decidedBy}.`}
-          </p>
+          </>
         ) : (
-          answeredCount < askableCount && (
-            <p className="text-[11px] text-slate-500 mt-2.5">Answer every question to decide.</p>
-          )
+          <div>
+            <div className="text-[13px] font-semibold text-slate-900">
+              {confirming === "approve"
+                ? "Approve this step?"
+                : willEscalate(card.priorReturns, card.maxReturns)
+                  ? "Escalate this step?"
+                  : "Return this step?"}
+            </div>
+            <p className="text-[12px] text-slate-600 leading-relaxed mt-1">
+              {confirming === "approve"
+                ? "The step is released and your review is sent to the mentee. It cannot be edited afterwards."
+                : willEscalate(card.priorReturns, card.maxReturns)
+                  ? `This gate has already been returned ${card.priorReturns} times — the limit is ${card.maxReturns}. Confirming raises it to the Programme Manager and the gate does not reopen.`
+                  : "The step reopens for the mentee with an extra attempt, and your review is sent."}
+            </p>
+
+            <label className="block mt-3">
+              <span className="block text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-400 mb-1.5">
+                Note to the mentee <span className="font-normal normal-case tracking-normal">(optional)</span>
+              </span>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                placeholder="Anything to say about the step as a whole."
+                className="w-full rounded-lg border border-[#e6eaf0] px-2.5 py-2 text-[12.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-300"
+              />
+            </label>
+
+            {/* Approve with note: good enough to release, but a habit needs correcting. Costs no
+                revision — the step simply does not complete until they have read it. */}
+            {confirming === "approve" && note.trim() && (
+              <label className="mt-2 flex items-start gap-2.5 rounded-lg border border-[#e6eaf0] px-3 py-2 cursor-pointer hover:bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={requireAck}
+                  onChange={(e) => setRequireAck(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 shrink-0 accent-indigo-600"
+                />
+                <span className="text-[12px] text-slate-700 leading-snug">
+                  The mentee must read this note before the step completes
+                </span>
+              </label>
+            )}
+
+            {error && (
+              <div className="mt-2 rounded-lg border border-[#f0c2c2] bg-[#fdecec] px-3 py-2 text-[12px] text-[#a31d1d]">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-3">
+              <button
+                onClick={confirm}
+                disabled={busy}
+                className={`h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-colors disabled:bg-slate-200 disabled:text-slate-400 ${
+                  confirming === "approve"
+                    ? "bg-[#1e7a46] hover:bg-[#1a6b3d]"
+                    : "bg-[#a31d1d] hover:bg-[#8f1919]"
+                }`}
+              >
+                {busy
+                  ? "Sending…"
+                  : confirming === "approve"
+                    ? "Yes, approve"
+                    : "Yes, return"}
+              </button>
+              <button
+                onClick={() => setConfirming(null)}
+                disabled={busy}
+                className="h-9 px-3.5 rounded-lg border border-[#e6eaf0] bg-white text-[12.5px] font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
       </div>
-
-      <ReasonSheet
-        mode={sheet}
-        reasons={sheet === "approve" ? card.approve : failing.map(itemAsReason)}
-        locked={sheet === "disapprove"}
-        priorReturns={card.priorReturns}
-        maxReturns={card.maxReturns}
-        busy={busy}
-        error={sheetError}
-        onCancel={() => setSheet(null)}
-        onConfirm={confirm}
-      />
 
       {toast && (
         <UndoToast
@@ -219,7 +284,7 @@ export function ReviewDecision({
         />
       )}
 
-      {raced && (
+      {raced && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-900/40 px-6">
           <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]">
             <h2 className="text-[15px] font-semibold text-slate-900">This card was closed elsewhere</h2>
@@ -233,601 +298,9 @@ export function ReviewDecision({
               Return to queue
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
-    </div>
-  );
-}
-
-/**
- * The review itself: the brief the mentee read, their submission replayed in their own workspace,
- * the six questions, and the decision.
- *
- * One component, two mountings. It is the whole of `/mentor/card/[submissionId]` — which the
- * Dashboard worklist still opens — and it is embedded directly into a gate step on the Review
- * Desk, so a mentor reading somebody's work does not get bounced to a different page to say what
- * they think of it. Sharing the component rather than the markup is what keeps the two identical:
- * a checklist that drifted between the two surfaces would be two different reviews.
- */
-export function ReviewCard({
-  submissionId,
-  /** Embedded in the desk: no page chrome, no back-link, and deciding stays where it is. */
-  embedded = false,
-  onDecided,
-}: {
-  submissionId: number;
-  embedded?: boolean;
-  onDecided?: () => void;
-}) {
-  const { card, loadError } = useReviewCard(submissionId);
-  const [tab, setTab] = useState<Tab>("submission");
-
-  if (loadError) {
-    return (
-      <div className={embedded ? "" : "mx-auto max-w-[900px] px-6 pt-10"}>
-        <div className="rounded-xl border border-[#f0c2c2] bg-[#fdecec] px-4 py-3 text-[12.5px] text-[#a31d1d]">
-          {loadError}
-        </div>
-        {!embedded && (
-          <Link href="/mentor" className="inline-block mt-4 text-[12.5px] text-indigo-600">
-            ← Back to the queue
-          </Link>
-        )}
-      </div>
-    );
-  }
-
-  if (!card) {
-    return (
-      <div className={embedded ? "" : "mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-7"}>
-        <div className="h-[120px] rounded-2xl border border-[#e6eaf0] bg-white animate-pulse" />
-      </div>
-    );
-  }
-
-  const overdue = card.remainingMin < 0;
-  const verb = verbMeta(card.verbId);
-
-  return (
-    <div
-      className={
-        embedded
-          ? ""
-          : "mx-auto max-w-[1320px] 2xl:max-w-[1600px] 3xl:max-w-[1880px] px-6 pt-6 pb-20"
-      }
-    >
-      {!embedded && (
-        <Link
-          href="/mentor"
-          className="inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 hover:text-slate-800 transition-colors mb-4"
-        >
-          <Icon name="arrowLeft" size={14} /> Back to the queue
-        </Link>
-      )}
-
-      <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-5 py-4 mb-3">
-        <div className="flex items-start gap-3 flex-wrap">
-          <span
-            className={`shrink-0 mt-0.5 w-6 h-6 rounded-[7px] grid place-items-center text-[9px] font-bold ${
-              card.gateType === "FOUNDATION" ? "bg-[#e0e7ff] text-[#3730a3]" : "bg-[#e8f5ee] text-[#1e7a46]"
-            }`}
-          >
-            {card.gateType === "FOUNDATION" ? "F" : "R"}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* The verb, first. The gate's own wording describes the deliverable; the verb says
-                  what kind of action is being judged, and a Record judged as a Draft fails for the
-                  wrong reasons. It was on the learner's desk and nowhere on this card. */}
-              <VerbBadge verbId={card.verbId} />
-              <span className="font-mono text-[11px] text-slate-500">{card.gateId}</span>
-              <span className="text-[11px] text-slate-400">
-                {card.taskCode} · {card.category}
-              </span>
-            </div>
-            <h1 className="text-[22px] font-semibold tracking-tight text-slate-900 mt-1">{card.gateName}</h1>
-            <div className="text-[11.5px] text-slate-500 mt-0.5">
-              {card.activityTitle}
-            </div>
-            {verb && (
-              <p className="text-[11.5px] text-slate-500 leading-relaxed mt-1.5">
-                <b className="font-semibold text-slate-700">{verb.label}</b> — {verb.when}
-              </p>
-            )}
-          </div>
-          {/* Whose work, which attempt. The card carried neither, so a reviewer could not tell a
-              first submission from a third, or one learner's card from the next. */}
-          <div className="shrink-0 text-right">
-            <div className="text-[12.5px] font-medium text-slate-800">{card.menteeName}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              Revision {card.revision} · submitted {formatSubmitted(card.submittedAt)}
-            </div>
-            <div className={`text-[11.5px] mt-1 ${overdue ? "text-[#a31d1d] font-medium" : "text-slate-500"}`}>
-              {formatRemaining(card.remainingMin)}
-            </div>
-          </div>
-        </div>
-
-        <ContextPack card={card} />
-      </div>
-
-      {card.tier === "T3" && (
-        <Banner tone="slate">
-          This gate is Tier 3. It is in your queue because it was sampled, not because every
-          submission at this gate is reviewed.
-        </Banner>
-      )}
-      {card.priorReturns > 0 && (
-        <Banner tone="amber">
-          Returned {card.priorReturns} time{card.priorReturns === 1 ? "" : "s"} at this gate
-          {card.priorReturns >= card.maxReturns
-            ? ` — the limit is ${card.maxReturns}, so a further disapproval escalates to the Programme Manager instead of returning.`
-            : ` of ${card.maxReturns} allowed.`}
-        </Banner>
-      )}
-      {card.decidedBy !== null && <Banner tone="red">Already decided by {card.decidedBy}.</Banner>}
-
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-3 items-start">
-        <div className="rounded-[14px] border border-[#e6eaf0] bg-white">
-          <div className="flex items-center gap-1 border-b border-[#f1f5f9] px-3 overflow-x-auto">
-            <TabButton active={tab === "submission"} onClick={() => setTab("submission")}>
-              Submission
-            </TabButton>
-            {card.judgment && (
-              <TabButton active={tab === "judgment"} onClick={() => setTab("judgment")}>
-                Judgment call
-              </TabButton>
-            )}
-            <TabButton active={tab === "context"} onClick={() => setTab("context")}>
-              Context &amp; history
-              {card.history.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center h-[15px] px-1 rounded bg-slate-100 text-slate-500 text-[9.5px] font-semibold align-middle">
-                  {card.history.length}
-                </span>
-              )}
-            </TabButton>
-          </div>
-          {/* No height cap: the submission reads on the page's own scroll. The aside is sticky, so
-              Approve/Disapprove stay in reach however long the deliverable runs. */}
-          <div className="px-4 sm:px-6 py-5 sm:py-6">
-            {tab === "submission" && (
-              <div>
-                <TheAsk brief={card.brief} title={card.activityTitle} />
-                <SubmittedWork card={card} />
-                {card.judgment && (
-                  <JudgmentSummary j={card.judgment} onOpen={() => setTab("judgment")} />
-                )}
-              </div>
-            )}
-            {tab === "judgment" && card.judgment && <JudgmentPanel j={card.judgment} />}
-            {tab === "context" && <Context card={card} verb={verb} />}
-          </div>
-        </div>
-
-        <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-          {/* The stakes, on every tab: what a wrong approval here reaches. Dropped rather than
-              drawn empty when the register has no downstream for this gate. */}
-          {card.feedsInto && (
-            <div className="rounded-[14px] border border-[#e0e7ff] bg-[#eef2ff] px-4 py-3.5">
-              <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
-                What this output feeds
-              </div>
-              <p className="text-[12px] text-[#3730a3]/90 leading-relaxed">{card.feedsInto}</p>
-            </div>
-          )}
-
-          <ReviewDecision card={card} onDecided={onDecided} />
-        </aside>
-      </div>
-
-    </div>
-  );
-}
-
-/** The prompt the mentee actually read, above their answer. Without it the reviewer judges against
- *  the gate register's org-agnostic wording while the mentee worked a rotated engagement — the
- *  most common way a correct submission gets disapproved. The acceptance points collapse because
- *  they are a re-read, not something needed on every card. */
-function TheAsk({ brief, title }: { brief?: Brief; title: string }) {
-  // Optional on purpose: backend and frontend deploy separately, so a card served by an older
-  // backend has no brief at all. Drop the panel rather than take the console down.
-  const { engagement = "", objective = "", whatToDo = [], references = [] } = brief ?? {};
-  if (!engagement && !objective) return null;
-  return (
-    <div className="rounded-xl border border-[#e0e7ff] bg-[#f6f7ff] px-4 py-3.5 mb-5">
-      <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#3730a3] mb-1.5">
-        What the mentee was asked
-      </div>
-      <p className="text-[12.5px] text-slate-800 leading-relaxed">{objective || title}</p>
-      {engagement && (
-        <p className="text-[11.5px] text-slate-500 leading-relaxed mt-2">{engagement}</p>
-      )}
-      {whatToDo.length > 0 && (
-        <details className="mt-2 group">
-          <summary className="cursor-pointer list-none text-[11.5px] font-medium text-indigo-700 hover:text-indigo-900">
-            <span className="group-open:hidden">Show the {whatToDo.length} acceptance points they saw</span>
-            <span className="hidden group-open:inline">Hide acceptance points</span>
-          </summary>
-          <ul className="mt-1.5 space-y-1">
-            {whatToDo.map((item, i) => (
-              <li key={i} className="flex gap-2 text-[11.5px] text-slate-600 leading-snug">
-                <span className="text-indigo-300 mt-1 shrink-0">•</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-      {references.length > 0 && (
-        <details className="mt-1.5 group">
-          <summary className="cursor-pointer list-none text-[11.5px] font-medium text-indigo-700 hover:text-indigo-900">
-            <span className="group-open:hidden">
-              Show the {references.length} reference document{references.length === 1 ? "" : "s"} they were given
-            </span>
-            <span className="hidden group-open:inline">Hide reference material</span>
-          </summary>
-          <div className="mt-2">
-            {/* The learner's own component and drawer — same cards, same body renderer, so the
-                reviewer reads the document exactly as it was handed over. */}
-            <ReferenceMaterial references={references} />
-          </div>
-        </details>
-      )}
-    </div>
-  );
-}
-
-/** The acceptance checklist, as the mentee saw it on the Working Desk — same criteria, same
- *  order, with the deterministic Layer 1 verdict that was run against their submission. It was
- *  previously folded inside the collapsed Agent-grading accordion, which is the wrong place: the
- *  criteria are what the work was written to satisfy, not a footnote about how it scored. */
-/** The review itself: the gate's questions, answered yes/no. Mirrors the v3 prototype's rail. */
-function ReviewChecklist({
-  card,
-  answers,
-  onAnswer,
-}: {
-  card: Card;
-  answers: Record<string, Answer>;
-  onAnswer: (id: string, value: Answer) => void;
-}) {
-  const [showReserve, setShowReserve] = useState(false);
-  return (
-    <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-3.5">
-      <div className="text-[12.5px] font-semibold text-slate-900">
-        Your checklist — {card.checklist.length} questions
-      </div>
-      <p className="text-[11px] text-slate-500 leading-relaxed mt-1">
-        Answering these is the review. Every “no” carries its own reason code and the correction the
-        mentee receives. Every question is yours to answer — nothing is decided for you.
-      </p>
-
-      <ul className="mt-3 space-y-2">
-        {card.checklist.map((item) => {
-          const answer = answers[item.id];
-          return (
-            <li
-              key={item.id}
-              data-check={item.id}
-              className={`rounded-xl border px-3 py-2.5 transition-colors ${
-                answer === "no"
-                  ? "border-[#f0c2c2] bg-[#fdecec]"
-                  : answer === "yes"
-                    ? "border-[#cfe8da] bg-[#f2f9f5]"
-                    : "border-[#e6eaf0] bg-white"
-              }`}
-            >
-              <div className="flex gap-2.5">
-                <span className="mt-0.5 shrink-0 grid place-items-center w-[18px] h-[18px] rounded-full bg-slate-100 font-mono text-[10px] text-slate-500">
-                  {item.slot}
-                </span>
-                <span className="text-[12px] text-slate-800 leading-snug">{item.question}</span>
-              </div>
-              <div className="mt-1.5 pl-[28px] font-mono text-[10px] uppercase tracking-wide text-slate-400">
-                {item.layer}
-                {item.layer === "COORDINATE" && " · resolved from this task's coordinate"}
-              </div>
-              <div className="mt-2 pl-[28px] flex items-center gap-1.5">
-                    <button
-                      aria-pressed={answer === "yes"}
-                      onClick={() => onAnswer(item.id, "yes")}
-                      className={`h-7 px-3 rounded-md text-[11.5px] font-semibold transition-colors ${
-                        answer === "yes"
-                          ? "bg-[#1e7a46] text-white"
-                          : "border border-[#e6eaf0] text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      aria-pressed={answer === "no"}
-                      onClick={() => onAnswer(item.id, "no")}
-                      className={`h-7 px-3 rounded-md text-[11.5px] font-semibold transition-colors ${
-                        answer === "no"
-                          ? "bg-[#a31d1d] text-white"
-                          : "border border-[#e6eaf0] text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      No
-                    </button>
-              </div>
-              {answer === "no" && (
-                <div className="mt-2 pl-[28px] text-[11px] leading-relaxed text-slate-600">
-                  <span className="font-semibold">Records {item.disapproveCode}:</span> {item.reason}
-                  <br />
-                  <span className="font-semibold">Correction sent:</span> {item.correction}
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-
-      {card.reserve.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowReserve((s) => !s)}
-            className="mt-3 w-full text-left text-[11px] font-medium text-slate-500 hover:text-slate-700 transition-colors"
-          >
-            Reserve set — {card.reserve.length} further items in scope{" "}
-            <span className="font-mono">{showReserve ? "−" : "+"}</span>
-          </button>
-          {showReserve && (
-            <ul className="mt-2 space-y-1.5">
-              {card.reserve.map((item) => (
-                <li key={item.id} className="text-[11px] text-slate-500 leading-snug">
-                  <span className="font-mono text-[10px] uppercase text-slate-400">{item.layer}</span>{" "}
-                  {item.question}
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-/* Whose organisation the work was done for. Every learner rotates through a different one, so the
-   register's org-agnostic text is not what this mentee read.
-
-   Three fields, no toggle: the toggle hid the *standards* — the field that decides whether a
-   submission is compliant — behind a "show 3 more fields" button, while showing head office, which
-   decides nothing. The rest moved to the Context tab. */
-function ContextPack({ card }: { card: Card }) {
-  return (
-    // gap-px over a border-coloured background draws the hairlines, so an unfilled cell
-    // shows as a grey block — the last item spans the remainder to close the row.
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#e6eaf0] mt-4 rounded-lg overflow-hidden max-lg:[&>*:last-child]:col-span-2">
-      <Meta label="Organisation" value={card.orgName} sub={card.orgIndustry} />
-      <Meta label="Regulator" value={card.orgRegulator || "—"} />
-      <Meta label="Mandatory standards" value={card.mandatoryStandards || "—"} />
-    </div>
-  );
-}
-
-/** Everything that is reference rather than review: where the step sits, what the deliverable was
- *  meant to be, and what has happened at this gate before. One tab, each fact once. */
-function Context({ card, verb }: { card: Card; verb?: VerbMeta }) {
-  return (
-    <div className="space-y-6">
-      <StepChain steps={card.stepChain} />
-
-      {verb && (
-        <Group title={`The ${verb.label} verb`}>
-          <p className="text-[12.5px] text-slate-700 leading-relaxed">{verb.when}</p>
-          <ul className="mt-2 space-y-1">
-            {verb.layer1.map((c) => (
-              <li key={c} className="flex gap-2 text-[12px] text-slate-600 leading-snug">
-                <span className="text-slate-300 mt-1.5 shrink-0">&bull;</span>
-                <span>{c}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
-            What every submission of this verb is held to, whatever the gate. Your checklist is the
-            review; this is the floor underneath it.
-          </p>
-        </Group>
-      )}
-
-      <Group title="The deliverable">
-        <div className="space-y-4">
-          <Field label="Task">
-            {card.taskCode} — {card.taskName}
-          </Field>
-          <Field label="Artefact under review">
-            {card.artefact}
-            {card.outputId && (
-              <span className="font-mono text-[11px] text-slate-400"> · {card.outputId}</span>
-            )}
-          </Field>
-          <Field label="Deliverable format">{card.deliverableFormat || "—"}</Field>
-          <Field label="Analytical lens">{card.analyticalLens || "—"}</Field>
-          <Field label="Scope objects">
-            {[card.scopeAsset, card.scopeVendor].filter(Boolean).join(" · ") || "—"}
-          </Field>
-          <Field label="Gate acceptance">{card.acceptance}</Field>
-          <Field label="Inputs it consumed">
-            {card.priorOutputs.length === 0 ? (
-              <span className="text-slate-400">Nothing — this is the first step of the task.</span>
-            ) : (
-              <ul>
-                {card.priorOutputs.map((input) => (
-                  <li key={input} className="flex gap-2">
-                    <span className="text-slate-300 mt-1.5 shrink-0">&bull;</span>
-                    <span>{input}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Field>
-          <Field label="You are reviewing as">
-            {card.reviewerRole}
-            <span className="text-slate-400"> · NICE {card.reviewerRoleNice}</span>
-          </Field>
-        </div>
-      </Group>
-
-      <Group title="Revision history at this gate">
-        <History entries={card.history} />
-      </Group>
-    </div>
-  );
-}
-
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="border-t border-[#f1f5f9] pt-5 first:border-0 first:pt-0">
-      <h3 className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-2.5">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-/** Where this gate sits in the task — a return reopens everything downstream, not just this step.
- *  "Feeds into" is the sticky panel in the rail, on every tab; it is not repeated here. */
-function StepChain({ steps }: { steps: Step[] }) {
-  if (steps.length === 0) {
-    return <p className="text-[12.5px] text-slate-400">No step chain for this task.</p>;
-  }
-  return (
-    <div>
-      <p className="text-[12px] text-slate-500 leading-relaxed mb-4">
-        The run of work this gate sits in. Returning it reopens this step and everything below that
-        inherits from it.
-      </p>
-      <ol className="space-y-1">
-        {steps.map((s) => (
-          <li
-            key={s.n}
-            className={`flex gap-3 rounded-lg px-3 py-2.5 ${
-              s.state === "now"
-                ? "bg-[#eef2ff] border border-[#c7d2fe]"
-                : s.state === "past"
-                  ? "opacity-60"
-                  : ""
-            }`}
-          >
-            <span
-              className={`shrink-0 grid place-items-center w-[20px] h-[20px] rounded-full font-mono text-[10px] ${
-                s.state === "now"
-                  ? "bg-indigo-600 text-white"
-                  : s.state === "past"
-                    ? "bg-slate-200 text-slate-500"
-                    : "bg-slate-100 text-slate-400"
-              }`}
-            >
-              {s.n}
-            </span>
-            <span className="text-[12.5px] text-slate-700 leading-snug">
-              {s.name}
-              {s.state === "now" && (
-                <b className="text-indigo-700"> &larr; this gate</b>
-              )}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-function Meta({ label, value, sub, mono }: { label: string; value: string; sub?: string; mono?: boolean }) {
-  return (
-    <div className="bg-white px-3 py-2.5">
-      <div className="text-[9.5px] font-semibold tracking-[0.1em] uppercase text-slate-400">{label}</div>
-      <div className={`text-[12px] text-slate-800 mt-0.5 break-words ${mono ? "font-mono text-[11px]" : ""}`}>
-        {value}
-      </div>
-      {sub && <div className="text-[10.5px] text-slate-400 mt-0.5">{sub}</div>}
-    </div>
-  );
-}
-
-function Banner({ tone, children }: { tone: "amber" | "blue" | "red" | "slate"; children: React.ReactNode }) {
-  const tones = {
-    amber: "border-[#e8c48a] bg-[#fdf1e6] text-[#7c4a10]",
-    blue: "border-[#b8d9ea] bg-[#eef6fb] text-[#0b4a66]",
-    red: "border-[#f0c2c2] bg-[#fdecec] text-[#a31d1d]",
-    slate: "border-[#e6eaf0] bg-[#f8fafc] text-slate-600",
-  } as const;
-  return (
-    <div className={`rounded-xl border px-4 py-3 mb-3 text-[12.5px] leading-relaxed ${tones[tone]}`}>{children}</div>
-  );
-}
-
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`h-11 px-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors ${
-        active ? "border-indigo-600 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-400 mb-1">{label}</div>
-      <div className="text-[12.5px] text-slate-700 leading-relaxed">{children}</div>
-    </div>
-  );
-}
-
-function History({ entries }: { entries: HistoryEntry[] }) {
-  if (entries.length === 0) {
-    return (
-      <p className="text-[12.5px] text-slate-500">
-        First time this learner has reached this gate — no prior decision.
-      </p>
-    );
-  }
-  return (
-    <div className="space-y-2">
-      {entries.map((e, i) => (
-        <div
-          key={i}
-          className={`rounded-xl border px-3.5 py-3 ${
-            e.withdrawn ? "border-[#e6eaf0] bg-slate-50/60 opacity-70" : "border-[#e6eaf0] bg-white"
-          }`}
-        >
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={`inline-flex items-center h-[18px] px-1.5 rounded text-[10px] font-semibold ${
-                e.outcome.startsWith("approve") ? "bg-[#e8f5ee] text-[#1e7a46]" : "bg-[#fdecec] text-[#a31d1d]"
-              }`}
-            >
-              {OUTCOME_LABEL[e.outcome]}
-            </span>
-            <span className="text-[11px] text-slate-400">
-              {e.mentorName} · {formatSubmitted(e.decidedAt)}
-            </span>
-            {e.withdrawn && (
-              <span className="inline-flex items-center h-[16px] px-1.5 rounded bg-slate-200 text-slate-600 text-[9.5px] font-semibold">
-                WITHDRAWN
-              </span>
-            )}
-          </div>
-          {e.reasons.length > 0 && (
-            <ul className="mt-2 space-y-1">
-              {e.reasons.map((r) => (
-                <li key={r} className="flex gap-2 text-[12px] text-slate-700 leading-snug">
-                  <span className="text-slate-300 mt-1.5 shrink-0">•</span>
-                  <span>{r}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {e.note && <p className="mt-2 text-[11.5px] text-slate-500 italic leading-relaxed">{e.note}</p>}
-        </div>
-      ))}
     </div>
   );
 }

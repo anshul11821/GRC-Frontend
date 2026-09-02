@@ -1,9 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./icon";
 
-/** A right-side slide-in drawer. Closes on overlay click or Esc. */
+/** No store to watch — the value only changes once, when hydration happens. */
+const NO_SUBSCRIBE = () => () => {};
+
+/**
+ * A right-side slide-in drawer. Closes on overlay click or Esc.
+ *
+ * Rendered into `document.body` rather than in place. `position: fixed` is only relative to the
+ * viewport while no ancestor establishes a containing block — and `filter`, `transform`,
+ * `backdrop-filter` and `will-change` all do. The mentor's decision sheet opens inside the working
+ * sheet, which carries a `drop-shadow` filter for its folded corner, so `fixed inset-0` was
+ * filling *that element* instead of the screen: the drawer opened above the fold of a long page
+ * and the reviewer had to scroll up to find it. A portal is the fix that holds wherever this is
+ * mounted, rather than one that depends on nothing upstream ever gaining a filter.
+ */
 export function Drawer({
   open,
   onClose,
@@ -36,7 +50,14 @@ export function Drawer({
     };
   }, [open, onClose]);
 
-  return (
+  // Portals need a DOM target, so nothing renders on the server pass or on the hydrating one —
+  // rendering the portal on the client's first pass and null on the server's is a mismatch.
+  // useSyncExternalStore rather than a mounted flag set in an effect: same result, and it is the
+  // hook that exists for "the server and the client disagree about this".
+  const hydrated = useSyncExternalStore(NO_SUBSCRIBE, () => true, () => false);
+  if (!hydrated) return null;
+
+  return createPortal(
     <div className={`fixed inset-0 z-[60] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
       {/* overlay */}
       <div
@@ -61,6 +82,7 @@ export function Drawer({
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

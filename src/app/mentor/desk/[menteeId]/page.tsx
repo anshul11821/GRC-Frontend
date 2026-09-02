@@ -49,8 +49,8 @@ export default function MenteeDeskOverview() {
         {learnings.programId?.toUpperCase().replace("GRC", "GRC ") ?? "GRC 101"}
       </h1>
       <p className="text-[12.5px] text-slate-500 mt-1">
-        Their engagement, exactly as they see it. Open any step to read the work; steps that carry a
-        gate can be decided.
+        The mentee&rsquo;s engagement, exactly as the mentee sees it. Open any step to read the
+        work; steps that carry a gate can be decided.
       </p>
 
       <div className="mt-5 rounded-[14px] border border-[#e6eaf0] bg-white px-5 py-4">

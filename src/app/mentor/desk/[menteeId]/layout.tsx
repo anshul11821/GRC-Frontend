@@ -62,7 +62,7 @@ function MenteeDesk({
   source: DeskSource;
   children: React.ReactNode;
 }) {
-  const { gates, loading } = useMenteeGates();
+  const { gates, loading, menteeName, menteeEmail } = useMenteeGates();
   const [treeOpen, setTreeOpen] = useState(false);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ function MenteeDesk({
           </div>
 
           <div className="flex-1 min-w-0 flex flex-col min-h-0">
-            <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 h-12 border-b border-[#e6eaf0] bg-white/60 backdrop-blur-xl">
+            <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 h-14 border-b border-[#e6eaf0] bg-white/60 backdrop-blur-xl">
               <button
                 onClick={() => setTreeOpen(true)}
                 aria-label="Open activities"
@@ -143,10 +143,35 @@ function MenteeDesk({
               </button>
               <Link
                 href="/mentor/desk"
-                className="inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 hover:text-slate-800 transition-colors no-underline"
+                className="inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 hover:text-slate-800 transition-colors no-underline shrink-0"
               >
                 <Icon name="arrowLeft" size={14} /> All mentees
               </Link>
+
+              {/* Whose desk this is, on every view of it. A reviewer several clicks into someone's
+                  engagement with no name on screen has nothing to catch the mistake of reading the
+                  wrong person's work — and the tree, the brief and the deliverable all look the
+                  same whoever they belong to. */}
+              {menteeName && (
+                <div className="flex items-center gap-2 min-w-0 ml-1 pl-3 border-l border-[#e6eaf0]">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-white text-[10px] font-semibold grid place-items-center">
+                    {menteeName
+                      .split(/\s+/)
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((p) => p[0]?.toUpperCase() ?? "")
+                      .join("") || "?"}
+                  </span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block text-[12.5px] font-semibold text-slate-900 truncate">
+                      {menteeName}
+                    </span>
+                    <span className="hidden sm:block text-[10.5px] text-slate-400 truncate">
+                      {menteeEmail}
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0 overflow-y-auto">{children}</div>
           </div>

@@ -77,6 +77,30 @@ export function MentorDecision({
             </p>
           )}
 
+          {/* Remarks on specific things you wrote. Each names what it is about, because feedback
+              you cannot locate in your own work is feedback you cannot act on. */}
+          {(review.comments ?? []).length > 0 && (
+            <div className="mt-3">
+              <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500 mb-1.5">
+                On specific entries
+              </div>
+              <ul className="space-y-1.5">
+                {review.comments.map((c) => (
+                  <li key={c.id} className="rounded-lg bg-white/70 ring-1 ring-slate-200/70 px-3 py-2">
+                    {c.anchorLabel && (
+                      <div className="text-[10.5px] font-medium text-slate-500 mb-0.5">
+                        {c.anchorLabel}
+                      </div>
+                    )}
+                    <p className="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {c.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {escalated && (
             <p className="mt-3 text-[12.5px] text-rose-800 leading-relaxed">
               This has been raised with the Programme Manager. It is not something to fix by

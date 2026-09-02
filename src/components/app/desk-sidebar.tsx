@@ -106,7 +106,12 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
                 ) : (
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotCls(ss)}`} />
                 )}
-                <span className="font-mono text-[9.5px] text-slate-400 shrink-0 w-6">{s.code}</span>
+                {/* The step number is the learner's way of finding their place in a run of ten.
+                    A mentor sees only the two they review, so "4" and "7" name positions in a
+                    sequence that is not on their screen. */}
+                {!stepFilter && (
+                  <span className="font-mono text-[9.5px] text-slate-400 shrink-0 w-6">{s.code}</span>
+                )}
                 <DVerb verbId={s.verb} />
                 <span className={`text-[11.5px] tracking-tight truncate flex-1 ${active ? "text-indigo-700 font-medium" : ss === "locked" ? "text-slate-400" : gate ? "text-violet-700" : "text-slate-600"}`}>{s.title}</span>
                 {gate && ss !== "locked" && <span className="inline-flex items-center h-[15px] px-1 rounded bg-violet-50 ring-1 ring-violet-200 text-violet-600 text-[8.5px] font-semibold tracking-[0.08em] shrink-0">{s.verb === "rua" ? "RUA" : "RESEARCH"}</span>}

@@ -25,6 +25,10 @@ export function StepBrief({
   objectiveRef,
   whatToDoRef,
   defaultOpen = true,
+  // Both panels are written in the second person for the learner who has to act on them. A
+  // reviewer is reading someone else's brief, so the headings say whose it is.
+  objectiveTitle = "Objective",
+  listTitle = "What to do",
 }: {
   objective?: string;
   whatToDo?: string[];
@@ -33,6 +37,8 @@ export function StepBrief({
   objectiveRef?: React.Ref<HTMLDivElement>;
   whatToDoRef?: React.Ref<HTMLDivElement>;
   defaultOpen?: boolean;
+  objectiveTitle?: string;
+  listTitle?: string;
 }) {
   const [shown, setShown] = useState(defaultOpen);
   if (!objective && !(whatToDo && whatToDo.length)) return null;
@@ -45,7 +51,9 @@ export function StepBrief({
       >
         <Icon name="target" size={14} className="text-indigo-600 shrink-0" />
         <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Brief</span>
-        <span className="text-[12px] text-slate-400 tracking-tight">— objective &amp; what to do</span>
+        <span className="text-[12px] text-slate-400 tracking-tight">
+          — {objectiveTitle.toLowerCase()} &amp; {listTitle.toLowerCase()}
+        </span>
         <span className="ml-auto inline-flex items-center gap-1 text-[11.5px] text-slate-400 group-hover:text-slate-600">
           {shown ? "Hide" : "Show"}
           <Icon name="chevronDown" size={14} className={`transition-transform ${shown ? "" : "-rotate-90"}`} />
@@ -65,7 +73,7 @@ export function StepBrief({
                 <div className="flex items-center gap-2 mb-2">
                   <Icon name="target" size={14} className="text-indigo-600" />
                   <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-indigo-700">
-                    Objective
+                    {objectiveTitle}
                   </h2>
                 </div>
                 <p
@@ -84,7 +92,7 @@ export function StepBrief({
                 <div className="flex items-center gap-2 mb-3">
                   <Icon name="list" size={14} className="text-emerald-700" />
                   <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-emerald-700">
-                    What to do
+                    {listTitle}
                   </h2>
                 </div>
                 <ol className="space-y-2.5">

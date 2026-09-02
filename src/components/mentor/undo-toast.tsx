@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { OUTCOME_LABEL, type Outcome } from "@/lib/mentor";
 
 /**
@@ -43,7 +44,11 @@ export function UndoToast({
 
   if (left <= 0) return null;
 
-  return (
+  // Portalled for the same reason the drawer is: a `filter` on an ancestor — the working sheet's
+  // folded corner uses one — makes `fixed` relative to that element, and the toast would sit in
+  // the middle of the deliverable instead of the bottom of the screen.
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-full bg-[#0f172a] pl-5 pr-2 py-2 shadow-[0_20px_50px_-18px_rgba(15,23,42,0.6)]">
       <span className="text-[12.5px] text-white">
         {OUTCOME_LABEL[outcome]} · <span className="font-mono text-[11.5px] text-white/70">{gateId}</span>
@@ -54,6 +59,7 @@ export function UndoToast({
       >
         Undo ({left}s)
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -299,10 +299,23 @@ export function StepScreen({
   readOnly = false,
   /** Replaces the submit bar. The mentor's Approve / Return goes here. */
   footer,
+  /**
+   * Replaces the live workspace when reviewing. Supplied by the mentor, who has the *reviewed*
+   * submission in hand — this screen otherwise seeds from `bestSubmission(history)`, which is the
+   * learner's rule ("show me my best attempt") and the wrong one for a reviewer, who must see the
+   * attempt the gate actually points at.
+   *
+   * It also carries the drift fallback. Payloads outlive workspaces: an `apply` submitted before
+   * the rewrite holds `rows`/`summary`/`findings` where today's holds `outcomes`/`notes`/`results`,
+   * and replaying it in the current workspace paints a pristine empty form — which tells the
+   * reviewer the mentee submitted nothing. That is the one wrong answer this screen can give.
+   */
+  submittedWork,
 }: {
   source?: StepScreenSource;
   readOnly?: boolean;
   footer?: React.ReactNode;
+  submittedWork?: React.ReactNode;
 } = {}) {
   const { activityId } = useParams<{ activityId: string }>();
   const { learnings, refresh: refreshTree, scheduleByActivity } = useDeskLearnings();
@@ -711,7 +724,10 @@ export function StepScreen({
           </button>}
 
           {/* submission-feedback trigger — only after a graded submission */}
-          {hasFeedback && (
+          {/* The learner's own grade and revision history. A reviewer is forming the decision that
+              goes into that history, not reading it back — and the AI's score sitting at the top of
+              the screen invites anchoring on it before they have read the work. */}
+          {hasFeedback && !readOnly && (
             <button
               onClick={() => setFeedbackOpen(true)}
               className={`inline-flex items-center gap-2 h-9 px-3 rounded-lg ring-1 transition-colors ${passed ? "bg-emerald-50 ring-emerald-200/70 hover:bg-emerald-100/70 text-emerald-700" : "bg-amber-50 ring-amber-200/70 hover:bg-amber-100/70 text-amber-700"}`}
@@ -749,7 +765,13 @@ export function StepScreen({
       {hasBrief && (
         <StepBrief
           objective={content?.objective}
-          whatToDo={content?.whatToDo}
+          // A reviewer is not doing the step, they are checking it — so the second panel carries
+          // the acceptance criteria the mentee's work was written to satisfy, which is the same
+          // list the learner sees in their own checklist, rather than the instructions for doing
+          // the work. Their own "what to do" is on their screen and useless on this one.
+          whatToDo={readOnly ? (verb?.layer1 ?? []) : content?.whatToDo}
+          objectiveTitle={readOnly ? "Mentee's objective" : "Objective"}
+          listTitle={readOnly ? "What to check" : "What to do"}
           objectiveRef={objectiveRef}
           whatToDoRef={whatToDoRef}
           defaultOpen={briefShown}
@@ -770,12 +792,21 @@ export function StepScreen({
           A clip-path plus drop-shadow rather than a ring, because a ring cannot be notched. */}
       <WorkingSheet
         sheetRef={deliverableRef}
-        title="Your deliverable"
+        title={readOnly ? "Mentee's deliverable" : "Your deliverable"}
         subtitle={
           verb ? (
             <>
-              <span className="font-medium">{verb.label}</span> — <Gloss>{verb.when}</Gloss>
+              <span className="font-medium">{verb.label}</span> —{" "}
+              {/* `verb.when` is written to the mentee ("You apply a defined scheme…"), which is
+                  the wrong voice on a reviewer's screen. They get the verb and what it is for. */}
+              {readOnly ? (
+                <>what this step asked of the mentee</>
+              ) : (
+                <Gloss>{verb.when}</Gloss>
+              )}
             </>
+          ) : readOnly ? (
+            "What the mentee submitted for this step."
           ) : (
             "Capture your work for this step."
           )
@@ -811,12 +842,20 @@ export function StepScreen({
             the fields they could type into tinted. A disabled fieldset is greyed by the browser,
             which would make the one thing a mentor is here to read the faintest text on the page.
             The learner keeps the plain read-back — it is their own work and they just wrote it. */}
-        <fieldset
-          disabled={locked}
-          className={`min-w-0 border-0 p-0 m-0 ${readOnly ? "mentee-entry" : locked ? "opacity-75" : ""}`}
-        >
-          <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
-        </fieldset>
+        {/* A reviewer never falls through to the live workspace. It used to render while the
+            review card was still loading — two sequential fetches — and for a payload the current
+            workspace cannot seed from, that is a blank form on screen for a second or two saying
+            the mentee submitted nothing. The caller owns what shows while it loads. */}
+        {readOnly ? (
+          submittedWork
+        ) : (
+          <fieldset
+            disabled={locked}
+            className={`min-w-0 border-0 p-0 m-0 ${readOnly ? "mentee-entry" : locked ? "opacity-75" : ""}`}
+          >
+            <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+          </fieldset>
+        )}
 
         {/* The judgment call sits AFTER the deliverable, not before it: the dilemmas are written
             for someone who has already done the work ("you have drafted the test plan…"), and
@@ -916,8 +955,10 @@ export function StepScreen({
         </div>
       </WorkingSheet>
 
-      {/* Acceptance criteria. Small screens: inline card under the deliverable. */}
-      {hasChecklist && (
+      {/* Acceptance criteria. Small screens: inline card under the deliverable. A reviewer reads
+          them in "What to check" above instead — on their screen these would be the same list a
+          second and third time, one of them floating over the work. */}
+      {hasChecklist && !readOnly && (
         <div ref={checklistInlineRef} className="md:hidden mt-5">
           <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} />
         </div>
@@ -927,7 +968,7 @@ export function StepScreen({
           scrolls into view — before that both the HUD and the chip are gone, so neither covers the
           brief. Inside the deliverable the HUD opens itself; dismissing it leaves the chip to
           bring it back. Both stay mounted so the swaps fade rather than pop. */}
-      {hasChecklist && (
+      {hasChecklist && !readOnly && (
         <>
           <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
             <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
