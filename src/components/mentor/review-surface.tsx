@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
-import { StepBrief, WhatToCheck } from "@/components/app/deliverable";
+import { StepBrief } from "@/components/app/deliverable";
+import { Gloss } from "@/components/app/glossary";
 import { RefBody } from "@/components/app/reference-material";
 import { FloatWindow } from "@/components/mentor/float-window";
 import { useMenteeGates } from "@/components/mentor/mentee-gates";
@@ -746,7 +747,7 @@ function Delivery({
   const checks = card.brief?.whatToDo ?? [];
 
   return (
-    <div className="@container">
+    <div>
       {card.brief && (
         <StepBrief
           objective={card.brief.objective}
@@ -773,31 +774,61 @@ function Delivery({
         </button>
       )}
 
-      {/* The delivery and the checks it is measured against, side by side.
-          Placement is explicit rather than by source order: the checklist comes FIRST in the DOM,
-          so on a narrow console it stacks above the work — a reviewer should meet the checks
-          before the thing being checked, and that is also the order a screen reader takes. Given
-          room, it is placed into column two of the same row instead. */}
-      <div className="grid gap-5 @4xl:grid-cols-[minmax(0,1fr)_17rem]">
-        {checks.length > 0 && (
-          <aside
-            // self-start matters: a stretched grid item is as tall as its row, and a sticky box
-            // with no slack inside its container never moves.
-            // top-[53px] clears the 45px toolbar it would otherwise slide under.
-            // The max-height is what keeps a long list honest — without it a checklist taller than
-            // the viewport pins its own tail off-screen with no way to reach it.
-            className="@4xl:sticky @4xl:top-[53px] @4xl:col-start-2 @4xl:row-start-1 @4xl:self-start @4xl:max-h-[calc(100dvh-8.5rem)] @4xl:overflow-y-auto @4xl:overscroll-contain"
-          >
-            <WhatToCheck items={checks} title="What to check" />
-          </aside>
-        )}
+      {checks.length > 0 && <CheckStrip items={checks} />}
 
-        <div className="min-w-0 @4xl:col-start-1 @4xl:row-start-1">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-            {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
-          </div>
-          <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
-        </div>
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+        {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
+      </div>
+      <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
+    </div>
+  );
+}
+
+/**
+ * What the work is measured against, pinned under the toolbar.
+ *
+ * This began as a rail down the right-hand side, which was the wrong axis to spend. A rail costs
+ * 272px of WIDTH for the whole length of the page, and width is what the thing being reviewed
+ * actually needs — a fourteen-column register, prose, a table of rationales. It cost that even
+ * though the box itself was 200px tall and the column beneath it empty.
+ *
+ * Measured across this programme's gates, a checklist is 2–5 items and 161–185 characters. Laid
+ * out along a 1162px page that is one line, two at the worst, so as a strip it costs ~44px of
+ * HEIGHT once — and nothing at all from the delivery's width.
+ *
+ * There is no collapse control. One was built and then measured: with a checklist this size the
+ * collapsed strip is the same 36px as the open one, because the label and the toggle set the
+ * height on their own. A control that visibly does nothing is worse than no control.
+ */
+function CheckStrip({ items }: { items: string[] }) {
+  return (
+    // -mx-6 px-6 so the strip spans the card rather than sitting inside its padding: a pinned bar
+    // that stops short of the edges reads as content, not as chrome.
+    // top-[45px] is the toolbar's height — it parks directly beneath it.
+    // It only pins from lg up. The same three checks are one line at 1280 and five at 390, where
+    // pinning would hold 17% of a small viewport for a list the reviewer has already read.
+    // The cap is for a brief longer than any we have; without it a tall strip would cover the work
+    // it is meant to be checked against.
+    <div className="lg:sticky lg:top-[45px] lg:z-10 -mx-6 mb-3.5 max-h-[28vh] overflow-y-auto border-y border-emerald-100 bg-[#f4faf6] px-6 py-2">
+      <div className="flex items-start gap-3">
+        <span className="mt-[3px] shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-700">
+          What to check
+        </span>
+        <ol className="flex min-w-0 flex-1 flex-wrap gap-x-5 gap-y-1.5">
+          {items.map((c, i) => (
+            <li key={i} className="flex max-w-full items-start gap-1.5">
+              <span className="mt-[1px] grid h-4 w-4 shrink-0 place-items-center rounded-full bg-emerald-600 text-[9.5px] font-semibold tabular-nums text-white">
+                {i + 1}
+              </span>
+              <span
+                className="text-[12px] leading-snug tracking-tight text-slate-700"
+                style={{ textWrap: "pretty" }}
+              >
+                <Gloss>{c}</Gloss>
+              </span>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );
