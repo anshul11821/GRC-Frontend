@@ -1,9 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { Icon } from "@/components/ui/icon";
-import { isAuthError, mentorApi, OUTCOME_LABEL, type MenteeGate } from "@/lib/mentor";
+import {
+  forgetAnalytics,
+  forgetMentee,
+  loadGates,
+  noteGateStarted,
+  peekGates,
+} from "@/components/mentor/desk-context";
+import { isAuthError, type MenteeGate } from "@/lib/mentor";
 
 /**
  * The learner's review gates, fetched once per desk and shared by every view inside it.
@@ -24,6 +29,8 @@ interface GatesValue {
   menteeEmail: string;
   loading: boolean;
   refresh: () => void;
+  /** Record locally that this mentor has begun marking a submission up. */
+  noteStarted: (submissionId: number) => void;
 }
 
 const MenteeGatesContext = createContext<GatesValue>({
@@ -33,6 +40,7 @@ const MenteeGatesContext = createContext<GatesValue>({
   menteeEmail: "",
   loading: true,
   refresh: () => {},
+  noteStarted: () => {},
 });
 
 export function MenteeGatesProvider({
@@ -42,9 +50,13 @@ export function MenteeGatesProvider({
   menteeId: string;
   children: React.ReactNode;
 }) {
-  const [gates, setGates] = useState<MenteeGate[]>([]);
-  const [who, setWho] = useState({ name: "", email: "" });
-  const [loading, setLoading] = useState(true);
+  // Seeded from the cache — a learner already opened this session paints with no loading state.
+  const [gates, setGates] = useState<MenteeGate[]>(() => peekGates(menteeId)?.gates ?? []);
+  const [who, setWho] = useState(() => {
+    const hit = peekGates(menteeId);
+    return { name: hit?.menteeName ?? "", email: hit?.menteeEmail ?? "" };
+  });
+  const [loading, setLoading] = useState(() => peekGates(menteeId) === undefined);
   const [nonce, setNonce] = useState(0);
 
   // Reset during render when the desk switches learner, not inside the effect: an effect-time
@@ -53,15 +65,15 @@ export function MenteeGatesProvider({
   const [prevKey, setPrevKey] = useState(menteeId);
   if (menteeId !== prevKey) {
     setPrevKey(menteeId);
-    setGates([]);
-    setWho({ name: "", email: "" });
-    setLoading(true);
+    const known = peekGates(menteeId);
+    setGates(known?.gates ?? []);
+    setWho({ name: known?.menteeName ?? "", email: known?.menteeEmail ?? "" });
+    setLoading(known === undefined);
   }
 
   useEffect(() => {
     let live = true;
-    mentorApi
-      .menteeGates(menteeId)
+    loadGates(menteeId)
       .then((d) => {
         if (!live) return;
         setGates(d.gates);
@@ -79,7 +91,25 @@ export function MenteeGatesProvider({
     };
   }, [menteeId, nonce]);
 
-  const refresh = useCallback(() => setNonce((n) => n + 1), []);
+  // A decision changes this learner's gate map, so the cached copy has to go with it — otherwise
+  // the reviewer approves a step and it still reads "awaiting".
+  const noteStarted = useCallback(
+    (submissionId: number) => {
+      setGates((prev) =>
+        prev.map((g) => (g.submissionId === submissionId ? { ...g, started: true } : g)),
+      );
+      noteGateStarted(menteeId, submissionId);
+    },
+    [menteeId],
+  );
+
+  const refresh = useCallback(() => {
+    forgetMentee(menteeId);
+    // The dashboard counts what is awaiting, in rework and decided this week. Every one of those
+    // moves when a gate is decided, so a stale copy would tell the reviewer nothing happened.
+    forgetAnalytics();
+    setNonce((n) => n + 1);
+  }, [menteeId]);
   const value = useMemo<GatesValue>(
     () => ({
       byActivity: new Map(gates.map((g) => [g.activityId, g])),
@@ -88,76 +118,12 @@ export function MenteeGatesProvider({
       menteeEmail: who.email,
       loading,
       refresh,
+      noteStarted,
     }),
-    [gates, who, loading, refresh],
+    [gates, who, loading, refresh, noteStarted],
   );
 
   return <MenteeGatesContext.Provider value={value}>{children}</MenteeGatesContext.Provider>;
 }
 
 export const useMenteeGates = () => useContext(MenteeGatesContext);
-
-/** Awaiting > decided > not submitted — the order a reviewer cares about. */
-export function gateTone(g: MenteeGate): { label: string; cls: string } {
-  if (g.state === "awaiting") {
-    return { label: "Needs your decision", cls: "bg-[#fdecec] text-[#a31d1d]" };
-  }
-  if (g.state === "decided") {
-    const approved = g.outcome?.startsWith("approve");
-    return {
-      label: g.outcome ? OUTCOME_LABEL[g.outcome] : "Decided",
-      cls: approved ? "bg-[#e8f5ee] text-[#1e7a46]" : "bg-[#fdecec] text-[#a31d1d]",
-    };
-  }
-  return { label: "Not submitted", cls: "bg-slate-100 text-slate-500" };
-}
-
-/** The chip a gate step wears wherever it appears on the desk. */
-export function GateChip({ gate }: { gate: MenteeGate }) {
-  const tone = gateTone(gate);
-  return (
-    <span
-      className={`shrink-0 inline-flex items-center h-[19px] px-2 rounded text-[10px] font-semibold ${tone.cls}`}
-    >
-      {tone.label}
-    </span>
-  );
-}
-
-/**
- * The link that opens this gate for review. Rendered as plain text when there is nothing to open —
- * a learner who has not submitted has no submission, and therefore nothing to review. Showing a
- * dead "Review" button there would be the same dead end in a different coat.
- *
- * The caller supplies the destination because a gate is reachable from more than one place on the
- * desk — the overview panel and the task step list — and both land on the same step screen.
- */
-export function OpenCardLink({
-  gate,
-  href,
-  className = "",
-}: {
-  gate: MenteeGate;
-  /** Where reviewing happens for this gate — the mentee's own step on the desk. */
-  href: string;
-  className?: string;
-}) {
-  if (gate.submissionId === null) {
-    return (
-      <span className={`shrink-0 text-[11.5px] text-slate-300 ${className}`}>Nothing to review</span>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      className={`shrink-0 inline-flex items-center gap-1 text-[12px] font-medium no-underline transition-colors ${
-        gate.state === "awaiting"
-          ? "text-indigo-600 hover:text-indigo-800"
-          : "text-slate-500 hover:text-slate-800"
-      } ${className}`}
-    >
-      {gate.state === "awaiting" ? "Review" : "Open"}
-      <Icon name="arrowRight" size={13} />
-    </Link>
-  );
-}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MentorShell } from "@/components/mentor/shell";
 import { isAuthError, mentorApi, type Earnings } from "@/lib/mentor";
 
 /**
@@ -17,9 +16,7 @@ import { isAuthError, mentorApi, type Earnings } from "@/lib/mentor";
  */
 export default function MentorEarningsPage() {
   return (
-    <MentorShell>
-      <EarningsBody />
-    </MentorShell>
+    <EarningsBody />
   );
 }
 

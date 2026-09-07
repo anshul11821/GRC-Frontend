@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
-import { MentorShell } from "@/components/mentor/shell";
 import { isAuthError, mentorApi, type MentorStats } from "@/lib/mentor";
 import { mentorBadges, bandForThreshold, UNIT_LABEL, type MentorBadge } from "@/lib/mentor-badges";
 
@@ -16,9 +15,7 @@ import { mentorBadges, bandForThreshold, UNIT_LABEL, type MentorBadge } from "@/
  */
 export default function MentorBadgesPage() {
   return (
-    <MentorShell>
-      <BadgesBody />
-    </MentorShell>
+    <BadgesBody />
   );
 }
 

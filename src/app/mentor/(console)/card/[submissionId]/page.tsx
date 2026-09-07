@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MentorShell } from "@/components/mentor/shell";
 import { useReviewCard } from "@/components/mentor/review-card";
 
 /**
@@ -29,16 +28,14 @@ export default function MentorCardPage() {
   }, [card, router]);
 
   return (
-    <MentorShell>
-      <div className="mx-auto max-w-[900px] px-6 pt-10">
-        {loadError ? (
-          <div className="rounded-xl border border-[#f0c2c2] bg-[#fdecec] px-4 py-3 text-[12.5px] text-[#a31d1d]">
-            {loadError}
-          </div>
-        ) : (
-          <p className="text-[12.5px] text-slate-500">Opening this step on the Review Desk…</p>
-        )}
-      </div>
-    </MentorShell>
+    <div className="mx-auto max-w-[900px] px-6 pt-10">
+      {loadError ? (
+        <div className="rounded-xl border border-[#f0c2c2] bg-[#fdecec] px-4 py-3 text-[12.5px] text-[#a31d1d]">
+          {loadError}
+        </div>
+      ) : (
+        <p className="text-[12.5px] text-slate-500">Opening this step on the Review Desk…</p>
+      )}
+    </div>
   );
 }

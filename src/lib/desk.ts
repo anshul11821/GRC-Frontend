@@ -3,6 +3,7 @@
  * GET /me/activities/{id}, PUT …/draft, POST …/submit, GET /me/submissions/{id}.
  */
 import { api } from "./api";
+import type { Verdict } from "./verdicts";
 
 export interface ActivityPayload {
   fields: Record<string, unknown>;
@@ -53,7 +54,15 @@ export interface MentorReview {
   /** approve_note only: the step stays incomplete, and the next one locked, until acknowledged. */
   needsAcknowledgement: boolean;
   /** Remarks on specific things you entered — anchored to a field, or to one row of a table. */
-  comments: { id: number; anchor: string; anchorLabel: string; body: string; sentAt: string | null }[];
+  /** One per part of the delivery the mentor said something about, each carrying its verdict. */
+  comments: {
+    id: number;
+    kind: Verdict;
+    anchor: string;
+    anchorLabel: string;
+    body: string;
+    sentAt: string | null;
+  }[];
 }
 
 /** A mentor decision as it appears in the Up-next bell. Full detail lives on the step itself. */

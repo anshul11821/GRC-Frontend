@@ -10,6 +10,7 @@
  * in one browser without either one shadowing the other.
  */
 import { api, ApiError, type RequestOptions } from "./api";
+import type { Verdict } from "./verdicts";
 import type { TaskReference } from "./taskmeta";
 import type { Learnings } from "./learnings";
 import type { ActivityDetail, SubmissionDetail } from "./desk";
@@ -121,6 +122,11 @@ export interface MenteeGate {
   submittedAt: string | null;
   revision: number;
   state: "not_submitted" | "awaiting" | "decided";
+  /**
+   * Whether THIS mentor has begun marking the delivery up — what separates "Submitted" from
+   * "In progress". Set by the first verdict they give to any part, not by opening the card.
+   */
+  started: boolean;
   outcome: Outcome | null;
   decidedAt: string | null;
   decidedBy: string | null;
@@ -277,9 +283,10 @@ export interface SubmissionEntry {
   rowLabels: string[];
 }
 
-/** One thing the reviewer did to one entry, sent with the decision. */
+/** One thing the reviewer said about one entry, sent with the decision. */
 export interface ReviewMark {
-  kind: "comment" | "approve";
+  /** The reviewer's judgement on this part. `observe` and `changes` carry a body. */
+  kind: Verdict;
   anchor: string;
   anchorLabel: string;
   body: string;
@@ -287,8 +294,7 @@ export interface ReviewMark {
 
 export interface ReviewComment {
   id: number;
-  /** "comment" is a remark; "approve" is a bare tick that the entry was read and is fine. */
-  kind: "comment" | "approve";
+  kind: Verdict;
   anchor: string;
   anchorLabel: string;
   body: string;
@@ -373,6 +379,96 @@ export interface Card {
   decidedBy: string | null;
 }
 
+/** One delivery that has waited longest — the dashboard's "do this first". */
+export interface Oldest {
+  userId: string;
+  name: string;
+  orgName: string;
+  activityId: string;
+  gateName: string;
+  taskCode: string;
+  waitedDays: number;
+}
+
+export interface BusiestOrg {
+  id: string;
+  name: string;
+  pending: number;
+  overdue: number;
+}
+
+/** The dashboard's figures, all scoped to this mentor's own caseload. */
+export interface MentorAnalytics {
+  mentees: number;
+  orgs: number;
+  pending: number;
+  overdue: number;
+  dueToday: number;
+  /**
+   * The queue by whose court the ball is in. The first two are the mentor's to move, the last two
+   * the learner's; `overdue` cuts across the first two rather than being a fifth pile.
+   */
+  awaitingFirst: number;
+  inProgress: number;
+  inRework: number;
+  awaitingResponse: number;
+  approved: number;
+  gatesDelivered: number;
+  /** Ten weeks of decisions, oldest first. */
+  weeks: number[];
+  oldest: Oldest[];
+  busiest: BusiestOrg[];
+  learnersWithWork: number;
+  /** The organisations themselves, so the tab that shows them costs no request of its own. */
+  orgList: OrgSummary[];
+}
+
+export interface OrgSummary {
+  id: string;
+  name: string;
+  short: string;
+  industry: string;
+  subIndustry: string;
+  headOffice: string;
+  mentees: number;
+  gates: number;
+  approved: number;
+  pending: number;
+  overdue: number;
+}
+
+export interface OrgMentee {
+  userId: string;
+  name: string;
+  email: string;
+  gates: number;
+  approved: number;
+  pending: number;
+  waitedDays: number;
+}
+
+/** One organisation as the learner was briefed on it, plus who is working it. */
+export interface OrgDetail {
+  id: string;
+  name: string;
+  industry: string;
+  subIndustry: string;
+  headOffice: string;
+  regulator: string;
+  regulatorRationale: string;
+  context: string;
+  officeLocations: { headOffice?: string; regionalOffices?: string[] };
+  services: string[];
+  interestedParties: { internal?: string[]; external?: string[] };
+  processes: string[];
+  clientData: string[];
+  informationAssets: { onPremises?: string[]; cloud?: string[] };
+  mandatoryStandards: string[];
+  optionalStandards: string[];
+  regulatoryRequirements: string[];
+  mentees: OrgMentee[];
+}
+
 export interface DecisionResult {
   decisionId: number;
   outcome: Outcome;
@@ -442,8 +538,14 @@ export const mentorApi = {
       opts(),
     ),
   earnings: () => api.get<Earnings>("/mentor/earnings", opts()),
+  analytics: () => api.get<MentorAnalytics>("/mentor/analytics", opts()),
+  orgs: () => api.get<OrgSummary[]>("/mentor/orgs", opts()),
+  org: (orgId: string) => api.get<OrgDetail>(`/mentor/orgs/${orgId}`, opts()),
   stats: () => api.get<MentorStats>("/mentor/stats", opts()),
   card: (submissionId: number) => api.get<Card>(`/mentor/cards/${submissionId}`, opts()),
+  /** Mark a submission as being worked on by this mentor. Idempotent; moves it to "In progress". */
+  markStarted: (submissionId: number) =>
+    api.post<{ ok: boolean }>(`/mentor/cards/${submissionId}/start`, undefined, opts()),
   /** The mentee's rendered task bundle, for replaying the two gate workspaces on the card. */
   cardTaskContent: (submissionId: number) =>
     api.get<unknown>(`/mentor/cards/${submissionId}/task-content`, opts()),
@@ -455,7 +557,7 @@ export const mentorApi = {
    */
   decide: (
     submissionId: number,
-    outcome: "approve" | "disapprove",
+    outcome: Verdict,
     note: string,
     requireAck: boolean,
     marks: ReviewMark[],

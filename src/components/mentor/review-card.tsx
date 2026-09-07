@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { UndoToast } from "@/components/mentor/undo-toast";
+import { Icon } from "@/components/ui/icon";
 import { ApiError } from "@/lib/api";
+import { loadCard, peekCard } from "@/components/mentor/desk-context";
+import { VERDICTS, VERDICT, rollUp, type Verdict } from "@/lib/verdicts";
 import {
   isAuthError,
   mentorApi,
@@ -20,7 +23,9 @@ import {
  * inheriting a second header with it.
  */
 export function useReviewCard(submissionId: number | null) {
-  const [card, setCard] = useState<Card | null>(null);
+  const seed = (id: number | null) => (id === null ? null : (peekCard(id) ?? null));
+  // Seeded from the cache, so a step already read this session paints with no skeleton at all.
+  const [card, setCard] = useState<Card | null>(() => seed(submissionId));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
 
@@ -29,7 +34,7 @@ export function useReviewCard(submissionId: number | null) {
   const [prevId, setPrevId] = useState(submissionId);
   if (submissionId !== prevId) {
     setPrevId(submissionId);
-    setCard(null);
+    setCard(seed(submissionId));
     setLoadError(null);
   }
 
@@ -38,8 +43,7 @@ export function useReviewCard(submissionId: number | null) {
     // a 404 for every unsubmitted step a reviewer walks past.
     if (submissionId === null) return;
     let live = true;
-    mentorApi
-      .card(submissionId)
+    loadCard(submissionId)
       .then((c) => {
         if (live) setCard(c);
       })
@@ -56,72 +60,66 @@ export function useReviewCard(submissionId: number | null) {
 }
 
 /**
- * The decision: the gate's six questions, Approve / Return, and everything that hangs off them —
- * the reason sheet, the undo window, and the race when somebody else closes the card first.
+ * The verdict on the whole delivery — the same four the reviewer gave each part, one scope up.
  *
- * Owns its own state so any layout can drop it in. The learner-shaped step page on the Review Desk
- * puts it under the deliverable, where a mentee's Submit button sits; the standalone card puts it
- * in the right-hand rail. Same component, so the two can never become two different reviews.
+ * They map onto the four outcomes the programme already had (`VERDICT_OUTCOME` on the server), so
+ * nothing about progression changes: approve releases the step, observe releases it but the mentee
+ * must read the note first, changes returns it with an extra attempt, reject escalates and does
+ * not reopen. What changes is that the reviewer names the judgement instead of choosing between
+ * "Approve" and "Return with reasons" and hoping the note carries the difference.
+ *
+ * It lives in the pipeline bar, beside the stage the delivery has reached, so the decision is one
+ * click away from wherever the reviewer has scrolled to in a thirty-row register. Committing opens
+ * a centred prompt rather than expanding the bar: what it says depends on the verdict, and a bar
+ * that changes height under the cursor moves the work being decided.
  */
 export function ReviewDecision({
   card,
   onDecided,
-  className = "",
   /**
-   * Anchors still to be marked reviewed or commented on. While any remain the decision is not
-   * available: a mentor who has read three rows of a thirty-row register has not reviewed it, and
-   * the count is the only thing that can tell them apart.
+   * Parts with no verdict yet. While any remain the delivery cannot be decided: a mentor who has
+   * read three rows of a thirty-row register has not reviewed it, and the count is the only thing
+   * that can tell them apart.
    */
   outstanding = 0,
-  /** True when the reviewer has written at least one comment on the work. */
-  hasComments = false,
   /** The whole review, held in the browser until this moment. */
   marks = [],
 }: {
   card: Card;
   onDecided?: () => void;
-  className?: string;
   outstanding?: number;
-  hasComments?: boolean;
   marks?: ReviewMark[];
 }) {
   const router = useRouter();
-  // Confirming happens in place. It was a right-hand drawer, which is a lot of machinery for
-  // "are you sure" — it covered the work being decided on, and the reviewer had just read the
-  // whole review in the panel below the buttons anyway.
-  const [confirming, setConfirming] = useState<"approve" | "disapprove" | null>(null);
+  const [pending, setPending] = useState<Verdict | null>(null);
   const [note, setNote] = useState("");
-  const [requireAck, setRequireAck] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<DecisionResult | null>(null);
   const [raced, setRaced] = useState(false);
 
-  const open = useCallback((mode: "approve" | "disapprove") => {
-    setError(null);
-    setConfirming(mode);
-  }, []);
+  const blocked = card.decidedBy !== null || raced;
+  const incomplete = outstanding > 0;
+  // What the parts add up to. Offered, never imposed — a reviewer may want changes on one row of a
+  // thirty-row register and still release the step, and only they can say.
+  const suggested = rollUp(marks.map((m) => m.kind));
 
   async function confirm() {
-    if (!confirming) return;
+    if (!pending) return;
+    const d = VERDICT[pending];
+    if (d.needsNote && !note.trim()) return;
     setBusy(true);
     setError(null);
     try {
-      // No reason codes: the checklist that produced them is gone, and the comments on the work
-      // are the reasons now.
-      const res = await mentorApi.decide(
-        card.submissionId,
-        confirming,
-        note,
-        requireAck && !!note.trim(),
-        marks,
-      );
-      setConfirming(null);
+      // No reason codes: the checklist that produced them is gone, and the verdicts on the parts
+      // are the reasons now. `requireAck` is implied by `observe` on the server.
+      const res = await mentorApi.decide(card.submissionId, pending, note, false, marks);
+      setPending(null);
       setToast(res);
     } catch (e) {
       // 409 means someone else closed this card while it was open — the design's race case.
       if (e instanceof ApiError && e.status === 409) {
-        setConfirming(null);
+        setPending(null);
         setRaced(true);
       } else {
         setError(e instanceof ApiError ? e.message : "Could not record the decision.");
@@ -140,139 +138,140 @@ export function ReviewDecision({
     }
   }
 
-  const decisionBlocked = card.decidedBy !== null || raced;
-  const incomplete = outstanding > 0;
+  const d = pending ? VERDICT[pending] : null;
+  const why = blocked
+    ? raced
+      ? "Decided elsewhere while you had it open."
+      : `Already decided by ${card.decidedBy}.`
+    : incomplete
+      ? `${outstanding} part${outstanding === 1 ? "" : "s"} still to decide`
+      : null;
 
+  // No label of its own. "6 parts still to decide" sat beside a pill already reading 0/6 — the
+  // same fact twice, taking the width that made the bar wrap onto a second line. The pill says
+  // how far along the review is; these buttons only have to say what they do.
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* The six-question checklist is gone. It was inherited from the gate register's generic
-          library — "is the population complete", "is the owner a role" — and asked the same six
-          things of a stakeholder map and a risk calculation alike, so on most steps it did not
-          describe the work in front of the reviewer. The comments on the entries are the reasons
-          now, and the note is optional alongside them. */}
-      <div className="rounded-[14px] border border-[#e6eaf0] bg-white px-4 py-4">
-        {confirming === null ? (
-          <>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={() => open("approve")}
-                disabled={decisionBlocked || incomplete}
-                className="flex-1 h-10 rounded-lg bg-[#1e7a46] text-white text-[13px] font-semibold hover:bg-[#1a6b3d] disabled:bg-slate-100 disabled:text-slate-400 transition-colors"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => open("disapprove")}
-                disabled={decisionBlocked || incomplete || !hasComments}
-                title={
-                  !hasComments
-                    ? "Comment on what needs changing before returning the step"
-                    : undefined
-                }
-                className="flex-1 h-10 rounded-lg border border-[#f0c2c2] text-[#a31d1d] text-[13px] font-semibold hover:bg-[#fdecec] disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent transition-colors"
-              >
-                Return with reasons
-              </button>
-            </div>
-            {decisionBlocked ? (
-              <p className="text-[11px] text-slate-500 mt-2.5">
-                {raced
-                  ? "Decided elsewhere while you had it open. Nothing you selected was submitted."
-                  : `Already decided by ${card.decidedBy}.`}
-              </p>
-            ) : incomplete ? (
-              <p className="text-[11px] text-slate-500 mt-2.5">
-                {outstanding} {outstanding === 1 ? "entry has" : "entries have"} not been marked
-                reviewed or commented on yet.
-              </p>
-            ) : (
-              !hasComments && (
-                <p className="text-[11px] text-slate-500 mt-2.5">
-                  Returning a step needs at least one comment — the mentee has to be told what to
-                  change.
-                </p>
-              )
-            )}
-          </>
-        ) : (
-          <div>
-            <div className="text-[13px] font-semibold text-slate-900">
-              {confirming === "approve"
-                ? "Approve this step?"
-                : willEscalate(card.priorReturns, card.maxReturns)
-                  ? "Escalate this step?"
-                  : "Return this step?"}
-            </div>
-            <p className="text-[12px] text-slate-600 leading-relaxed mt-1">
-              {confirming === "approve"
-                ? "The step is released and your review is sent to the mentee. It cannot be edited afterwards."
-                : willEscalate(card.priorReturns, card.maxReturns)
-                  ? `This gate has already been returned ${card.priorReturns} times — the limit is ${card.maxReturns}. Confirming raises it to the Programme Manager and the gate does not reopen.`
-                  : "The step reopens for the mentee with an extra attempt, and your review is sent."}
-            </p>
+    <>
+      {blocked && (
+        <span className="text-[11px] text-slate-500">
+          {raced ? "Decided elsewhere" : `Decided by ${card.decidedBy}`}
+        </span>
+      )}
+      {VERDICTS.map((v) => (
+        <button
+          key={v.id}
+          onClick={() => {
+            setError(null);
+            setNote("");
+            setPending(v.id);
+          }}
+          disabled={blocked || incomplete}
+          title={why ?? v.label}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-[12.5px] font-semibold ring-1 transition-colors disabled:bg-slate-50 disabled:text-slate-300 disabled:ring-slate-200 ${v.idle}`}
+        >
+          <Icon name={v.icon} size={13} strokeWidth={2.1} />
+          {/* "Approve with observation" is the one that costs the bar a second row. */}
+          <span className="hidden 2xl:inline">{v.label}</span>
+          <span className="2xl:hidden">{v.terse}</span>
+          {/* A dot, not the word "suggested": four labelled buttons plus a pipeline is already the
+              whole width of the bar. */}
+          {suggested === v.id && !blocked && !incomplete && (
+            <span className={`h-1.5 w-1.5 rounded-full ${v.dot}`} title="What your verdicts on the parts add up to" />
+          )}
+        </button>
+      ))}
 
-            <label className="block mt-3">
-              <span className="block text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-400 mb-1.5">
-                Note to the mentee <span className="font-normal normal-case tracking-normal">(optional)</span>
-              </span>
+      {d &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[75] flex items-start justify-center bg-slate-900/25 px-4 pt-[14vh]"
+            onMouseDown={() => !busy && setPending(null)}
+          >
+            <div
+              onMouseDown={(e) => e.stopPropagation()}
+              className="w-full max-w-[480px] rounded-xl border border-[#e6eaf0] bg-white p-4 shadow-[0_24px_60px_-18px_rgba(15,23,42,0.4)]"
+            >
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-[14px] font-semibold tracking-tight text-slate-900">
+                  {d.id === "approve"
+                    ? "Approve this delivery?"
+                    : d.id === "observe"
+                      ? "Approve with an observation?"
+                      : d.id === "changes"
+                        ? willEscalate(card.priorReturns, card.maxReturns)
+                          ? "This will escalate instead"
+                          : "Request changes on this delivery?"
+                        : "Reject this delivery?"}
+                </h3>
+                {d.needsNote && (
+                  <span className="text-[11px] font-semibold text-[#a31d1d]">note required</span>
+                )}
+              </div>
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-600">
+                {d.id === "approve"
+                  ? "The step is released and your review is sent to the mentee. It cannot be edited afterwards."
+                  : d.id === "observe"
+                    ? "The step is released, but does not complete until the mentee has read your note. It costs them no attempt."
+                    : d.id === "changes"
+                      ? willEscalate(card.priorReturns, card.maxReturns)
+                        ? `This gate has already been returned ${card.priorReturns} times — the limit is ${card.maxReturns}. Confirming raises it to the Programme Manager and the gate does not reopen.`
+                        : "The step reopens with an extra attempt. Resubmitting spends it, so say exactly what has to change."
+                      : "The gate does not reopen. The mentee is shown the worked reference answer instead, and acknowledging it releases the step — nobody is left permanently stuck."}
+              </p>
+
               <textarea
+                autoFocus
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                rows={2}
-                placeholder="Anything to say about the step as a whole."
-                className="w-full rounded-lg border border-[#e6eaf0] px-2.5 py-2 text-[12.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-300"
+                rows={4}
+                placeholder={
+                  d.id === "observe"
+                    ? "What should they note for next time?"
+                    : d.id === "changes"
+                      ? "What has to change before they resubmit?"
+                      : d.id === "reject"
+                        ? "Why does this delivery end here?"
+                        : "Anything to say about the delivery as a whole (optional)."
+                }
+                className="mt-3 w-full resize-none rounded-lg border border-[#e6eaf0] px-3 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:border-indigo-300 focus:outline-none"
               />
-            </label>
 
-            {/* Approve with note: good enough to release, but a habit needs correcting. Costs no
-                revision — the step simply does not complete until they have read it. */}
-            {confirming === "approve" && note.trim() && (
-              <label className="mt-2 flex items-start gap-2.5 rounded-lg border border-[#e6eaf0] px-3 py-2 cursor-pointer hover:bg-slate-50">
-                <input
-                  type="checkbox"
-                  checked={requireAck}
-                  onChange={(e) => setRequireAck(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-indigo-600"
-                />
-                <span className="text-[12px] text-slate-700 leading-snug">
-                  The mentee must read this note before the step completes
-                </span>
-              </label>
-            )}
+              {error && (
+                <div className="mt-2 rounded-lg border border-[#f0c2c2] bg-[#fdecec] px-3 py-2 text-[12px] text-[#a31d1d]">
+                  {error}
+                </div>
+              )}
 
-            {error && (
-              <div className="mt-2 rounded-lg border border-[#f0c2c2] bg-[#fdecec] px-3 py-2 text-[12px] text-[#a31d1d]">
-                {error}
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={confirm}
+                  disabled={busy || (d.needsNote && !note.trim())}
+                  className={`h-9 rounded-md px-3.5 text-[12.5px] font-semibold transition-colors ${
+                    busy || (d.needsNote && !note.trim())
+                      ? "bg-slate-100 text-slate-400"
+                      : d.btn
+                  }`}
+                >
+                  {busy ? "Sending…" : `Yes, ${d.label.toLowerCase()}`}
+                </button>
+                <button
+                  onClick={() => setPending(null)}
+                  disabled={busy}
+                  className="h-9 rounded-md px-3 text-[12.5px] font-semibold text-slate-500 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                {d.needsNote && !note.trim() && (
+                  <span className="text-[11px] text-slate-400">
+                    This verdict has to say what it is asking for.
+                  </span>
+                )}
               </div>
-            )}
-
-            <div className="flex items-center gap-2 mt-3">
-              <button
-                onClick={confirm}
-                disabled={busy}
-                className={`h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-colors disabled:bg-slate-200 disabled:text-slate-400 ${
-                  confirming === "approve"
-                    ? "bg-[#1e7a46] hover:bg-[#1a6b3d]"
-                    : "bg-[#a31d1d] hover:bg-[#8f1919]"
-                }`}
-              >
-                {busy
-                  ? "Sending…"
-                  : confirming === "approve"
-                    ? "Yes, approve"
-                    : "Yes, return"}
-              </button>
-              <button
-                onClick={() => setConfirming(null)}
-                disabled={busy}
-                className="h-9 px-3.5 rounded-lg border border-[#e6eaf0] bg-white text-[12.5px] font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
 
       {toast && (
         <UndoToast
@@ -301,6 +300,6 @@ export function ReviewDecision({
         </div>,
         document.body,
       )}
-    </div>
+    </>
   );
 }

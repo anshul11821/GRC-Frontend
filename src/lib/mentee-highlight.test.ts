@@ -1,57 +1,62 @@
 // Run: npx tsx src/lib/mentee-highlight.test.ts
 //
-// The mentor card replays the learner's workspace in a disabled fieldset, and the styling that
-// tells the reviewer which parts of it are the mentee's own entries lives in globals.css, keyed on
-// one class name. Nothing type-checks that pairing: drop the class from the component, or rename
-// the rule, and the card still renders — the mentee's values just go back to being the faintest
-// grey text on it, with untouched placeholders indistinguishable from real answers. Silent, and
-// the exact failure the highlight exists to prevent. So assert the contract holds.
+// A reviewer's screen has one job that matters more than any other: show what the mentee actually
+// wrote, and never let anything else on the page be mistaken for it. Nothing type-checks that.
+//
+// It used to be enforced by CSS — the learner's workspace was replayed in a disabled fieldset and
+// a `.mentee-entry` rule tinted the controls they could type into. That is gone: the review
+// surface renders `card.entries`, the server's walk of the payload, so what is on screen is the
+// submission itself rather than a form re-seeded from it. The guarantee moved with it, and the
+// two ways it can silently break moved with it too:
+//
+//   1. The entries stop being rendered from `card.entries` and go back to replaying a workspace.
+//      A payload outlives its workspace — an `apply` submitted before the rewrite holds
+//      `rows`/`summary` where today's holds `outcomes`/`notes` — so a replay paints a pristine
+//      empty form, which tells the reviewer the mentee submitted nothing. The one wrong answer
+//      this screen can give.
+//   2. The highlight ground is dropped from one of the three entry kinds, so a table of the
+//      mentee's rows reads as ordinary page furniture.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-const component = readFileSync(
-  new URL("../components/mentor/submitted-work.tsx", import.meta.url),
+const src = readFileSync(
+  new URL("../components/mentor/commentable-submission.tsx", import.meta.url),
   "utf8",
 );
 
-// The payload panel leads, unconditionally. This is the one that actually broke: the submission
-// used to be reachable only by toggling out of the replayed workspace, and several verbs commit —
-// `request` routes to a conversation view once sent, `conduct` and `interview` likewise — so the
-// mentee's words render as static transcript text with no control holding them. Tinting reaches
-// nothing there, and the reviewer sees a scripted conversation with the work invisible inside it.
-// `blocks` is the server's walk of payload.fields, so it works for every verb; keep it unguarded.
-const panel = component.match(/What the mentee entered[\s\S]*?<\/div>\s*<\/div>/)?.[0] ?? "";
-assert.match(panel, /<Blocks blocks=\{card\.blocks\}/, "the entries panel must render the payload");
-// The toggle's own identifiers, not its label — the label survives in the comment explaining why
-// it went.
-for (const gone of ["setRaw", "showWorkspace"]) {
-  assert.doesNotMatch(
-    component,
-    new RegExp(`\b${gone}\b`),
-    `${gone}: the submission must not go back behind a view toggle`,
+// 1. The submission comes from the server's entries, not from a replayed form.
+assert.match(
+  src,
+  /card\.entries\.map\(/,
+  "the delivery must be rendered from card.entries",
+);
+assert.doesNotMatch(
+  src,
+  /VerbWorkspace/,
+  "the review surface must never replay the learner's workspace — payloads outlive workspaces",
+);
+
+// 2. The highlighter ground, on every kind of entry a mentee can submit. `text` and `list` carry
+//    it directly; a table's rows carry it until a verdict recolours them.
+const HIGHLIGHT = "#fefce8";
+for (const kind of ["text", "list"] as const) {
+  const block = src.match(new RegExp(`entry\\.kind === "${kind}"[\\s\\S]{0,700}`))?.[0] ?? "";
+  assert.ok(
+    block.includes(HIGHLIGHT) || block.includes("${tone}"),
+    `a ${kind} entry must render on the mentee-entry highlight`,
   );
 }
+assert.match(
+  src,
+  /bg-\[#fefce8\]\/50/,
+  "an undecided table row must render on the mentee-entry highlight",
+);
 
-// The workspace is context underneath it, and its tint needs the class and the legend.
-assert.match(component, /className="mentee-entry /, "the replayed workspace must carry .mentee-entry");
-assert.match(component, /Tinted fields are the mentee/, "the tint needs its legend");
-
-// A disabled control is greyed by the UA. `color` alone does not undo it in Chrome or Safari —
-// they grey through -webkit-text-fill-color — so both have to be set.
-const disabled = css.match(/\.mentee-entry :disabled \{[^}]*\}/)?.[0] ?? "";
-assert.match(disabled, /-webkit-text-fill-color/, "disabled values must beat the UA grey");
-assert.match(disabled, /opacity:\s*1/, "disabled values must be full opacity");
-
-// A greyed placeholder reads exactly like a greyed value, so an untouched field would look answered.
-assert.match(css, /\.mentee-entry :disabled::placeholder \{\s*color: transparent;/);
-
-// Every control the mentee could type into gets the tint — but a tinted checkbox is just a broken
-// checkbox, and selection chips are buttons that already carry their own selected colour.
-const tint = css.match(/\.mentee-entry input[^{]*\{[^}]*\}/)?.[0] ?? "";
-assert.match(tint, /:not\(\[type="checkbox"\]\)/);
-assert.match(tint, /:not\(\[type="radio"\]\)/);
-assert.match(tint, /\btextarea\b/);
-assert.match(tint, /\bselect\b/);
+// 3. The default tone — before any verdict — is the highlight, not a neutral card.
+assert.match(
+  src,
+  /const tone = given \? VERDICT\[given\.kind\]\.card : "bg-\[#fefce8\] ring-\[#fde68a\]"/,
+  "an entry with no verdict yet must sit on the highlight ground",
+);
 
 console.log("mentee highlight OK");

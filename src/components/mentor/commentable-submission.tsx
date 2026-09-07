@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { JudgmentPanel } from "@/components/mentor/judgment-review";
+import { VERDICT, VERDICTS, type Verdict } from "@/lib/verdicts";
 import {
   type Card,
+  type JudgmentReview,
   type ReviewComment,
   type SubmissionEntry,
 } from "@/lib/mentor";
@@ -16,21 +19,20 @@ let seq = 0;
 const local = () => ({ id: ++seq, createdAt: "", sentAt: null, mentorName: "" });
 
 /**
- * The mentee's submission, laid out so a mentor can comment on exactly one thing in it.
+ * The mentee's submission, laid out so a mentor can decide on exactly one part of it.
  *
  * Built from `card.entries` — the server's walk of the payload — rather than from the workspace
  * that produced it. That is what makes it work for all 24 verbs without any of them knowing about
- * comments, and what makes it work at all for a submission whose payload has outlived its
+ * verdicts, and what makes it work at all for a submission whose payload has outlived its
  * workspace: replaying the form there paints a blank page, but the entries are still the answers.
  *
- * Comments are drafts. Nothing here reaches the learner until the mentor approves or returns,
- * which is the moment the whole review is released — see `record_decision`.
+ * Each part carries **one** verdict, not a tick and a pile of remarks. Two remarks on one row left
+ * the mentee to work out which one the decision rested on, and a remark with no verdict was
+ * feedback nobody had to act on. The four are the same four the whole delivery gets, one scope
+ * down — see `lib/verdicts.ts`.
  *
- * One composer is open at a time, and which one is held here rather than inside the button. A
- * composer that lives in the button renders wherever the button sits — and the button for a table
- * row sits in a 48px column, which squeezed the textarea to four characters wide. Held here, it
- * can be rendered where there is room for it: full width under the field, or as its own row
- * spanning the table.
+ * Verdicts are drafts. Nothing here reaches the learner until the mentor decides the step, which
+ * is the moment the whole review is released — see `record_decision`.
  */
 export function CommentableSubmission({
   card,
@@ -41,24 +43,25 @@ export function CommentableSubmission({
   comments: ReviewComment[];
   onChange: React.Dispatch<React.SetStateAction<ReviewComment[]>>;
 }) {
-  const [composing, setComposing] = useState<{ anchor: string; label: string } | null>(null);
+  // One composer open at a time, held here rather than inside the button. A composer that lives in
+  // the button renders wherever the button sits — and the button for a table row sits in a narrow
+  // column, which squeezed the textarea to four characters wide.
+  const [composing, setComposing] = useState<{ anchor: string; verdict: Verdict } | null>(null);
+
+  // Anchors are only unique within a submission — `field:outcomes` exists on many of them — so an
+  // open note box carried across a change of card would reopen itself against a different
+  // learner's answer of the same name. Reset during render, before anything is painted.
+  const [prevSub, setPrevSub] = useState(card.submissionId);
+  if (prevSub !== card.submissionId) {
+    setPrevSub(card.submissionId);
+    setComposing(null);
+  }
 
   const byAnchor = useMemo(() => {
-    const map = new Map<string, ReviewComment[]>();
-    for (const c of comments.filter((x) => x.kind !== "approve")) {
-      const list = map.get(c.anchor) ?? [];
-      list.push(c);
-      map.set(c.anchor, list);
-    }
+    const map = new Map<string, ReviewComment>();
+    for (const c of comments) map.set(c.anchor, c);
     return map;
   }, [comments]);
-
-  // Ticks are a separate set: an entry can be ticked, commented, or both — a comment is
-  // "approved with comment", never a rejection.
-  const ticked = useMemo(
-    () => new Set(comments.filter((c) => c.kind === "approve").map((c) => c.anchor)),
-    [comments],
-  );
 
   if (card.entries.length === 0) {
     return (
@@ -68,27 +71,15 @@ export function CommentableSubmission({
     );
   }
 
-  const shared: Shared = {
-    card,
-    comments,
-    onChange,
-    byAnchor,
-    ticked,
-    composing,
-    setComposing,
-  };
-
-  const required = requiredAnchors(card.entries);
-  const addressed = addressedAnchors(comments);
-  const done = required.filter((a) => addressed.has(a)).length;
+  const shared: Shared = { onChange, byAnchor, composing, setComposing };
+  const required = requiredAnchors(card);
+  const done = required.filter((a) => byAnchor.has(a)).length;
 
   return (
     <div className="space-y-5">
-      {/* Progress, not a requirement. Nothing here has to be touched to decide the step — the
-          count is for a reviewer working a long register who wants to know where they got to. */}
       <p className="text-[11.5px] text-slate-500">
-        Mark every entry reviewed, or comment on it — a comment is approval with a remark, not a
-        rejection.{" "}
+        Decide on each part the mentee wrote — approve it, approve it with an observation, ask for
+        changes, or reject it. Everything you say here is sent when you decide the step.{" "}
         <b className={done === required.length ? "text-[#1e7a46]" : "text-slate-700"}>
           <span className="tabular-nums">
             {done} of {required.length}
@@ -99,52 +90,106 @@ export function CommentableSubmission({
       {card.entries.map((e) => (
         <Entry key={e.anchor} entry={e} {...shared} />
       ))}
+
+      {card.judgment?.chose && <JudgmentSection judgment={card.judgment} {...shared} />}
     </div>
   );
 }
 
 /**
- * The anchors a reviewer has to address before the step can be decided: one per field, one per
- * table row. A table's own field anchor is not among them — a register is reviewed row by row, and
- * requiring a tick on the table *and* on each of its rows would be asking twice for the same read.
+ * The judgment call, decided like any other part of the delivery.
+ *
+ * It is the one place in a task where the mentee had to choose between defensible options and
+ * defend the choice, so it is the part least suited to being read past — and it used to sit below
+ * the deliverable as a read-only panel with no verdict on it at all, which meant a step could be
+ * approved without anyone saying anything about the only genuinely hard thing in it.
+ *
+ * Two or three of the four options are defensible by design, so the pick is not the grade: the
+ * reviewer is judging the reasoning. The library's own view is on the panel as guidance, clearly
+ * labelled as such.
  */
-export function requiredAnchors(entries: SubmissionEntry[]): string[] {
-  return entries.flatMap((e) =>
+function JudgmentSection({ judgment, ...s }: { judgment: JudgmentReview } & Shared) {
+  const given = s.byAnchor.get(JUDGMENT_ANCHOR);
+  const label = "Judgment call";
+
+  return (
+    <section className="rounded-xl border border-[#e6eaf0] bg-[#fafbfc] px-4 py-4">
+      <div className="mb-3 flex items-baseline justify-between gap-3 flex-wrap">
+        <h3 className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500">
+          {label}
+        </h3>
+        <Control anchor={JUDGMENT_ANCHOR} label={label} {...s} />
+      </div>
+      <JudgmentPanel j={judgment} />
+      {s.composing?.anchor === JUDGMENT_ANCHOR && s.composing && (
+        <Composer
+          key={`${JUDGMENT_ANCHOR}:${s.composing.verdict}`}
+          anchor={JUDGMENT_ANCHOR}
+          label={label}
+          {...s}
+        />
+      )}
+      {given && <Given mark={given} {...s} />}
+    </section>
+  );
+}
+
+/**
+ * Where the judgment call hangs its verdict. Not an entry — the dilemma lives in
+ * `judgment_responses`, not in the submission payload — but it is a part of the delivery the
+ * reviewer must decide on, so it gets an anchor like any other.
+ */
+export const JUDGMENT_ANCHOR = "judgment";
+
+/**
+ * The parts a reviewer has to address before the step can be decided: one per field, one per table
+ * row, and the judgment call where there is one. A table's own field anchor is not among them — a
+ * register is reviewed row by row, and requiring a verdict on the table *and* on each of its rows
+ * would be asking twice for the same read.
+ */
+export function requiredAnchors(card: Card): string[] {
+  const parts = card.entries.flatMap((e) =>
     e.kind === "table"
       ? (e.rows ?? []).map((_, i) => e.rowAnchors[i] ?? `${e.anchor}:${i}`)
       : [e.anchor],
   );
+  // Only when they actually answered one. A step that carries a dilemma the mentee left blank has
+  // nothing there for a mentor to judge.
+  return card.judgment?.chose ? [...parts, JUDGMENT_ANCHOR] : parts;
 }
 
-/** Which of them have been ticked or commented on. Either counts — see the Actions comment. */
+/** Which of them carry a verdict. */
 export function addressedAnchors(comments: ReviewComment[]): Set<string> {
   return new Set(comments.map((c) => c.anchor));
 }
 
 interface Shared {
-  card: Card;
-  comments: ReviewComment[];
   onChange: React.Dispatch<React.SetStateAction<ReviewComment[]>>;
-  byAnchor: Map<string, ReviewComment[]>;
-  ticked: Set<string>;
-  composing: { anchor: string; label: string } | null;
-  setComposing: (v: { anchor: string; label: string } | null) => void;
+  byAnchor: Map<string, ReviewComment>;
+  composing: { anchor: string; verdict: Verdict } | null;
+  setComposing: (v: { anchor: string; verdict: Verdict } | null) => void;
 }
 
 function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
   const cols = (entry.head?.length ?? 0) + 1;
+  const given = s.byAnchor.get(entry.anchor);
+  const tone = given ? VERDICT[given.kind].card : "bg-[#fefce8] ring-[#fde68a]";
+
   return (
     <section>
-      <div className="flex items-baseline justify-between gap-3 mb-1.5">
+      <div className="flex items-baseline justify-between gap-3 mb-1.5 flex-wrap">
         <h3 className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500">
           {entry.label}
         </h3>
-        {entry.kind !== "table" && <Actions anchor={entry.anchor} label={entry.label} {...s} />}
+        {entry.kind !== "table" && <Control anchor={entry.anchor} label={entry.label} {...s} />}
       </div>
 
-      {/* Their words wear the same highlighter as everywhere else a mentee's entry appears. */}
+      {/* Their words wear the same highlighter as everywhere else a mentee's entry appears, until
+          a verdict recolours them. */}
       {entry.kind === "text" && (
-        <p className="text-[12.5px] text-slate-800 leading-relaxed whitespace-pre-wrap rounded-lg bg-[#fefce8] ring-1 ring-[#fde68a] px-3 py-2">
+        <p
+          className={`text-[12.5px] text-slate-800 leading-relaxed whitespace-pre-wrap rounded-lg ring-1 px-3 py-2 ${tone}`}
+        >
           {entry.text}
         </p>
       )}
@@ -154,7 +199,7 @@ function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
           {(entry.items ?? []).map((item, i) => (
             <li
               key={i}
-              className="flex gap-2 text-[12.5px] text-slate-800 leading-relaxed rounded-lg bg-[#fefce8] ring-1 ring-[#fde68a] px-3 py-1.5"
+              className={`flex gap-2 text-[12.5px] text-slate-800 leading-relaxed rounded-lg ring-1 px-3 py-1.5 ${tone}`}
             >
               <span className="text-[#b8912a] mt-1 shrink-0">&bull;</span>
               <span>{item}</span>
@@ -176,28 +221,20 @@ function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
                     {h}
                   </th>
                 ))}
-                {/* Every row is commentable — a register is reviewed row by row or not at all. */}
-                <th className="w-[76px] border-b border-[#e6eaf0]" />
+                {/* Every row gets its own verdict — a register is reviewed row by row or not at all. */}
+                <th className="w-[132px] border-b border-[#e6eaf0]" />
               </tr>
             </thead>
             <tbody>
               {(entry.rows ?? []).map((row, r) => {
                 const anchor = entry.rowAnchors[r] ?? `${entry.anchor}:${r}`;
-                const label = entry.rowLabels[r] ?? `Row ${r + 1}`;
-                const on = s.byAnchor.get(anchor) ?? [];
-                const open = s.composing?.anchor === anchor;
-                const done = s.ticked.has(anchor);
                 return (
                   <FragmentRow
                     key={anchor}
-                    open={open}
                     anchor={anchor}
-                    label={label}
+                    label={entry.rowLabels[r] ?? `Row ${r + 1}`}
                     cols={cols}
-                    highlighted={on.length > 0 || open}
-                    done={done}
                     row={row}
-                    threads={on}
                     {...s}
                   />
                 );
@@ -207,58 +244,64 @@ function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
         </div>
       )}
 
-      {/* Non-table composers and threads sit under the field, where there is full width. */}
+      {/* Non-table composers and verdicts sit under the field, where there is full width. */}
+      {/* Keyed by verdict as well as part: switching from "request changes" to "observe" is a
+          different thing to say, and carrying the half-typed reason across is how the wrong words
+          end up under the wrong verdict. */}
       {entry.kind !== "table" && s.composing?.anchor === entry.anchor && (
-        <Composer anchor={entry.anchor} label={entry.label} {...s} />
+        <Composer
+          key={`${entry.anchor}:${s.composing.verdict}`}
+          anchor={entry.anchor}
+          label={entry.label}
+          {...s}
+        />
       )}
-      {entry.kind !== "table" && <Thread items={s.byAnchor.get(entry.anchor) ?? []} {...s} />}
+      {entry.kind !== "table" && given && <Given mark={given} {...s} />}
     </section>
   );
 }
 
-/** One table row, plus the full-width row its composer and comments live in. */
+/** One table row, plus the full-width row its composer and verdict live in. */
 function FragmentRow({
   row,
   anchor,
   label,
   cols,
-  open,
-  highlighted,
-  done,
-  threads,
   ...s
-}: {
-  row: string[];
-  anchor: string;
-  label: string;
-  cols: number;
-  open: boolean;
-  highlighted: boolean;
-  done: boolean;
-  threads: ReviewComment[];
-} & Shared) {
+}: { row: string[]; anchor: string; label: string; cols: number } & Shared) {
+  const given = s.byAnchor.get(anchor);
+  const open = s.composing?.anchor === anchor;
+  const tone = open
+    ? "bg-indigo-50/50"
+    : given
+      ? VERDICT[given.kind].row
+      : "bg-[#fefce8]/50";
+
   return (
     <>
-      <tr
-        className={`border-b border-[#f1f5f9] ${
-          highlighted ? "bg-indigo-50/50" : done ? "bg-[#f2f9f5]" : "bg-[#fefce8]/50"
-        }`}
-      >
+      <tr className={`border-b border-[#f1f5f9] ${tone}`}>
         {row.map((cell, c) => (
           <td key={c} className="px-3 py-2 text-slate-800 align-top">
             {cell}
           </td>
         ))}
         <td className="px-2 py-1.5 align-top whitespace-nowrap text-right">
-          <Actions anchor={anchor} label={label} compact {...s} />
+          <Control anchor={anchor} label={label} compact {...s} />
         </td>
       </tr>
-      {(open || threads.length > 0) && (
+      {(open || (given && given.body)) && (
         <tr className="border-b border-[#f1f5f9]">
-          {/* Spanning the whole table: a composer in the 44px pin column is four characters wide. */}
-          <td colSpan={cols} className="px-3 pb-3 pt-0 bg-indigo-50/30">
-            <Thread items={threads} rowLabel={label} {...s} />
-            {open && <Composer anchor={anchor} label={label} {...s} />}
+          {/* Spanning the whole table: a composer in the action column is four characters wide. */}
+          <td colSpan={cols} className="px-3 pb-3 pt-0 bg-slate-50/60">
+            {given && given.body && <Given mark={given} rowLabel={label} {...s} />}
+            {open && s.composing && (
+              <Composer
+                key={`${anchor}:${s.composing.verdict}`}
+                anchor={anchor}
+                label={label}
+                {...s}
+              />
+            )}
           </td>
         </tr>
       )}
@@ -267,74 +310,91 @@ function FragmentRow({
 }
 
 /**
- * The two things a reviewer can do to one entry: tick it, or say something about it.
+ * The verdict control for one part: four buttons before, one pill after.
  *
- * Both optional, and not exclusive — an entry can be ticked, commented, or both. There is no third
- * button for "reject", because a comment already means "approved, and here is what I want you to
- * see"; sending work back is a decision about the whole step, not about one row of it.
+ * Approve and Reject land immediately — they are complete on their own. Observe and Changes open
+ * a composer first, because an observation nobody wrote and a change request with nothing to
+ * change are not things a learner can act on.
  */
-function Actions({
+function Control({
   anchor,
   label,
   compact,
   onChange,
   byAnchor,
-  ticked,
   composing,
   setComposing,
 }: { anchor: string; label: string; compact?: boolean } & Shared) {
-  const count = (byAnchor.get(anchor) ?? []).length;
-  const open = composing?.anchor === anchor;
-  const isTicked = ticked.has(anchor);
+  const given = byAnchor.get(anchor);
 
-  // Local only. Nothing about this review exists outside the browser until the mentor decides —
-  // so a tick is instant, and walking away leaves nothing behind on the learner's submission.
-  const toggleTick = () => {
-    const drop = (list: ReviewComment[]) =>
-      list.filter((c) => !(c.kind === "approve" && c.anchor === anchor));
-    onChange((prev) =>
-      isTicked
-        ? drop(prev)
-        : [...drop(prev), { ...local(), kind: "approve" as const, anchor, anchorLabel: label, body: "" }],
-    );
+  const set = (kind: Verdict, body: string) => {
+    // Close any note box open on this part first. Approving a part while its "request changes" box
+    // was open used to record the approval and leave the box standing underneath it — a reason
+    // being written for a verdict that is no longer the verdict.
+    setComposing(null);
+    onChange((prev) => [
+      ...prev.filter((c) => c.anchor !== anchor),
+      { ...local(), kind, anchor, anchorLabel: label, body },
+    ]);
   };
 
+  if (given) {
+    const d = VERDICT[given.kind];
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${d.pill}`}
+        >
+          <Icon name={d.icon} size={11} strokeWidth={2.4} />
+          {compact ? d.short.split(" ")[0] : d.short}
+        </span>
+        <button
+          onClick={() => {
+            setComposing(null);
+            onChange((prev) => prev.filter((c) => c.anchor !== anchor));
+          }}
+          title={`Change the verdict on ${label}`}
+          aria-label={`Change the verdict on ${label}`}
+          className="text-slate-300 hover:text-indigo-600 transition-colors"
+        >
+          <Icon name="refresh" size={12} />
+        </button>
+      </span>
+    );
+  }
+
+  // A note is being written for this part. The other three are held until it is sent or cancelled,
+  // so a half-written reason cannot be abandoned by a stray click on a neighbouring verdict.
+  const writing = composing?.anchor === anchor;
+
   return (
-    <span className="inline-flex items-center gap-0.5">
-      <button
-        onClick={toggleTick}
-        title={isTicked ? `Reviewed — ${label}` : `Mark ${label} as reviewed`}
-        aria-label={isTicked ? `Reviewed: ${label}` : `Mark as reviewed: ${label}`}
-        aria-pressed={isTicked}
-        className={`shrink-0 inline-flex items-center justify-center rounded-md ring-1 transition-colors ${
-          compact ? "h-6 w-6" : "h-6 px-2 gap-1"
-        } ${
-          isTicked
-            ? "bg-[#1e7a46] text-white ring-[#1e7a46]"
-            : "bg-white text-slate-400 ring-slate-200 hover:text-[#1e7a46] hover:ring-[#1e7a46]/40"
-        }`}
-      >
-        <Icon name="check" size={13} strokeWidth={3} />
-        {!compact && <span className="text-[11px] font-medium">{isTicked ? "Reviewed" : "Mark reviewed"}</span>}
-      </button>
-      <button
-        onClick={() => setComposing(open ? null : { anchor, label })}
-        title={`Comment on ${label}`}
-        aria-label={`Comment on ${label}`}
-        aria-expanded={open}
-        className={`shrink-0 inline-flex items-center gap-1 rounded-md transition-colors ${
-          compact ? "h-6 px-1.5" : "h-6 px-2"
-        } ${
-          open
-            ? "bg-indigo-600 text-white"
-            : count > 0
-              ? "bg-indigo-100 text-indigo-700"
-              : "text-slate-400 hover:text-indigo-700 hover:bg-indigo-50"
-        }`}
-      >
-        <Icon name="chat" size={12} />
-        {count > 0 && <span className="text-[10px] font-semibold tabular-nums">{count}</span>}
-      </button>
+    // Wraps: four labelled verdicts are wider than a phone, and a row of buttons that runs off the
+    // edge is a row of buttons nobody can press.
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {VERDICTS.map((d) => {
+        const open = writing && composing.verdict === d.id;
+        const held = writing && !open;
+        return (
+          <button
+            key={d.id}
+            onClick={() =>
+              d.needsNote
+                ? setComposing(open ? null : { anchor, verdict: d.id })
+                : set(d.id, "")
+            }
+            disabled={held}
+            title={held ? `Finish or cancel the note first` : `${d.label} — ${label}`}
+            aria-label={`${d.label}: ${label}`}
+            aria-pressed={open}
+            className={`shrink-0 inline-flex items-center gap-1 rounded-md ring-1 transition-colors h-6 ${
+              compact ? "w-6 justify-center" : "px-2"
+            } ${open ? d.btn : held ? "bg-slate-50 text-slate-300 ring-slate-200" : `bg-white ${d.idle}`}`}
+          >
+            <Icon name={d.icon} size={12} strokeWidth={2.2} />
+            {!compact && <span className="text-[11px] font-medium">{d.label}</span>}
+          </button>
+        );
+      })}
     </span>
   );
 }
@@ -343,44 +403,56 @@ function Composer({
   anchor,
   label,
   onChange,
+  composing,
   setComposing,
 }: { anchor: string; label: string } & Shared) {
   const [body, setBody] = useState("");
+  const d = VERDICT[composing?.verdict ?? "changes"];
 
   const save = () => {
     if (!body.trim()) return;
     onChange((prev) => [
-      ...prev,
-      { ...local(), kind: "comment" as const, anchor, anchorLabel: label, body: body.trim() },
+      ...prev.filter((c) => c.anchor !== anchor),
+      { ...local(), kind: d.id, anchor, anchorLabel: label, body: body.trim() },
     ]);
     setBody("");
     setComposing(null);
   };
 
   return (
-    <div className="mt-2 rounded-xl border border-indigo-200 bg-white p-3">
-      <div className="text-[10.5px] text-slate-500 mb-1.5">
-        Commenting on <b className="text-slate-700">{label}</b>
+    <div className="mt-2 rounded-xl border border-[#e6eaf0] bg-white p-3">
+      <div className="flex items-baseline gap-2 mb-1.5">
+        <Icon name={d.icon} size={13} className="text-slate-500 shrink-0 self-center" />
+        <span className="text-[12px] font-semibold text-slate-800">
+          {d.id === "observe" ? "Observation" : "Changes"} on <b>{label}</b>
+        </span>
+        <span className="text-[10.5px] font-semibold text-[#a31d1d]">required</span>
       </div>
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") void save();
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
           if (e.key === "Escape") setComposing(null);
         }}
         rows={3}
         autoFocus
-        placeholder="What about this entry, and what should they do instead?"
+        placeholder={
+          d.id === "observe"
+            ? "What should they note for next time?"
+            : "What has to change here before they resubmit?"
+        }
         className="w-full min-w-0 resize-y rounded-lg border border-[#e6eaf0] px-2.5 py-2 text-[12.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-300"
       />
       <div className="flex items-center gap-2 mt-2 flex-wrap">
         <button
           onClick={save}
           disabled={!body.trim()}
-          className="h-8 px-3 rounded-lg bg-indigo-600 text-white text-[12px] font-semibold hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 transition-colors whitespace-nowrap"
+          className={`h-8 px-3 rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap ${
+            body.trim() ? d.btn : "bg-slate-100 text-slate-400"
+          }`}
         >
-          Add comment
+          {d.id === "observe" ? "Approve with observation" : "Request changes"}
         </button>
         <button
           onClick={() => setComposing(null)}
@@ -396,45 +468,37 @@ function Composer({
   );
 }
 
-/** What is already attached to one anchor. A draft can be withdrawn; a sent one is on the record. */
-function Thread({
-  items,
+/** The words attached to a verdict already given. A draft can be withdrawn; a sent one is on the record. */
+function Given({
+  mark,
   rowLabel,
-  ...s
-}: { items: ReviewComment[]; rowLabel?: string } & Shared) {
-  if (items.length === 0) return null;
-
-  const remove = (id: number) => s.onChange((prev) => prev.filter((c) => c.id !== id));
+  onChange,
+}: { mark: ReviewComment; rowLabel?: string } & Shared) {
+  if (!mark.body) return null;
+  const d = VERDICT[mark.kind];
 
   return (
-    <div className="mt-2 space-y-1.5">
-      {items.map((c) => (
-        <div
-          key={c.id}
-          className="flex items-start gap-2 rounded-lg border border-indigo-100 bg-white px-3 py-2"
-        >
-          <Icon name="chat" size={12} className="text-indigo-500 shrink-0 mt-0.5" />
-          <div className="min-w-0 flex-1">
-            {rowLabel && <div className="text-[10.5px] text-slate-500 mb-0.5">on {rowLabel}</div>}
-            <p className="text-[12px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
-              {c.body}
-            </p>
-            <div className="text-[10.5px] text-slate-400 mt-1">
-              {c.sentAt ? `Sent · ${c.mentorName}` : "Draft — sent when you decide"}
-            </div>
-          </div>
-          {!c.sentAt && (
-            <button
-              onClick={() => remove(c.id)}
-              title="Delete this draft"
-              aria-label="Delete this draft comment"
-              className="shrink-0 text-slate-300 hover:text-[#a31d1d] transition-colors"
-            >
-              <Icon name="x" size={13} />
-            </button>
-          )}
+    <div className={`mt-2 flex items-start gap-2 rounded-lg ring-1 px-3 py-2 ${d.card}`}>
+      <Icon name={d.icon} size={12} className="text-slate-500 shrink-0 mt-0.5" />
+      <div className="min-w-0 flex-1">
+        {rowLabel && <div className="text-[10.5px] text-slate-500 mb-0.5">on {rowLabel}</div>}
+        <p className="text-[12px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
+          {mark.body}
+        </p>
+        <div className="text-[10.5px] text-slate-500 mt-1">
+          {mark.sentAt ? `Sent · ${mark.mentorName}` : "Draft — sent when you decide"}
         </div>
-      ))}
+      </div>
+      {!mark.sentAt && (
+        <button
+          onClick={() => onChange((prev) => prev.filter((c) => c.anchor !== mark.anchor))}
+          title="Withdraw this verdict"
+          aria-label="Withdraw this verdict"
+          className="shrink-0 text-slate-300 hover:text-[#a31d1d] transition-colors"
+        >
+          <Icon name="x" size={13} />
+        </button>
+      )}
     </div>
   );
 }

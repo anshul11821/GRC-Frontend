@@ -293,30 +293,7 @@ export interface StepScreenSource {
   submissions: () => Promise<SubmissionDetail[]>;
 }
 
-export function StepScreen({
-  source,
-  /** Reviewer view: nothing autosaves, nothing submits, and the workspace is frozen. */
-  readOnly = false,
-  /** Replaces the submit bar. The mentor's Approve / Return goes here. */
-  footer,
-  /**
-   * Replaces the live workspace when reviewing. Supplied by the mentor, who has the *reviewed*
-   * submission in hand — this screen otherwise seeds from `bestSubmission(history)`, which is the
-   * learner's rule ("show me my best attempt") and the wrong one for a reviewer, who must see the
-   * attempt the gate actually points at.
-   *
-   * It also carries the drift fallback. Payloads outlive workspaces: an `apply` submitted before
-   * the rewrite holds `rows`/`summary`/`findings` where today's holds `outcomes`/`notes`/`results`,
-   * and replaying it in the current workspace paints a pristine empty form — which tells the
-   * reviewer the mentee submitted nothing. That is the one wrong answer this screen can give.
-   */
-  submittedWork,
-}: {
-  source?: StepScreenSource;
-  readOnly?: boolean;
-  footer?: React.ReactNode;
-  submittedWork?: React.ReactNode;
-} = {}) {
+export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   const { activityId } = useParams<{ activityId: string }>();
   const { learnings, refresh: refreshTree, scheduleByActivity } = useDeskLearnings();
   const base = useDeskBase();
@@ -413,12 +390,12 @@ export function StepScreen({
   // Auto-run the guided walkthrough only on a new mentee's entry point — the first action of the
   // first task. Everywhere else it's on-demand via the Guide button (which blinks to hint it exists).
   useEffect(() => {
-    if (readOnly || !activity || !learnings) return;
+    if (!activity || !learnings) return;
     const firstStepId = learnings.orgs[0]?.projects[0]?.tasks[0]?.steps[0]?.id;
     if (activityId !== firstStepId) return;
     const id = setTimeout(() => setTourStep(0), 400); // let the brief animate in first
     return () => clearTimeout(id);
-  }, [activity, learnings, activityId, readOnly]);
+  }, [activity, learnings, activityId]);
 
   const closeTour = () => setTourStep(-1);
 
@@ -473,7 +450,6 @@ export function StepScreen({
   const touched = useRef(false); // set by the page's capture handlers on the first real interaction
   useEffect(() => { savedSnapshot.current = null; touched.current = false; }, [activityId]);
   useEffect(() => {
-    if (readOnly) return; // a reviewer's screen never writes to the learner's account
     if (!activity || activity.attemptsRemaining <= 0) return; // not loaded, or read-only
     if (activity.status === "complete" && !resubmit) return; // reading a passed step back, not editing it
     // The judgment call rides in the same draft blob as the deliverable, so an answer typed and
@@ -491,7 +467,7 @@ export function StepScreen({
         .catch(() => {}); // keep the stale snapshot so the next edit retries; the button still reports errors
     }, 2000);
     return () => clearTimeout(id);
-  }, [values, decision, activity, activityId, resubmit, readOnly]);
+  }, [values, decision, activity, activityId, resubmit]);
 
   const saveDraft = async () => {
     setBusy(true); setError(null);
@@ -602,7 +578,7 @@ export function StepScreen({
   // excluded — their tab rail is buttons, and a disabled fieldset would strand the mentee on
   // whichever tab loaded first with no way to read the rest of what they wrote.
   const readback = passed && !resubmit;
-  const locked = readOnly || noAttemptsLeft || (readback && !isGateVerb(activity.verb.id));
+  const locked = noAttemptsLeft || (readback && !isGateVerb(activity.verb.id));
   const hasFeedback = !!(layer1 || review || activity.mentorReview);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
@@ -685,14 +661,14 @@ export function StepScreen({
       onPointerDownCapture={() => { touched.current = true; }}
       onKeyDownCapture={() => { touched.current = true; }}
     >
-      {!readOnly && <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />}
+      <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />
       <FloatingDocs docs={fw.docs} onClose={fw.close} onFocus={fw.focus} />
 
       {/* header — description left, submission-feedback trigger on the right */}
       <div className="mb-5 flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <Link
-            href={readOnly ? `${base}/task/${activity.taskCode}` : "/app/learnings"}
+            href="/app/learnings"
             className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 no-underline mb-2"
           >
             <Icon name="chevronLeft" size={14} /> {activity.taskTitle}
@@ -715,19 +691,19 @@ export function StepScreen({
 
         <div className="shrink-0 flex items-center gap-2">
           {/* guide trigger — always available; blinks thrice on open to hint the walkthrough exists */}
-          {!readOnly && <button
+          <button
             key={activityId}
             onClick={() => setTourStep(0)}
             className="guide-blink focus-ring inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 hover:bg-indigo-100 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
           >
             <Icon name="help" size={14} /> Guide
-          </button>}
+          </button>
 
           {/* submission-feedback trigger — only after a graded submission */}
           {/* The learner's own grade and revision history. A reviewer is forming the decision that
               goes into that history, not reading it back — and the AI's score sitting at the top of
               the screen invites anchoring on it before they have read the work. */}
-          {hasFeedback && !readOnly && (
+          {hasFeedback && (
             <button
               onClick={() => setFeedbackOpen(true)}
               className={`inline-flex items-center gap-2 h-9 px-3 rounded-lg ring-1 transition-colors ${passed ? "bg-emerald-50 ring-emerald-200/70 hover:bg-emerald-100/70 text-emerald-700" : "bg-amber-50 ring-amber-200/70 hover:bg-amber-100/70 text-amber-700"}`}
@@ -748,7 +724,7 @@ export function StepScreen({
       {/* Stuck with no way forward — the reference answer goes in the page body, not behind the
           feedback drawer. Someone who cannot submit needs to see why and what to do next without
           hunting for it. */}
-      {activity.modelAnswer && !readOnly && (
+      {activity.modelAnswer && (
         <div className="mb-5">
           <ModelAnswer
             answer={activity.modelAnswer}
@@ -765,13 +741,7 @@ export function StepScreen({
       {hasBrief && (
         <StepBrief
           objective={content?.objective}
-          // A reviewer is not doing the step, they are checking it — so the second panel carries
-          // the acceptance criteria the mentee's work was written to satisfy, which is the same
-          // list the learner sees in their own checklist, rather than the instructions for doing
-          // the work. Their own "what to do" is on their screen and useless on this one.
-          whatToDo={readOnly ? (verb?.layer1 ?? []) : content?.whatToDo}
-          objectiveTitle={readOnly ? "Mentee's objective" : "Objective"}
-          listTitle={readOnly ? "What to check" : "What to do"}
+          whatToDo={content?.whatToDo}
           objectiveRef={objectiveRef}
           whatToDoRef={whatToDoRef}
           defaultOpen={briefShown}
@@ -792,21 +762,13 @@ export function StepScreen({
           A clip-path plus drop-shadow rather than a ring, because a ring cannot be notched. */}
       <WorkingSheet
         sheetRef={deliverableRef}
-        title={readOnly ? "Mentee's deliverable" : "Your deliverable"}
+        title="Your deliverable"
         subtitle={
           verb ? (
             <>
               <span className="font-medium">{verb.label}</span> —{" "}
-              {/* `verb.when` is written to the mentee ("You apply a defined scheme…"), which is
-                  the wrong voice on a reviewer's screen. They get the verb and what it is for. */}
-              {readOnly ? (
-                <>what this step asked of the mentee</>
-              ) : (
-                <Gloss>{verb.when}</Gloss>
-              )}
+              <Gloss>{verb.when}</Gloss>
             </>
-          ) : readOnly ? (
-            "What the mentee submitted for this step."
           ) : (
             "Capture your work for this step."
           )
@@ -837,25 +799,9 @@ export function StepScreen({
         )}
 
         {/* A native disabled fieldset switches off every control inside in one go. */}
-        {/* On a reviewer's screen the workspace carries `mentee-entry`: their values at full
-            contrast, placeholders suppressed so an untouched field cannot read as an answer, and
-            the fields they could type into tinted. A disabled fieldset is greyed by the browser,
-            which would make the one thing a mentor is here to read the faintest text on the page.
-            The learner keeps the plain read-back — it is their own work and they just wrote it. */}
-        {/* A reviewer never falls through to the live workspace. It used to render while the
-            review card was still loading — two sequential fetches — and for a payload the current
-            workspace cannot seed from, that is a blank form on screen for a second or two saying
-            the mentee submitted nothing. The caller owns what shows while it loads. */}
-        {readOnly ? (
-          submittedWork
-        ) : (
-          <fieldset
-            disabled={locked}
-            className={`min-w-0 border-0 p-0 m-0 ${readOnly ? "mentee-entry" : locked ? "opacity-75" : ""}`}
-          >
-            <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
-          </fieldset>
-        )}
+        <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
+          <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+        </fieldset>
 
         {/* The judgment call sits AFTER the deliverable, not before it: the dilemmas are written
             for someone who has already done the work ("you have drafted the test plan…"), and
@@ -873,22 +819,14 @@ export function StepScreen({
           />
         )}
 
-        {readOnly && (
-          <div className="mt-4 flex items-center gap-2 text-[11.5px] text-slate-500 leading-relaxed">
-            <span className="shrink-0 inline-block w-3.5 h-3.5 rounded-[4px] bg-[#fefce8] shadow-[inset_0_0_0_1px_#fde68a]" />
-            Tinted fields are the mentee&rsquo;s entries; everything else the workspace supplied. A
-            tinted field left empty is one they did not fill in.
-          </div>
-        )}
-
-        {!readOnly && readback && !noAttemptsLeft && (
+        {readback && !noAttemptsLeft && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-emerald-50/70 ring-1 ring-emerald-200/70 px-3 py-2 text-[12px] text-emerald-800 tracking-tight">
             <Icon name="check" size={13} strokeWidth={3} className="text-emerald-600 shrink-0 mt-px" />
             <span>This is the work you submitted{review ? ` — graded ${review.overallScore.toFixed(1)} / 5` : ""}. It&apos;s read-only; Resubmit starts a fresh attempt from a blank deliverable.</span>
           </div>
         )}
 
-        {!readOnly && noAttemptsLeft && (
+        {noAttemptsLeft && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 px-3 py-2 text-[12px] text-slate-600 tracking-tight">
             <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
             <span>You&apos;ve used all {maxAttempts} attempts for this step — it&apos;s now read-only. Your submissions are in <button onClick={() => setFeedbackOpen(true)} className="underline underline-offset-2 hover:text-slate-900 cursor-pointer">Submission feedback</button>.</span>
@@ -897,12 +835,8 @@ export function StepScreen({
 
         {error &&<div className="mt-4 text-[12.5px] text-rose-700 bg-rose-50 ring-1 ring-rose-100 rounded-lg px-3 py-2">{error}</div>}
 
-        {/* Where the learner submits, a reviewer decides. Same place on the same screen, which is
-            the point: the decision belongs under the work, not on another page. */}
         <div className="mt-5">
-          {readOnly ? (
-            footer
-          ) : passed && !busy && !resubmit ? (
+          {passed && !busy && !resubmit ? (
             <div className="flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 ring-1 ring-emerald-200/70 text-emerald-700 text-[13px] font-medium tracking-tight">
                 <Icon name="check" size={14} strokeWidth={3} /> Submitted — step complete{review ? ` · ${review.overallScore.toFixed(1)} / 5` : ""}
@@ -958,7 +892,7 @@ export function StepScreen({
       {/* Acceptance criteria. Small screens: inline card under the deliverable. A reviewer reads
           them in "What to check" above instead — on their screen these would be the same list a
           second and third time, one of them floating over the work. */}
-      {hasChecklist && !readOnly && (
+      {hasChecklist && (
         <div ref={checklistInlineRef} className="md:hidden mt-5">
           <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} />
         </div>
@@ -968,7 +902,7 @@ export function StepScreen({
           scrolls into view — before that both the HUD and the chip are gone, so neither covers the
           brief. Inside the deliverable the HUD opens itself; dismissing it leaves the chip to
           bring it back. Both stay mounted so the swaps fade rather than pop. */}
-      {hasChecklist && !readOnly && (
+      {hasChecklist && (
         <>
           <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
             <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />

@@ -51,9 +51,6 @@ export function StepBrief({
       >
         <Icon name="target" size={14} className="text-indigo-600 shrink-0" />
         <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500">Brief</span>
-        <span className="text-[12px] text-slate-400 tracking-tight">
-          — {objectiveTitle.toLowerCase()} &amp; {listTitle.toLowerCase()}
-        </span>
         <span className="ml-auto inline-flex items-center gap-1 text-[11.5px] text-slate-400 group-hover:text-slate-600">
           {shown ? "Hide" : "Show"}
           <Icon name="chevronDown" size={14} className={`transition-transform ${shown ? "" : "-rotate-90"}`} />

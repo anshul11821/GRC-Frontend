@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { VERDICT } from "@/lib/verdicts";
 import { deskApi, type MentorReview } from "@/lib/desk";
 
 /**
@@ -77,26 +78,38 @@ export function MentorDecision({
             </p>
           )}
 
-          {/* Remarks on specific things you wrote. Each names what it is about, because feedback
-              you cannot locate in your own work is feedback you cannot act on. */}
+          {/* What your mentor decided about each part you wrote. Each one names the part and
+              carries its own verdict, because "changes requested" on a delivery you cannot locate
+              in your own work is not something you can act on. Every one of these is your mentor's
+              own words — a machine grade never appears here, and never wears this band. */}
           {(review.comments ?? []).length > 0 && (
             <div className="mt-3">
               <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500 mb-1.5">
-                On specific entries
+                On specific parts of your delivery
               </div>
               <ul className="space-y-1.5">
-                {review.comments.map((c) => (
-                  <li key={c.id} className="rounded-lg bg-white/70 ring-1 ring-slate-200/70 px-3 py-2">
-                    {c.anchorLabel && (
-                      <div className="text-[10.5px] font-medium text-slate-500 mb-0.5">
-                        {c.anchorLabel}
+                {review.comments.map((c) => {
+                  const v = VERDICT[c.kind];
+                  return (
+                    <li key={c.id} className={`rounded-lg ring-1 px-3 py-2 ${v.card}`}>
+                      <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
+                        {c.anchorLabel && (
+                          <span className="text-[10.5px] font-medium text-slate-500">
+                            {c.anchorLabel}
+                          </span>
+                        )}
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.06em] ${v.pill}`}
+                        >
+                          {v.short}
+                        </span>
                       </div>
-                    )}
-                    <p className="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {c.body}
-                    </p>
-                  </li>
-                ))}
+                      <p className="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {c.body}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

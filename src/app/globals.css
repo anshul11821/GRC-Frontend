@@ -176,39 +176,3 @@ body {
     margin: 0 0 6px;
   }
 }
-
-
-
-/* ── Mentor console: the mentee's own entries, inside their replayed workspace ──────────────
-   The review card mounts the learner's real workspace in a disabled fieldset. That workspace is
-   mostly *scripted* — pre-loaded register rows, stakeholder transcripts, reference cards — and the
-   graded work is the handful of controls the mentee filled in. Two problems for a reviewer:
-
-   1. A disabled control is greyed by the UA, and Chrome/Safari do it through
-      `-webkit-text-fill-color`, which `color` does not override. So the one thing on the card
-      the mentor is there to read rendered as the faintest text on it.
-   2. A greyed placeholder ("Required for Confidential") looks exactly like a greyed value, so an
-      untouched field could be read as something the mentee wrote.
-
-   So: full contrast on the values, no placeholders at all, and a highlighter tint that marks every
-   control the mentee could type into. An empty tinted box is then a field they left blank, which
-   is a finding rather than an ambiguity. Selection chips need nothing — a picked chip already
-   carries its own colour and an unpicked one is plain white. */
-.mentee-entry :disabled {
-  opacity: 1;
-  color: #0f172a;
-  -webkit-text-fill-color: #0f172a;
-  cursor: default;
-}
-
-.mentee-entry :disabled::placeholder {
-  color: transparent;
-}
-
-.mentee-entry input:not([type="checkbox"]):not([type="radio"]),
-.mentee-entry textarea,
-.mentee-entry select {
-  background-color: #fefce8;
-  box-shadow: inset 0 0 0 1px #fde68a;
-  border-radius: 6px;
-}
