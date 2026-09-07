@@ -776,82 +776,67 @@ function Delivery({
 
       {/* Delivery and criteria as two frames with a divider between them, the way every grading
           tool that has solved this lays it out. Below lg they stack, criteria first. */}
-      <div className="lg:flex lg:items-start">
-        {/* Criteria first in the DOM so that stacked — and for a screen reader — the reviewer
-            meets the checks before the thing being checked. The lg:order-* classes put it back
-            on the right once there are two frames. */}
-        {checks.length > 0 && <CheckPanel items={checks} />}
-        <div className="min-w-0 flex-1 lg:order-1">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-            {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
-          </div>
-          <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
-        </div>
+      {checks.length > 0 && <CheckBar items={checks} />}
+
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+        {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
       </div>
+      <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
     </div>
   );
 }
 
 /**
- * What the work is measured against, docked beside it.
+ * What the work is measured against, pinned above it.
  *
- * Three shapes were tried before this one, and the content is what ruled the first two out. Across
- * the programme's 630 checklists: 2-8 items, 142 characters at the median but 941 at the worst,
- * and a single item can run to 312. A fixed-width rail spent 272px of the delivery's width on the
- * median case, which is three short lines. A pinned strip was right for the median and wrong for
- * the tail - 941 characters would hold roughly 150px of every screen, permanently.
+ * Four shapes were tried before this one and the measurements ruled out the rest.
  *
- * No fixed shape fits a range that wide, so the reviewer sets it. This is the layout every tool
- * that has solved the problem arrived at - Canvas SpeedGrader, Turnitin, Blackboard, Gradescope:
- * the submission and its criteria as two frames with a DIVIDER between them, draggable, and the
- * criteria collapsible to an edge tab when they are not wanted. SpeedGrader's own answer to long
- * criteria is exactly this - drag the divider and widen the panel.
+ * The content: across the programme's 630 checklists, 2-8 items, 142 characters at the median,
+ * 941 at the worst, and a single item can reach 312. Nothing fixed fits that range.
  *
- * Width and collapsed state are per-reviewer and remembered, because a grader sets this once for
- * how they work, not once per submission. localStorage, since it is a per-viewer convenience that
- * nothing downstream depends on: every read is guarded and the fallback is a usable panel.
+ * The screen: a 1440 laptop at 150% Windows scaling is a 960px viewport, and this console spends
+ * 336 of those on its own sidebar. A docked side panel — Canvas SpeedGrader's answer, and the
+ * right one when a grader has the whole window — left the delivery 462px on a 1097px screen and
+ * did not fit at all below 1024. A register with fourteen columns needs that width; the criteria
+ * do not.
+ *
+ * So the criteria take HEIGHT, which the page has, and never width, which it does not. A bar
+ * pinned under the toolbar at every size, showing the checks in full when open and a single
+ * readable line when not. Open or closed is remembered, because a reviewer decides once how they
+ * work rather than once per submission — and it is open by default, since a reviewer who has not
+ * met the checks is the person this exists for.
+ *
+ * The cap is 38vh with its own scroll: past that the bar would be covering the work it is meant
+ * to be read against, which is the failure every version of this has had to avoid.
  */
 const PANEL_KEY = "grcmentor.mentor.checksPanel";
-const PANEL_MIN = 220;
-const PANEL_MAX = 620;
-const PANEL_DEFAULT = 300;
 
-type PanelState = { w: number; open: boolean };
-
-// A module store rather than component state, for two reasons. It is what useSyncExternalStore
-// wants — reading storage in an effect and calling setState is the cascading-render pattern the
-// lint rule exists to stop — and it means the width survives a remount, so walking from step to
-// step does not reset the panel the reviewer just set.
-const PANEL_SERVER: PanelState = { w: PANEL_DEFAULT, open: true };
+// A module store read through useSyncExternalStore, not state loaded in an effect: that is the
+// cascading-render pattern the lint rule exists to stop, and this way the choice survives a
+// remount, so walking step to step does not reopen what the reviewer just closed.
+const CHECKS_SERVER = { open: true };
 const panelListeners = new Set<() => void>();
-let panelMemo: PanelState | null = null;
+let panelMemo: { open: boolean } | null = null;
 
-function panelSnapshot(): PanelState {
-  // Memoised because getSnapshot must be referentially stable — a fresh object each call is an
-  // infinite render loop.
+function panelSnapshot(): { open: boolean } {
+  // Memoised: getSnapshot must be referentially stable or React re-renders forever.
   if (!panelMemo) {
     try {
       const raw = JSON.parse(localStorage.getItem(PANEL_KEY) ?? "null");
-      panelMemo =
-        raw && typeof raw.w === "number"
-          ? { w: Math.min(PANEL_MAX, Math.max(PANEL_MIN, raw.w)), open: raw.open !== false }
-          : PANEL_SERVER;
+      panelMemo = raw && typeof raw.open === "boolean" ? { open: raw.open } : CHECKS_SERVER;
     } catch {
-      panelMemo = PANEL_SERVER; // storage unavailable or corrupt — a default panel beats none
+      panelMemo = CHECKS_SERVER; // storage unavailable or corrupt — open beats absent
     }
   }
   return panelMemo;
 }
 
-/** `persist` is false while a drag is in flight: one write at the end, not one per pointer move. */
-function setPanelState(next: PanelState, persist = true): void {
-  panelMemo = next;
-  if (persist) {
-    try {
-      localStorage.setItem(PANEL_KEY, JSON.stringify(next));
-    } catch {
-      // Not being able to remember the width is no reason to refuse to set it.
-    }
+function setChecksOpen(open: boolean): void {
+  panelMemo = { open };
+  try {
+    localStorage.setItem(PANEL_KEY, JSON.stringify({ open }));
+  } catch {
+    // Not remembering the choice is no reason to refuse to make it.
   }
   panelListeners.forEach((l) => l());
 }
@@ -861,105 +846,66 @@ function subscribePanel(l: () => void): () => void {
   return () => void panelListeners.delete(l);
 }
 
-function CheckPanel({ items }: { items: string[] }) {
-  const { w, open } = useSyncExternalStore(subscribePanel, panelSnapshot, () => PANEL_SERVER);
-  const drag = useRef<{ x: number; w: number } | null>(null);
-
-  useEffect(() => {
-    const move = (e: PointerEvent) => {
-      if (!drag.current) return;
-      // Dragging left widens the panel: the divider sits on its left edge.
-      const next = drag.current.w + (drag.current.x - e.clientX);
-      setPanelState(
-        { ...panelSnapshot(), w: Math.min(PANEL_MAX, Math.max(PANEL_MIN, next)) },
-        false,
-      );
-    };
-    const up = () => {
-      if (!drag.current) return;
-      drag.current = null;
-      document.body.style.userSelect = "";
-      setPanelState(panelSnapshot());
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-  }, []);
-
-  // Collapsed: an edge tab naming what is behind it and how much, so reopening is not a guess.
-  if (!open) {
-    return (
-      <button
-        onClick={() => setPanelState({ w, open: true })}
-        title="Show what to check"
-        className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-[#f4faf6] py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-emerald-700 hover:bg-emerald-50 lg:order-2 lg:mb-0 lg:ml-3 lg:w-9 lg:flex-col lg:gap-3 lg:self-stretch lg:py-3"
-      >
-        <Icon name="list" size={13} />
-        <span className="lg:[writing-mode:vertical-rl]">What to check &middot; {items.length}</span>
-      </button>
-    );
-  }
+function CheckBar({ items }: { items: string[] }) {
+  const { open } = useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER);
 
   return (
-    <>
-      {/* The divider. A 9px target around a 1px rule: a hairline is the right thing to see and the
-          wrong thing to have to hit. Keyboard users get the collapse button instead - a drag has
-          no keyboard equivalent worth inventing when the panel reads fine at every width. */}
-      <div
-        onPointerDown={(e) => {
-          drag.current = { x: e.clientX, w };
-          document.body.style.userSelect = "none";
-          e.preventDefault();
-        }}
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize the checks panel"
-        className="group relative hidden w-[9px] shrink-0 cursor-col-resize self-stretch lg:order-2 lg:block"
+    // -mx-6 px-6 so it spans the card: a pinned bar that stops short of the edges reads as
+    // content rather than as chrome. top-[45px] is the toolbar's height, so it parks beneath it.
+    <div className="sticky top-[45px] z-10 -mx-6 mb-3.5 border-y border-emerald-100 bg-[#f4faf6]">
+      <button
+        onClick={() => setChecksOpen(!open)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2.5 px-6 py-2 text-left"
       >
-        <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200 transition-colors group-hover:bg-emerald-400" />
-      </div>
+        <Icon name="list" size={13} className="shrink-0 text-emerald-700" />
+        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-700">
+          What to check
+        </span>
+        {open ? (
+          <span className="flex-1 text-[11px] tabular-nums text-emerald-700/60">
+            {items.length} step{items.length === 1 ? "" : "s"}
+          </span>
+        ) : (
+          // Closed, the bar still says what the first check is. A count alone would make the
+          // reviewer open it to find out whether it was worth opening.
+          <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600">
+            {items[0]}
+            {items.length > 1 && (
+              <span className="ml-1.5 tabular-nums text-emerald-700/70">
+                +{items.length - 1} more
+              </span>
+            )}
+          </span>
+        )}
+        <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-700">
+          {open ? "Hide" : "Show"}
+          <Icon
+            name="chevronDown"
+            size={13}
+            className={`transition-transform ${open ? "" : "-rotate-90"}`}
+          />
+        </span>
+      </button>
 
-      <aside
-        // Sticky so it is still beside the work at the thirtieth row, and scrolls inside itself
-        // when the criteria are longer than the screen - which, at 941 characters, they can be.
-        className="mb-4 lg:sticky lg:top-[45px] lg:order-3 lg:mb-0 lg:max-h-[calc(100dvh-8.5rem)] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:overscroll-contain"
-        style={{ ["--checks-w" as string]: `${w}px` }}
-      >
-        <div className="rounded-2xl border border-emerald-100 bg-[#f4faf6] p-3.5 lg:w-[var(--checks-w)]">
-          <div className="mb-2.5 flex items-center gap-2">
-            <Icon name="list" size={13} className="shrink-0 text-emerald-700" />
-            <h2 className="flex-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
-              What to check
-            </h2>
-            <button
-              onClick={() => setPanelState({ w, open: false })}
-              aria-label="Hide what to check"
-              className="rounded p-0.5 text-emerald-700/70 hover:bg-emerald-100 hover:text-emerald-900"
-            >
-              <Icon name="x" size={12} />
-            </button>
-          </div>
-          <ol className="space-y-2">
-            {items.map((c, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="mt-[1px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-emerald-600 text-[10px] font-semibold tabular-nums text-white">
-                  {i + 1}
-                </span>
-                <span
-                  className="text-[12px] leading-relaxed tracking-tight text-slate-700"
-                  style={{ textWrap: "pretty" }}
-                >
-                  <Gloss>{c}</Gloss>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </aside>
-    </>
+      {open && (
+        <ol className="max-h-[38vh] space-y-1.5 overflow-y-auto overscroll-contain border-t border-emerald-100/80 px-6 py-2.5">
+          {items.map((c, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="mt-[1px] grid h-[17px] w-[17px] shrink-0 place-items-center rounded-full bg-emerald-600 text-[9.5px] font-semibold tabular-nums text-white">
+                {i + 1}
+              </span>
+              <span
+                className="text-[12px] leading-relaxed tracking-tight text-slate-700"
+                style={{ textWrap: "pretty" }}
+              >
+                <Gloss>{c}</Gloss>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }
 
