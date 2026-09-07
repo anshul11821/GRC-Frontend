@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
-import { StepBrief } from "@/components/app/deliverable";
+import { StepBrief, WhatToCheck } from "@/components/app/deliverable";
 import { RefBody } from "@/components/app/reference-material";
 import { FloatWindow } from "@/components/mentor/float-window";
 import { useMenteeGates } from "@/components/mentor/mentee-gates";
@@ -743,14 +743,19 @@ function Delivery({
   marks: ReviewComment[];
   setMarks: React.Dispatch<React.SetStateAction<ReviewComment[]>>;
 }) {
+  const checks = card.brief?.whatToDo ?? [];
+
   return (
-    <div>
+    <div className="@container">
       {card.brief && (
         <StepBrief
           objective={card.brief.objective}
-          whatToDo={card.brief.whatToDo}
+          // The checklist is lifted out of the brief and into the rail below, so it is still on
+          // screen at the thirtieth row of a register. Printing it in both places would make the
+          // reviewer wonder which one they had already worked through.
           objectiveTitle="What they were asked for"
-          listTitle="What to check"
+          // Its terms still have to be defined on the page, and TermsUsed reads this.
+          glossTexts={checks}
           // Open. It is what the delivery is being judged against, and a reviewer who has to press
           // "Show" before they can check anything will sometimes not press it.
           defaultOpen
@@ -768,11 +773,32 @@ function Delivery({
         </button>
       )}
 
-      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-        {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
-      </div>
-      <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
+      {/* The delivery and the checks it is measured against, side by side.
+          Placement is explicit rather than by source order: the checklist comes FIRST in the DOM,
+          so on a narrow console it stacks above the work — a reviewer should meet the checks
+          before the thing being checked, and that is also the order a screen reader takes. Given
+          room, it is placed into column two of the same row instead. */}
+      <div className="grid gap-5 @4xl:grid-cols-[minmax(0,1fr)_17rem]">
+        {checks.length > 0 && (
+          <aside
+            // self-start matters: a stretched grid item is as tall as its row, and a sticky box
+            // with no slack inside its container never moves.
+            // top-[53px] clears the 45px toolbar it would otherwise slide under.
+            // The max-height is what keeps a long list honest — without it a checklist taller than
+            // the viewport pins its own tail off-screen with no way to reach it.
+            className="@4xl:sticky @4xl:top-[53px] @4xl:col-start-2 @4xl:row-start-1 @4xl:self-start @4xl:max-h-[calc(100dvh-8.5rem)] @4xl:overflow-y-auto @4xl:overscroll-contain"
+          >
+            <WhatToCheck items={checks} title="What to check" />
+          </aside>
+        )}
 
+        <div className="min-w-0 @4xl:col-start-1 @4xl:row-start-1">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+            {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
+          </div>
+          <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
+        </div>
+      </div>
     </div>
   );
 }

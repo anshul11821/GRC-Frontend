@@ -17,6 +17,54 @@ import { Gloss, TermsUsed } from "@/components/app/glossary";
  * stays with whichever page owns it, because those are the parts that genuinely differ.
  */
 
+/**
+ * The steps the work is measured against.
+ *
+ * Lives on its own because it is rendered twice in different frames: inside the brief, beside the
+ * objective, and — in the mentor console — as a rail that stays in view while the reviewer reads
+ * the submission. The same list, checked against the same numbers, either way.
+ */
+export function WhatToCheck({
+  items,
+  title,
+  panelRef,
+  className = "",
+}: {
+  items: string[];
+  title: string;
+  panelRef?: React.Ref<HTMLDivElement>;
+  className?: string;
+}) {
+  return (
+    <div
+      ref={panelRef}
+      className={`rounded-2xl bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-transparent ring-1 ring-emerald-100/80 p-4 ${className}`}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Icon name="list" size={14} className="text-emerald-700" />
+        <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-emerald-700">
+          {title}
+        </h2>
+      </div>
+      <ol className="space-y-2.5">
+        {items.map((step, i) => (
+          <li key={i} className="flex gap-2.5">
+            <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10.5px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
+              {i + 1}
+            </span>
+            <span
+              className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight"
+              style={{ textWrap: "pretty" }}
+            >
+              <Gloss>{step}</Gloss>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /** The brief: what this step is for, and what doing it involves. Collapsible to reclaim the page. */
 export function StepBrief({
   objective,
@@ -61,7 +109,11 @@ export function StepBrief({
         className={`grid transition-all duration-300 ease-in-out ${shown ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className="overflow-hidden min-h-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+          <div
+            className={`grid grid-cols-1 gap-4 items-stretch ${
+              objective && whatToDo && whatToDo.length > 0 ? "md:grid-cols-2" : ""
+            }`}
+          >
             {objective && (
               <div
                 ref={objectiveRef}
@@ -82,32 +134,7 @@ export function StepBrief({
               </div>
             )}
             {whatToDo && whatToDo.length > 0 && (
-              <div
-                ref={whatToDoRef}
-                className="rounded-2xl bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-transparent ring-1 ring-emerald-100/80 p-4"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="list" size={14} className="text-emerald-700" />
-                  <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-emerald-700">
-                    {listTitle}
-                  </h2>
-                </div>
-                <ol className="space-y-2.5">
-                  {whatToDo.map((step, i) => (
-                    <li key={i} className="flex gap-2.5">
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10.5px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
-                        {i + 1}
-                      </span>
-                      <span
-                        className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight"
-                        style={{ textWrap: "pretty" }}
-                      >
-                        <Gloss>{step}</Gloss>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              <WhatToCheck items={whatToDo} title={listTitle} panelRef={whatToDoRef} />
             )}
           </div>
           {/* Every term this step's brief uses, defined in full — hover is opt-in, this isn't. */}
