@@ -776,7 +776,7 @@ function Delivery({
 
       {/* Delivery and criteria as two frames with a divider between them, the way every grading
           tool that has solved this lays it out. Below lg they stack, criteria first. */}
-      {checks.length > 0 && <CheckBar items={checks} submissionId={card.submissionId} />}
+      {checks.length > 0 && <CheckBar items={checks} />}
 
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
         {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
@@ -787,32 +787,29 @@ function Delivery({
 }
 
 /**
- * The checks, as a checklist the reviewer works through.
+ * The checks the work is measured against, kept in view while it is read.
  *
- * It was a list to read; it is now a list to do. A reviewer opening a card holds "which of these
- * have I actually confirmed" in their head across a thirty-row register, and that is precisely the
- * kind of bookkeeping a screen should carry instead. Ticking one strikes it and moves the count;
- * closed, the bar names the next UNTICKED check rather than the first, so the one line it can
- * afford is the one that is still owed.
+ * Read-only on purpose. A tickable version was built and taken back out: ticks that the programme
+ * does not keep are a private tally that looks like a record, and ticks it did keep would imply a
+ * gate was approved BECAUSE eight boxes were ticked. What the programme keeps is the verdict and
+ * its note. This is a reference, so it behaves like one.
  *
  * Four shapes preceded this and the measurements ruled out the rest. The content: 630 checklists,
  * 2-8 items, 142 characters at the median and 941 at the worst, one item reaching 312. The screen:
  * a 1440 laptop at 150% Windows scaling is a 960px viewport and this console spends 336 on its
  * sidebar, so a docked side panel — right when a grader has the whole window — left the delivery
  * 462px at 1097 and did not dock at all below 1024. Height is what this page has spare; width is
- * not. Hence a bar, pinned at every size, capped at 38vh with its own scroll.
+ * not. Hence a bar, pinned under the toolbar at every size, capped at 38vh with its own scroll.
  *
- * The ticks are a working aid, not a record. What the programme keeps is the verdict and its note;
- * storing ticks on the server would imply they are part of the decision, and they are not. So they
- * live in this reviewer's browser, keyed by submission — which means a resubmission, being a new
- * submission, starts clean without anything having to clear it.
+ * It stops at max-w-3xl rather than running the width of the card. Past about 80 characters a line
+ * is harder to track back from, and these run to 312 — full width would have made the longest
+ * checks the hardest to read, which is backwards.
  */
 const PANEL_KEY = "grcmentor.mentor.checksPanel";
-const TICKS_KEY = "grcmentor.mentor.checksTicked";
-// One key holding a map rather than a key per submission: a mentor reviews thousands, and a
-// per-submission key would grow this reviewer's storage without bound. Oldest are dropped.
-const TICKS_KEPT = 40;
 
+// A module store read through useSyncExternalStore, not state loaded in an effect: that is the
+// cascading-render pattern the lint rule exists to stop, and this way the choice survives a
+// remount, so walking step to step does not reopen what the reviewer just closed.
 const CHECKS_SERVER = { open: true };
 const panelListeners = new Set<() => void>();
 let panelMemo: { open: boolean } | null = null;
@@ -845,100 +842,33 @@ function subscribePanel(l: () => void): () => void {
   return () => void panelListeners.delete(l);
 }
 
-type TickMap = Record<string, number[]>;
-const NO_TICKS: number[] = [];
-const tickListeners = new Set<() => void>();
-let tickMemo: TickMap | null = null;
-
-function tickMap(): TickMap {
-  if (!tickMemo) {
-    try {
-      const raw = JSON.parse(localStorage.getItem(TICKS_KEY) ?? "null");
-      tickMemo = raw && typeof raw === "object" ? (raw as TickMap) : {};
-    } catch {
-      tickMemo = {};
-    }
-  }
-  return tickMemo;
-}
-
-/** Stable identity per submission, so useSyncExternalStore does not see a new array every render. */
-function ticksFor(submissionId: number): number[] {
-  return tickMap()[String(submissionId)] ?? NO_TICKS;
-}
-
-function toggleTick(submissionId: number, index: number): void {
-  const key = String(submissionId);
-  const now = tickMap()[key] ?? [];
-  const next = now.includes(index) ? now.filter((n) => n !== index) : [...now, index].sort((a, b) => a - b);
-  const map: TickMap = { ...tickMap() };
-  if (next.length) map[key] = next;
-  else delete map[key];
-  // Insertion order is arrival order, so the oldest submissions fall off the front.
-  const keys = Object.keys(map);
-  for (const k of keys.slice(0, Math.max(0, keys.length - TICKS_KEPT))) delete map[k];
-  tickMemo = map;
-  try {
-    localStorage.setItem(TICKS_KEY, JSON.stringify(map));
-  } catch {
-    // A tick that cannot be remembered is still worth showing for this sitting.
-  }
-  tickListeners.forEach((l) => l());
-}
-
-function subscribeTicks(l: () => void): () => void {
-  tickListeners.add(l);
-  return () => void tickListeners.delete(l);
-}
-
-function CheckBar({ items, submissionId }: { items: string[]; submissionId: number }) {
+function CheckBar({ items }: { items: string[] }) {
   const { open } = useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER);
-  const ticked = useSyncExternalStore(
-    subscribeTicks,
-    () => ticksFor(submissionId),
-    () => NO_TICKS,
-  );
-  const done = ticked.length;
-  const next = items.findIndex((_, i) => !ticked.includes(i));
-  const allDone = done === items.length;
 
   return (
-    // -mx-6 px-6 so it spans the card: a pinned bar that stops short of the edges reads as
-    // content rather than as chrome. top-[45px] is the toolbar's height, so it parks beneath it.
-    <div
-      className={`sticky top-[45px] z-10 -mx-6 mb-3.5 border-y transition-colors ${
-        allDone ? "border-emerald-200 bg-[#eaf7ef]" : "border-emerald-100 bg-[#f4faf6]"
-      }`}
-    >
+    // Two elements, and the outer one is load-bearing. The bar itself stops at max-w-3xl, but a
+    // sticky box narrower than the page does not mask what scrolls under it — the delivery's rows
+    // slid past in the gap beside it, which read as a rendering fault. So the sticky element is a
+    // full-bleed strip in the card's own white, and the only thing visible in it is the bar.
+    // top-[45px] is the toolbar's height, so it parks directly beneath it at every size.
+    <div className="sticky top-[45px] z-10 -mx-6 mb-3.5 bg-white px-6 pb-3.5">
+    <div className="w-full max-w-3xl rounded-xl border border-emerald-100 bg-[#f4faf6]">
       <button
         onClick={() => setChecksOpen(!open)}
         aria-expanded={open}
-        className="flex w-full items-center gap-2.5 px-6 py-2 text-left"
+        className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left"
       >
-        <Icon
-          name={allDone ? "checkCircle" : "list"}
-          size={13}
-          className="shrink-0 text-emerald-700"
-        />
+        <Icon name="list" size={13} className="shrink-0 text-emerald-700" />
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-700">
           What to check
         </span>
         <span className="shrink-0 text-[11px] tabular-nums text-emerald-700/70">
-          {done}/{items.length}
+          {items.length}
         </span>
         {!open && (
-          // Closed, the one line it can afford is the check still owed — not the first one, which
-          // may be the one just ticked.
-          <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600">
-            {allDone ? (
-              <span className="text-emerald-700">All checks confirmed</span>
-            ) : (
-              <>
-                <span className="text-slate-400">Next &middot; </span>
-                {items[next]}
-              </>
-            )}
-          </span>
+          // Closed, the bar still says what the first check is. A count alone would make the
+          // reviewer open it to find out whether it was worth opening.
+          <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600">{items[0]}</span>
         )}
         {open && <span className="flex-1" />}
         <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-700">
@@ -952,42 +882,27 @@ function CheckBar({ items, submissionId }: { items: string[]; submissionId: numb
       </button>
 
       {open && (
-        <ul className="max-h-[38vh] overflow-y-auto overscroll-contain border-t border-emerald-100/80 px-4 py-1.5">
-          {items.map((c, i) => {
-            const on = ticked.includes(i);
-            return (
-              <li key={i}>
-                {/* The whole row is the target. A 17px checkbox is a poor thing to have to hit,
-                    and there is nothing else in the row to click. */}
-                <button
-                  onClick={() => toggleTick(submissionId, i)}
-                  aria-pressed={on}
-                  className="flex w-full items-start gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-emerald-50"
-                >
-                  <span
-                    aria-hidden
-                    className={`mt-[1px] grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[5px] border transition-colors ${
-                      on
-                        ? "border-emerald-600 bg-emerald-600 text-white"
-                        : "border-emerald-300 bg-white text-transparent"
-                    }`}
-                  >
-                    <Icon name="check" size={11} />
-                  </span>
-                  <span
-                    className={`text-[12px] leading-relaxed tracking-tight transition-colors ${
-                      on ? "text-slate-400 line-through decoration-slate-300" : "text-slate-700"
-                    }`}
-                    style={{ textWrap: "pretty" }}
-                  >
-                    <Gloss>{c}</Gloss>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <ol className="max-h-[38vh] space-y-1.5 overflow-y-auto overscroll-contain border-t border-emerald-100/80 px-3.5 py-2.5">
+          {items.map((c, i) => (
+            <li key={i} className="flex gap-2.5">
+              {/* A checklist marker, deliberately not a control: no hover, no pointer, nothing
+                  that says it can be clicked. It reads as a checklist because that is what a
+                  reviewer is doing with it, not because the page keeps score. */}
+              <span
+                aria-hidden
+                className="mt-[2px] h-[15px] w-[15px] shrink-0 rounded-[4px] border-[1.5px] border-emerald-300 bg-white"
+              />
+              <span
+                className="text-[12px] leading-relaxed tracking-tight text-slate-700"
+                style={{ textWrap: "pretty" }}
+              >
+                <Gloss>{c}</Gloss>
+              </span>
+            </li>
+          ))}
+        </ol>
       )}
+    </div>
     </div>
   );
 }
