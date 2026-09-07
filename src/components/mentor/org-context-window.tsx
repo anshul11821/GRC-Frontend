@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { FloatWindow } from "@/components/mentor/float-window";
-import { Icon } from "@/components/ui/icon";
 import { loadOrg, peekOrg } from "@/components/mentor/desk-context";
 import {
   PANES,
@@ -21,12 +20,11 @@ import { isAuthError, type OrgDetail } from "@/lib/mentor";
  * dashboard's own pane components rather than a second version of them, so a field added to the
  * profile shows up in both places or neither.
  *
- * What differs is only the shape the sections take. The dashboard has a full page and shows one
- * pane at a time behind a tab strip; this is a 470px window floating over a submission, where a
- * reviewer wants two sections open at once — the client data beside the standards, say, to judge
- * whether the mentee classified it right. So the tabs become collapsible sections, all of them
- * reachable by scrolling, and Overview is open on arrival because it is the one that says what
- * this organisation is. The dashboard's Mentees pane is not carried over — see SECTIONS below.
+ * The tab strip is the dashboard's too, so a reviewer who knows where a fact lives on one screen
+ * knows where it lives on the other. It wraps rather than scrolls: five labels do not fit across
+ * 430px, and a tab row you have to scroll to see is an index that hides half of itself.
+ *
+ * The dashboard's Mentees pane is not carried over — see SECTIONS below.
  */
 
 const BODIES: Record<string, (o: OrgDetail) => React.ReactNode> = {
@@ -52,9 +50,7 @@ export function OrgContextWindow({
   onClose: () => void;
 }) {
   const [org, setOrg] = useState<OrgDetail | null>(() => peekOrg(orgId) ?? null);
-  // Open on arrival, so the window says something the moment it appears rather than presenting
-  // six shut drawers. The rest are the reviewer's to open.
-  const [open, setOpen] = useState<Set<string>>(() => new Set(["context"]));
+  const [pane, setPane] = useState<string>(SECTIONS[0].id);
 
   useEffect(() => {
     let live = true;
@@ -68,12 +64,7 @@ export function OrgContextWindow({
     };
   }, [orgId]);
 
-  const toggle = (id: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
+  const shown = SECTIONS.find((s) => s.id === pane) ?? SECTIONS[0];
 
   return (
     <FloatWindow title={org?.name || orgName} icon="briefcase" width={470} height={580} onClose={onClose}>
@@ -84,7 +75,7 @@ export function OrgContextWindow({
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {/* The identifying line the dashboard puts in its page header. In a window the title bar
               already carries the name, so only what the name does not say is repeated. */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 pb-1">
@@ -103,28 +94,33 @@ export function OrgContextWindow({
             )}
           </div>
 
-          {SECTIONS.map((s) => {
-            const on = open.has(s.id);
-            return (
-              <section key={s.id} className="rounded-xl bg-slate-50/70 ring-1 ring-slate-200/70">
+          {/* Wraps rather than scrolls, for the reason in the docblock. The buttons sit 1px proud
+              of the rule via -mb-px, so the underline of the active tab meets it. */}
+          <div
+            role="tablist"
+            className="flex flex-wrap items-end gap-0.5 border-b border-slate-200/70"
+          >
+            {SECTIONS.map((s) => {
+              const on = s.id === pane;
+              return (
                 <button
-                  onClick={() => toggle(s.id)}
-                  aria-expanded={on}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-100/70"
+                  key={s.id}
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setPane(s.id)}
+                  className={`-mb-px h-8 whitespace-nowrap border-b-2 px-2 text-[11.5px] font-medium transition-colors ${
+                    on
+                      ? "border-indigo-600 text-slate-900"
+                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  }`}
                 >
-                  <Icon
-                    name="chevronDown"
-                    size={14}
-                    className={`shrink-0 text-slate-400 transition-transform ${on ? "" : "-rotate-90"}`}
-                  />
-                  <span className="text-[12.5px] font-semibold tracking-tight text-slate-900">
-                    {s.label}
-                  </span>
+                  {s.label}
                 </button>
-                {on && <div className="@container px-3 pb-3">{BODIES[s.id](org)}</div>}
-              </section>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          <div className="@container pt-1">{BODIES[shown.id](org)}</div>
         </div>
       )}
     </FloatWindow>
