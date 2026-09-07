@@ -812,9 +812,12 @@ function Delivery({
  * wanted. It is also how this console already shows the other thing a reviewer holds up against
  * the work — the reference material — so it is one interaction, not two.
  *
- * Read-only. A tickable version was built and taken back out: a tally the programme does not keep
- * looks like a record without being one, and one it did keep would imply a gate was approved
- * BECAUSE eight boxes were ticked. What the programme keeps is the verdict and its note.
+ * It is something to read, so it is set as something to read: numbered, hanging-indented, ruled
+ * between items, and in the console's own greys. It carried checkbox markers for a while — first
+ * tickable, then not — and an unticked box a reviewer cannot tick is a control that does nothing,
+ * which is worse than no control. A tally would also have been the wrong idea underneath: what the
+ * programme keeps is the verdict and its note, and boxes ticked beside them would read as though a
+ * gate had been approved BECAUSE eight of them were ticked.
  *
  * It arrives when the reviewer does. At the top of a card they are reading the brief, not marking
  * anything, and a window over that is in the way; it opens once the delivery itself is on screen,
@@ -921,13 +924,13 @@ function ChecksButton({ count, showing }: { count: number; showing: boolean }) {
       aria-pressed={showing}
       className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-semibold ring-1 transition-colors ${
         showing
-          ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+          ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
           : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
       }`}
     >
       <Icon name="list" size={12} />
       What to check
-      <span className={`tabular-nums ${showing ? "text-emerald-600" : "text-slate-400"}`}>
+      <span className={`tabular-nums ${showing ? "text-indigo-400" : "text-slate-400"}`}>
         {count}
       </span>
     </button>
@@ -943,21 +946,27 @@ function ChecksWindow({ items, showing }: { items: string[]; showing: boolean })
     <FloatWindow
       title="What to check"
       icon="list"
-      width={400}
+      width={420}
       foldable={false}
       onClose={() => setChecksPref("closed")}
     >
-      <ol className="space-y-2">
+      {/* Numbered, because these really are the mentee's steps in order — the numbering is the
+          content's own, not decoration added to it, and it gives a reviewer a way to say which
+          check failed. Hairlines rather than boxes: eight items need separating, and a rule does
+          that with one pixel where a card does it with four borders and a fill.
+          The number sits in its own column so wrapped lines align under the text, not under the
+          digit — a hanging indent is what makes a long item read as one item. */}
+      <ol className="divide-y divide-slate-100">
         {items.map((c, i) => (
-          <li key={i} className="flex gap-2.5">
-            {/* A checklist marker, deliberately not a control: no hover, no pointer, nothing that
-                offers a click the page will not honour. */}
+          <li key={i} className="flex gap-3 py-2.5 first:pt-0.5 last:pb-0.5">
             <span
               aria-hidden
-              className="mt-[2px] h-[15px] w-[15px] shrink-0 rounded-[4px] border-[1.5px] border-emerald-300 bg-white"
-            />
+              className="w-4 shrink-0 pt-[2px] text-right text-[11px] font-medium tabular-nums text-slate-400"
+            >
+              {i + 1}
+            </span>
             <span
-              className="text-[12.5px] leading-relaxed tracking-tight text-slate-700"
+              className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-slate-700"
               style={{ textWrap: "pretty" }}
             >
               <Gloss>{c}</Gloss>
