@@ -745,6 +745,11 @@ function Delivery({
   setMarks: React.Dispatch<React.SetStateAction<ReviewComment[]>>;
 }) {
   const checks = card.brief?.whatToDo ?? [];
+  const deliveryRef = useRef<HTMLDivElement>(null);
+  const atTheWork = useReachedOnce(deliveryRef, card.submissionId);
+  const pref = useChecksPref();
+  // "auto" defers to where the reviewer has scrolled; the other two are their explicit answer.
+  const showing = pref === "open" || (pref === "auto" && atTheWork);
 
   return (
     <div>
@@ -766,7 +771,7 @@ function Delivery({
       {/* The two companions to a submission, opened the same way and each into its own window:
           what the mentee was told to produce, and what they were given to produce it from. */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {checks.length > 0 && <ChecksButton count={checks.length} />}
+        {checks.length > 0 && <ChecksButton count={checks.length} showing={showing} />}
         {card.brief && card.brief.references.length > 0 && (
           <button
             onClick={onRefs}
@@ -779,9 +784,12 @@ function Delivery({
         )}
       </div>
 
-      {checks.length > 0 && <ChecksWindow items={checks} />}
+      {checks.length > 0 && <ChecksWindow items={checks} showing={showing} />}
 
-      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+      <div
+        ref={deliveryRef}
+        className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500"
+      >
         {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
       </div>
       <CommentableSubmission card={card} comments={marks} onChange={setMarks} />
@@ -808,35 +816,44 @@ function Delivery({
  * looks like a record without being one, and one it did keep would imply a gate was approved
  * BECAUSE eight boxes were ticked. What the programme keeps is the verdict and its note.
  *
- * Open on arrival, and closing it is remembered — a reviewer who works from the checks should not
- * reopen them on every card, and one who does not should not keep dismissing them.
+ * It arrives when the reviewer does. At the top of a card they are reading the brief, not marking
+ * anything, and a window over that is in the way; it opens once the delivery itself is on screen,
+ * which is the point the checks start being useful. Closing it is the reviewer overruling that:
+ * "closed" is a decision, it is remembered, and nothing reopens the window afterwards except the
+ * reviewer pressing the button. Three states, not two — auto, open, closed — because "has not
+ * decided yet" and "has decided against" must not collapse into the same thing.
+ *
+ * One control to dismiss it, not two. FloatWindow's fold is off here: a second way to make a
+ * window go away is one too many when reopening it is a single click.
  */
 const PANEL_KEY = "grcmentor.mentor.checksPanel";
 
 // A module store read through useSyncExternalStore, not state loaded in an effect: that is the
 // cascading-render pattern the lint rule exists to stop, and this way the choice survives a
 // remount, so walking step to step does not reopen what the reviewer just closed.
-const CHECKS_SERVER = { open: true };
+type ChecksPref = "auto" | "open" | "closed";
+const CHECKS_SERVER: { pref: ChecksPref } = { pref: "auto" };
 const panelListeners = new Set<() => void>();
-let panelMemo: { open: boolean } | null = null;
+let panelMemo: { pref: ChecksPref } | null = null;
 
-function panelSnapshot(): { open: boolean } {
+function panelSnapshot(): { pref: ChecksPref } {
   // Memoised: getSnapshot must be referentially stable or React re-renders forever.
   if (!panelMemo) {
     try {
       const raw = JSON.parse(localStorage.getItem(PANEL_KEY) ?? "null");
-      panelMemo = raw && typeof raw.open === "boolean" ? { open: raw.open } : CHECKS_SERVER;
+      panelMemo =
+        raw && (raw.pref === "open" || raw.pref === "closed") ? { pref: raw.pref } : CHECKS_SERVER;
     } catch {
-      panelMemo = CHECKS_SERVER; // storage unavailable or corrupt — open beats absent
+      panelMemo = CHECKS_SERVER; // storage unavailable or corrupt — auto beats nothing
     }
   }
   return panelMemo;
 }
 
-function setChecksOpen(open: boolean): void {
-  panelMemo = { open };
+function setChecksPref(pref: ChecksPref): void {
+  panelMemo = { pref };
   try {
-    localStorage.setItem(PANEL_KEY, JSON.stringify({ open }));
+    localStorage.setItem(PANEL_KEY, JSON.stringify({ pref }));
   } catch {
     // Not remembering the choice is no reason to refuse to make it.
   }
@@ -848,38 +865,88 @@ function subscribePanel(l: () => void): () => void {
   return () => void panelListeners.delete(l);
 }
 
-function useChecksOpen(): boolean {
-  return useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER).open;
+function useChecksPref(): ChecksPref {
+  return useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER).pref;
+}
+
+/**
+ * True once the reviewer has scrolled far enough to reach the delivery, and true from then on.
+ *
+ * An observer rather than a scroll handler: the question is "has this element come into the frame",
+ * which IntersectionObserver answers directly and a scroll listener can only recompute on every
+ * frame from numbers it has to measure itself.
+ *
+ * Two details, both learned by watching it get them wrong. The bottom inset means the delivery
+ * counts as reached when it rises into the upper part of the screen, not when its first pixel
+ * appears at the very bottom — on an 864px viewport the heading is already visible at page load,
+ * so without it the window opened before the reviewer had scrolled anywhere. And it LATCHES: the
+ * first version tracked visibility, so the window vanished the moment the heading scrolled off the
+ * top, which is precisely when a reviewer is deepest in the work and most wants it.
+ *
+ * The latch resets per submission, so the next card starts from the top again.
+ */
+function useReachedOnce(ref: React.RefObject<HTMLElement | null>, resetKey: number): boolean {
+  const [seen, setSeen] = useState(false);
+
+  // Reset during render, not in an effect: an effect-time reset would leave the previous card's
+  // answer on screen for a frame under the new card's heading.
+  const [prevKey, setPrevKey] = useState(resetKey);
+  if (resetKey !== prevKey) {
+    setPrevKey(resetKey);
+    setSeen(false);
+  }
+
+  useEffect(() => {
+    if (seen) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setSeen(true);
+      },
+      { rootMargin: "0px 0px -40% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, seen, resetKey]);
+
+  return seen;
 }
 
 /** Reopens the window, and shows it is there to reopen. Sits beside Reference material. */
-function ChecksButton({ count }: { count: number }) {
-  const open = useChecksOpen();
+function ChecksButton({ count, showing }: { count: number; showing: boolean }) {
   return (
     <button
-      onClick={() => setChecksOpen(!open)}
-      aria-pressed={open}
+      onClick={() => setChecksPref(showing ? "closed" : "open")}
+      aria-pressed={showing}
       className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-semibold ring-1 transition-colors ${
-        open
+        showing
           ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
           : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
       }`}
     >
       <Icon name="list" size={12} />
       What to check
-      <span className={`tabular-nums ${open ? "text-emerald-600" : "text-slate-400"}`}>{count}</span>
+      <span className={`tabular-nums ${showing ? "text-emerald-600" : "text-slate-400"}`}>
+        {count}
+      </span>
     </button>
   );
 }
 
-function ChecksWindow({ items }: { items: string[] }) {
-  const open = useChecksOpen();
-  if (!open) return null;
+function ChecksWindow({ items, showing }: { items: string[]; showing: boolean }) {
+  if (!showing) return null;
 
   return (
     // No height: the window hugs its content, and FloatWindow's own cap and inner scroll take over
     // when the content is longer than the screen — which at 941 characters it can be.
-    <FloatWindow title="What to check" icon="list" width={400} onClose={() => setChecksOpen(false)}>
+    <FloatWindow
+      title="What to check"
+      icon="list"
+      width={400}
+      foldable={false}
+      onClose={() => setChecksPref("closed")}
+    >
       <ol className="space-y-2">
         {items.map((c, i) => (
           <li key={i} className="flex gap-2.5">

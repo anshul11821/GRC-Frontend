@@ -21,6 +21,8 @@ export function FloatWindow({
   width = 420,
   height,
   onClose,
+  /** Two ways to make a window go away is one too many when reopening it is a single click. */
+  foldable = true,
   children,
 }: {
   title: string;
@@ -29,6 +31,7 @@ export function FloatWindow({
   width?: number;
   height?: number;
   onClose: () => void;
+  foldable?: boolean;
   children: React.ReactNode;
 }) {
   // Null until the reviewer drags it. Until then the window is placed by CSS against the right
@@ -116,13 +119,15 @@ export function FloatWindow({
           <div className="text-[12.5px] font-semibold text-slate-800 truncate">{title}</div>
           {sub && <div className="text-[11px] text-slate-500 truncate">{sub}</div>}
         </div>
-        <button
-          onClick={() => setFolded(!folded)}
-          aria-label={folded ? `Unfold ${title}` : `Fold ${title}`}
-          className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-200"
-        >
-          <Icon name={folded ? "plus" : "minus"} size={13} />
-        </button>
+        {foldable && (
+          <button
+            onClick={() => setFolded(!folded)}
+            aria-label={folded ? `Unfold ${title}` : `Fold ${title}`}
+            className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-200"
+          >
+            <Icon name={folded ? "plus" : "minus"} size={13} />
+          </button>
+        )}
         <button
           onClick={onClose}
           aria-label={`Close ${title}`}
