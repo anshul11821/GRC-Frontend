@@ -193,7 +193,7 @@ function OrgSidebar({
   );
 }
 
-const PANES = [
+export const PANES = [
   { id: "context", label: "Overview" },
   { id: "data", label: "Data & processes" },
   { id: "std", label: "Standards & regulators" },
@@ -306,7 +306,7 @@ function OrgPane({ orgId }: { orgId: string }) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pb-1 pt-3.5">
+      <div className="@container min-h-0 flex-1 pb-1 pt-3.5">
         {pane === "context" && <PaneOverview o={org} />}
         {pane === "data" && <PaneData o={org} />}
         {pane === "std" && <PaneStandards o={org} />}
@@ -324,7 +324,7 @@ function PaneSkeleton() {
     <div className="flex flex-col gap-3 bg-white p-5">
       <div className="h-11 w-80 animate-pulse rounded-lg bg-slate-100" />
       <div className="h-9 w-full max-w-[560px] animate-pulse rounded-lg bg-slate-100" />
-      <div className="grid gap-3.5 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <div className="grid gap-3.5 @md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="h-52 animate-pulse rounded-2xl bg-slate-100" />
         <div className="h-52 animate-pulse rounded-2xl bg-slate-100" />
       </div>
@@ -373,10 +373,10 @@ const Bullets = ({ items, empty }: { items: string[]; empty: string }) =>
     </div>
   );
 
-function PaneOverview({ o }: { o: OrgDetail }) {
+export function PaneOverview({ o }: { o: OrgDetail }) {
   const regional = o.officeLocations.regionalOffices ?? [];
   return (
-    <div className="grid gap-3.5 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+    <div className="grid gap-3.5 @md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-3.5">
         <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-white to-white p-4 ring-1 ring-slate-200/70">
           <p className="text-[12.5px] leading-relaxed text-slate-600">{o.context || "—"}</p>
@@ -433,8 +433,8 @@ function PaneOverview({ o }: { o: OrgDetail }) {
   );
 }
 
-const PaneData = ({ o }: { o: OrgDetail }) => (
-  <div className="grid gap-3.5 md:grid-cols-2">
+export const PaneData = ({ o }: { o: OrgDetail }) => (
+  <div className="grid gap-3.5 @md:grid-cols-2">
     <Card title="Client data handled" icon="shield" meta={`${o.clientData.length} types`}>
       <div className="flex flex-wrap gap-1.5">
         {o.clientData.map((d) => (
@@ -453,8 +453,8 @@ const PaneData = ({ o }: { o: OrgDetail }) => (
   </div>
 );
 
-const PaneStandards = ({ o }: { o: OrgDetail }) => (
-  <div className="grid gap-3.5 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+export const PaneStandards = ({ o }: { o: OrgDetail }) => (
+  <div className="grid gap-3.5 @md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
     <Card title="Standards" icon="checkCircle" meta={`${o.mandatoryStandards.length} mandatory`}>
       <div className="flex flex-col gap-1.5">
         {o.mandatoryStandards.map((s) => (
@@ -487,8 +487,8 @@ const PaneStandards = ({ o }: { o: OrgDetail }) => (
   </div>
 );
 
-const PanePeople = ({ o }: { o: OrgDetail }) => (
-  <div className="grid items-start gap-3.5 md:grid-cols-2">
+export const PanePeople = ({ o }: { o: OrgDetail }) => (
+  <div className="grid items-start gap-3.5 @md:grid-cols-2">
     <Card title="Internal parties" icon="users">
       <Bullets items={o.interestedParties.internal ?? []} empty="None recorded." />
     </Card>
@@ -498,8 +498,8 @@ const PanePeople = ({ o }: { o: OrgDetail }) => (
   </div>
 );
 
-const PaneInfra = ({ o }: { o: OrgDetail }) => (
-  <div className="grid items-start gap-3.5 md:grid-cols-2">
+export const PaneInfra = ({ o }: { o: OrgDetail }) => (
+  <div className="grid items-start gap-3.5 @md:grid-cols-2">
     <Card title="On-premises" icon="cube" meta="Self-hosted">
       <Bullets items={o.informationAssets.onPremises ?? []} empty="None recorded." />
     </Card>
@@ -509,8 +509,8 @@ const PaneInfra = ({ o }: { o: OrgDetail }) => (
   </div>
 );
 
-const PaneMentees = ({ o }: { o: OrgDetail }) => (
-  <div className="grid items-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
+export const PaneMentees = ({ o }: { o: OrgDetail }) => (
+  <div className="grid items-start gap-3 @md:grid-cols-2 @4xl:grid-cols-3">
     {o.mentees.map((m) => (
       <div key={m.userId} className="rounded-2xl bg-white p-4 ring-1 ring-slate-200/70">
         <div className="flex items-start gap-2.5">
