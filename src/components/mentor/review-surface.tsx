@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { StepBrief } from "@/components/app/deliverable";
@@ -747,7 +747,16 @@ function Delivery({
   const checks = card.brief?.whatToDo ?? [];
   const deliveryRef = useRef<HTMLDivElement>(null);
   const atTheWork = useReachedOnce(deliveryRef, card.submissionId);
-  const pref = useChecksPref();
+  const [pref, setPref] = useState<ChecksPref>("auto");
+
+  // Reset during render when the step changes, not in an effect: an effect-time reset would leave
+  // the previous step's answer standing for a frame under this step's checks.
+  const [prevSub, setPrevSub] = useState(card.submissionId);
+  if (card.submissionId !== prevSub) {
+    setPrevSub(card.submissionId);
+    setPref("auto");
+  }
+
   // "auto" defers to where the reviewer has scrolled; the other two are their explicit answer.
   const showing = pref === "open" || (pref === "auto" && atTheWork);
 
@@ -771,7 +780,9 @@ function Delivery({
       {/* The two companions to a submission, opened the same way and each into its own window:
           what the mentee was told to produce, and what they were given to produce it from. */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {checks.length > 0 && <ChecksButton count={checks.length} showing={showing} />}
+        {checks.length > 0 && (
+          <ChecksButton count={checks.length} showing={showing} onSet={setPref} />
+        )}
         {card.brief && card.brief.references.length > 0 && (
           <button
             onClick={onRefs}
@@ -784,7 +795,7 @@ function Delivery({
         )}
       </div>
 
-      {checks.length > 0 && <ChecksWindow items={checks} showing={showing} />}
+      {checks.length > 0 && <ChecksWindow items={checks} showing={showing} onSet={setPref} />}
 
       <div
         ref={deliveryRef}
@@ -821,56 +832,22 @@ function Delivery({
  *
  * It arrives when the reviewer does. At the top of a card they are reading the brief, not marking
  * anything, and a window over that is in the way; it opens once the delivery itself is on screen,
- * which is the point the checks start being useful. Closing it is the reviewer overruling that:
- * "closed" is a decision, it is remembered, and nothing reopens the window afterwards except the
- * reviewer pressing the button. Three states, not two — auto, open, closed — because "has not
- * decided yet" and "has decided against" must not collapse into the same thing.
+ * which is the point the checks start being useful. Closing it is the reviewer overruling that,
+ * and nothing reopens it except the button. Three states, not two — auto, open, closed — because
+ * "has not decided yet" and "has decided against" must not collapse into the same value, or
+ * scrolling would undo the close.
+ *
+ * All three are per VISIT, and deliberately not stored anywhere. Closing this step's checks says
+ * "I have read these", which is true of this reading of this step and of nothing else: the next
+ * step has different checks, and coming back to this one is a fresh look at it. Remembered
+ * globally — the first version — one close meant the window never appeared again on any card.
+ * Remembered per submission it would still have gone quiet on the second visit to a step, which
+ * is exactly when a reviewer returning to finish something wants the checks back.
  *
  * One control to dismiss it, not two. FloatWindow's fold is off here: a second way to make a
  * window go away is one too many when reopening it is a single click.
  */
-const PANEL_KEY = "grcmentor.mentor.checksPanel";
-
-// A module store read through useSyncExternalStore, not state loaded in an effect: that is the
-// cascading-render pattern the lint rule exists to stop, and this way the choice survives a
-// remount, so walking step to step does not reopen what the reviewer just closed.
 type ChecksPref = "auto" | "open" | "closed";
-const CHECKS_SERVER: { pref: ChecksPref } = { pref: "auto" };
-const panelListeners = new Set<() => void>();
-let panelMemo: { pref: ChecksPref } | null = null;
-
-function panelSnapshot(): { pref: ChecksPref } {
-  // Memoised: getSnapshot must be referentially stable or React re-renders forever.
-  if (!panelMemo) {
-    try {
-      const raw = JSON.parse(localStorage.getItem(PANEL_KEY) ?? "null");
-      panelMemo =
-        raw && (raw.pref === "open" || raw.pref === "closed") ? { pref: raw.pref } : CHECKS_SERVER;
-    } catch {
-      panelMemo = CHECKS_SERVER; // storage unavailable or corrupt — auto beats nothing
-    }
-  }
-  return panelMemo;
-}
-
-function setChecksPref(pref: ChecksPref): void {
-  panelMemo = { pref };
-  try {
-    localStorage.setItem(PANEL_KEY, JSON.stringify({ pref }));
-  } catch {
-    // Not remembering the choice is no reason to refuse to make it.
-  }
-  panelListeners.forEach((l) => l());
-}
-
-function subscribePanel(l: () => void): () => void {
-  panelListeners.add(l);
-  return () => void panelListeners.delete(l);
-}
-
-function useChecksPref(): ChecksPref {
-  return useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER).pref;
-}
 
 /**
  * True once the reviewer has scrolled far enough to reach the delivery, and true from then on.
@@ -917,10 +894,18 @@ function useReachedOnce(ref: React.RefObject<HTMLElement | null>, resetKey: numb
 }
 
 /** Reopens the window, and shows it is there to reopen. Sits beside Reference material. */
-function ChecksButton({ count, showing }: { count: number; showing: boolean }) {
+function ChecksButton({
+  count,
+  showing,
+  onSet,
+}: {
+  count: number;
+  showing: boolean;
+  onSet: (p: ChecksPref) => void;
+}) {
   return (
     <button
-      onClick={() => setChecksPref(showing ? "closed" : "open")}
+      onClick={() => onSet(showing ? "closed" : "open")}
       aria-pressed={showing}
       className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-semibold ring-1 transition-colors ${
         showing
@@ -937,7 +922,15 @@ function ChecksButton({ count, showing }: { count: number; showing: boolean }) {
   );
 }
 
-function ChecksWindow({ items, showing }: { items: string[]; showing: boolean }) {
+function ChecksWindow({
+  items,
+  showing,
+  onSet,
+}: {
+  items: string[];
+  showing: boolean;
+  onSet: (p: ChecksPref) => void;
+}) {
   if (!showing) return null;
 
   return (
@@ -948,7 +941,7 @@ function ChecksWindow({ items, showing }: { items: string[]; showing: boolean })
       icon="list"
       width={420}
       foldable={false}
-      onClose={() => setChecksPref("closed")}
+      onClose={() => onSet("closed")}
     >
       {/* Numbered, because these really are the mentee's steps in order — the numbering is the
           content's own, not decoration added to it, and it gives a reviewer a way to say which
