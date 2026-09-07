@@ -763,20 +763,23 @@ function Delivery({
         />
       )}
 
-      {card.brief && card.brief.references.length > 0 && (
-        <button
-          onClick={onRefs}
-          className="mb-4 inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-[11.5px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-        >
-          <Icon name="paperclip" size={12} />
-          Reference material
-          <span className="tabular-nums text-slate-400">{card.brief.references.length}</span>
-        </button>
-      )}
+      {/* The two companions to a submission, opened the same way and each into its own window:
+          what the mentee was told to produce, and what they were given to produce it from. */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {checks.length > 0 && <ChecksButton count={checks.length} />}
+        {card.brief && card.brief.references.length > 0 && (
+          <button
+            onClick={onRefs}
+            className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-[11.5px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            <Icon name="paperclip" size={12} />
+            Reference material
+            <span className="tabular-nums text-slate-400">{card.brief.references.length}</span>
+          </button>
+        )}
+      </div>
 
-      {/* Delivery and criteria as two frames with a divider between them, the way every grading
-          tool that has solved this lays it out. Below lg they stack, criteria first. */}
-      {checks.length > 0 && <CheckBar items={checks} />}
+      {checks.length > 0 && <ChecksWindow items={checks} />}
 
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
         {menteeName ? `${menteeName.split(" ")[0]}'s delivery` : "The delivery"}
@@ -787,23 +790,26 @@ function Delivery({
 }
 
 /**
- * The checks the work is measured against, kept in view while it is read.
+ * The checks the work is measured against, in a window of their own.
  *
- * Read-only on purpose. A tickable version was built and taken back out: ticks that the programme
- * does not keep are a private tally that looks like a record, and ticks it did keep would imply a
- * gate was approved BECAUSE eight boxes were ticked. What the programme keeps is the verdict and
- * its note. This is a reference, so it behaves like one.
+ * Five shapes preceded this, and each was ruled out by something measurable. A docked side panel —
+ * Canvas SpeedGrader's answer, and the right one when a grader has the whole window — left the
+ * delivery 462px at a 1097px viewport and did not dock at all below 1024; this console spends 336
+ * of those pixels on its own sidebar before the review starts. A pinned bar cost no width but
+ * could not stop growing with the content: 630 checklists across the programme run 2-8 items and
+ * 142 characters at the median but 941 at the worst, one item reaching 312.
  *
- * Four shapes preceded this and the measurements ruled out the rest. The content: 630 checklists,
- * 2-8 items, 142 characters at the median and 941 at the worst, one item reaching 312. The screen:
- * a 1440 laptop at 150% Windows scaling is a 960px viewport and this console spends 336 on its
- * sidebar, so a docked side panel — right when a grader has the whole window — left the delivery
- * 462px at 1097 and did not dock at all below 1024. Height is what this page has spare; width is
- * not. Hence a bar, pinned under the toolbar at every size, capped at 38vh with its own scroll.
+ * A floating window has neither problem. It costs nothing from the layout at all, it can be
+ * dragged off whatever it covers, it resizes for the long ones, and it is closed when it is not
+ * wanted. It is also how this console already shows the other thing a reviewer holds up against
+ * the work — the reference material — so it is one interaction, not two.
  *
- * It stops at max-w-3xl rather than running the width of the card. Past about 80 characters a line
- * is harder to track back from, and these run to 312 — full width would have made the longest
- * checks the hardest to read, which is backwards.
+ * Read-only. A tickable version was built and taken back out: a tally the programme does not keep
+ * looks like a record without being one, and one it did keep would imply a gate was approved
+ * BECAUSE eight boxes were ticked. What the programme keeps is the verdict and its note.
+ *
+ * Open on arrival, and closing it is remembered — a reviewer who works from the checks should not
+ * reopen them on every card, and one who does not should not keep dismissing them.
  */
 const PANEL_KEY = "grcmentor.mentor.checksPanel";
 
@@ -842,68 +848,57 @@ function subscribePanel(l: () => void): () => void {
   return () => void panelListeners.delete(l);
 }
 
-function CheckBar({ items }: { items: string[] }) {
-  const { open } = useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER);
+function useChecksOpen(): boolean {
+  return useSyncExternalStore(subscribePanel, panelSnapshot, () => CHECKS_SERVER).open;
+}
+
+/** Reopens the window, and shows it is there to reopen. Sits beside Reference material. */
+function ChecksButton({ count }: { count: number }) {
+  const open = useChecksOpen();
+  return (
+    <button
+      onClick={() => setChecksOpen(!open)}
+      aria-pressed={open}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-semibold ring-1 transition-colors ${
+        open
+          ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+          : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
+      }`}
+    >
+      <Icon name="list" size={12} />
+      What to check
+      <span className={`tabular-nums ${open ? "text-emerald-600" : "text-slate-400"}`}>{count}</span>
+    </button>
+  );
+}
+
+function ChecksWindow({ items }: { items: string[] }) {
+  const open = useChecksOpen();
+  if (!open) return null;
 
   return (
-    // Two elements, and the outer one is load-bearing. The bar itself stops at max-w-3xl, but a
-    // sticky box narrower than the page does not mask what scrolls under it — the delivery's rows
-    // slid past in the gap beside it, which read as a rendering fault. So the sticky element is a
-    // full-bleed strip in the card's own white, and the only thing visible in it is the bar.
-    // top-[45px] is the toolbar's height, so it parks directly beneath it at every size.
-    <div className="sticky top-[45px] z-10 -mx-6 mb-3.5 bg-white px-6 pb-3.5">
-    <div className="w-full max-w-3xl rounded-xl border border-emerald-100 bg-[#f4faf6]">
-      <button
-        onClick={() => setChecksOpen(!open)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left"
-      >
-        <Icon name="list" size={13} className="shrink-0 text-emerald-700" />
-        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-700">
-          What to check
-        </span>
-        <span className="shrink-0 text-[11px] tabular-nums text-emerald-700/70">
-          {items.length}
-        </span>
-        {!open && (
-          // Closed, the bar still says what the first check is. A count alone would make the
-          // reviewer open it to find out whether it was worth opening.
-          <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600">{items[0]}</span>
-        )}
-        {open && <span className="flex-1" />}
-        <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-700">
-          {open ? "Hide" : "Show"}
-          <Icon
-            name="chevronDown"
-            size={13}
-            className={`transition-transform ${open ? "" : "-rotate-90"}`}
-          />
-        </span>
-      </button>
-
-      {open && (
-        <ol className="max-h-[38vh] space-y-1.5 overflow-y-auto overscroll-contain border-t border-emerald-100/80 px-3.5 py-2.5">
-          {items.map((c, i) => (
-            <li key={i} className="flex gap-2.5">
-              {/* A checklist marker, deliberately not a control: no hover, no pointer, nothing
-                  that says it can be clicked. It reads as a checklist because that is what a
-                  reviewer is doing with it, not because the page keeps score. */}
-              <span
-                aria-hidden
-                className="mt-[2px] h-[15px] w-[15px] shrink-0 rounded-[4px] border-[1.5px] border-emerald-300 bg-white"
-              />
-              <span
-                className="text-[12px] leading-relaxed tracking-tight text-slate-700"
-                style={{ textWrap: "pretty" }}
-              >
-                <Gloss>{c}</Gloss>
-              </span>
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
-    </div>
+    // No height: the window hugs its content, and FloatWindow's own cap and inner scroll take over
+    // when the content is longer than the screen — which at 941 characters it can be.
+    <FloatWindow title="What to check" icon="list" width={400} onClose={() => setChecksOpen(false)}>
+      <ol className="space-y-2">
+        {items.map((c, i) => (
+          <li key={i} className="flex gap-2.5">
+            {/* A checklist marker, deliberately not a control: no hover, no pointer, nothing that
+                offers a click the page will not honour. */}
+            <span
+              aria-hidden
+              className="mt-[2px] h-[15px] w-[15px] shrink-0 rounded-[4px] border-[1.5px] border-emerald-300 bg-white"
+            />
+            <span
+              className="text-[12.5px] leading-relaxed tracking-tight text-slate-700"
+              style={{ textWrap: "pretty" }}
+            >
+              <Gloss>{c}</Gloss>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </FloatWindow>
   );
 }
 
