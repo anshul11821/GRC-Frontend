@@ -202,7 +202,7 @@ function Overview({ a }: { a: MentorAnalytics }) {
                 needs it, but as what it is: a slice across the two rows above it. */}
             {[
               {
-                label: "Awaiting first review",
+                label: "Awaiting review",
                 value: a.awaitingFirst,
                 bar: "bg-indigo-500",
                 hint: "Delivered and not yet picked up.",
