@@ -375,8 +375,14 @@ const Bullets = ({ items, empty }: { items: string[]; empty: string }) =>
 
 export function PaneOverview({ o }: { o: OrgDetail }) {
   const regional = o.officeLocations.regionalOffices ?? [];
+  // Nine of the seventeen have no services list and most have no regulator rationale, so for them
+  // the second column held nothing — and an empty track still takes its share of the row, which
+  // squeezed the context into 55% of the width beside a blank half.
+  const aside = o.services.length > 0 || !!o.regulatorRationale;
   return (
-    <div className="grid gap-3.5 @md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+    <div
+      className={`grid gap-3.5 ${aside ? "@md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]" : ""}`}
+    >
       <div className="flex flex-col gap-3.5">
         <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-white to-white p-4 ring-1 ring-slate-200/70">
           <p className="text-[12.5px] leading-relaxed text-slate-600">{o.context || "—"}</p>
@@ -406,9 +412,10 @@ export function PaneOverview({ o }: { o: OrgDetail }) {
           </div>
         </Card>
       </div>
+      {aside && (
       <div className="flex flex-col gap-3.5">
-        {/* Nine of the seventeen seed organisations carry no services list. An empty card
-            announcing "0" reads as a fault in the page rather than a gap in the briefing. */}
+        {/* An empty card announcing "0" reads as a fault in the page rather than a gap in the
+            briefing, so each of these is present only when it has something to say. */}
         {o.services.length > 0 && (
           <Card title="Services & products" icon="briefcase" meta={`${o.services.length}`}>
             <div className="flex flex-wrap gap-1.5">
@@ -429,6 +436,7 @@ export function PaneOverview({ o }: { o: OrgDetail }) {
           </Card>
         )}
       </div>
+      )}
     </div>
   );
 }

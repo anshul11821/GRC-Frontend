@@ -20,9 +20,11 @@ import { isAuthError, type OrgDetail } from "@/lib/mentor";
  * dashboard's own pane components rather than a second version of them, so a field added to the
  * profile shows up in both places or neither.
  *
- * The tab strip is the dashboard's too, so a reviewer who knows where a fact lives on one screen
- * knows where it lives on the other. It wraps rather than scrolls: five labels do not fit across
- * 430px, and a tab row you have to scroll to see is an index that hides half of itself.
+ * The tabs are a segmented control rather than the dashboard's underline. The strip wraps — five
+ * labels do not fit on one row even here, and a tab row you have to scroll is an index that hides
+ * half of itself — and an underline on a wrapped strip marks a tab in the middle of the block,
+ * where it reads as a divider between the rows rather than as a selection. A filled tab does not
+ * care which row it lands on.
  *
  * The dashboard's Mentees pane is not carried over — see SECTIONS below.
  */
@@ -67,7 +69,7 @@ export function OrgContextWindow({
   const shown = SECTIONS.find((s) => s.id === pane) ?? SECTIONS[0];
 
   return (
-    <FloatWindow title={org?.name || orgName} icon="briefcase" width={470} height={580} onClose={onClose}>
+    <FloatWindow title={org?.name || orgName} icon="briefcase" width={620} height={620} onClose={onClose}>
       {!org ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
@@ -94,12 +96,7 @@ export function OrgContextWindow({
             )}
           </div>
 
-          {/* Wraps rather than scrolls, for the reason in the docblock. The buttons sit 1px proud
-              of the rule via -mb-px, so the underline of the active tab meets it. */}
-          <div
-            role="tablist"
-            className="flex flex-wrap items-end gap-0.5 border-b border-slate-200/70"
-          >
+          <div role="tablist" className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
             {SECTIONS.map((s) => {
               const on = s.id === pane;
               return (
@@ -108,10 +105,10 @@ export function OrgContextWindow({
                   role="tab"
                   aria-selected={on}
                   onClick={() => setPane(s.id)}
-                  className={`-mb-px h-8 whitespace-nowrap border-b-2 px-2 text-[11.5px] font-medium transition-colors ${
+                  className={`h-7 whitespace-nowrap rounded-md px-2.5 text-[11.5px] font-medium transition-colors ${
                     on
-                      ? "border-indigo-600 text-slate-900"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
+                      ? "bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.10)]"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {s.label}
