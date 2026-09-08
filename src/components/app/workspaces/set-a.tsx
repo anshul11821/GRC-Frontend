@@ -769,7 +769,15 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
               return (
                 <tr key={i} className={`border-t border-slate-100 align-top ${bad ? "bg-rose-50/60" : ""}`}>
                   {task.columns.map((c) => {
-                    const condHide = c.condReq && r[c.condReq.key] !== c.condReq.equals;
+                    // Inert only while the cell is EMPTY and its condition is unmet. A cell that
+                    // already holds something is always editable, whatever the row's Type says
+                    // now: hiding it would put submitted content on the mentor's card that the
+                    // mentee could neither see nor take back — and Type can be changed after the
+                    // cell was filled, so that state is reachable by ordinary use.
+                    const condHide =
+                      !!c.condReq &&
+                      r[c.condReq.key] !== c.condReq.equals &&
+                      !(r[c.key] ?? "").trim();
                     return (
                       <td key={c.key} className="px-2 py-1.5">
                         {condHide ? (

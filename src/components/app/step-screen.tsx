@@ -366,7 +366,10 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
         // screen showing a blank deliverable under "This is the work you submitted — graded
         // 5.0 / 5". That is precisely what happened wherever a workspace failed to read its own
         // saved shape: it painted blank, autosaved the blank, and the blank then won every time.
-        const done = a.status === "complete";
+        // Exactly the test the rest of the screen uses for `passed` — `status` alone is not it: a
+        // step whose last review decided "pass" is finished even when the status has not caught up,
+        // and reading the draft there is what showed a blank deliverable under "graded 5.0 / 5".
+        const done = a.status === "complete" || a.latestReview?.decision === "pass";
         seed(done ? (bestSubmission(h) ?? a.draft) : (a.draft ?? bestSubmission(h)));
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
@@ -499,6 +502,20 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
     savedSnapshot.current = null; // don't autosave the blanking itself; the next edit saves
     setAttemptKey((k) => k + 1);
     setResubmit(true);
+  };
+
+  /**
+   * Backing out of a resubmit puts the last submission back on screen.
+   *
+   * Re-seeding `values` is not enough on its own: a workspace holds its own state, seeded from
+   * `value` when it mounts, and `startResubmit` bumps `attemptKey` precisely to remount it blank.
+   * Cancel has to bump it too, or the workspace keeps the blank state it was given and the screen
+   * stays empty — which is what "cancel" was doing: it undid the mode and not the blanking.
+   */
+  const cancelResubmit = () => {
+    setResubmit(false);
+    seed(bestSubmission(history));
+    setAttemptKey((k) => k + 1);
   };
 
   const submit = async () => {
@@ -876,7 +893,7 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
               </button>
               <AttemptsMeter used={attemptsUsed} max={maxAttempts} />
               {passed && resubmit && (
-                <button onClick={() => { setResubmit(false); seed(bestSubmission(history)); }} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 text-[13px] font-medium tracking-tight hover:bg-slate-50 disabled:opacity-50">
+                <button onClick={cancelResubmit} disabled={busy} className="focus-ring h-10 px-4 rounded-lg text-slate-500 text-[13px] font-medium tracking-tight hover:bg-slate-50 disabled:opacity-50">
                   Cancel
                 </button>
               )}
