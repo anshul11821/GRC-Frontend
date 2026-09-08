@@ -5,7 +5,20 @@
 import { TASK_CONTROL_DATA } from "./task-controls";
 import { TASK_META } from "./taskmeta";
 
-export interface Control { standard: string; tone: string; domain: string; num: string; name: string; purpose?: string; }
+export interface Control {
+  standard: string; tone: string; domain: string; num: string; name: string;
+  /** OUR one-line gloss. Never the standard's words — it renders labelled, outside the plaque. */
+  purpose?: string;
+  /**
+   * The clause text itself, verbatim, when we are licensed to reproduce it.
+   *
+   * Empty for every ISO/IEC and AICPA clause: their text is copyright and we hold no licence, so
+   * the plaque renders the published control *title* and says the clause text is not reproduced.
+   * Fill this from a licensed copy — see CLAUSE_TEXT below — and the plaque quotes it instead,
+   * with no other change. Nothing may be written here that is not word-for-word from the source.
+   */
+  text?: string;
+}
 export interface TaskControls { category: string; controls: Control[]; }
 
 const TONE: Record<string, string> = {
@@ -34,6 +47,25 @@ function domainOf(standard: string, ref: string): string {
   if (standard.startsWith("GDPR")) return ref.startsWith("Recital") ? "Recital" : "Regulation article";
   return "Trust Services Criteria";
 }
+
+/**
+ * Verbatim clause text, keyed by reference — the only place the plaque may quote from.
+ *
+ * Deliberately empty. ISO/IEC 27001:2022 Annex A text is ISO's copyright and reproducing it in a
+ * product served to learners needs a redistribution licence (national bodies: BSI, ANSI, DIN).
+ * The same holds for the AICPA Trust Services Criteria. NIST CSF 2.0 is a US Government work and
+ * free to reproduce; GDPR is Official Journal text and reusable with attribution — those two may
+ * be filled in without a licence, from the published source, copied not recalled.
+ *
+ * Rules for anything added here:
+ *   1. Word for word from the source document. Not a summary, not a tidy-up, not a recollection.
+ *   2. Whole clause. The plaque may never truncate mid-clause.
+ *   3. If you are unsure it is exact, leave it out — the plaque falls back to the published title
+ *      and says so, which is honest. A wrong quotation under a "verbatim" caption is not.
+ */
+const CLAUSE_TEXT: Record<string, string> = {
+  // e.g. "GV.SC-05": "Requirements to address cybersecurity risks in supply chains are …",
+};
 
 /** One line on why the control exists. Keyed by ref — a clause means the same thing in every task. */
 const PURPOSE: Record<string, string> = {
@@ -109,11 +141,104 @@ const PURPOSE: Record<string, string> = {
   "Article 30": "Maintain a record of processing activities for each process.",
   "Article 35": "Determine whether a Data Protection Impact Assessment is required.",
   "Recital 39": "Processing must be transparent to the people whose data it is.",
+  // CIS Controls v8 — reached through the cross-walk on ISO- and GDPR-anchored tasks.
+  "Control 5": "Know every account that exists, who owns it, and close the ones nobody owns.",
+  "Control 6": "Grant access by role and least privilege, and withdraw it when the role changes.",
+  "Control 11": "Be able to restore data after loss or corruption — and prove the restore works.",
+  "Control 11.1": "Run a written, repeatable recovery process rather than improvising after a loss.",
+  "Control 11.4": "Keep one recovery copy isolated, so whatever damages production cannot reach it.",
+  "Control 14": "Train people against the risks their own role exposes them to.",
+  "Control 14.1": "Run a standing awareness programme, not a one-off induction slide.",
+  "Control 14.2": "Give role-specific training to anyone carrying security responsibilities.",
+  "Control 14.7": "Train users to recognise social engineering and to know how to report it.",
+  "Control 15": "Know which providers hold your data or run your processes, and manage that exposure.",
+  "Control 15.2": "Have a route for raising a weakness found in a provider and seeing it closed.",
+  "Control 17": "Define the incident response capability before an incident, not during one.",
+  "Control 17.8": "Review each incident afterwards and feed what it taught you back into the plan.",
+  "Control 18": "Test defences by attempting to defeat them; at GRC 101 you only need to know it exists.",
+  "Control 3.11": "Encrypt sensitive data where it is stored, not only where it travels.",
+  "Control 3.14": "Log access to sensitive data, so who saw what can be reconstructed later.",
+  // NIST CSF 2.0 — the cross-walk target on every non-NIST task.
+  "GV.OC-02": "Name the internal and external stakeholders whose interests shape security decisions.",
+  "GV.OC-03": "Know which laws, regulations and contract terms apply, and who owns each obligation.",
+  "GV.OC-04": "Make sure every party understands which security responsibilities are theirs.",
+  "GV.OC-05": "Keep track of the legal, regulatory and contractual requirements you have to meet.",
+  "GV.PO-01": "Set a written policy saying how cybersecurity risk will be managed here.",
+  "GV.PO-02": "Review that policy on a schedule, and make sure the people bound by it have seen it.",
+  "GV.RM-01": "Agree what risk management is meant to achieve before assessing anything.",
+  "GV.RM-06": "Decide how much risk is acceptable, and tell the people who make decisions.",
+  "GV.RM-07": "Choose a response to each risk — accept, mitigate, transfer, avoid — and see it through.",
+  "GV.SC-04": "Tell suppliers and third parties what is expected of them.",
+  "GV.SC-06": "Do the due diligence before signing, not after something has gone wrong.",
+  "GV.SC-07": "Assess the risk each supplier brings, sized to what they can actually reach.",
+  "ID.AM-01": "Keep a current inventory of hardware, with a named owner against each item.",
+  "ID.AM-02": "Keep a current inventory of software, including anything no longer supported.",
+  "ID.AM-05": "Rank assets by what their loss would cost, so effort goes where it matters.",
+  "ID.AM-08": "Record the systems and services that involve an external party.",
+  "ID.RA-01": "Find the weaknesses in your assets before somebody else finds them.",
+  "ID.RA-04": "Work out what each risk would cost and how likely it is to happen.",
+  "ID.RA-06": "Record risks in a form that can be owned, tracked and reviewed.",
+  "ID.RA-09": "Assess the risk third parties carry, and reflect it in what you report.",
+  "PR.AA-01": "Manage identities and credentials across their whole life, from issue to revocation.",
+  "PR.AA-02": "Check a person is who they claim before binding a credential to them.",
+  "PR.AT-01": "Give everyone the awareness training their role requires.",
+  "PR.AT-02": "Give anyone holding elevated privileges training matched to that privilege.",
+  "PR.DS-01": "Protect data where it is stored.",
+  "PR.DS-02": "Protect data while it moves between systems and people.",
+  "PR.DS-10": "Protect data while it is being processed.",
+  "PR.DS-11": "Take backups — and know they restore.",
+  "PR.PS-04": "Generate logs of what happened, so events can be reconstructed afterwards.",
+  "DE.AE-06": "Get information about an adverse event to the people who can act on it.",
+  "DE.CM-09": "Monitor hardware and software for signs that something is wrong.",
+  "RS.CO-02": "Report incidents to the people and bodies who need to know, inside the time required.",
+  "RS.MA-01": "Run the response the plan describes instead of improvising under pressure.",
+  "RC.IM-01": "Fold what the incident taught you back into the recovery plan.",
+  "RC.RP-01": "Execute the recovery plan when it is needed.",
+  "RC.RP-02": "Update the recovery plan as systems and dependencies change.",
+  "RC.RP-03": "Keep people informed about recovery progress while it is happening.",
+  // Family- and framework-level references — cited whole, so they carry no clause number.
+  "Functions": "The six CSF Functions — Govern, Identify, Protect, Detect, Respond, Recover — used as the mapping frame.",
+  "PR.DS": "Protecting data itself — at rest, in transit and in use.",
+  "DE.CM": "Watching systems and people for signs that something has gone wrong.",
   // SOC 2
   "CC1–CC9": "The Common Criteria every SOC 2 report is assessed against.",
   "A1": "Criteria covering system availability against the service commitment.",
   "C1": "Criteria covering protection of information designated as confidential.",
 };
+
+/**
+ * Which standard a cross-walk reference actually belongs to.
+ *
+ * Every cross-walk entry used to be stamped "NIST CSF 2.0" regardless of its code, so fifteen
+ * tasks rendered cards headed `NIST CSF 2.0 · Control 11` — a CIS Controls v8 reference under
+ * someone else's name. Wrong on its face, and in a programme that teaches control mapping it is
+ * the one kind of error a learner will repeat in real work. The code shape says who owns it.
+ */
+function crossStandard(code: string): string {
+  if (/^(GV|ID|PR|DE|RS|RC)\./.test(code)) return "NIST CSF 2.0";
+  if (/^Control\s/.test(code) || /^CIS/.test(code)) return "CIS Controls v8";
+  if (/^(Clause|Annex)/.test(code)) return "ISO/IEC 27001:2022";
+  if (/^(Article|Recital)/.test(code)) return "GDPR (EU) 2016/679";
+  return "NIST CSF 2.0";
+}
+
+/**
+ * Repair a cross-walk entry the extractor split badly.
+ *
+ * "CIS Controls v8 Control 11.1 and 11.4" was split on whitespace, leaving a second entry whose
+ * code is the literal "and 11.4"; a continuation gets its "Control " prefix back.
+ *
+ * Nothing is dropped. An earlier pass here binned any code without a digit as a fragment, which
+ * quietly deleted two real references: "Functions" (the CSF Functions, cross-walked against the
+ * whole of Annex A on CRM-002 and GRM-003) and, at family level, "GV.OC"/"PR.DS" and the like.
+ * A reference to a whole framework or a whole category is a legitimate thing to cite — it is not
+ * malformed just because it carries no number.
+ */
+function normaliseCrossRef(x: { code: string; desc: string }): { code: string; desc: string } {
+  const code = x.code.trim();
+  const cont = code.match(/^and\s+(\d[\d.]*)$/i);
+  return cont ? { ...x, code: `Control ${cont[1]}` } : { ...x, code };
+}
 
 function toControls(code: string): TaskControls | undefined {
   const rua = TASK_CONTROL_DATA[code];
@@ -125,15 +250,25 @@ function toControls(code: string): TaskControls | undefined {
     num: c.ref,
     name: c.name,
     purpose: PURPOSE[c.ref],
+    text: CLAUSE_TEXT[c.ref],
   }));
   // Skip the crosswalk when the task's own standard is already NIST CSF.
-  const crosswalk: Control[] = rua.standard.startsWith("NIST") ? [] : rua.crosswalk.map((x) => ({
-    standard: "NIST CSF 2.0",
-    tone: "violet",
-    domain: CSF_FUNCTION[x.code.slice(0, 2)] ?? "Cross-walk",
-    num: x.code,
-    name: x.desc,
-  }));
+  const crosswalk: Control[] = rua.standard.startsWith("NIST")
+    ? []
+    : rua.crosswalk
+        .map(normaliseCrossRef)
+        .map((x) => {
+          const std = crossStandard(x.code);
+          return {
+            standard: std,
+            tone: TONE[std] ?? "violet",
+            domain: domainOf(std, x.code),
+            num: x.code,
+            name: x.desc,
+            purpose: PURPOSE[x.code],
+            text: CLAUSE_TEXT[x.code],
+          };
+        });
   return { category: TASK_META[code]?.methodCategory ?? rua.standard, controls: [...primary, ...crosswalk] };
 }
 

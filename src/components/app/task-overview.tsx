@@ -20,6 +20,105 @@ import { gloss, TermsUsed } from "@/components/app/glossary";
 import { dueChip, fmtDue, type ScheduleItem } from "@/lib/schedule";
 
 /**
+ * The crosswalk (form 02) — two authorities bridged.
+ *
+ * Exact tokens: the anchor half is navy (`#e8ecf7` on `#b9c4e0`, clause `#1f3564`), the mapped
+ * half is steel (`#e2eff6` on `#a8cede`, clause `#0b6e99`), and the node sits on a hairline rule
+ * between them. Hue is doing the work: navy is the standard the task is graded against, steel is
+ * the frame it is being read across into.
+ *
+ * Both halves carry published references only — never our gloss. We hold the mapping at task
+ * level, not clause-to-clause, so each half lists that standard's references for this task rather
+ * than pretending to a one-to-one pairing the source data does not contain.
+ *
+ * A half-populated crosswalk is not a crosswalk: with nothing on the mapped side this renders
+ * nothing at all, rather than an empty box implying a mapping exists.
+ */
+function Crosswalk({ anchor, mapped }: {
+  anchor: { standard: string; controls: Control[] };
+  mapped: { standard: string; controls: Control[] };
+}) {
+  const refs = (cs: Control[]) => cs.map((c) => c.num).join(" · ");
+  return (
+    <div className="grid grid-cols-[1fr_30px_1fr] items-stretch">
+      <div className="border border-[#b9c4e0] bg-[#e8ecf7] px-3 py-2.5 min-w-0">
+        <span className="block font-mono text-[10px] font-semibold tracking-[0.07em] text-[#1f3564] mb-1">
+          {anchor.standard}
+        </span>
+        <p className="m-0 text-[12px] leading-[1.45] text-[#4e5a6b]" style={{ textWrap: "pretty" }}>
+          {refs(anchor.controls)}
+        </p>
+      </div>
+      <div className="relative grid place-items-center">
+        <span aria-hidden className="absolute left-0 right-0 top-1/2 h-px bg-[#d3dbe6]" />
+        <b aria-hidden className="relative w-6 h-6 rounded-full bg-white border border-[#d3dbe6] grid place-items-center text-[12px] font-normal text-[#4e5a6b]">
+          &#8596;
+        </b>
+      </div>
+      <div className="border border-[#a8cede] bg-[#e2eff6] px-3 py-2.5 min-w-0">
+        <span className="block font-mono text-[10px] font-semibold tracking-[0.07em] text-[#0b6e99] mb-1">
+          {mapped.standard}
+        </span>
+        <p className="m-0 text-[12px] leading-[1.45] text-[#4e5a6b]" style={{ textWrap: "pretty" }}>
+          {refs(mapped.controls)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The plaque (form 01) — the control, in the standard's colours.
+ *
+ * Exact tokens from grc101-forms.css: navy `#1f3564`, tinted ground `#e8ecf7`, edge `#b9c4e0`,
+ * ink `#131c28`. Square corners and the hatched navy rail are the silhouette — "these are not our
+ * words" — and neither may be softened.
+ *
+ * The quotation is the standard's: the clause itself where CLAUSE_TEXT is licensed, otherwise the
+ * published control title, and the meta line says which. Our own explanation sits inside the same
+ * card, below a rule and under its own steel label, because a learner reading a control wants both
+ * halves in one place. The labels are what keep the two apart — remove them and the card starts
+ * implying we are quoting when we are not.
+ */
+function ControlPlaque({ control: c }: { control: Control }) {
+  const verbatim = !!c.text?.trim();
+  return (
+    <div className="relative ml-[5px] border border-[#b9c4e0] bg-[#e8ecf7] px-5 py-4">
+      <span
+        aria-hidden
+        className="absolute -left-[5px] -top-px -bottom-px w-[5px] [background:repeating-linear-gradient(180deg,#1f3564_0_3px,transparent_3px_6px),#1f3564]"
+      />
+      <span className="block font-mono text-[10.5px] font-semibold tracking-[0.08em] text-[#1f3564]">
+        {c.standard} · {c.num}
+      </span>
+      <q className="mt-1.5 block font-serif text-[14.5px] leading-[1.55] text-[#131c28]">
+        {verbatim ? c.text : c.name}
+      </q>
+      <span className="mt-2 block font-mono text-[10px] tracking-[0.06em] text-[#7d899a]">
+        {verbatim
+          ? "Verbatim · retrieved from control library · not editable"
+          : "Control title as published · not the clause text"}
+      </span>
+
+      {c.purpose && (
+        <div className="mt-3.5 pt-3.5 border-t border-[#b9c4e0]">
+          <span className="block font-mono text-[9.5px] uppercase tracking-[0.08em] text-[#0b6e99] mb-1">
+            What it asks for · in plain terms
+          </span>
+          <p className="m-0 text-[13px] leading-relaxed tracking-tight text-[#4e5a6b]" style={{ textWrap: "pretty" }}>
+            {c.purpose}
+          </p>
+        </div>
+      )}
+
+      <span className="mt-3 block font-mono text-[9.5px] uppercase tracking-[0.07em] text-[#7d899a]">
+        {c.domain}
+      </span>
+    </div>
+  );
+}
+
+/**
  * A task's brief: what the engagement asks for, the controls behind it, and its steps.
  *
  * Shared by the learner's Working Desk and the mentor's Review Desk. The mentor mounts it against
@@ -73,6 +172,12 @@ export function TaskOverview() {
     for (const c of reg?.controls ?? []) m.set(c.standard, [...(m.get(c.standard) ?? []), c]);
     return [...m];
   }, [reg]);
+
+  // The task's own standard is whichever the primary controls carry — they are pushed first in
+  // lib/controls, ahead of the cross-walk. Everything after it is a frame the task is read across
+  // into, and gets its own crosswalk row.
+  const [anchorStd, ...mappedStds] = byStandard.map(([std]) => std);
+  const controlsFor = (std: string) => byStandard.find(([s]) => s === std)?.[1] ?? [];
 
   const nextStep = task?.steps.find((s) => s.status !== "complete") ?? task?.steps[0];
 
@@ -160,9 +265,37 @@ export function TaskOverview() {
         </button>
       )}
       <DraggablePanel open={controlsOpen} onClose={() => setControlsOpen(false)} title="Control references" eyebrow={meta?.standardLabel}>
-        <p className="text-[12.5px] text-slate-500 leading-relaxed tracking-tight mb-4" style={{ textWrap: "pretty" }}>
+        {/* Provenance, stated before the list rather than left to be inferred. Three different
+            authorities used to be stacked in each card with nothing separating them — the clause
+            reference and title are the standard's words, the plain-terms line is ours. Unlabelled,
+            our summary sat where a quotation sits, and a learner would reasonably cite it as the
+            control. A.5.9's summary says "complete inventory"; the standard does not say complete. */}
+        <p className="text-[12.5px] text-slate-500 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>
           The clauses and controls this task is graded against. Your deliverable should trace back to each one.
         </p>
+        <p className="mt-2 mb-4 text-[11.5px] text-slate-600 bg-slate-50 ring-1 ring-slate-200/70 rounded-lg px-3 py-2 leading-relaxed tracking-tight" style={{ textWrap: "pretty" }}>
+          Each control is identified by its reference and published title, then explained
+          in <span className="font-semibold">our own words</span>. These explanations are written for
+          the programme — they are not the wording of the standard, so quote the standard itself when
+          your work has to cite it.
+        </p>
+        {/* Crosswalk (form 02) first: what this task is graded against, and what that maps onto.
+            Nothing renders when the task has no mapped frame — a one-sided bridge is not a bridge. */}
+        {mappedStds.length > 0 && (
+          <div className="mb-5 space-y-2">
+            <span className="block font-mono text-[9.5px] uppercase tracking-[0.08em] text-slate-400">
+              Cross-walk
+            </span>
+            {mappedStds.map((std) => (
+              <Crosswalk
+                key={std}
+                anchor={{ standard: anchorStd, controls: controlsFor(anchorStd) }}
+                mapped={{ standard: std, controls: controlsFor(std) }}
+              />
+            ))}
+          </div>
+        )}
+
         <div className="space-y-4">
           {byStandard.map(([standard, controls]) => {
             const tone = VERB_TONES[controls[0].tone] ?? VERB_TONES.indigo;
@@ -175,13 +308,14 @@ export function TaskOverview() {
                 </div>
                 <div className="space-y-1.5">
                   {controls.map((c, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-xl bg-slate-50/50 ring-1 ring-slate-200/50 p-3">
-                      <span className={`font-mono text-[10.5px] font-semibold rounded px-1.5 py-1 shrink-0 whitespace-nowrap ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{c.num}</span>
-                      <div className="min-w-0">
-                        <div className="text-[12.5px] font-medium text-slate-900 tracking-tight">{c.name}</div>
-                        <div className="text-[11.5px] text-slate-500 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}>{c.purpose}</div>
-                        <div className="mt-1 text-[10.5px] uppercase tracking-[0.08em] text-slate-400">{c.domain}</div>
-                      </div>
+                    // The plaque only appears where we hold licensed clause text; everywhere else
+                    // the reference card carries our own explanation, which is all the learner
+                    // needs here and all we are entitled to publish.
+                    // Plaque on top carrying the standard's own words — the clause where we are
+                    // licensed to quote it, the published title otherwise — and our explanation
+                    // joined beneath it as one object, so provenance reads top to bottom.
+                    <div key={i} className="pt-1">
+                      <ControlPlaque control={c} />
                     </div>
                   ))}
                 </div>

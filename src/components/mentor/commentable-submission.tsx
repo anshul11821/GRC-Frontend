@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { JudgmentPanel } from "@/components/mentor/judgment-review";
 import { VERDICT, VERDICTS, type Verdict } from "@/lib/verdicts";
+import { alignColumns, columnsFor, rowLabel } from "@/lib/workspace-columns";
+import { type WorkspaceColumn } from "@/lib/workspace-columns";
 import {
   type Card,
   type JudgmentReview,
@@ -51,6 +53,13 @@ export function CommentableSubmission({
   // Anchors are only unique within a submission — `field:outcomes` exists on many of them — so an
   // open note box carried across a change of card would reopen itself against a different
   // learner's answer of the same name. Reset during render, before anything is painted.
+  // The register's own columns, if this step is one. Looked up once per card rather than per
+  // entry: it is a constant for the whole submission.
+  const spec = useMemo(
+    () => columnsFor(card.taskCode, card.activityCode),
+    [card.taskCode, card.activityCode],
+  );
+
   const [prevSub, setPrevSub] = useState(card.submissionId);
   if (prevSub !== card.submissionId) {
     setPrevSub(card.submissionId);
@@ -88,7 +97,7 @@ export function CommentableSubmission({
         done.
       </p>
       {card.entries.map((e) => (
-        <Entry key={e.anchor} entry={e} {...shared} />
+        <Entry key={e.anchor} entry={e} spec={spec} {...shared} />
       ))}
 
       {card.judgment?.chose && <JudgmentSection judgment={card.judgment} {...shared} />}
@@ -170,8 +179,15 @@ interface Shared {
   setComposing: (v: { anchor: string; verdict: Verdict } | null) => void;
 }
 
-function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
-  const cols = (entry.head?.length ?? 0) + 1;
+function Entry({
+  entry,
+  spec,
+  ...s
+}: { entry: SubmissionEntry; spec: WorkspaceColumn[] | null } & Shared) {
+  // Headers and cells in the order the mentee saw them, under the names the mentee saw. Only the
+  // display changes: `entry.rowAnchors` is per row, so nothing a mark points at moves.
+  const table = alignColumns(entry.head ?? [], entry.rows ?? [], spec);
+  const cols = table.head.length + 1;
   const given = s.byAnchor.get(entry.anchor);
   const tone = given ? VERDICT[given.kind].card : "bg-[#fefce8] ring-[#fde68a]";
 
@@ -213,7 +229,7 @@ function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
           <table className="w-full text-[11.5px] border-collapse">
             <thead>
               <tr className="bg-slate-50">
-                {(entry.head ?? []).map((h) => (
+                {table.head.map((h) => (
                   <th
                     key={h}
                     className="text-left font-semibold text-slate-600 px-3 py-2 border-b border-[#e6eaf0] whitespace-nowrap"
@@ -226,13 +242,20 @@ function Entry({ entry, ...s }: { entry: SubmissionEntry } & Shared) {
               </tr>
             </thead>
             <tbody>
-              {(entry.rows ?? []).map((row, r) => {
+              {table.rows.map((row, r) => {
                 const anchor = entry.rowAnchors[r] ?? `${entry.anchor}:${r}`;
                 return (
                   <FragmentRow
                     key={anchor}
                     anchor={anchor}
-                    label={entry.rowLabels[r] ?? `Row ${r + 1}`}
+                    // Recomputed only when the columns moved: the server names a row by its first
+                    // cell, which is the wrong cell once the order is the form's rather than the
+                    // payload's.
+                    label={
+                      table.reordered
+                        ? rowLabel(row, r)
+                        : (entry.rowLabels[r] ?? `Row ${r + 1}`)
+                    }
                     cols={cols}
                     row={row}
                     {...s}

@@ -98,7 +98,7 @@ function ControlsTable({ row }: { row: ReportRow }) {
       <table className="w-full text-left border-collapse min-w-[760px]">
         <thead>
           <tr className="bg-slate-50/80 text-[10px] font-semibold tracking-[0.1em] uppercase text-slate-500">
-            <th className="px-3 py-2.5">Standard</th><th className="px-3 py-2.5">Domain</th><th className="px-3 py-2.5">Control #</th><th className="px-3 py-2.5">Control name</th><th className="px-3 py-2.5">Purpose</th>
+            <th className="px-3 py-2.5">Standard</th><th className="px-3 py-2.5">Domain</th><th className="px-3 py-2.5">Control #</th><th className="px-3 py-2.5">Control name</th><th className="px-3 py-2.5">Purpose <span className="font-normal normal-case text-slate-400">(our summary)</span></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -224,7 +224,7 @@ export default function ReportsPage() {
   }), [allRows, q, std]);
 
   const exportCsv = () => {
-    const head = ["Program", "Task", "Title", "Category", "Industry", "Organisations", "Standard", "Domain", "Control #", "Control Name", "Purpose", "Status", "Completion"];
+    const head = ["Program", "Task", "Title", "Category", "Industry", "Organisations", "Standard", "Domain", "Control #", "Control Name", "Purpose (grcmentor summary, not standard text)", "Status", "Completion"];
     const esc = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`;
     const lines = [head.map(esc).join(",")];
     rows.forEach((r) => {
