@@ -729,6 +729,31 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
     return errs;
   };
   const startedRows = rows.filter(started);
+
+  /**
+   * The columns worth showing right now.
+   *
+   * A conditional column belongs to one Type — cost to a test recommendation, "routed to" to a
+   * routed finding, "accepted by" to an accepted risk — and a row is exactly one Type, so at most
+   * one of them can ever apply to a given row. On an untouched register that meant three of six
+   * columns were dead on every row: nothing to type in, nothing to pick, just width. Explaining
+   * them in place did not help, because the explanation was also repeated four times.
+   *
+   * So a conditional column appears once some row can actually use it — because its Type calls for
+   * it, or because it already holds something (which outlives a later change of Type, and must
+   * never be hidden: that would put content on the mentor's card the mentee cannot see or take
+   * back). Picking "Test recommendation" makes the Cost column appear, which is also the clearest
+   * way of saying that the choice has just asked for a cost.
+   *
+   * Validation is unmoved: `rowErrors` still walks every column in the spec, so a conditional
+   * field that is required stays required whether or not its column is on screen.
+   */
+  const shownColumns = task.columns.filter(
+    (c) =>
+      !c.condReq ||
+      rows.some((r) => r[c.condReq!.key] === c.condReq!.equals || (r[c.key] ?? "").trim()),
+  );
+  const hiddenCount = task.columns.length - shownColumns.length;
   const dupCols = task.columns.filter((c) => c.unique);
   const dupValues = (key: string) => { const counts: Record<string, number> = {}; startedRows.forEach((r) => { const v = (r[key] ?? "").trim(); if (v) counts[v] = (counts[v] ?? 0) + 1; }); return new Set(Object.entries(counts).filter(([, n]) => n > 1).map(([v]) => v)); };
   const dupSets = Object.fromEntries(dupCols.map((c) => [c.key, dupValues(c.key)]));
@@ -759,7 +784,7 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
-              {task.columns.map((c) => <th key={c.key} className="px-2 py-2 font-semibold">{c.label}{c.required ? <span className="text-rose-500"> *</span> : null}</th>)}
+              {shownColumns.map((c) => <th key={c.key} className="px-2 py-2 font-semibold">{c.label}{c.required ? <span className="text-rose-500"> *</span> : null}</th>)}
               <th className="px-2 py-2 w-8" />
             </tr>
           </thead>
@@ -768,7 +793,7 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
               const bad = checked && started(r) && !rowOk(r);
               return (
                 <tr key={i} className={`border-t border-slate-100 align-top ${bad ? "bg-rose-50/60" : ""}`}>
-                  {task.columns.map((c) => {
+                  {shownColumns.map((c) => {
                     // Inert only while the cell is EMPTY and its condition is unmet. A cell that
                     // already holds something is always editable, whatever the row's Type says
                     // now: hiding it would put submitted content on the mentor's card that the
@@ -808,7 +833,12 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] text-slate-400">{objectiveMet ? "Register valid — ready to submit." : "Fill the mandatory fields; IDs/owners must follow the rules."}</p>
+        <p className="text-[11px] text-slate-400">
+          {objectiveMet ? "Register valid — ready to submit." : "Fill the mandatory fields; IDs/owners must follow the rules."}
+          {hiddenCount > 0 && (
+            <> {hiddenCount} more column{hiddenCount === 1 ? "" : "s"} appear{hiddenCount === 1 ? "s" : ""} once a row&apos;s Type calls for {hiddenCount === 1 ? "it" : "them"}.</>
+          )}
+        </p>
         <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check register</button>
       </div>
 
