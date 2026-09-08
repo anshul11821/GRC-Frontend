@@ -23,27 +23,55 @@ const rows = [["", "ICT DR Checklist v1.0", "Checklist filed", "", "Proves the d
 const out = alignColumns(head, rows, spec);
 
 assert.equal(out.reordered, true);
+// In the form's order, and without the three conditional columns this delivery never filled.
 assert.deepEqual(out.head, [
   "Item Filed Or Recommended",
   "Type",
   "What It Proves (talk-through = document, live test = capability)",
-  "Cost / Disruption",
-  "Routed To (role)",
-  "Risk Accepted By (role)",
 ]);
 // The load-bearing assertion: every value must still be under its own key.
 assert.deepEqual(out.rows[0], [
   "ICT DR Checklist v1.0",
   "Checklist filed",
   "Proves the document",
-  "",
-  "",
-  "",
 ]);
-for (const [i, col] of spec.entries()) {
-  const from = head.indexOf(col.key);
-  assert.equal(out.rows[0][i], rows[0][from], `${col.key} moved to the wrong column`);
+for (const [i, label] of out.head.entries()) {
+  const key = spec.find((c) => c.label === label)!.key;
+  assert.equal(out.rows[0][i], rows[0][head.indexOf(key)], `${key} moved to the wrong column`);
 }
+
+// A conditional column that one row DOES fill is kept — for every row, blank cells included.
+const mixed = alignColumns(
+  head,
+  [
+    ["", "ICT DR Checklist v1.0", "Checklist filed", "", "Proves the document", ""],
+    ["STAGE 1: ~2 hours", "Staged live restoration", "Test recommendation", "", "Proves capability", ""],
+  ],
+  spec,
+);
+assert.deepEqual(mixed.head, [
+  "Item Filed Or Recommended",
+  "Type",
+  "What It Proves (talk-through = document, live test = capability)",
+  "Cost / Disruption",
+]);
+assert.deepEqual(mixed.rows[0], ["ICT DR Checklist v1.0", "Checklist filed", "Proves the document", ""]);
+assert.deepEqual(mixed.rows[1], [
+  "Staged live restoration",
+  "Test recommendation",
+  "Proves capability",
+  "STAGE 1: ~2 hours",
+]);
+
+// A delivery that is empty everywhere keeps its headers: a table with no columns reads as a bug,
+// not as an empty delivery.
+const nothing = alignColumns(head, [["", "", "", "", "", ""]], spec);
+assert.equal(nothing.head.length, 6, "an empty delivery must still show what was asked for");
+
+// Same rule without a spec.
+const bare = alignColumns(["a", "b", "c"], [["x", "", "z"]], null);
+assert.deepEqual(bare.head, ["A", "C"]);
+assert.deepEqual(bare.rows[0], ["x", "z"]);
 
 // ── row naming ───────────────────────────────────────────────────────────────
 // The reported symptom: three rows called "" and one called by a paragraph.
@@ -69,8 +97,7 @@ const extra = alignColumns(
   [["s", "i", "k"]],
   columnsFor("BCRP-002", "8"),
 );
-assert.deepEqual(extra.head.slice(0, 2), ["Item Filed Or Recommended", "Type"]);
-assert.equal(extra.head.at(-1), "Surprise");
+assert.deepEqual(extra.head, ["Item Filed Or Recommended", "Type", "Surprise"]);
 assert.deepEqual(extra.rows[0], ["i", "k", "s"]);
 
 // ── every register in the programme survives its own round trip ──────────────

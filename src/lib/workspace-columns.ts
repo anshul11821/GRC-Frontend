@@ -69,12 +69,23 @@ export function humaniseKey(key: string): string {
 }
 
 /**
- * Line a table's columns up with the form the mentee filled in.
+ * Line a table's columns up with the form the mentee filled in, and drop the ones they left alone.
  *
- * Spec columns first, in the form's order; then anything the payload holds that the spec does not
- * mention, so a key added to a workspace since — or one the spec never had — is still shown rather
- * than silently dropped. A column the spec names but this submission never filled is dropped, so a
- * reviewer is not given four empty columns to scan past.
+ * Two things happen here, and the second is the one a reviewer notices.
+ *
+ * ORDER AND NAMES: spec columns first, in the form's order, then anything the payload holds that
+ * the spec does not mention — a key added to a workspace since, or one the spec never had — so
+ * nothing is silently dropped for being unrecognised.
+ *
+ * EMPTY COLUMNS GO: a register's payload carries every column on every row, filled or not, because
+ * that is how the form writes it. Several columns are conditional and apply to one row Type each,
+ * so a submission routinely leaves whole columns blank — and the mentor was being shown them,
+ * headed and ruled and empty top to bottom. There is nothing in a column the mentee never filled
+ * for a reviewer to decide about. Dropped on unspecced tables too, for the same reason.
+ *
+ * The exception is a submission that is empty everywhere: dropping every column would leave a
+ * table with no columns at all, which reads as a bug rather than as an empty delivery. There the
+ * headers stay so the reviewer can see what was asked for and not answered.
  */
 export function alignColumns(
   head: string[],
@@ -82,19 +93,24 @@ export function alignColumns(
   spec: WorkspaceColumn[] | null,
 ): { head: string[]; rows: string[][]; reordered: boolean } {
   const label = (k: string) => spec?.find((c) => c.key === k)?.label ?? humaniseKey(k);
-  if (!spec) {
-    return { head: head.map(label), rows, reordered: false };
-  }
 
-  const known = spec.filter((c) => head.includes(c.key)).map((c) => c.key);
-  const extra = head.filter((k) => !spec.some((c) => c.key === k));
-  const order = [...known, ...extra];
-  const reordered = order.some((k, i) => head[i] !== k);
-  if (!reordered) return { head: head.map(label), rows, reordered: false };
+  const order = spec
+    ? [
+        ...spec.filter((c) => head.includes(c.key)).map((c) => c.key),
+        ...head.filter((k) => !spec.some((c) => c.key === k)),
+      ]
+    : [...head];
 
-  const at = order.map((k) => head.indexOf(k));
+  let at = order.map((k) => head.indexOf(k));
+  const used = at.filter((i) => rows.some((r) => (r[i] ?? "").trim()));
+  // Only when something was filled — otherwise an empty delivery would render no table at all.
+  if (used.length > 0) at = used;
+
+  const changed = at.length !== head.length || at.some((i, n) => i !== n);
+  if (!changed) return { head: head.map(label), rows, reordered: false };
+
   return {
-    head: order.map(label),
+    head: at.map((i) => label(head[i])),
     rows: rows.map((r) => at.map((i) => r[i] ?? "")),
     reordered: true,
   };
