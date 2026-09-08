@@ -196,7 +196,7 @@ export function ReviewSurface() {
             ) : gate.submissionId === null ? (
               <Empty
                 title="Nothing submitted yet"
-                body={`${menteeName || "This mentee"} has not delivered ${gate.gateName} yet.`}
+                body={`${menteeName || "This mentee"} has not delivered ${stepName(gate)} yet.`}
               />
             ) : loadError ? (
               <div className="rounded-lg border border-[#f0c2c2] bg-[#fdecec] px-4 py-3 text-[12.5px] text-[#a31d1d]">
@@ -392,7 +392,7 @@ function Toolbar({
               {task?.title ?? ""}
             </span>
             <Icon name="chevronRight" size={12} className="hidden shrink-0 text-slate-300 lg:inline" />
-            <span className="min-w-0 truncate font-medium text-slate-900">{gate.gateName}</span>
+            <span className="min-w-0 truncate font-medium text-slate-900">{stepName(gate)}</span>
           </>
         ) : (
           <span className="text-slate-500">
@@ -575,7 +575,7 @@ function StepRow({
               key={g.activityId}
               onClick={() => onPick(g.activityId)}
               aria-current={on ? "page" : undefined}
-              title={`${taskOf.get(g.taskCode)?.title ?? g.taskCode} — ${g.gateName}`}
+              title={`${taskOf.get(g.taskCode)?.title ?? g.taskCode} — ${stepName(g)}`}
               className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg border py-1.5 pl-2.5 pr-3 text-left transition-colors ${
                 on
                   ? "border-indigo-500 bg-white shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
@@ -592,7 +592,7 @@ function StepRow({
                     on ? "font-semibold text-slate-900" : "font-medium text-slate-700"
                   }`}
                 >
-                  {g.gateName}
+                  {stepName(g)}
                 </span>
               </span>
             </button>
@@ -686,7 +686,7 @@ function Heading({
             )}
           </div>
           <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.02em] text-slate-900">
-            {card?.activityTitle ?? gate?.gateName ?? task?.title ?? "…"}
+            {card?.activityTitle ?? (gate ? stepName(gate) : null) ?? task?.title ?? "…"}
           </h1>
           <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5">
             {/* A reviewer deep in a thirty-row register with no name in front of them has nothing
@@ -893,6 +893,22 @@ function useReachedOnce(ref: React.RefObject<HTMLElement | null>, resetKey: numb
   return seen;
 }
 
+/**
+ * What to call a step.
+ *
+ * The register names a gate by the acceptance statement it checks — "Apply the organisation's
+ * classification scheme (Public ‣ Internal ‣ Confidential ‣ Restricted) to every asset, working by
+ * data-subject category." The card, and the learner's own step list, name it by its title —
+ * "Apply Public / Internal / Confidential classification". Those differ on 66 of the 70 gates, so
+ * the step picker was labelling a step one way and the card another, and a reviewer telling a
+ * mentee which step they meant had two names to choose from.
+ *
+ * The title wins: it is short enough to pick out of a row of chips, and it is the name the mentee
+ * already uses. The acceptance statement is what the gate CHECKS, not what the step IS.
+ */
+const stepName = (g: { activityTitle?: string; gateName: string }) =>
+  g.activityTitle?.trim() || g.gateName;
+
 /** Reopens the window, and shows it is there to reopen. Sits beside Reference material. */
 function ChecksButton({
   count,
@@ -1004,7 +1020,7 @@ function RefPane({ references }: { references: TaskReference[] }) {
         <h3 className="mb-3 text-[14px] font-semibold tracking-tight text-slate-900">
           {open.title}
         </h3>
-        <RefBody text={open.body} />
+        <RefBody text={open.body} kind={open.kind} />
       </div>
     );
   }

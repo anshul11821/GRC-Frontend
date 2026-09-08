@@ -675,9 +675,35 @@ export function RecordWorkspace({ value, onChange, taskCode, activityCode }: Wor
 }
 
 type RecRow = Record<string, string>;
+
+/**
+ * The rows of a register that has already been submitted, in either shape it was ever saved in.
+ *
+ * This flow used to lift `{ register: rows, ready }` and now lifts `{ register: <name>, rows,
+ * objectiveMet }` — the same rows under a different key. Reading only `rows` meant a mentee who
+ * opened a step they had already passed was shown an empty grid under a banner reading "This is
+ * the work you submitted — graded 5.0 / 5", which is the least believable thing the page can say.
+ * 23 of the 27 submissions on scripted registers are in the older shape, so this is not an edge:
+ * it is nearly all of them.
+ *
+ * Both shapes key their cells by the spec's own column keys, so nothing has to be translated —
+ * only found. `register` is only treated as rows when it is a list; in the current shape it holds
+ * the register's NAME, and a string is not a row.
+ */
+function savedRows(value: Record<string, unknown>): RecRow[] | null {
+  for (const key of ["rows", "register"]) {
+    const v = value[key];
+    if (Array.isArray(v) && v.length > 0 && typeof v[0] === "object" && v[0] !== null) {
+      return v as RecRow[];
+    }
+  }
+  return null;
+}
 function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pick<WorkspaceProps, "value" | "onChange">) {
   const blank = (): RecRow => Object.fromEntries(task.columns.map((c) => [c.key, ""]));
-  const [rows, setRows] = useState<RecRow[]>(() => seed(value, "rows", Array.from({ length: task.requiredRows }, blank)));
+  const [rows, setRows] = useState<RecRow[]>(() =>
+    savedRows(value) ?? Array.from({ length: task.requiredRows }, blank),
+  );
   const [checked, setChecked] = useState(() => seed<boolean>(value, "objectiveMet", false));
 
   const started = (r: RecRow) => task.columns.some((c) => (r[c.key] ?? "").trim());
@@ -746,7 +772,17 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
                     const condHide = c.condReq && r[c.condReq.key] !== c.condReq.equals;
                     return (
                       <td key={c.key} className="px-2 py-1.5">
-                        {condHide ? <span className="text-[11px] text-slate-300 italic">—</span> : c.type === "select" ? (
+                        {condHide ? (
+                          // Not a dead column: this cell opens once the row's Type makes it
+                          // relevant. A bare dash read as a broken form — three columns of them on
+                          // an untouched register, with nothing saying what would fill them.
+                          <span
+                            title={`Fill this in when ${task.columns.find((x) => x.key === c.condReq!.key)?.label ?? c.condReq!.key} is "${c.condReq!.equals}"`}
+                            className="block text-[10.5px] leading-snug text-slate-400"
+                          >
+                            {c.condReq!.equals} only
+                          </span>
+                        ) : c.type === "select" ? (
                           <select value={r[c.key] ?? ""} onChange={(e) => set(i, c.key, e.target.value)} className="w-full h-8 px-1.5 rounded-md bg-white ring-1 ring-slate-200/80 focus:ring-2 focus:ring-indigo-500/40 outline-none text-[11.5px]"><option value="">—</option>{c.options!.map((o) => <option key={o}>{o}</option>)}</select>
                         ) : (
                           <input type={c.type === "number" ? "number" : c.type === "date" ? "date" : "text"} value={r[c.key] ?? ""} onChange={(e) => set(i, c.key, e.target.value)} placeholder={c.idFormat?.example ?? ""}

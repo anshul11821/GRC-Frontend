@@ -134,7 +134,7 @@ function RefAccordion({ references, focusId }: { references: TaskReference[]; fo
               </span>
               <Icon name="chevronDown" size={15} className={`text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
-            {isOpen && <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-100"><RefBody text={r.body} /></div>}
+            {isOpen && <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-100"><RefBody text={r.body} kind={r.kind} /></div>}
           </div>
         );
       })}
@@ -359,7 +359,15 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
         // An unsubmitted draft refills the workspace to carry on with. Failing that, a step that
         // has been submitted reads its own work back — frozen once it passed, until Resubmit
         // blanks it for a fresh attempt.
-        seed(a.draft ?? bestSubmission(h));
+        //
+        // A passed step reads the SUBMISSION, never a draft. The draft is the current attempt, and
+        // once a step is complete there is no current attempt — while a draft that is merely open
+        // on the page autosaves, so an empty one could outrank the graded work and leave the
+        // screen showing a blank deliverable under "This is the work you submitted — graded
+        // 5.0 / 5". That is precisely what happened wherever a workspace failed to read its own
+        // saved shape: it painted blank, autosaved the blank, and the blank then won every time.
+        const done = a.status === "complete";
+        seed(done ? (bestSubmission(h) ?? a.draft) : (a.draft ?? bestSubmission(h)));
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
       .finally(() => !cancelled && setLoading(false));

@@ -115,6 +115,8 @@ export interface MenteeGate {
   taskCode: string;
   gateId: string;
   gateName: string;
+  /** What the step is called — the card's own heading. See `stepName`. */
+  activityTitle: string;
   gateType: string;
   verbId: string;
   /** Null until they submit — there is no card to open yet. */
