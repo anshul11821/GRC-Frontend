@@ -214,7 +214,7 @@ const PURPOSE: Record<string, string> = {
  * someone else's name. Wrong on its face, and in a programme that teaches control mapping it is
  * the one kind of error a learner will repeat in real work. The code shape says who owns it.
  */
-function crossStandard(code: string): string {
+export function standardForRef(code: string): string {
   if (/^(GV|ID|PR|DE|RS|RC)\./.test(code)) return "NIST CSF 2.0";
   if (/^Control\s/.test(code) || /^CIS/.test(code)) return "CIS Controls v8";
   if (/^(Clause|Annex)/.test(code)) return "ISO/IEC 27001:2022";
@@ -252,13 +252,16 @@ function toControls(code: string): TaskControls | undefined {
     purpose: PURPOSE[c.ref],
     text: CLAUSE_TEXT[c.ref],
   }));
-  // Skip the crosswalk when the task's own standard is already NIST CSF.
-  const crosswalk: Control[] = rua.standard.startsWith("NIST")
-    ? []
-    : rua.crosswalk
+  // Drop only the cross-walk rows that resolve to the task's *own* standard — a task cannot be
+  // cross-walked against itself. This used to bin the whole array whenever the task was
+  // NIST-anchored, which was right while every row was assumed to target NIST and wrong the moment
+  // standardForRef() started reading the code: GRM-003 maps NIST onto ISO Clause 9.1, a real
+  // cross-walk that simply runs the other way, and it was being thrown away.
+  const crosswalk: Control[] = rua.crosswalk
         .map(normaliseCrossRef)
+        .filter((x) => standardForRef(x.code) !== rua.standard)
         .map((x) => {
-          const std = crossStandard(x.code);
+          const std = standardForRef(x.code);
           return {
             standard: std,
             tone: TONE[std] ?? "violet",
@@ -275,3 +278,14 @@ function toControls(code: string): TaskControls | undefined {
 export const CONTROLS_BY_TASK: Record<string, TaskControls> = Object.fromEntries(
   Object.keys(TASK_CONTROL_DATA).map((code) => [code, toControls(code)!]),
 );
+
+/** OUR plain-terms line for a reference, wherever it is cited. Never the standard's wording. */
+export function purposeForRef(ref: string): string | undefined {
+  return PURPOSE[ref];
+}
+
+/** Repair the one extractor artefact that reaches reference bodies as well as the cross-walk. */
+export function normaliseRef(ref: string): string {
+  const cont = ref.trim().match(/^and\s+(\d[\d.]*)$/i);
+  return cont ? `Control ${cont[1]}` : ref.trim();
+}

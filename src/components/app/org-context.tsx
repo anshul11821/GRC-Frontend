@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Register } from "@/components/app/register";
 import { OrgLogo } from "@/components/app/org-logo";
 import { Gloss, TermsUsed } from "@/components/app/glossary";
 import { LRN_CHIP } from "@/lib/tones";
@@ -21,41 +22,41 @@ function Panel({ title, icon, aside, span, tour, children }: {
   tour?: string;
   children: React.ReactNode;
 }) {
+  // Register (form 08). These panels are the organisation's own records — ochre, because ochre
+  // means "this is theirs, go and test it", and dense because nobody reads a register end to end.
+  // They were white content cards, which read as the programme telling you things rather than as
+  // a filing cabinet you look things up in.
   return (
-    <section data-tour={tour} className={`rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 flex flex-col ${span === 3 ? "md:col-span-2 lg:col-span-3" : "lg:col-span-2"}`}>
-      <div className="flex items-baseline justify-between gap-3 mb-3.5">
-        <h3 className="text-[13px] font-semibold tracking-tight text-slate-900 flex items-center gap-2">
-          <Icon name={icon} size={14} className="text-indigo-500 shrink-0 translate-y-[2px]" />
-          {title}
-        </h3>
-        {aside && <span className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-slate-500 shrink-0 tabular-nums">{aside}</span>}
-      </div>
-      {children}
-    </section>
+    <div data-tour={tour} className={`flex flex-col ${span === 3 ? "md:col-span-2 lg:col-span-3" : "lg:col-span-2"}`}>
+      <Register tab={title} meta={aside} className="flex-1 !mt-[21px]">
+        <Icon name={icon} size={13} className="absolute right-3 top-3 text-[#c99a5e]" />
+        {children}
+      </Register>
+    </div>
   );
 }
 
 /** Inset row — the tonal list item this page repeats for every enumerable fact. */
 const Row = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-2.5 py-2">{children}</div>
+  <div className="flex items-center justify-between gap-3 border-b border-dotted border-[#e2c49a] py-[5px] text-[#4e5a6b] last:border-b-0">{children}</div>
 );
 
 const Chip = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center px-2.5 h-[26px] rounded-full bg-slate-100 text-slate-700 text-[11.5px] tracking-tight"><Gloss>{children}</Gloss></span>
+  <span className="inline-flex min-h-[24px] items-center rounded border border-[#e2c49a] bg-white/70 px-2 py-1 font-mono text-[10.5px] leading-snug tracking-tight text-[#4e5a6b]"><Gloss>{children}</Gloss></span>
 );
 
 /** Ruled list — asset inventories read as an audit table, not as chips. */
 const RuledList = ({ items }: { items: string[] }) => (
   <ul>
     {items.map((s, i) => (
-      <li key={i} className="text-[12.5px] text-slate-700 tracking-tight py-2 border-b border-slate-100 last:border-0 last:pb-0 first:pt-0" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></li>
+      <li key={i} className="border-b border-dotted border-[#e2c49a] py-[5px] font-mono text-[11px] tracking-tight text-[#4e5a6b] last:border-0 last:pb-0 first:pt-0" style={{ textWrap: "pretty" }}><Gloss>{s}</Gloss></li>
     ))}
   </ul>
 );
 
 /** Column heading inside a panel. */
 const SubHead = ({ children }: { children: React.ReactNode }) => (
-  <h4 className="font-mono text-[9.5px] font-medium uppercase tracking-[0.1em] text-indigo-600 border-b border-indigo-100 pb-1.5 mb-2">{children}</h4>
+  <h4 className="font-mono text-[9.5px] font-medium uppercase tracking-[0.1em] text-[#9a5216] border-b border-[#e2c49a] pb-1.5 mb-2">{children}</h4>
 );
 
 const REQ_PARTIES = [

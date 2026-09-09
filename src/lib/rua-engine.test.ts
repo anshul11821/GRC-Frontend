@@ -2,7 +2,7 @@
 // The gate's failure feedback must name the mistake the mentee actually made — telling someone
 // "a decoy slipped in" when they simply under-ticked sends them hunting for the wrong error.
 import assert from "node:assert/strict";
-import { inspectMiss, gradeExplain, inspectExercise, lockSteps } from "./rua-engine";
+import { inspectMiss, gradeExplain, inspectExercise, lockSteps, microCheck } from "./rua-engine";
 import type { RuaTask } from "./rua-tasks";
 
 // AA-001's real shape: one template with fields, one without — so the within-task decoy pool is
@@ -81,5 +81,24 @@ assert.deepEqual(seq.map((s) => s.locked), [false, false, true, false]);
 //                                            ↑ done   ↑ current  ↑ shut   ↑ already finished, stays open
 assert.deepEqual(lockSteps([{ done: false }, { done: false }]).map((s) => s.locked), [false, true]);
 assert.deepEqual(lockSteps([{ done: true }, { done: true }]).map((s) => s.locked), [false, false]);
+
+// A comprehension check must be answerable WRONGLY. CRM-002 carries a single control, so a
+// sibling-only decoy pool rendered one option — the learner clicked the only answer and passed.
+// BCRP-001 / PE-001 / SPA-002 rendered two, which is a coin flip.
+const oneControl = { controls: [{ ref: "Annex A", name: "All 93 controls across 4 Themes" }] } as unknown as RuaTask;
+const one = microCheck(oneControl, "CRM-002", 0);
+assert.ok(one.options.length >= 4, `single-control task must still offer real choices (got ${one.options.length})`);
+assert.ok(one.options.includes(one.answer), "the correct answer must be among the options");
+assert.equal(new Set(one.options).size, one.options.length, "options must not repeat");
+assert.equal(one.options.filter((o) => o === one.answer).length, 1, "exactly one option may be correct");
+
+const twoControls = { controls: [
+  { ref: "Annex A 5.29", name: "Information security during disruption" },
+  { ref: "Annex A 5.30", name: "ICT readiness for business continuity" },
+] } as unknown as RuaTask;
+const two = microCheck(twoControls, "BCRP-001", 1);
+assert.ok(two.options.length >= 4, `two-control task must top up its decoys (got ${two.options.length})`);
+assert.ok(two.options.includes("Information security during disruption"), "the sibling control is still used as a decoy");
+assert.equal(two.options.filter((o) => o === two.answer).length, 1);
 
 console.log("rua-engine: ok");

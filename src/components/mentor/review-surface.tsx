@@ -6,6 +6,8 @@ import { Icon } from "@/components/ui/icon";
 import { StepBrief } from "@/components/app/deliverable";
 import { Gloss } from "@/components/app/glossary";
 import { RefBody } from "@/components/app/reference-material";
+import { ControlReferences } from "@/components/app/control-references";
+import { CONTROLS_BY_TASK } from "@/lib/controls";
 import { FloatWindow } from "@/components/mentor/float-window";
 import { useMenteeGates } from "@/components/mentor/mentee-gates";
 import { useDeskFilter, useMenteeTree } from "@/components/mentor/desk-context";
@@ -51,6 +53,7 @@ export function ReviewSurface() {
   const { taskOf, orgOf } = useMenteeTree();
 
   const [refsOpen, setRefsOpen] = useState(false);
+  const [ctrlOpen, setCtrlOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
   // The review lives here and nowhere else until the decision writes it — at the surface rather
   // than inside the delivery because the pipeline bar reads it too. Seeded empty rather than from
@@ -208,6 +211,7 @@ export function ReviewSurface() {
               <Delivery
                 card={card}
                 onRefs={() => setRefsOpen(true)}
+                onControls={() => setCtrlOpen(true)}
                 menteeName={menteeName}
                 marks={marks}
                 setMarks={setMarks}
@@ -227,6 +231,18 @@ export function ReviewSurface() {
           onClose={() => setRefsOpen(false)}
         >
           <RefPane references={card.brief.references} />
+        </FloatWindow>
+      )}
+      {ctrlOpen && card && (
+        <FloatWindow
+          title="Control references"
+          sub={card.taskName}
+          icon="shield"
+          width={520}
+          height={620}
+          onClose={() => setCtrlOpen(false)}
+        >
+          <ControlReferences taskCode={card.taskCode} />
         </FloatWindow>
       )}
       {histOpen && card && (
@@ -734,12 +750,14 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
 function Delivery({
   card,
   onRefs,
+  onControls,
   menteeName,
   marks,
   setMarks,
 }: {
   card: Card;
   onRefs: () => void;
+  onControls: () => void;
   menteeName: string;
   marks: ReviewComment[];
   setMarks: React.Dispatch<React.SetStateAction<ReviewComment[]>>;
@@ -782,6 +800,19 @@ function Delivery({
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {checks.length > 0 && (
           <ChecksButton count={checks.length} showing={showing} onSet={setPref} />
+        )}
+        {/* The controls the delivery is graded against. A reviewer was being asked whether the work
+            traces back to its controls with no way to see them — the same panel the mentee reads,
+            so the two are never judging against different words. */}
+        {(CONTROLS_BY_TASK[card.taskCode]?.controls.length ?? 0) > 0 && (
+          <button
+            onClick={onControls}
+            className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-[11.5px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            <Icon name="shield" size={12} />
+            Control references
+            <span className="tabular-nums text-slate-400">{CONTROLS_BY_TASK[card.taskCode]!.controls.length}</span>
+          </button>
         )}
         {card.brief && card.brief.references.length > 0 && (
           <button

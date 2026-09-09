@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -71,7 +71,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
         <button onClick={() => setOpen((o) => !o)} className="w-6 h-7 flex items-center justify-center shrink-0 text-slate-400 hover:text-slate-600" aria-label="Toggle actions">
           <Icon name="chevronRight" size={13} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
-        <Link href={`${base}/task/${task.code}`} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
+        <Link href={`${base}/task/${task.code}`} data-desk-active={activeTaskCode === task.code || undefined} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
           <div className="flex items-center gap-1.5">
             <span className={`inline-flex items-center h-[16px] px-1.5 rounded text-[9.5px] font-medium ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{meta?.standardLabel ?? task.standards}</span>
             {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
@@ -120,9 +120,9 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
               </>
             );
             return ss === "locked" ? (
-              <div key={s.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-not-allowed opacity-70" title="Complete the previous step first">{inner}</div>
+              <div key={s.id} data-desk-active={active || undefined} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-not-allowed opacity-70" title="Complete the previous step first">{inner}</div>
             ) : (
-              <Link key={s.id} href={`${base}/${s.id}`} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
+              <Link key={s.id} href={`${base}/${s.id}`} data-desk-active={active || undefined} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
             );
           })}
         </div>
@@ -267,10 +267,10 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   );
 }
 
-function SidebarShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
+function SidebarShell({ children, footer, scrollRef }: { children: React.ReactNode; footer?: React.ReactNode; scrollRef?: React.Ref<HTMLDivElement> }) {
   return (
     <aside data-tour="desk-tree" className="w-[288px] 2xl:w-[344px] 3xl:w-[380px] shrink-0 h-full border-r border-slate-200/70 bg-white/50 flex flex-col">
-      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">{children}</div>
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">{children}</div>
       {footer}
     </aside>
   );
@@ -292,6 +292,14 @@ export function DeskSidebar() {
   const activeId =
     rest[0] && rest[0] !== "task" && rest[0] !== "org" ? decodeURIComponent(rest[0]) : undefined;
 
+  // Opening a step or task by link (Up next, calendar, a mentor's worklist) has to *show* it: the
+  // tree is ~350 rows tall, so the highlighted row is usually below the fold on arrival. The nodes
+  // holding it are already open on their first render, so the marked row exists by the time this runs.
+  const railRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    railRef.current?.querySelector("[data-desk-active]")?.scrollIntoView({ block: "center" });
+  }, [activeId, activeTaskCode, learnings]);
+
   if (loading && !learnings) {
     return (
       <SidebarShell>
@@ -309,7 +317,15 @@ export function DeskSidebar() {
 
   const orgs = learnings?.orgs ?? [];
   // The current placement: the first one that's accessible (not complete, not locked).
-  const activeOrgId = (orgs.find((o) => o.status === "active") ?? orgs.find((o) => orgDisplayState(o) === "active"))?.id;
+  // The placement to open: the one holding the linked task/step if there is one — a link into a
+  // completed placement used to leave its org collapsed, so the step it pointed at was not in the
+  // tree at all — otherwise the current placement.
+  const linkedOrgId = (activeTaskCode || activeId)
+    ? orgs.find((o) => o.projects.some((p) => p.tasks.some(
+        (t) => t.code === activeTaskCode || t.steps.some((s) => s.id === activeId))))?.id
+    : undefined;
+  const activeOrgId = linkedOrgId
+    ?? (orgs.find((o) => o.status === "active") ?? orgs.find((o) => orgDisplayState(o) === "active"))?.id;
 
   // Overall program progress — pinned to the rail's footer so the lower area always reads as
   // intentional chrome rather than blank space, regardless of how short the tree is.
@@ -329,7 +345,7 @@ export function DeskSidebar() {
   ) : undefined;
 
   return (
-    <SidebarShell footer={progressFooter}>
+    <SidebarShell footer={progressFooter} scrollRef={railRef}>
       {orgs.length === 0 ? (
         <div className="px-2 py-6 text-center text-[12px] text-slate-500">No placements yet.</div>
       ) : (

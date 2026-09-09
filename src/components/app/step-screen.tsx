@@ -25,6 +25,7 @@ import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { MentorDecision } from "@/components/app/mentor-decision";
+import { LockedNotice } from "@/components/app/locked-notice";
 import { MachineNote, MachineTag } from "@/components/app/machine-note";
 import { ModelAnswer } from "@/components/app/model-answer";
 import { invalidateQuery } from "@/lib/use-query";
@@ -270,14 +271,29 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
   );
 }
 
+/** Flags a workspace lifts *about* the attempt rather than as part of it. A payload holding only
+ *  these carries no answers to read back. */
+const CONTROL_FLAGS = new Set(["objectiveMet", "hintsUsed", "scripted", "slips", "slipRows"]);
+const hasAnswers = (p?: ActivityPayload | null) =>
+  Object.keys(p?.fields ?? {}).some((k) => !CONTROL_FLAGS.has(k));
+
 /** The submission a completed step reads back: highest scored, newest on a tie (history is
  *  newest-first, and `>` keeps the one seen first). Scores re-roll between attempts, so the last
- *  attempt is not necessarily the best one. */
+ *  attempt is not necessarily the best one.
+ *
+ *  Submissions carrying no answers are skipped rather than won with. A payload of nothing but
+ *  control flags renders as an untouched workspace — on a gate, a tab rail reading 0/8 with every
+ *  step after the first locked — under a banner claiming it is the work that was graded. Such a
+ *  payload cannot come from a workspace (each lifts its own answers beside its flags), only from a
+ *  submission made straight to the API, and showing the learner's own draft beats showing them a
+ *  blank. */
 function bestSubmission(history: SubmissionDetail[]): ActivityPayload | undefined {
-  return history.reduce<SubmissionDetail | undefined>(
-    (best, h) => (!best || (h.review?.overallScore ?? 0) > (best.review?.overallScore ?? 0) ? h : best),
-    undefined,
-  )?.submission.payload;
+  return history
+    .filter((h) => hasAnswers(h.submission.payload))
+    .reduce<SubmissionDetail | undefined>(
+      (best, h) => (!best || (h.review?.overallScore ?? 0) > (best.review?.overallScore ?? 0) ? h : best),
+      undefined,
+    )?.submission.payload;
 }
 
 /**
@@ -324,6 +340,9 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   const [atDeliverable, setAtDeliverable] = useState(false);   // deliverable card is on screen
   // When a passed activity is reopened, lets the user choose to start the deliverable again.
   const [resubmit, setResubmit] = useState(false);
+  // The read-back on screen is a draft, because the graded submission held no answers (see
+  // bestSubmission). The banner must not then call it the work that was submitted.
+  const [readbackIsDraft, setReadbackIsDraft] = useState(false);
   const [attemptKey, setAttemptKey] = useState(0); // bumped to remount the workspace blank
   const deliverableRef = useRef<HTMLDivElement>(null);
   // Guided walkthrough: objective → what to do → checklist → deliverable. -1 = closed.
@@ -347,15 +366,21 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
     setTourStep(-1); // close the tour during navigation so it never shows a stale step
     Promise.all([
       (source?.activity ?? (() => deskApi.activity(activityId)))(),
+      // null = the fetch FAILED; [] = there genuinely are no submissions. Swallowing both as []
+      // is how a transient network blip turned a finished step into a blank one: with no history
+      // to read back, the seed below falls through to whatever draft is on file — for a gate,
+      // usually the empty one autosaved on the way in — and the mentee is told nothing.
       (source?.submissions ?? (() => deskApi.submissions(activityId)))().catch(
-        () => [] as SubmissionDetail[],
+        () => null,
       ),
     ])
-      .then(([a, h]) => {
+      .then(([a, hist]) => {
         if (cancelled) return;
+        const h = hist ?? [];
         setActivity(a);
         setHistory(h);
         setResubmit(false);
+        if (!hist) setError("Couldn't load your previous submissions — reload the page to see the work you submitted.");
         // An unsubmitted draft refills the workspace to carry on with. Failing that, a step that
         // has been submitted reads its own work back — frozen once it passed, until Resubmit
         // blanks it for a fresh attempt.
@@ -370,7 +395,9 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
         // step whose last review decided "pass" is finished even when the status has not caught up,
         // and reading the draft there is what showed a blank deliverable under "graded 5.0 / 5".
         const done = a.status === "complete" || a.latestReview?.decision === "pass";
-        seed(done ? (bestSubmission(h) ?? a.draft) : (a.draft ?? bestSubmission(h)));
+        const submitted = bestSubmission(h);
+        setReadbackIsDraft(done && !submitted && hasAnswers(a.draft));
+        seed(done ? (submitted ?? a.draft) : (a.draft ?? submitted));
       })
       .catch((e) => !cancelled && setLoadError(e instanceof ApiError ? e.message : "Couldn't load this activity."))
       .finally(() => !cancelled && setLoading(false));
@@ -583,6 +610,24 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           <div className="text-[13px] font-medium text-slate-700">{loadError ?? "Activity not found"}</div>
           <Link href="/app/learnings" className="inline-block mt-4 text-[12.5px] text-indigo-600 hover:text-indigo-700">← Back to My Learnings</Link>
         </Card>
+      </div>
+    );
+  }
+
+  // Typing a step URL ahead of yourself used to open the full workspace: brief, deliverable and a
+  // Submit that 409s ("This step is locked") only once the work is done. The tree is authoritative
+  // about what is open, so say so before any of that. Only when we positively know it is locked —
+  // an unloaded tree must not flash the notice — and never on a mentor's desk, where the step
+  // belongs to somebody else and read-only is the point.
+  const treeStep = learnings?.orgs
+    .flatMap((o) => o.projects)
+    .flatMap((p) => p.tasks)
+    .flatMap((t) => t.steps)
+    .find((s) => s.id === activityId);
+  if (!source && treeStep?.status === "locked") {
+    return (
+      <div className="max-w-[680px] mx-auto px-6 py-10">
+        <LockedNotice what="step" />
       </div>
     );
   }
@@ -847,7 +892,11 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
         {readback && !noAttemptsLeft && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-emerald-50/70 ring-1 ring-emerald-200/70 px-3 py-2 text-[12px] text-emerald-800 tracking-tight">
             <Icon name="check" size={13} strokeWidth={3} className="text-emerald-600 shrink-0 mt-px" />
-            <span>This is the work you submitted{review ? ` — graded ${review.overallScore.toFixed(1)} / 5` : ""}. It&apos;s read-only; Resubmit starts a fresh attempt from a blank deliverable.</span>
+            <span>
+              {readbackIsDraft
+                ? <>Your graded submission for this step holds no answers to show{review ? ` — it was still graded ${review.overallScore.toFixed(1)} / 5` : ""}. This is your last saved draft; Resubmit starts a fresh attempt from a blank deliverable.</>
+                : <>This is the work you submitted{review ? ` — graded ${review.overallScore.toFixed(1)} / 5` : ""}. It&apos;s read-only; Resubmit starts a fresh attempt from a blank deliverable.</>}
+            </span>
           </div>
         )}
 

@@ -19,6 +19,14 @@ export interface TabDef {
   locked?: boolean;
 }
 
+/** Which tab a gate opens on when the mentee hasn't picked one: the first unfinished step — or,
+ *  once every step is done, the LAST one. A submitted gate reads back where it ended (the
+ *  sign-off, with the decision on it); landing back on step 1 with the work behind it made a
+ *  finished gate look like it had been restarted. A resubmit blanks the progress, so the same
+ *  rule then lands on step 1 with the rest locked, which is what a fresh attempt should do. */
+export const resumeTab = (tabs: TabDef[]): string =>
+  (tabs.find((t) => !t.done) ?? tabs[tabs.length - 1]).key;
+
 /** Left tab rail (md+) / horizontal chip row (mobile) + progress header. */
 export function TabRail({ tabs, active, onSelect, progressLabel }: {
   tabs: TabDef[]; active: string; onSelect: (k: string) => void; progressLabel: string;

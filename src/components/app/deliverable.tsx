@@ -176,7 +176,7 @@ export function WorkingSheet({
       ref={sheetRef}
       className="relative [filter:drop-shadow(0_1px_0_rgb(226,232,240))_drop-shadow(0_6px_16px_rgba(15,23,42,0.10))]"
     >
-      <div className="bg-white p-4 sm:p-5 [clip-path:polygon(0_0,calc(100%-28px)_0,100%_28px,100%_100%,0_100%)]">
+      <div className="bg-white p-4 sm:p-5 [clip-path:polygon(0_0,calc(100%-24px)_0,100%_24px,100%_100%,0_100%)]">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0">
             <h2 className="text-[14px] font-semibold tracking-tight text-slate-900">{title}</h2>
@@ -186,10 +186,17 @@ export function WorkingSheet({
         </div>
         {children}
       </div>
-      {/* The fold itself — the lit triangle over the notch the clip-path cut. */}
+      {/* The fold. Straight from grc101-forms.css: a 24px square painted by a 225deg gradient —
+          the flap of the turned-back corner — with the crease as its left and bottom border.
+          The gradient runs the opposite way to the reference CSS on purpose: there the page ground
+          (#eef1f6) and the flap tint (#e7ecf3) are all but identical, so which half is painted does
+          not show. Our deliverable sits on white, where painting the cut-away half left a tinted
+          block hanging off the corner. The cut is transparent so the page shows through it, and
+          the tint is on the flap below the crease, which is what a folded corner actually looks
+          like. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute top-0 right-0 w-7 h-7 bg-slate-100 border-l border-b border-slate-200 [clip-path:polygon(100%_0,100%_100%,0_100%)]"
+        className="pointer-events-none absolute top-0 right-0 h-6 w-6 border-b border-l border-[#d3dbe6] [background:linear-gradient(225deg,transparent_0_50%,#e7ecf3_50%)]"
       />
     </div>
   );

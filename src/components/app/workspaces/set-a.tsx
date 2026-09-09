@@ -71,13 +71,15 @@ function Avatar({ who, label }: { who: "you" | "stakeholder"; label?: string }) 
   );
 }
 
-/* A read-only stakeholder/mentee chat bubble (supports multi-paragraph text). */
+/* A read-only stakeholder/mentee chat bubble (supports multi-paragraph text).
+   Borders are the form language's own hairline (--gf-line #d3dbe6) rather than a tinted ring —
+   the only thing changed here. */
 function Bubble({ who, initials, text }: { who: "you" | "stakeholder"; initials: string; text: string }) {
   const mine = who === "you";
   return (
     <div className={`flex items-start gap-2.5 ${mine ? "justify-end" : ""}`}>
       {!mine && <Avatar who="stakeholder" label={initials} />}
-      <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[82%] leading-relaxed ring-1 whitespace-pre-line ${mine ? "bg-indigo-50 ring-indigo-100 text-slate-800" : "bg-white ring-slate-200/70 text-slate-800"}`}>{text}</div>
+      <div className={`rounded-2xl px-3.5 py-2 text-[12.5px] tracking-tight max-w-[82%] leading-relaxed border border-[#d3dbe6] whitespace-pre-line ${mine ? "bg-indigo-50 text-slate-800" : "bg-white text-slate-800"}`}>{text}</div>
       {mine && <Avatar who="you" label={initials} />}
     </div>
   );
@@ -216,7 +218,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
             <button onClick={reset} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1"><Icon name="chevronLeft" size={12} />Edit request</button>
           }>Conversation · {thread.speaker}</SectionLabel>
 
-          <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
+          <div className="rounded-[16px_4px_4px_16px] bg-slate-50/60 border border-[#d3dbe6] p-4 space-y-2.5">
             {/* Your opening request */}
             <Bubble who="you" initials="ME" text={`${subject}\n\n${purpose}\n\nRequested:\n${items.filter((i) => i.trim()).map((i) => `• ${i}`).join("\n")}`} />
 
@@ -548,7 +550,7 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
         <SectionLabel action={
           <button onClick={reset} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1"><Icon name="chevronLeft" size={12} />Re-open</button>
         }>Interview · {thread!.speaker}</SectionLabel>
-        <div className="rounded-2xl bg-slate-50/60 ring-1 ring-slate-200/70 p-4 space-y-2.5">
+        <div className="rounded-[16px_4px_4px_16px] bg-slate-50/60 border border-[#d3dbe6] p-4 space-y-2.5">
           <Bubble who="you" initials="ME" text={opening.text} />
           <TypingBubble initials={thread!.initials} text={thread!.opener} onDone={() => setWaiting(false)} />
           {correctPicks.map((p, i) => (

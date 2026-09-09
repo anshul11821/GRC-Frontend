@@ -12,7 +12,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
-import { TabRail, PaneNav, type TabDef } from "./gates";
+import { TabRail, PaneNav, resumeTab, type TabDef } from "./gates";
 import { type RuaTask } from "@/lib/rua-tasks";
 import { useTaskBundle } from "@/lib/task-bundle";
 import { TASK_META } from "@/lib/taskmeta";
@@ -311,7 +311,7 @@ function ResearchWorkspaceInner({ taskCode, value, onChange, rua }: WorkspacePro
   ];
   // Reopening the gate resumes at the first method still outstanding, not always the first required
   // one. Landing back on method 1 every time made finished work look lost.
-  const tab = tabPick ?? tabs.find((t) => !t.done)?.key ?? tabs[0].key;
+  const tab = tabPick ?? resumeTab(tabs);
   const goMethod = (k: string) => setTabPick(k);
   const method = RESEARCH_METHODS.find((m) => m.key === tab);
 

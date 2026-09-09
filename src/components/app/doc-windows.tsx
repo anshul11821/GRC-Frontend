@@ -94,7 +94,7 @@ function DocWindow({ doc, index, z, onClose, onFocus }: {
         </button>
       </div>
       <div className="px-4 py-3 pb-6 overflow-y-auto overscroll-contain flex-1 min-h-0 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgb(100_116_139/0.35)_transparent]">
-        <RefBody text={doc.body} />
+        <RefBody text={doc.body} kind={doc.kind} />
       </div>
       {/* corner resize grip — z-10 + opaque note-coloured corner keeps it above the body's scrollbar */}
       <div onPointerDown={startResize} aria-hidden

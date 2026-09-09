@@ -19,7 +19,8 @@ import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
 import { Gloss } from "@/components/app/glossary";
 import { MachineTag } from "@/components/app/machine-note";
-import { TabRail, PaneNav, type TabDef } from "./gates";
+import { StudyCard } from "@/components/app/study-card";
+import { TabRail, PaneNav, resumeTab, type TabDef } from "./gates";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
 import { type RuaTask } from "@/lib/rua-tasks";
 import { type RuaRef } from "@/lib/rua-refs";
@@ -237,12 +238,13 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
                   <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>
                     <Gloss>Studied for intent, not wording: {c.ref} forces the organisation to demonstrably control “{c.name.toLowerCase()}”. Ask what risk it removes and how you&apos;d see it working.</Gloss>
                   </p>
-                  <div className="rounded-xl bg-violet-50/70 px-3.5 py-3">
-                    <div className="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-violet-600 mb-1">Why this matters here</div>
-                    <p className="text-[12px] leading-relaxed text-slate-700 tracking-tight" style={{ textWrap: "pretty" }}>
-                      <Gloss>Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.</Gloss>
-                    </p>
-                  </div>
+                  {/* Study card (form 03): borderless, so the mentee reads it knowing nothing is
+                      owed *here* — the comprehension check below is what is owed, and it wears the
+                      border. It was violet-tinted, which is the reserved machine hue; this text is
+                      authored by the programme, not generated. */}
+                  <StudyCard title="Why this matters here">
+                    <p><Gloss>Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.</Gloss></p>
+                  </StudyCard>
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <MicroCheckBox task={task} taskCode={taskCode} idx={i} passed={done} attempts={p.study[i]?.attempts ?? 0}
                     onPass={() => {
@@ -1295,9 +1297,10 @@ function RuaWorkspaceInner({ task, allRefs, taskCode, value, onChange }: Workspa
     { key: "attest", label: "Attest", icon: "shield", blurb: "Request the gate decision", done: doneMap.attest, group: "D · Readiness Sign-off" },
   ]);
   const doneCount = tabs.filter((t) => t.done).length;
-  // Reopening the gate resumes at the first unfinished step. Landing back on Study every time made
-  // finished work look lost, even though the draft had restored it.
-  const tab = tabPick ?? tabs.find((t) => !t.done)?.key ?? tabs[0].key;
+  // Reopening the gate resumes at the first unfinished step, or at Attest once it is all done —
+  // see resumeTab. Landing back on Study every time made finished work look lost, even though the
+  // draft had restored it.
+  const tab = tabPick ?? resumeTab(tabs);
   const paneProps: PaneProps = {
     task, taskCode: taskCode ?? "", p, patch, goVerb: setTabPick,
     refs: allRefs.filter((r) => r.tab === tab), openDoc: fw.open,

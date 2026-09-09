@@ -73,12 +73,42 @@ export const PARROT = 0.62;
 export interface MicroCheckItem { q: string; options: string[]; answer: string }
 
 /** R1 Study — one comprehension MCQ per control; decoys borrowed across the catalog when short. */
+/**
+ * Outcomes from elsewhere in GRC, for when a task has too few controls to supply its own decoys.
+ *
+ * Sibling controls are the better decoy — they are the confusions a learner actually has — but
+ * they run out: CRM-002 carries a single control, so a sibling-only pool produced a question with
+ * ONE option, which cannot be got wrong, and BCRP-001 / PE-001 / SPA-002 produced two, which is a
+ * coin flip. Same failure and same remedy as DECOY_FIELDS below.
+ *
+ * Each is phrased as an outcome and drawn from a different control domain, so it is never
+ * accidentally right for the control in hand, and it is still a plausible thing to have to reject.
+ */
+const DECOY_OUTCOMES = [
+  "Encrypt personal data held in backup media",
+  "Review privileged account access every quarter",
+  "Maintain a tested incident response plan",
+  "Record a lawful basis for every processing activity",
+  "Screen suppliers for financial stability before onboarding",
+  "Run vulnerability scans against internet-facing systems",
+  "Retain audit logs for a defined minimum period",
+  "Segregate duties for payment authorisation",
+];
+
+/** Never fewer than this many options — below it the question stops being answerable wrongly. */
+const MIN_OPTIONS = 4;
+
 export function microCheck(task: RuaTask, taskCode: string, ctrlIdx: number): MicroCheckItem {
   const c = task.controls[ctrlIdx];
-  const others = task.controls.filter((_, i) => i !== ctrlIdx);
-  // ponytail: within-task decoys only (the catalog is now server-side, one task at a time).
-  // A 3+-control task still yields 2-3 decoys; short tasks just show fewer options.
-  const distract = [...new Set(others.map((x) => x.name))].filter((n) => n !== c.name).slice(0, 3);
+  const siblings = task.controls.filter((_, i) => i !== ctrlIdx).map((x) => x.name);
+  const taken = new Set([c.name, ...task.controls.map((x) => x.name)]);
+  // Siblings first — they are the real confusions — then top up from the bank so the question is
+  // always answerable wrongly. A check that cannot be failed teaches nothing and passes everyone.
+  const pool = [
+    ...new Set(siblings.filter((n) => n !== c.name)),
+    ...seededShuffle(DECOY_OUTCOMES, taskCode + ctrlIdx).filter((n) => !taken.has(n)),
+  ];
+  const distract = pool.slice(0, MIN_OPTIONS - 1);
   return {
     q: `Which outcome does ${c.ref || "this reference"} actually require?`,
     options: seededShuffle([c.name, ...distract], taskCode + ctrlIdx),
@@ -119,8 +149,16 @@ export function inspectExercise(task: RuaTask, taskCode: string, tplIdx: number)
     );
     return { kind: "columns", prompt: `Tick every field that belongs in the ${tpl.name} — some of these belong to other artefacts.`, picks };
   }
-  const purposes = seededShuffle(task.templates.map((t) => t.purpose || t.name), taskCode + tplIdx);
-  return { kind: "purpose", prompt: `Which purpose matches the ${tpl.name}?`, options: purposes, answer: tpl.purpose || tpl.name };
+  // Same top-up as the control check: sibling templates bottom out at two across the curriculum,
+  // which is a coin flip rather than a question.
+  const answer = tpl.purpose || tpl.name;
+  const ownPurposes = new Set(task.templates.map((t) => t.purpose || t.name));
+  const purposePool = [
+    ...new Set(task.templates.filter((_, i) => i !== tplIdx).map((t) => t.purpose || t.name)),
+    ...seededShuffle(DECOY_OUTCOMES, `${taskCode}p${tplIdx}`).filter((n) => !ownPurposes.has(n)),
+  ].filter((n) => n !== answer);
+  const purposes = seededShuffle([answer, ...purposePool.slice(0, MIN_OPTIONS - 1)], taskCode + tplIdx);
+  return { kind: "purpose", prompt: `Which purpose matches the ${tpl.name}?`, options: purposes, answer };
 }
 
 /**
