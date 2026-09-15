@@ -117,20 +117,30 @@ export function StepBrief({
             {objective && (
               <div
                 ref={objectiveRef}
-                className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-50/40 to-transparent ring-1 ring-indigo-100/80 p-4 flex flex-col justify-center"
+                className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-50/40 to-transparent ring-1 ring-indigo-100/80 p-4"
               >
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-3">
                   <Icon name="target" size={14} className="text-indigo-600" />
                   <h2 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-indigo-700">
                     {objectiveTitle}
                   </h2>
                 </div>
-                <p
-                  className="text-[13px] text-slate-700 leading-relaxed tracking-tight"
-                  style={{ textWrap: "pretty" }}
-                >
-                  <Gloss>{objective}</Gloss>
-                </p>
+                {/* ponytail: one bullet per sentence; an "e.g. Foo" abbreviation would split early */}
+                <ol className="space-y-2.5">
+                  {objective.split(/(?<=[.!?])\s+(?=[A-Z])/).map((sentence, i) => (
+                    <li key={i} className="flex gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-600 text-white text-[10.5px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
+                        {i + 1}
+                      </span>
+                      <span
+                        className="text-[12.5px] text-slate-700 leading-relaxed tracking-tight"
+                        style={{ textWrap: "pretty" }}
+                      >
+                        <Gloss>{sentence}</Gloss>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
             {whatToDo && whatToDo.length > 0 && (

@@ -18,7 +18,8 @@ import { JudgmentCall, JudgmentAnswer, JudgmentVerdict, decisionReady } from "@/
 import type { DecisionAnswer } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
-import { CONTROL_KEYS, checklistStates, isFilled } from "@/lib/checklist";
+import { CONTROL_KEYS, isFilled } from "@/lib/checklist";
+import { acceptanceStates, acceptanceTexts } from "@/lib/acceptance";
 import { useDeskBase, useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
 import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
@@ -26,6 +27,7 @@ import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { MentorDecision } from "@/components/app/mentor-decision";
 import { LockedNotice } from "@/components/app/locked-notice";
+import { fitsWorkspace } from "@/lib/workspace-readback";
 import { MachineNote, MachineTag } from "@/components/app/machine-note";
 import { ModelAnswer } from "@/components/app/model-answer";
 import { invalidateQuery } from "@/lib/use-query";
@@ -198,15 +200,18 @@ function SubmittedFields({ payload, verbId, taskCode, rua }: {
 
 /** Live acceptance-criteria checklist (always expanded). Heuristic before submit; authoritative after.
  *  Pass `onClose` to show a dismiss (✕) button (used by the floating HUD). */
-function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
-  criteria: string[];
+function AcceptanceChecklist({ verbId, values, layer1, onClose }: {
+  verbId: string;
   values: Record<string, unknown>;
   layer1?: Layer1Result | null;
   onClose?: () => void;
 }) {
+  // The criteria and their met-tests come from the same place — lib/acceptance.ts — so a criterion
+  // on screen is one this step's workspace can actually evidence.
+  const criteria = acceptanceTexts(verbId);
   // Once graded, defer to the backend's deterministic result (when it lines up 1:1 with the criteria).
   const graded = !!layer1 && layer1.checks.length === criteria.length;
-  const live = checklistStates(criteria, values);
+  const live = acceptanceStates(verbId, values);
   const states = criteria.map((c, i) => (graded ? layer1!.checks[i].passed : live[i]));
   const met = states.filter(Boolean).length;
   const allMet = met === criteria.length;
@@ -218,10 +223,14 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
     // Steel rules rather than navy because these criteria are the programme's, not a standard's.
     // The panel keeps a blurred white ground only because it floats over the form as a HUD.
     <div className="bg-white/95 backdrop-blur-xl backdrop-saturate-150 border-x border-x-slate-200 border-y-4 border-y-sky-700 [border-top-style:double] [border-bottom-style:double] px-4 py-3 shadow-[0_16px_44px_-14px_rgba(15,23,42,0.28)]">
-      <div className="flex items-baseline gap-2">
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.09em] text-slate-500">
-          Accepted only if all hold
-        </span>
+      {/* The one-line summary the form language puts with a rule strip, carrying the state the
+          progress bar used to carry. Sits on top so the close button has a row to live in. */}
+      <div className="mb-1 flex items-center gap-2">
+        <div className="font-mono text-[10px] uppercase tracking-[0.06em] text-slate-500">
+          {criteria.length} criteria · {met} met
+          {allMet && <span className="text-emerald-600"> · all hold</span>}
+          <span className="text-slate-400"> · {graded ? "from your last submission" : "live"}</span>
+        </div>
         {onClose && (
           <button
             onClick={onClose}
@@ -233,7 +242,7 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
         )}
       </div>
 
-      <ol className="mt-2 list-none p-0 m-0">
+      <ol className="list-none p-0 m-0">
         {criteria.map((c, i) => {
           const ok = states[i];
           // Only a graded run can say "not met" — before submission an unticked row is merely
@@ -259,14 +268,6 @@ function AcceptanceChecklist({ criteria, values, layer1, onClose }: {
           );
         })}
       </ol>
-
-      {/* The one-line summary the form language puts under a rule strip, carrying the state the
-          progress bar used to carry. */}
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.06em] text-slate-500">
-        {criteria.length} criteria · {met} met
-        {allMet && <span className="text-emerald-600"> · all hold</span>}
-        <span className="text-slate-400"> · {graded ? "from your last submission" : "live"}</span>
-      </div>
     </div>
   );
 }
@@ -648,10 +649,13 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   // excluded — their tab rail is buttons, and a disabled fieldset would strand the mentee on
   // whichever tab loaded first with no way to read the rest of what they wrote.
   const readback = passed && !resubmit;
+  // Whether the work on screen is the learner's own, reloaded into the workspace, or a payload the
+  // workspace has no way to read (a demo/API row, or work submitted against an older workspace).
+  const workspaceFits = fitsWorkspace(activity.verb.id, values);
   const locked = noAttemptsLeft || (readback && !isGateVerb(activity.verb.id));
   const hasFeedback = !!(layer1 || review || activity.mentorReview);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
-  const hasChecklist = !!(verb?.layer1 && verb.layer1.length > 0);
+  const hasChecklist = acceptanceTexts(activity.verb.id).length > 0;
   // Documents with their own Open button (floating windows) leave the drawer: the Reference-material
   // panel keeps only the verb workspace's scripted artefacts (Scope Statement, Asset Register, …)
   // opened via the in-workspace "Open" buttons.
@@ -868,10 +872,28 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
             className={`mb-5 sticky top-2 z-10 md:max-w-[520px] transition-shadow duration-200 motion-reduce:transition-none ${atDeliverable ? "shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)]" : ""}`} />
         )}
 
-        {/* A native disabled fieldset switches off every control inside in one go. */}
-        <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
-          <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
-        </fieldset>
+        {/* Work this workspace cannot read back is shown as a record instead of as an empty
+            workspace under "this is the work you submitted" — see lib/workspace-readback.ts for
+            the three ways a payload ends up unreadable. Resubmit leaves this branch, so a fresh
+            attempt still gets the real workspace. */}
+        {readback && !workspaceFits ? (
+          <div className="rounded-2xl ring-1 ring-slate-200/80 bg-white p-4">
+            <div className="flex items-start gap-2 mb-3 text-[12px] text-slate-600 tracking-tight">
+              <Icon name="info" size={13} className="text-slate-400 shrink-0 mt-px" />
+              <span style={{ textWrap: "pretty" }}>
+                This submission can&apos;t be loaded back into the workspace — it was made before this
+                step&apos;s workspace took its current form, or outside it. Here is what was submitted;
+                Resubmit starts a fresh attempt in the workspace.
+              </span>
+            </div>
+            <SubmittedFields payload={{ fields: values, notes: "", attachments: [] }} verbId={activity.verb.id} taskCode={activity.taskCode} rua={bundle?.rua} />
+          </div>
+        ) : (
+          /* A native disabled fieldset switches off every control inside in one go. */
+          <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
+            <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+          </fieldset>
+        )}
 
         {/* The judgment call sits AFTER the deliverable, not before it: the dilemmas are written
             for someone who has already done the work ("you have drafted the test plan…"), and
@@ -968,7 +990,7 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           second and third time, one of them floating over the work. */}
       {hasChecklist && (
         <div ref={checklistInlineRef} className="md:hidden mt-5">
-          <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} />
+          <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} />
         </div>
       )}
 
@@ -979,7 +1001,7 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
       {hasChecklist && (
         <>
           <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
-            <AcceptanceChecklist criteria={verb!.layer1!} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
+            <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
             onClick={() => setCriteriaHidden(false)}

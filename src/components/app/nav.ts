@@ -16,6 +16,7 @@ export const DASH_NAV: NavItem[] = [
   { id: "desk", label: "Working Desk", icon: "desk", href: "/app/desk" },
   { id: "calendar", label: "Calendar", icon: "calendar", href: "/app/calendar" },
   { id: "learnings", label: "My Learnings", icon: "layers", href: "/app/learnings" },
+  { id: "library", label: "Standards Library", icon: "book", href: "/app/library" },
   { id: "badges", label: "Badges", icon: "star", href: "/app/badges" },
   { id: "certificate", label: "Certificate", icon: "ribbon", href: "/app/certificate" },
   { id: "cv", label: "My CV", icon: "file", href: "/app/cv" },

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import { itemHref, resolveRef } from "@/lib/library";
 import { VERB_TONES } from "@/lib/tones";
 import { CONTROLS_BY_TASK, type Control } from "@/lib/controls";
 import { Plaque } from "@/components/app/plaque";
@@ -62,7 +64,11 @@ function Crosswalk({ anchor, mapped }: {
  * whether a deliverable traces back to its controls could not see them. Two implementations of
  * this would drift, and a mentor reading different words from the mentee is worse than either.
  */
-export function ControlReferences({ taskCode }: { taskCode: string }) {
+export function ControlReferences({ taskCode, linkToLibrary = false }: {
+  taskCode: string;
+  /** Learner only: the library lives under /app, which the mentor console does not mount. */
+  linkToLibrary?: boolean;
+}) {
   const reg = CONTROLS_BY_TASK[taskCode];
 
   const byStandard = useMemo(() => {
@@ -122,24 +128,35 @@ export function ControlReferences({ taskCode }: { taskCode: string }) {
                   <span className="h-px flex-1 bg-slate-200/60" />
                 </div>
                 <div className="space-y-1.5">
-                  {controls.map((c, i) => (
-                    // The plaque only appears where we hold licensed clause text; everywhere else
-                    // the reference card carries our own explanation, which is all the learner
-                    // needs here and all we are entitled to publish.
-                    // Plaque on top carrying the standard's own words — the clause where we are
-                    // licensed to quote it, the published title otherwise — and our explanation
-                    // joined beneath it as one object, so provenance reads top to bottom.
-                    <div key={i} className="pt-1">
-                      <Plaque
-                        standard={c.standard}
-                        reference={c.num}
-                        quotation={c.text?.trim() || c.name}
-                        verbatim={!!c.text?.trim()}
-                        explanation={c.purpose}
-                        domain={c.domain}
-                      />
-                    </div>
-                  ))}
+                  {controls.map((c, i) => {
+                    const lib = linkToLibrary ? resolveRef(c.num) : null;
+                    return (
+                      // The plaque only appears where we hold licensed clause text; everywhere else
+                      // the reference card carries our own explanation, which is all the learner
+                      // needs here and all we are entitled to publish.
+                      // Plaque on top carrying the standard's own words — the clause where we are
+                      // licensed to quote it, the published title otherwise — and our explanation
+                      // joined beneath it as one object, so provenance reads top to bottom.
+                      <div key={i} className="pt-1">
+                        <Plaque
+                          standard={c.standard}
+                          reference={c.num}
+                          quotation={c.text?.trim() || c.name}
+                          verbatim={!!c.text?.trim()}
+                          explanation={c.purpose}
+                          domain={c.domain}
+                        />
+                        {lib && (
+                          <Link
+                            href={itemHref(lib.standard, lib.item, taskCode)}
+                            className="focus-ring mt-1.5 ml-[5px] inline-flex items-center gap-1 text-[11.5px] font-medium text-sky-700 hover:text-sky-900"
+                          >
+                            {lib.item.ref === c.num ? "Open in the standards library" : `Open ${lib.item.ref} in the standards library`} &rarr;
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

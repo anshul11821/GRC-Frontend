@@ -235,15 +235,20 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
               </button>
               {isOpen && (
                 <div className="px-4 pb-4 pt-0.5 space-y-3">
-                  <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>
-                    <Gloss>Studied for intent, not wording: {c.ref} forces the organisation to demonstrably control “{c.name.toLowerCase()}”. Ask what risk it removes and how you&apos;d see it working.</Gloss>
-                  </p>
+                  {/* Both lines are authored per task in the content seed (asks, why) — they used to
+                      be one template sentence for every control, which told the mentee nothing. */}
+                  {c.asks && (
+                    <p className="text-[12.5px] leading-relaxed text-slate-600 tracking-tight" style={{ textWrap: "pretty" }}>
+                      <span className="block font-mono text-[9.5px] uppercase tracking-[0.08em] text-sky-700 mb-0.5">What it asks for · in plain terms</span>
+                      <Gloss>{c.asks}</Gloss>
+                    </p>
+                  )}
                   {/* Study card (form 03): borderless, so the mentee reads it knowing nothing is
                       owed *here* — the comprehension check below is what is owed, and it wears the
                       border. It was violet-tinted, which is the reserved machine hue; this text is
                       authored by the programme, not generated. */}
                   <StudyCard title="Why this matters here">
-                    <p><Gloss>Here it becomes a line of evidence inside your {task.deliverable.toLowerCase()} — so a gap against it is a gap you must record.</Gloss></p>
+                    <p><Gloss>{c.why ?? `It is part of what your ${task.deliverable.toLowerCase()} is judged against at ${task.org}.`}</Gloss></p>
                   </StudyCard>
                   <ItemDoc refs={refs} idx={i} openDoc={openDoc} />
                   <MicroCheckBox task={task} taskCode={taskCode} idx={i} passed={done} attempts={p.study[i]?.attempts ?? 0}

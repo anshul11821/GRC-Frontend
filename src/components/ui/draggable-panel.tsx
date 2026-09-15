@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, useDragControls } from "framer-motion";
 import { Icon } from "./icon";
 
@@ -47,14 +48,16 @@ export function DraggablePanel({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  // Portalled for the same reason as FloatingDocs: a transformed or blurred ancestor turns `fixed`
+  // into "fixed to that ancestor", so the panel scrolled with the page and hid under the sidebar.
+  if (!open || typeof document === "undefined") return null;
 
   // Full-width but short on phones (drag mostly to slide it up/down); a roomier window on desktop.
   const panelSize = isMobile
     ? "inset-x-3 top-16 max-h-[42dvh]"
     : "right-6 top-24 max-h-[82dvh] w-[min(440px,calc(100vw-1.5rem))]";
 
-  return (
+  return createPortal(
     // Full-viewport bounds box for drag constraints; click-through everywhere except the panel.
     <div ref={boundsRef} className="pointer-events-none fixed inset-0 z-[60]">
       <motion.div
@@ -92,6 +95,7 @@ export function DraggablePanel({
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4">{children}</div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

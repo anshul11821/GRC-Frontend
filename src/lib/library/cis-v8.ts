@@ -1,0 +1,168 @@
+// CIS Critical Security Controls v8 — 18 Controls, 153 Safeguards. Control titles are CIS's;
+// summaries and points are ours. Safeguards are counted, not listed.
+
+import { item, type LibStandard } from "./types";
+
+const PART = "18 Critical Security Controls";
+const cis = (n: number, title: string, count: number, summary: string | undefined, points: string[]) =>
+  item(`CIS ${n}`, title, summary, points, count);
+
+export const CIS_V8: LibStandard = {
+  id: "cisv8",
+  source: "CIS Critical Security Controls v8 © Center for Internet Security",
+  publishedTitles: true,
+  countUnit: "safeguards",
+  groups: [
+    {
+      name: "The 18 Controls", part: PART, unit: "controls", items: [
+        cis(1, "Inventory and Control of Enterprise Assets", 5, undefined, [
+          "Keep a detailed asset inventory",
+          "Deal with unauthorised assets",
+          "Use active and passive discovery",
+          "Use DHCP logs to keep the inventory current",
+        ]),
+        cis(2, "Inventory and Control of Software Assets", 7, undefined, [
+          "Keep a software inventory",
+          "Make sure installed software is supported",
+          "Deal with unauthorised software",
+          "Use automated inventory tools",
+          "Allowlist authorised software, libraries and scripts",
+        ]),
+        cis(3, "Data Protection", 14, undefined, [
+          "Run a data management process",
+          "Inventory and classify data",
+          "Set access control lists on data",
+          "Retain and dispose of data securely",
+          "Encrypt data on devices, in transit and at rest",
+          "Segment processing by sensitivity",
+          "Deploy data loss prevention and log sensitive access",
+        ]),
+        cis(4, "Secure Configuration of Enterprise Assets and Software", 12, undefined, [
+          "Keep a secure configuration process",
+          "Lock idle sessions and run host firewalls",
+          "Manage devices and software securely",
+          "Change default accounts",
+          "Remove unnecessary services",
+          "Enforce lockout and remote wipe on portable devices",
+        ]),
+        cis(5, "Account Management", 6, undefined, [
+          "Keep an inventory of accounts",
+          "Use unique passwords",
+          "Disable dormant accounts",
+          "Keep admin privileges on dedicated admin accounts",
+          "Keep an inventory of service accounts",
+          "Centralise account management",
+        ]),
+        cis(6, "Access Control Management", 8, undefined, [
+          "Have processes for granting and revoking access",
+          "Require MFA for external apps, remote and admin access",
+          "Inventory authentication and authorisation systems",
+          "Centralise access control",
+          "Define and maintain role-based access",
+        ]),
+        cis(7, "Continuous Vulnerability Management", 7, "Keep finding and tracking vulnerabilities, and close them before attackers use them.", [
+          "Run a vulnerability management process",
+          "Run a remediation process",
+          "Automate operating system and application patching",
+          "Scan internal and external assets regularly",
+          "Fix what the scans find",
+        ]),
+        cis(8, "Audit Log Management", 12, "Collect, alert on, review and keep logs that help detect an attack and recover from it.", [
+          "Run an audit log management process",
+          "Collect logs and keep enough storage",
+          "Synchronise time across systems",
+          "Collect detailed, DNS, URL and command-line logs",
+          "Centralise and retain logs",
+          "Review logs regularly",
+        ]),
+        cis(9, "Email and Web Browser Protections", 7, "Harden email and browsers, where many attacks arrive.", [
+          "Use only supported browsers and email clients",
+          "Use DNS filtering",
+          "Maintain URL filters",
+          "Restrict unneeded browser and email extensions",
+          "Implement DMARC",
+          "Block unneeded file types and scan attachments",
+        ]),
+        cis(10, "Malware Defenses", 7, "Stop malicious code being installed, spreading or running.", [
+          "Deploy and maintain anti-malware",
+          "Update signatures automatically",
+          "Disable autorun on removable media",
+          "Scan removable media automatically",
+          "Turn on anti-exploitation features",
+          "Manage anti-malware centrally, with behaviour-based detection",
+        ]),
+        cis(11, "Data Recovery", 5, "Keep recovery practices that can bring assets back to a trusted state.", [
+          "Run a data recovery process",
+          "Back up automatically",
+          "Protect the recovery data",
+          "Keep an isolated copy",
+          "Test recovery",
+        ]),
+        cis(12, "Network Infrastructure Management", 8, "Manage network devices so weak services and access points cannot be exploited.", [
+          "Keep network infrastructure up to date",
+          "Maintain a secure network architecture",
+          "Manage network devices securely",
+          "Keep architecture diagrams",
+          "Centralise network authentication",
+          "Use secure management protocols",
+          "Route remote devices through VPN",
+        ]),
+        cis(13, "Network Monitoring and Defense", 11, "Monitor and defend the network with processes and tooling.", [
+          "Centralise security event alerting",
+          "Detect intrusions on hosts and the network",
+          "Filter traffic between segments",
+          "Control access for remote assets",
+          "Collect network flow logs",
+          "Deploy intrusion prevention",
+          "Tune alerting thresholds",
+        ]),
+        cis(14, "Security Awareness and Skills Training", 9, "Make the workforce security-aware and skilled enough to reduce risk.", [
+          "Run an awareness programme",
+          "Teach people to spot social engineering",
+          "Train on authentication and data handling",
+          "Explain how data gets exposed by accident",
+          "Teach people to recognise and report incidents",
+          "Give role-specific training",
+        ]),
+        cis(15, "Service Provider Management", 7, "Evaluate the providers who hold sensitive data or run critical processes.", [
+          "Keep an inventory of providers",
+          "Have a provider management policy",
+          "Classify providers",
+          "Put security requirements in contracts",
+          "Assess providers",
+          "Monitor providers",
+          "Offboard providers securely",
+        ]),
+        cis(16, "Application Software Security", 14, "Manage the security of software you build, host or buy, across its life.", [
+          "Run a secure development process",
+          "Accept and handle vulnerability reports",
+          "Find the root cause of vulnerabilities",
+          "Manage third-party components",
+          "Use secure design principles and hardened templates",
+          "Separate production from non-production",
+          "Train developers in secure coding",
+          "Use code analysis and application testing",
+          "Model threats",
+        ]),
+        cis(17, "Incident Response Management", 9, "Be ready to prepare, communicate and respond fast when an attack happens.", [
+          "Name people to manage incidents",
+          "Keep contact details for reporting",
+          "Set up a way to report incidents",
+          "Set up an incident response process",
+          "Assign key roles",
+          "Define how people communicate during an incident",
+          "Run regular exercises",
+          "Review each incident afterwards",
+          "Set thresholds for what counts as an incident",
+        ]),
+        cis(18, "Penetration Testing", 5, "Test your defences by acting out an attacker's goals and moves.", [
+          "Run a penetration testing programme",
+          "Test externally on a schedule",
+          "Fix the findings",
+          "Validate security measures after each test",
+          "Test internally on a schedule",
+        ]),
+      ],
+    },
+  ],
+};

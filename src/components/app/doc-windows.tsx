@@ -7,6 +7,7 @@
 // by the normal verb workspaces on the activity page.
 
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@/components/ui/icon";
 import { RefBody } from "./reference-material";
 import type { TaskReference } from "@/lib/taskmeta";
@@ -107,16 +108,21 @@ function DocWindow({ doc, index, z, onClose, onFocus }: {
   );
 }
 
-/** Renders the open document windows (last = frontmost). */
+/** Renders the open document windows (last = frontmost).
+ *
+ *  Portalled to <body>: rendered in place, `position: fixed` resolves against any ancestor with a
+ *  transform or backdrop-filter, so the window scrolled with the desk and slid under the sidebar. */
 export function FloatingDocs({ docs, onClose, onFocus }: {
   docs: TaskReference[]; onClose: (id: string) => void; onFocus: (id: string) => void;
 }) {
-  return (
+  if (docs.length === 0 || typeof document === "undefined") return null;
+  return createPortal(
     <>
       {docs.map((d, i) => (
         <DocWindow key={d.id} doc={d} index={i} z={55 + i} onClose={() => onClose(d.id)} onFocus={() => onFocus(d.id)} />
       ))}
-    </>
+    </>,
+    document.body,
   );
 }
 

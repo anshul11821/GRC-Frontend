@@ -167,7 +167,7 @@ export function TaskOverview() {
         </button>
       )}
       <DraggablePanel open={controlsOpen} onClose={() => setControlsOpen(false)} title="Control references" eyebrow={meta?.standardLabel}>
-        <ControlReferences taskCode={taskCode} />
+        <ControlReferences taskCode={taskCode} linkToLibrary={!reviewing} />
       </DraggablePanel>
 
       {/* actions / verbs */}

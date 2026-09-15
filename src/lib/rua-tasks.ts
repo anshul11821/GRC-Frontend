@@ -3,7 +3,14 @@
 // per-task from the gated endpoint (see task-bundle.ts / GET /me/task-content/{code}). Only the
 // shared types remain client-side.
 
-export interface RuaControl { ref: string; name: string }
+export interface RuaControl {
+  ref: string;
+  name: string;
+  /** OUR plain-terms line for what the control asks — never the standard's wording. */
+  asks?: string;
+  /** Why this control matters to this task: which step or artefact it shows up in. */
+  why?: string;
+}
 export interface RuaCrosswalk { code: string; desc: string }
 export interface RuaTemplate { name: string; purpose: string; fmt: "sheet" | "doc" | "deck" | "diagram"; fields: string[] }
 export interface RuaAcquireItem { type: "context" | "template" | "access" | "artefact"; label: string }
