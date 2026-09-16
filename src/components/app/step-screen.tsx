@@ -27,6 +27,7 @@ import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
 import { MentorDecision } from "@/components/app/mentor-decision";
 import { LockedNotice } from "@/components/app/locked-notice";
+import { TopBarNow } from "@/components/app/app-shell";
 import { fitsWorkspace } from "@/lib/workspace-readback";
 import { MachineNote, MachineTag } from "@/components/app/machine-note";
 import { ModelAnswer } from "@/components/app/model-answer";
@@ -346,6 +347,8 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   const [readbackIsDraft, setReadbackIsDraft] = useState(false);
   const [attemptKey, setAttemptKey] = useState(0); // bumped to remount the workspace blank
   const deliverableRef = useRef<HTMLDivElement>(null);
+  // Watched by TopBarNow: while this heading is on screen the top bar stays empty.
+  const headingRef = useRef<HTMLDivElement>(null);
   // Guided walkthrough: objective → what to do → checklist → deliverable. -1 = closed.
   const [tourStep, setTourStep] = useState(-1);
   const objectiveRef = useRef<HTMLDivElement>(null);
@@ -764,7 +767,8 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           >
             <Icon name="chevronLeft" size={14} /> {activity.taskTitle}
           </Link>
-          <div className="flex items-start gap-3">
+          <TopBarNow eyebrow={activity.taskTitle} code={activity.code} title={activity.title} watch={headingRef} />
+          <div ref={headingRef} className="flex items-start gap-3">
             <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold shrink-0 mt-0.5">{activity.code}</span>
             <div className="min-w-0 flex-1">
               <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900 leading-snug">{activity.title}</h1>
