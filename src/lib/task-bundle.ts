@@ -12,6 +12,8 @@
 
 import { createContext, createElement, useContext, useEffect, useState } from "react";
 import { api, ApiError } from "./api";
+import { userKey } from "./token";
+import { persistJSON } from "./use-query";
 import { isGateVerb } from "./verbs";
 import type { RuaTask } from "./rua-tasks";
 import type { RuaRef } from "./rua-refs";
@@ -28,6 +30,28 @@ export interface TaskBundle {
 }
 
 const cache = new Map<string, Promise<TaskBundle>>();
+
+/**
+ * A task's bundle is seeded content rendered into this learner's organisation — identical on every
+ * fetch for the life of the session — but the map above dies with the JS module graph, so every
+ * refresh re-fetched the brief for the step already on screen. Mirrored per tab, namespaced by the
+ * token's subject, exactly as `lib/use-query` does for the tree; sessionStorage so it goes when the
+ * tab does, and a quota failure just means the next refresh fetches as it does today.
+ */
+const STORE = (cacheKey: string) => `grcb:${userKey()}:${cacheKey}`;
+
+function readStored(cacheKey: string): TaskBundle | null {
+  try {
+    const raw = sessionStorage.getItem(STORE(cacheKey));
+    return raw ? (JSON.parse(raw) as TaskBundle) : null;
+  } catch {
+    return null;
+  }
+}
+
+function store(cacheKey: string, bundle: TaskBundle): void {
+  persistJSON(STORE(cacheKey), bundle); // shares the query cache's quota handling
+}
 
 /**
  * Where a bundle comes from. The learner's own gated endpoint by default; the mentor console
@@ -72,13 +96,29 @@ export function fetchTaskBundle(
   const cacheKey = `${source.key}:${taskCode}`;
   let p = cache.get(cacheKey);
   if (!p) {
-    p = source.fetch(taskCode).catch((err) => {
-      cache.delete(cacheKey); // don't cache failures — allow a retry
-      throw err;
-    });
+    const stored = readStored(cacheKey);
+    p = stored
+      ? Promise.resolve(stored)
+      : source.fetch(taskCode).then(
+          (bundle) => {
+            store(cacheKey, bundle);
+            return bundle;
+          },
+          (err) => {
+            cache.delete(cacheKey); // don't cache failures — allow a retry
+            throw err;
+          },
+        );
     cache.set(cacheKey, p);
   }
   return p;
+}
+
+/** Warm a task's bundle without rendering it. Hovering a task in the desk tree is the signal —
+ *  a bundle is fetched once per task for the whole session, so at worst it is one early request
+ *  for a task the learner was opening anyway. */
+export function prefetchTaskBundle(taskCode: string): void {
+  fetchTaskBundle(taskCode).catch(() => {}); // a prefetch that fails is nobody's error
 }
 
 /** An activity's brief from the fetched bundle. Task-boundary gates (RUA / Research Submission)

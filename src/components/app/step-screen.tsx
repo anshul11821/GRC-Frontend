@@ -13,7 +13,7 @@ import { Gloss } from "@/components/app/glossary";
 import { StepBrief, WorkingSheet } from "@/components/app/deliverable";
 import { VERBS, GATE_VERBS, isGateVerb } from "@/lib/verbs";
 import { DocOpenStrip, FloatingDocs, useFloatingDocs } from "@/components/app/doc-windows";
-import { deskApi, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
+import { deskApi, takeWarmStep, type ActivityDetail, type ActivityPayload, type SubmitResponse, type Review, type SubmissionDetail, type Layer1Result } from "@/lib/desk";
 import { JudgmentCall, JudgmentAnswer, JudgmentVerdict, decisionReady } from "@/components/app/judgment-call";
 import type { DecisionAnswer } from "@/lib/desk";
 import { ApiError } from "@/lib/api";
@@ -365,13 +365,16 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   useEffect(() => {
     let cancelled = false;
     setTourStep(-1); // close the tour during navigation so it never shows a stale step
+    // A hover on the step's link in the tree may already have these in flight — see
+    // `prefetchStep`. Learner's own desk only: a mentor's `source` reads a different learner.
+    const warm = source ? null : takeWarmStep(activityId);
     Promise.all([
-      (source?.activity ?? (() => deskApi.activity(activityId)))(),
+      warm?.activity ?? (source?.activity ?? (() => deskApi.activity(activityId)))(),
       // null = the fetch FAILED; [] = there genuinely are no submissions. Swallowing both as []
       // is how a transient network blip turned a finished step into a blank one: with no history
       // to read back, the seed below falls through to whatever draft is on file — for a gate,
       // usually the empty one autosaved on the way in — and the mentee is told nothing.
-      (source?.submissions ?? (() => deskApi.submissions(activityId)))().catch(
+      warm?.submissions ?? (source?.submissions ?? (() => deskApi.submissions(activityId)))().catch(
         () => null,
       ),
     ])
@@ -439,8 +442,18 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   const closeTour = () => setTourStep(-1);
 
   // Curriculum content (brief + reference bodies) is fetched per-task from the gated endpoint,
-  // not bundled — see task-bundle.ts. Fetches once activity (hence taskCode) is loaded.
-  const { bundle } = useTaskBundle(activity?.taskCode);
+  // not bundled — see task-bundle.ts.
+  //
+  // The task code used to come only from the loaded activity, which put the bundle behind
+  // `GET /me/activities/{id}` in a two-hop chain on every step opened — and the brief is the first
+  // thing on the page, so the whole step read as slow. The tree already says which task a step
+  // belongs to and is fetched in parallel by the desk, so take it from there when it's known and
+  // the two requests go out together. `activity` still wins once it lands: it is the authority on
+  // its own task, and a mentor's desk is filtered to gates but carries the same codes.
+  const treeTaskCode = learnings?.orgs
+    .flatMap((o) => o.projects.flatMap((p) => p.tasks))
+    .find((t) => t.steps.some((st) => st.id === activityId))?.code;
+  const { bundle, loading: bundleLoading } = useTaskBundle(activity?.taskCode ?? treeTaskCode);
 
   const payload = (): ActivityPayload => ({
     fields: activity?.judgment ? { ...values, decision } : values,
@@ -735,7 +748,11 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
       onPointerDownCapture={() => { touched.current = true; }}
       onKeyDownCapture={() => { touched.current = true; }}
     >
-      <GuidedTour steps={tourSteps} step={tourStep} onStep={setTourStep} onClose={closeTour} />
+      {/* Held shut while the task bundle is in flight: `content` is what the objective and
+          what-to-do steps are built from, so a tour opened before it lands is a 2-step tour on the
+          checklist that renumbers itself under the mentee a second later. Guards both ways in —
+          the auto-run on the first step and the Guide button. */}
+      <GuidedTour steps={tourSteps} step={bundleLoading ? -1 : tourStep} onStep={setTourStep} onClose={closeTour} />
       <FloatingDocs docs={fw.docs} onClose={fw.close} onFocus={fw.focus} />
 
       {/* header — description left, submission-feedback trigger on the right */}

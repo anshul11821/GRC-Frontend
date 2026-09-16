@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -197,6 +198,54 @@ function UserMenu() {
   );
 }
 
+/** The top bar's empty middle, lent to whatever the mentee is working on. */
+export const TOPBAR_SLOT_ID = "app-topbar-now";
+
+/**
+ * Repeats what you are working on in the top bar, once `watch` has scrolled out of view.
+ *
+ * A learner deep in a long step could not see which step it was without scrolling back up, and the
+ * bar had nothing in the middle but air. Rendered through a portal rather than by AppShell holding
+ * page state: the page already knows its own title, and nothing needs to be lifted or kept in sync.
+ * Returns nothing where no slot exists (the mentor console's shell has none).
+ */
+export function TopBarNow({ eyebrow, code, title, watch }: {
+  eyebrow?: string;
+  code?: string;
+  title: string;
+  /** The page's own heading. While it is on screen the bar stays empty — one title is enough. */
+  watch: React.RefObject<HTMLElement | null>;
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [scrolledPast, setScrolledPast] = useState(false);
+
+  useEffect(() => setSlot(document.getElementById(TOPBAR_SLOT_ID)), []);
+
+  useEffect(() => {
+    const el = watch.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setScrolledPast(!entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [watch, title]);
+
+  if (!slot || !scrolledPast) return null;
+  return createPortal(
+    <div className="flex min-w-0 items-center gap-2.5">
+      {code && (
+        <span className="inline-flex items-center justify-center px-1.5 h-[22px] rounded bg-slate-900 text-white text-[11px] font-mono font-semibold shrink-0">
+          {code}
+        </span>
+      )}
+      <span className="min-w-0">
+        {eyebrow && <span className="block text-[10px] text-slate-500 tracking-tight truncate">{eyebrow}</span>}
+        <span className="block text-[13px] font-semibold tracking-tight text-slate-900 truncate">{title}</span>
+      </span>
+    </div>,
+    slot,
+  );
+}
+
 function DashTopBar({ openMobile }: { openMobile: () => void }) {
   return (
     <div className="relative z-30 h-[68px] shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-slate-200/70 bg-white/40 backdrop-blur-xl print:hidden">
@@ -215,6 +264,9 @@ function DashTopBar({ openMobile }: { openMobile: () => void }) {
           <div className="text-[11px] text-slate-500">Foundations</div>
         </div>
       </div>
+      {/* Filled by the page when its own heading scrolls out of view — see TopBarNow. Empty
+          otherwise, and never a second navigation: it says where you are, nothing more. */}
+      <div id={TOPBAR_SLOT_ID} className="hidden md:flex min-w-0 flex-1 items-center pl-8 pr-4" />
       <div className="flex items-center gap-2">
         <span data-tour="bell"><UpNext /></span>
         <span data-tour="account"><UserMenu /></span>

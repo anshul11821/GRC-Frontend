@@ -12,6 +12,8 @@ import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
 import { useDeskBase, useDeskLearnings, useDeskStepFilter } from "./desk-context";
 import { dueChip } from "@/lib/schedule";
+import { prefetchStep } from "@/lib/desk";
+import { prefetchTaskBundle } from "@/lib/task-bundle";
 
 type TaskState = "complete" | "current" | "locked";
 type StepState = "complete" | "current" | "locked";
@@ -37,6 +39,9 @@ const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "c
 
 function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTask; state: TaskState; activeId?: string; activeTaskCode?: string }) {
   const base = useDeskBase();
+  // `/me/activities/...` is the signed-in learner's own step. On a mentor's desk the tree is
+  // somebody else's, so nothing there may be warmed from those endpoints.
+  const warmable = base === "/app/desk";
   // On a mentor's desk only the reviewable steps are listed — see useDeskStepFilter. The learner's
   // own desk passes null and sees every step, unchanged.
   const stepFilter = useDeskStepFilter();
@@ -71,7 +76,7 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
         <button onClick={() => setOpen((o) => !o)} className="w-6 h-7 flex items-center justify-center shrink-0 text-slate-400 hover:text-slate-600" aria-label="Toggle actions">
           <Icon name="chevronRight" size={13} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
-        <Link href={`${base}/task/${task.code}`} data-desk-active={activeTaskCode === task.code || undefined} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
+        <Link href={`${base}/task/${task.code}`} onMouseEnter={warmable ? () => prefetchTaskBundle(task.code) : undefined} data-desk-active={activeTaskCode === task.code || undefined} className="flex-1 min-w-0 py-1.5 pr-2 no-underline">
           <div className="flex items-center gap-1.5">
             <span className={`inline-flex items-center h-[16px] px-1.5 rounded text-[9.5px] font-medium ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>{meta?.standardLabel ?? task.standards}</span>
             {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
@@ -122,7 +127,10 @@ function TaskNode({ task, state, activeId, activeTaskCode }: { task: LearningTas
             return ss === "locked" ? (
               <div key={s.id} data-desk-active={active || undefined} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-not-allowed opacity-70" title="Complete the previous step first">{inner}</div>
             ) : (
-              <Link key={s.id} href={`${base}/${s.id}`} data-desk-active={active || undefined} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
+              // Hover starts the step's two reads early (see lib/desk.prefetchStep). Only on the
+              // learner's own desk: the mentor's tree points at another learner, whose steps those
+              // endpoints do not serve. Locked steps aren't links, so none is ever warmed.
+              <Link key={s.id} href={`${base}/${s.id}`} onMouseEnter={warmable ? () => prefetchStep(s.id) : undefined} onFocus={warmable ? () => prefetchStep(s.id) : undefined} data-desk-active={active || undefined} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg no-underline transition-colors ${active ? "bg-indigo-50 ring-1 ring-indigo-100" : gate ? "bg-violet-50/40 hover:bg-violet-50" : "hover:bg-slate-100/70"}`}>{inner}</Link>
             );
           })}
         </div>

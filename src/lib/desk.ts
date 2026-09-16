@@ -204,3 +204,40 @@ export const deskApi = {
     api.post<SubmitResponse>(`/me/activities/${id}/submit`, { payload }),
   submissions: (id: string) => api.get<SubmissionDetail[]>(`/me/activities/${id}/submissions`),
 };
+
+/**
+ * Opening a step costs two round trips — the activity and its submission history — and neither is
+ * cacheable across a submit, so every click in the tree paid for both before anything rendered.
+ * Hovering a step link starts them early: by the time the click lands the answers are usually
+ * back, and a hover that never becomes a click costs two GETs the learner was about to make anyway.
+ *
+ * Deliberately NOT a cache. An entry is handed out once and then dropped, and expires on its own
+ * shortly after, because a submit changes both reads and serving a stale activity would show a
+ * spent attempt as unspent. The learner's own endpoints only — a mentor's desk reads a different
+ * learner through its own source and must never be served from here.
+ */
+export interface WarmStep {
+  activity: Promise<ActivityDetail>;
+  submissions: Promise<SubmissionDetail[] | null>;
+}
+const warm = new Map<string, { at: number; step: WarmStep }>();
+const WARM_MS = 30_000;
+
+export function prefetchStep(id: string): void {
+  if (warm.has(id)) return;
+  const step: WarmStep = {
+    activity: deskApi.activity(id),
+    submissions: deskApi.submissions(id).catch(() => null),
+  };
+  // Keep the rejection handled here too, so a failed prefetch nobody consumed stays quiet; the
+  // original promise still carries the error for a consumer that does take it.
+  step.activity.catch(() => warm.delete(id));
+  warm.set(id, { at: Date.now(), step });
+}
+
+/** Take the warmed reads for a step, if they're fresh. Always removes the entry. */
+export function takeWarmStep(id: string): WarmStep | null {
+  const e = warm.get(id);
+  warm.delete(id);
+  return e && Date.now() - e.at < WARM_MS ? e.step : null;
+}

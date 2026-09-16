@@ -33,7 +33,10 @@ export function TabRail({ tabs, active, onSelect, progressLabel }: {
 }) {
   const done = tabs.filter((t) => t.done).length;
   return (
-    <nav className="md:w-[196px] shrink-0">
+    // Sticky on desktop so the eight steps stay reachable while a long pane scrolls past. Capped
+    // and scrollable in its own right, so a short viewport can still reach Attest at the bottom.
+    // Phone layout is a horizontal strip above the pane, where sticking would eat the screen.
+    <nav className="md:w-[196px] shrink-0 md:self-start md:sticky md:top-2 md:max-h-[calc(100dvh-5rem)] md:overflow-y-auto [scrollbar-width:thin]">
       <div className="hidden md:flex items-center gap-2 px-2 mb-2">
         <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
           <div className="h-full bg-violet-500 transition-all duration-300" style={{ width: `${(done / tabs.length) * 100}%` }} />

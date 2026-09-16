@@ -211,7 +211,10 @@ function StudyPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PaneProp
       <ScreenHead v="R1" name="Study" title="Study the governing controls & cross-walk"
         subtitle={`Work through each ${task.standard} reference for its intent, then pass the comprehension check. Controls unlock in order.`}
         ring={{ value: passedCount / Math.max(1, task.controls.length), label: `${passedCount}/${task.controls.length}` }} />
-      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Reference material for this step" className="mb-4" />
+      {/* No step-level strip: the two tab-level study refs restate the control list and the
+          cross-walk the pane already renders, and a list of five documents above three
+          questions makes the mentee guess which one the question in front of them needs.
+          Each control carries its own extract inline, directly above its check. */}
       <div className="space-y-2.5">
         {task.controls.map((c, i) => {
           const done = !!p.study[i]?.passed;
@@ -335,7 +338,6 @@ function InspectPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
       <ScreenHead v="R2" name="Inspect" title="Open every provided template"
         subtitle="Prove you know each template's structure and purpose before you use it in anger. Open a card, study its fields, then pass the field-purpose exercise."
         ring={{ value: passedCount / Math.max(1, task.templates.length), label: `${passedCount}/${task.templates.length}` }} />
-      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Template reference documents" className="mb-4" />
       <div className="space-y-2.5">
         {task.templates.map((tpl, i) => {
           const done = !!p.inspect[i];
@@ -496,7 +498,6 @@ function AcquirePane({ task, p, patch, goVerb, refs, openDoc }: PaneProps) {
       <ScreenHead v="R3" name="Acquire" title="Retrieve prerequisite inputs & access"
         subtitle="Pull prior-task artefacts, acknowledge the organisation context, and confirm the access this task needs — before any work begins."
         ring={{ value: resolved / Math.max(1, task.acquire.length), label: `${resolved}/${task.acquire.length}` }} />
-      <DocOpenStrip docs={tabRefs(refs)} onOpen={openDoc} tone="violet" label="Prerequisite briefs" className="mb-4" />
 
       <div className="space-y-2.5">
         {task.acquire.map((a, i) => {
@@ -783,7 +784,6 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
     <div>
       <ScreenHead v="R5" name="Confirm" title="Lock the deliverable contract"
         subtitle="Restate the final deliverable and its acceptance standard in your own words, then sort the scope boundary. This becomes the reference point for grading your finished work." />
-      <DocOpenStrip docs={refs} onOpen={openDoc} tone="violet" label="Deliverable acceptance specification" className="mb-4" />
       <div className="space-y-4">
         <div className="rounded-2xl ring-1 ring-slate-200/80 bg-white overflow-hidden">
           <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2">
@@ -793,6 +793,9 @@ function ConfirmPane({ task, taskCode, p, patch, goVerb, refs, openDoc }: PanePr
           <div className="px-4 py-3.5">
             <div className="text-[14px] font-semibold text-slate-900 tracking-tight mb-1">{task.deliverable}</div>
             <p className="text-[12.5px] text-slate-600 tracking-tight leading-relaxed" style={{ textWrap: "pretty" }}><Gloss>{task.acceptance}</Gloss></p>
+            {/* The acceptance spec sits with the contract it specifies, not in a strip above the
+                pane — same rule as every other RUA section: one document, at its own question. */}
+            <div className="mt-3"><ItemDoc refs={refs} idx={0} openDoc={openDoc} /></div>
           </div>
         </div>
 
