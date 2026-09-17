@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { learningsApi, type Learnings } from "@/lib/learnings";
 import { scheduleApi, type ScheduleItem } from "@/lib/schedule";
+import { pickOrgId } from "@/lib/desk-org";
 import { useCachedQuery } from "@/lib/use-query";
 
 interface DeskLearningsValue {
@@ -121,6 +123,37 @@ export const useDeskBase = () => useContext(DeskBaseContext);
  */
 const DeskStepFilterContext = createContext<Set<string> | null>(null);
 export const useDeskStepFilter = () => useContext(DeskStepFilterContext);
+
+/**
+ * What the URL says the desk is looking at — and, from it, which organisation is on screen.
+ *
+ * Derived, never stored: the org strip's chips are links to each organisation's context page, so
+ * choosing one *is* a navigation and there is no selection to keep in sync with the route. Opening
+ * a task or a step of another organisation moves the desk there for the same reason.
+ *
+ * Read by the strip and by the tree, which is why it lives here rather than in either of them.
+ */
+export function useDeskRoute() {
+  const base = useDeskBase();
+  const pathname = usePathname();
+  const { learnings } = useDeskLearnings();
+
+  // Split on the base rather than matching a pattern built from it: the base is interpolated from
+  // a route param, and a regex built out of one is a regex you have to remember to escape.
+  const rest = pathname.startsWith(`${base}/`) ? pathname.slice(base.length + 1).split("/") : [];
+  const activeTaskCode = rest[0] === "task" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
+  const activeOrgPageId = rest[0] === "org" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
+  const activeId =
+    rest[0] && rest[0] !== "task" && rest[0] !== "org" ? decodeURIComponent(rest[0]) : undefined;
+
+  const orgId = pickOrgId(learnings?.orgs ?? [], {
+    activityId: activeId,
+    taskCode: activeTaskCode,
+    orgPageId: activeOrgPageId,
+  });
+
+  return { activeTaskCode, activeOrgPageId, activeId, orgId };
+}
 
 /** Show/hide the activity tree from outside DeskLayout — the walkthrough runs on a child route but
  *  has to spotlight the tree, which is an off-canvas drawer on small screens. No-op on md+, where

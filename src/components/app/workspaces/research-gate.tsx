@@ -10,6 +10,7 @@
 // Layer 2, and the page's real "Submit for review" button fires once `objectiveMet` is true.
 
 import { useState } from "react";
+import { CriterionMark } from "@/components/app/criterion-mark";
 import { Icon } from "@/components/ui/icon";
 import { type WorkspaceProps, useLift, seed, GivenNote } from "./kit";
 import { TabRail, PaneNav, resumeTab, type TabDef } from "./gates";
@@ -88,6 +89,10 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
     patch((p) => { p.methods = p.methods ?? {}; p.methods[m.key] = { ...(p.methods[m.key] ?? {}), [k]: v }; });
   const toggleInclude = () => patch((p) => { p.include = p.include ?? {}; p.include[m.key] = !p.include[m.key]; });
   const dim = !m.req && !included;
+  // R1 needs all three required methods to clear the bar, R2 one included optional method. The
+  // method's own bar is what clears it, so the mark reports this method, not the whole criterion.
+  const reqIndex = RESEARCH_METHODS.filter((x) => x.req).findIndex((x) => x.key === m.key);
+  const reqTotal = RESEARCH_METHODS.filter((x) => x.req).length;
   const passCount = res.checks.filter((c) => c.pass).length;
 
   return (
@@ -99,13 +104,16 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
             {m.req
               ? <span className="inline-flex items-center h-[17px] px-1.5 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200 text-[9.5px] font-semibold">REQUIRED</span>
               : <span className={`inline-flex items-center h-[17px] px-1.5 rounded-full text-[9.5px] font-semibold ring-1 ${included ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-slate-50 text-slate-500 ring-slate-200"}`}>{included ? "INCLUDED" : "OPTIONAL"}</span>}
+            {m.req
+              ? <CriterionMark rs={[1]} done={res.pass} part={`${reqIndex + 1} of ${reqTotal}`} />
+              : <CriterionMark rs={[2]} done={included && res.pass} />}
           </div>
           <h3 className="text-[17px] font-semibold text-slate-900 tracking-tight leading-tight">{m.name}</h3>
           <p className="mt-1 text-[13px] text-slate-500 tracking-tight" style={{ textWrap: "pretty" }}><Gloss>{m.definition}</Gloss></p>
           <p className="mt-1 text-[12px] text-indigo-700/90 tracking-tight" style={{ textWrap: "pretty" }}>{rsFill(m.why, ctx)}</p>
         </div>
         {!m.req && (
-          <button onClick={toggleInclude}
+          <button data-guide="rs:include" onClick={toggleInclude}
             className={`shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-semibold cursor-pointer focus-ring transition-colors ${included ? "bg-slate-100 text-slate-600 hover:bg-slate-200/70" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"}`}>
             <Icon name={included ? "minus" : "plus"} size={14} />{included ? "Remove" : "Include"}
           </button>
@@ -113,7 +121,7 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
       </div>
 
       <div className={dim ? "opacity-45 pointer-events-none select-none" : ""}>
-        <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
+        <div data-guide="rs:prompts" className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
           <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500 mb-2.5">Guiding prompts — answer these in your findings</div>
           <ol className="space-y-2.5">
             {m.prompts.map((p, i) => (
@@ -125,7 +133,7 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
           </ol>
         </div>
 
-        <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
+        <div data-guide="rs:findings" className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
           <div className="flex items-baseline justify-between mb-2">
             <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500">Research findings</div>
             <span className="text-[10.5px] font-mono text-slate-400 tabular-nums">{res.checks[0].ev}</span>
@@ -135,7 +143,7 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
             className="w-full resize-y rounded-xl bg-slate-50 ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500/30 px-3.5 py-3 text-[13px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none" />
         </div>
 
-        <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
+        <div data-guide="rs:sowhat" className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
           <div className="flex items-baseline justify-between mb-2">
             <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500">So what — implication for the deliverable</div>
             <span className="text-[10.5px] font-mono text-slate-400 tabular-nums">{res.checks[1].ev}</span>
@@ -145,8 +153,8 @@ function MethodEditor({ ctx, m, prog, patch, res }: {
             className="w-full resize-y rounded-xl bg-slate-50 ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500/30 px-3.5 py-3 text-[13px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none" />
         </div>
 
-        <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
-          <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500 mb-2.5">Sources consulted</div>
+        <div data-guide="rs:sources" className="rounded-2xl bg-white ring-1 ring-slate-200/80 p-4 mb-3.5">
+          <div className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-slate-500 mb-2.5">Sources consulted <CriterionMark rs={[3]} done={(entry.sources ?? []).length > 0} className="ml-1.5" /></div>
           <SourcesEditor sources={entry.sources ?? []} onChange={(v) => set("sources", v)} hint={rsFill(m.sourceHint, ctx)} />
         </div>
 

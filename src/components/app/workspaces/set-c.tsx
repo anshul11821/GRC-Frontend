@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CriterionMark } from "@/components/app/criterion-mark";
 import { Icon } from "@/components/ui/icon";
 import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextArea, WTextInput,
@@ -24,17 +25,17 @@ function BriefFlow({ task, value, onChange }: { task: BriefTask } & Pick<Workspa
     <div className="space-y-4">
       <GivenNote>Write a plain-language brief for a non-technical audience. State who it&apos;s for and the one explicit ask, then 3–5 short key messages ({task.format}). Submission unlocks at audience + ask + ≥3 messages.</GivenNote>
       <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
-      <div>
-        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Audience <span className="text-rose-500">*</span></div>
+      <div data-guide="audience">
+        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Audience <span className="text-rose-500">*</span> <CriterionMark guide="audience" className="ml-1.5" /></div>
         <WTextInput value={audience} onChange={setAudience} placeholder={task.audience} />
       </div>
-      <div>
-        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Explicit ask of the audience <span className="text-rose-500">*</span></div>
+      <div data-guide="ask">
+        <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">Explicit ask of the audience <span className="text-rose-500">*</span> <CriterionMark guide="ask" className="ml-1.5" /></div>
         <WTextInput value={ask} onChange={setAsk} placeholder={task.ask} />
       </div>
-      <div>
+      <div data-guide="messages">
         <div className="flex items-center justify-between mb-1.5">
-          <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500">Key messages ({filled.length}/5, min 3)</div>
+          <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500">Key messages ({filled.length}/5, min 3) <CriterionMark guide="messages" className="ml-1.5" /></div>
           {messages.length < 5 && <button onClick={() => setMessages([...messages, ""])} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add</button>}
         </div>
         <div className="space-y-2">
@@ -319,8 +320,8 @@ export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
     <div className="space-y-4">
       <GivenNote>Prepare ≥ 5 open questions, then read the pre-scripted DPO dialogue and write a closing summary. There is no live chat — the exchange is fixed.</GivenNote>
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">
-        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start">
-          <div className="flex items-center justify-between mb-3"><h4 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500">Prepared questions</h4><span className={`text-[10.5px] font-mono ${prepared >= 5 ? "text-emerald-600" : "text-amber-700"}`}>{prepared} / 5</span></div>
+        <div data-guide="questions" className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 self-start">
+          <div className="flex items-center justify-between mb-3"><h4 className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500">Prepared questions <CriterionMark guide="questions" className="ml-1.5" /></h4><span className={`text-[10.5px] font-mono ${prepared >= 5 ? "text-emerald-600" : "text-amber-700"}`}>{prepared} / 5</span></div>
           <div className="space-y-1.5">
             {questions.map((q, i) => (
               <div key={i} className="flex items-start gap-2"><span className="mt-2 text-[10.5px] font-mono text-slate-400 w-4">{i + 1}</span><textarea value={q} onChange={(e) => { const n = [...questions]; n[i] = e.target.value; setQuestions(n); }} rows={2} placeholder="Open-ended question…" className="flex-1 px-2 py-1.5 rounded-md bg-slate-50 ring-1 ring-slate-200/60 focus:ring-2 focus:ring-violet-400/40 outline-none text-[11.5px] resize-none leading-snug" /></div>
@@ -328,7 +329,7 @@ export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
             <button onClick={() => setQuestions([...questions, ""])} className="w-full mt-1 h-8 rounded-md text-[11px] font-medium text-violet-700 hover:bg-violet-50 flex items-center justify-center gap-1"><Icon name="plus" size={11} />Add question</button>
           </div>
         </div>
-        <div>
+        <div data-guide="dialogue">
           <ScriptedExchange title="Interview dialogue · Data Protection Officer (pre-scripted)" turns={[
             { who: "you", initials: "AS", text: "Tell me about the last time you escalated a security concern." },
             { who: "stakeholder", initials: "DPO", text: "Two weeks ago — a vendor reported a possible breach in their dev environment. We had to decide within hours whether to suspend the integration. The hardest part was reaching the right decision-maker." },
@@ -337,7 +338,7 @@ export function InterviewWorkspace({ value, onChange }: WorkspaceProps) {
           ]} />
         </div>
       </div>
-      <div><SectionLabel hint={`${summary.length} chars · min 30`}>Closing summary <span className="text-rose-500">*</span></SectionLabel><WTextArea value={summary} onChange={setSummary} rows={3} placeholder="Most important insight, biggest open question, what to probe next." /></div>
+      <div data-guide="summary"><SectionLabel hint={`${summary.length} chars · min 30`}>Closing summary <span className="text-rose-500">*</span> <CriterionMark guide="summary" className="ml-1.5" /></SectionLabel><WTextArea value={summary} onChange={setSummary} rows={3} placeholder="Most important insight, biggest open question, what to probe next." /></div>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 // (./research-gate.tsx).
 
 import { Icon, type IconName } from "@/components/ui/icon";
+import { CriterionMark } from "@/components/app/criterion-mark";
 
 export interface TabDef {
   key: string;
@@ -36,7 +37,9 @@ export function TabRail({ tabs, active, onSelect, progressLabel }: {
     // Sticky on desktop so the eight steps stay reachable while a long pane scrolls past. Capped
     // and scrollable in its own right, so a short viewport can still reach Attest at the bottom.
     // Phone layout is a horizontal strip above the pane, where sticking would eat the screen.
-    <nav className="md:w-[196px] shrink-0 md:self-start md:sticky md:top-2 md:max-h-[calc(100dvh-5rem)] md:overflow-y-auto [scrollbar-width:thin]">
+    // Pins 60px down, clear of the step's 52px StepBar; capped at the column less the header, that
+    // bar and a margin.
+    <nav className="md:w-[196px] shrink-0 md:self-start md:sticky md:top-[60px] md:max-h-[calc(100dvh/var(--app-zoom)_-_var(--hdr-h,64px)_-_76px)] md:overflow-y-auto [scrollbar-width:thin]">
       <div className="hidden md:flex items-center gap-2 px-2 mb-2">
         <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
           <div className="h-full bg-violet-500 transition-all duration-300" style={{ width: `${(done / tabs.length) * 100}%` }} />
@@ -49,7 +52,7 @@ export function TabRail({ tabs, active, onSelect, progressLabel }: {
             {t.group && (
               <div className="hidden md:block px-2 pt-3 pb-1 first:pt-0 text-[9.5px] font-semibold tracking-[0.12em] uppercase text-slate-400">{t.group}</div>
             )}
-            <button onClick={() => onSelect(t.key)} disabled={t.locked} aria-current={active === t.key ? "step" : undefined}
+            <button data-guide={`tab:${t.key}`} onClick={() => onSelect(t.key)} disabled={t.locked} aria-current={active === t.key ? "step" : undefined}
               title={t.locked ? "Finish the previous step first" : undefined}
               className={`w-auto md:w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer focus-ring transition-colors disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:bg-transparent ${
                 active === t.key ? "bg-violet-50 ring-1 ring-violet-200 text-violet-800" : "text-slate-600 hover:bg-slate-100/70"}`}>
@@ -58,7 +61,7 @@ export function TabRail({ tabs, active, onSelect, progressLabel }: {
                 <Icon name={t.done ? "check" : t.locked ? "lock" : t.icon} size={13} strokeWidth={t.done ? 3 : 2} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[12px] font-medium tracking-tight whitespace-nowrap md:whitespace-normal">{t.label}</span>
+                <span className="block text-[12px] font-medium tracking-tight whitespace-nowrap md:whitespace-normal">{t.label}<CriterionMark guide={`tab:${t.key}`} done={t.done} className="ml-1.5" /></span>
                 <span className="hidden md:block text-[10px] text-slate-400 tracking-tight leading-tight">{t.blurb}</span>
               </span>
             </button>

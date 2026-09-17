@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CriterionMark } from "@/components/app/criterion-mark";
 import { Icon } from "@/components/ui/icon";
 import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextInput, WTextArea,
@@ -265,7 +266,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
 
             {/* Active decision: choose one reply — held until the stakeholder's reply finishes typing */}
             {activeRound >= 0 && !waiting && thread.rounds[activeRound] && (
-              <div className="pt-1.5">
+              <div data-guide="reply" className="pt-1.5">
                 <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different reply" : "Choose your reply"}</div>
                 <div className="space-y-2">
                   {shuffleOptions(thread.rounds[activeRound].options).map((o, i) => (
@@ -313,26 +314,29 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
     <div className="space-y-5">
       <GivenNote>Address this to <strong>{conv.recipient}</strong>. Compose a specific, well-scoped request and pick the items that belong in it — not every suggestion is appropriate. A vague or over-broad ask changes how the stakeholder responds.</GivenNote>
 
-      <div>
-        <SectionLabel>To · stakeholder (named role)</SectionLabel>
+      {/* data-guide: the Guide walks these fields one at a time — see lib/guide-fields.ts. The keys
+          are the lifted field names, so a renamed field breaks the walk loudly rather than
+          silently pointing at nothing. */}
+      <div data-guide="to">
+        <SectionLabel>To · stakeholder (named role) <CriterionMark guide="to" className="ml-1.5" /></SectionLabel>
         <WTextInput value={to} onChange={setTo} placeholder={conv.recipient} />
       </div>
 
-      <div>
-        <SectionLabel hint={`${subject.length} / 80`}>Subject</SectionLabel>
+      <div data-guide="subject">
+        <SectionLabel hint={`${subject.length} / 80`}>Subject <CriterionMark guide="subject" className="ml-1.5" /></SectionLabel>
         <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectBad ? "ring-rose-300" : "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30"}`}>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A specific, scoped subject line…" className="flex-1 bg-transparent outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
           <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
         </div>
       </div>
 
-      <div>
-        <SectionLabel>Purpose</SectionLabel>
+      <div data-guide="purpose">
+        <SectionLabel>Purpose <CriterionMark guide="purpose" className="ml-1.5" /></SectionLabel>
         <WTextArea value={purpose} onChange={setPurpose} rows={3} placeholder="Why you need this and what you'll do with it…" hint={`${purpose.length} chars`} />
       </div>
 
-      <div>
-        <SectionLabel hint={`${itemsN} selected · min 3`}>Requested items</SectionLabel>
+      <div data-guide="items">
+        <SectionLabel hint={`${itemsN} selected · min 3`}>Requested items <CriterionMark guide="items" className="ml-1.5" /></SectionLabel>
         <p className="text-[10.5px] text-slate-400 tracking-tight mb-2">Select the items that belong in this request. Some options are out of scope or inappropriate — choose carefully.</p>
 
         <div className="space-y-1.5">
@@ -368,7 +372,7 @@ function ScriptedRequestFlow({ conv, value, onChange }: { conv: RequestConversat
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 pt-1">
+      <div data-guide="send" className="flex items-center justify-between gap-3 pt-1">
         <p className="text-[11px] text-slate-400 tracking-tight">
           {canSend ? "Select the right items, then send — the stakeholder won't engage with a wrong or incomplete request." : "Complete the request: named recipient · subject ≤ 80 · ≥ 3 items."}
         </p>
@@ -398,28 +402,28 @@ function LegacyRequestWorkspace({ value, onChange }: Pick<WorkspaceProps, "value
     <div className="space-y-5">
       <GivenNote>The reference documents are pre-set for this engagement. Write a specific, well-scoped request — a vague ask gets ignored.</GivenNote>
 
-      <div>
-        <SectionLabel>To · stakeholder (named role) <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="to">
+        <SectionLabel>To · stakeholder (named role) <span className="text-rose-500">*</span> <CriterionMark guide="to" className="ml-1.5" /></SectionLabel>
         <WTextInput value={to} onChange={setTo} placeholder="e.g. IT Operations Lead" />
       </div>
 
-      <div>
-        <SectionLabel hint={`${subject.length} / 80`}>Subject <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="subject">
+        <SectionLabel hint={`${subject.length} / 80`}>Subject <span className="text-rose-500">*</span> <CriterionMark guide="subject" className="ml-1.5" /></SectionLabel>
         <div className={`flex items-center gap-2 h-10 px-3 rounded-lg bg-white ring-1 ${subjectBad ? "ring-rose-300" : "ring-slate-200/80 focus-within:ring-2 focus-within:ring-indigo-500/30"}`}>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A specific, scoped subject line…" className="flex-1 bg-transparent outline-none text-[13px] text-slate-900 placeholder:text-slate-400" />
           <span className={`text-[11px] tabular-nums ${subject.length > 80 ? "text-rose-600 font-medium" : "text-slate-400"}`}>{80 - subject.length}</span>
         </div>
       </div>
 
-      <div>
-        <SectionLabel>Purpose <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="purpose">
+        <SectionLabel>Purpose <span className="text-rose-500">*</span> <CriterionMark guide="purpose" className="ml-1.5" /></SectionLabel>
         <WTextArea value={purpose} onChange={setPurpose} rows={3} placeholder="Why you need this and what you'll do with it…" hint={`${purpose.length} chars`} />
       </div>
 
-      <div>
+      <div data-guide="items">
         <SectionLabel hint={`${itemsN} of min 3`} action={
           <button onClick={() => setItems([...items, ""])} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add item</button>
-        }>Requested items</SectionLabel>
+        }>Requested items <CriterionMark guide="items" className="ml-1.5" /></SectionLabel>
         <div className="space-y-2">
           {items.map((it, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -504,7 +508,7 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
         {task.prep ? (
           <>
             <GivenNote>Presenting <strong>{task.interview}</strong> to the <strong>{task.roleAgent}</strong> for sign-off. Your deck and anticipated Q&A are prepared below — choose how to open the pitch; your framing sets the senior&apos;s disposition.</GivenNote>
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 space-y-3">
+            <div data-guide="prep" className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-4 space-y-3">
               <div>
                 <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-500 mb-1">Deck summary</div>
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">{task.prep.deck}</p>
@@ -518,8 +522,8 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
         ) : (
           <GivenNote>You&apos;re interviewing the <strong>{task.roleAgent}</strong> ({task.interview}). Choose how to open — your approach sets how forthcoming they are.</GivenNote>
         )}
-        <div>
-          <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your opening</div>
+        <div data-guide="opening">
+          <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">Choose your opening <CriterionMark guide="opening" className="ml-1.5" /></div>
           <div className="space-y-2">
             {shuffleOptions(task.openings).map((o, i) => (
               <button key={o.id} onClick={() => pickOpening(o)}
@@ -569,8 +573,8 @@ export function ScriptedConductFlow({ task, value, onChange }: { task: ConductTa
             </>
           )}
           {activeRound >= 0 && !waiting && thread!.rounds[activeRound] && (
-            <div className="pt-1.5">
-              <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different probe" : "Choose your probe"}</div>
+            <div data-guide="probe" className="pt-1.5">
+              <div className="text-[10.5px] font-semibold tracking-[0.12em] uppercase text-slate-400 mb-2 text-center">{missOption ? "Try a different probe" : "Choose your probe"} <CriterionMark guide="probe" className="ml-1.5" /></div>
               <div className="space-y-2">
                 {shuffleOptions(thread!.rounds[activeRound].options).map((o, i) => (
                   <button key={o.id} onClick={() => pick(o, activeRound)}
@@ -780,9 +784,9 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
       </GivenNote>
       <SectionLabel hint={task.standard} action={
         <button onClick={addRow} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="plus" size={12} />Add row</button>
-      }>{task.title} · {startedRows.filter(rowOk).length}/{task.requiredRows} valid</SectionLabel>
+      }>{task.title} · {startedRows.filter(rowOk).length}/{task.requiredRows} valid <CriterionMark guide="register" className="ml-1.5" /></SectionLabel>
 
-      <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
+      <div data-guide="register" className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
@@ -841,7 +845,7 @@ function ScriptedRecordFlow({ task, value, onChange }: { task: RecordTask } & Pi
             <> {hiddenCount} more column{hiddenCount === 1 ? "" : "s"} appear{hiddenCount === 1 ? "s" : ""} once a row&apos;s Type calls for {hiddenCount === 1 ? "it" : "them"}.</>
           )}
         </p>
-        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check register</button>
+        <button data-guide="check" onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check register</button>
       </div>
 
       {checked && !objectiveMet && (
@@ -967,8 +971,8 @@ export function ScriptedApplyFlow({ task, value, onChange, taskCode, activityCod
     <div className="space-y-4">
       <GivenNote>Apply the scheme to <strong>every</strong> item — pick the outcome from the dropdown{showNoteCol ? <> and add the {task.noteLabel?.toLowerCase()} where needed</> : null}. Submission unlocks once every outcome matches the scheme.</GivenNote>
 
-      <div>
-        <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
+      <div data-guide="table">
+        <SectionLabel hint={task.standard}>{task.title} <CriterionMark guide="table" className="ml-1.5" /></SectionLabel>
         <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -1005,7 +1009,7 @@ export function ScriptedApplyFlow({ task, value, onChange, taskCode, activityCod
           </table>
         </div>
         <div className="mt-2 flex justify-end">
-          <button onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check answers</button>
+          <button data-guide="check" onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check answers</button>
         </div>
       </div>
 
@@ -1140,15 +1144,15 @@ function ScriptedXRefFlow({ task, value, onChange, taskCode, activityCode }: { t
     <div className="space-y-4">
       <GivenNote>Reconcile <strong>Source A ↔ Source B</strong>. Set each row&apos;s status; every row that isn&apos;t <em>{task.clean}</em> needs a corrective action. State your comparison method. Submission unlocks once your statuses match the reconciliation exactly.</GivenNote>
 
-      <div>
-        <SectionLabel hint={task.sources}>Comparison method <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="method">
+        <SectionLabel hint={task.sources}>Comparison method <span className="text-rose-500">*</span> <CriterionMark guide="method" className="ml-1.5" /></SectionLabel>
         <WTextArea value={method} onChange={setMethod} rows={2} placeholder={task.method} hint={`${method.length} chars`} />
       </div>
 
-      <div>
+      <div data-guide="table">
         <SectionLabel hint={`${discrepancyRows.length} discrepancies of ${rows.length}`} action={
           <button onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check reconciliation</button>
-        }>{task.title}</SectionLabel>
+        }>{task.title} <CriterionMark guide="table" className="ml-1.5" /></SectionLabel>
 
         <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -1322,15 +1326,15 @@ function ScriptedIdentifyFlow({ task, value, onChange, taskCode, activityCode }:
     <div className="space-y-4">
       <GivenNote>Scan the dataset and <strong>flag</strong> every row that meets the criterion. Give each flag a proposed action and a named accountable role. Submission unlocks once your flags match the criterion exactly.</GivenNote>
 
-      <div>
-        <SectionLabel hint={task.standard}>Flagging criterion <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="criterion">
+        <SectionLabel hint={task.standard}>Flagging criterion <span className="text-rose-500">*</span> <CriterionMark guide="criterion" className="ml-1.5" /></SectionLabel>
         <WTextInput value={criterion} onChange={setCriterion} placeholder="State the rule you'll flag by…" />
       </div>
 
-      <div>
+      <div data-guide="table">
         <SectionLabel hint={`${flaggedIds.length} flagged of ${rows.length}`} action={
           <button onClick={() => setChecked(true)} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check flags</button>
-        }>Dataset</SectionLabel>
+        }>Dataset <CriterionMark guide="table" className="ml-1.5" /></SectionLabel>
 
         <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -1482,8 +1486,8 @@ function ScriptedReviewFlow({ task, value, onChange }: { task: ReviewTask } & Pi
       </div>
 
       {task.feedback.length > 0 ? (
-        <div>
-          <SectionLabel hint={`${task.feedback.filter((_, i) => addressed[i]).length} / ${task.feedback.length}`}>Prior feedback — confirm addressed</SectionLabel>
+        <div data-guide="feedback">
+          <SectionLabel hint={`${task.feedback.filter((_, i) => addressed[i]).length} / ${task.feedback.length}`}>Prior feedback — confirm addressed <CriterionMark guide="feedback" className="ml-1.5" /></SectionLabel>
           <div className="space-y-2">
             {task.feedback.map((f, i) => (
               <button key={i} onClick={() => setAddressed((a) => ({ ...a, [i]: !a[i] }))} className="w-full flex items-start gap-2.5 text-left group">
@@ -1497,14 +1501,14 @@ function ScriptedReviewFlow({ task, value, onChange }: { task: ReviewTask } & Pi
         <p className="text-[11.5px] text-slate-400 italic px-1">First submission — no prior feedback to address.</p>
       )}
 
-      <div>
-        <SectionLabel hint={`${cover.length} chars`}>Cover note <span className="text-rose-500">*</span></SectionLabel>
+      <div data-guide="cover">
+        <SectionLabel hint={`${cover.length} chars`}>Cover note <span className="text-rose-500">*</span> <CriterionMark guide="cover" className="ml-1.5" /></SectionLabel>
         <WTextArea value={cover} onChange={setCover} rows={3} placeholder={task.coverExample} />
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400 tracking-tight">{objectiveMet ? "Ready — submit for the mentor's review." : "Write a cover note and confirm all prior feedback to submit."}</p>
-        <button onClick={() => setSubmitted(true)} disabled={!objectiveMet} className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"><Icon name="send" size={14} />Submit for review</button>
+        <button data-guide="send" onClick={() => setSubmitted(true)} disabled={!objectiveMet} className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-[12.5px] font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"><Icon name="send" size={14} />Submit for review</button>
       </div>
 
       {submitted && objectiveMet && (

@@ -11,8 +11,12 @@ import { DESK_TOUR_SEEN_KEY } from "./nav";
 import { TASK_META } from "@/lib/taskmeta";
 import { CONTROLS_BY_TASK } from "@/lib/controls";
 
-/** Spotlight a piece of desk chrome by its data-tour tag. */
-const tag = (name: string) => () => document.querySelector<HTMLElement>(`[data-tour="${name}"]`);
+/** Spotlight a piece of desk chrome by its data-tour tag — the one actually on screen, where a
+ *  responsive layout draws the same thing twice and hides one of them. */
+const tag = (name: string) => () => {
+  const all = [...document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`)];
+  return all.find((el) => el.getBoundingClientRect().width > 0) ?? all[0] ?? null;
+};
 
 /**
  * The Working Desk walkthrough — one continuous tour across the desk's two surfaces: the engagement
@@ -65,9 +69,10 @@ function steps(goto: (href: string) => void, orgHref: string, task: { href: stri
     },
     {
       title: "The organisation you're placed at",
-      body: "Its name in the rail always brings you back to the context page. One placement runs at a time; the next unlocks when this one is complete.",
+      body: "Every organisation you are assigned sits in this dock, each as its logo inside a ring that fills as you finish its tasks. The one spelled out is the one the tree below belongs to — click another to move the desk there, or hover it for its progress. The small i opens the organisation's briefing over your work, so you can look a fact up without leaving the step. One organisation runs at a time; the next unlocks when this one is complete.",
       icon: "briefcase",
-      ...tree("desk-org"),
+      getEl: tag("desk-org"),
+      onEnter: () => showDeskTree(false),
     },
     {
       title: "Tasks, grouped by method",
@@ -95,7 +100,7 @@ function steps(goto: (href: string) => void, orgHref: string, task: { href: stri
     },
     {
       title: "Their footprint, systems and people",
-      body: "Offices, services, the data they hold, their assets, every stakeholder with a stake in the outcome, and the standards they're bound by. Tasks ask you to scope, classify and assign ownership using exactly these facts — this grid is where you look them up.",
+      body: "Offices, services, the data they hold, their assets, every stakeholder with a stake in the outcome, and the standards they're bound by — one tab each. Tasks ask you to scope, classify and assign ownership using exactly these facts. The same tabs open from the i on any placement card, so you can look one up without leaving a step.",
       icon: "layers",
       ...at(orgHref, "org-grid"),
     },

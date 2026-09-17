@@ -29,17 +29,32 @@ export function DraggablePanel({
   onClose,
   title,
   eyebrow,
+  side = "right",
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   eyebrow?: string;
+  /** Which edge it opens against on desktop. `left` sits over the Working Desk's tree — see below. */
+  side?: "left" | "right";
   children: React.ReactNode;
 }) {
   const controls = useDragControls();
   const boundsRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  // `left` lines the panel up with the desk's activity tree, whose left edge moves with the main
+  // menu (collapsed or not). Read once as it opens — it is a starting point, and the panel is
+  // dragged from there. Divided by the desktop zoom because the rect is in viewport pixels and the
+  // panel is placed in the zoomed page's own.
+  const [treeLeft, setTreeLeft] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open || side !== "left") return;
+    const tree = document.querySelector<HTMLElement>('[data-tour="desk-tree"]');
+    const zoom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--app-zoom")) || 1;
+    const left = tree ? tree.getBoundingClientRect().left / zoom : 16;
+    requestAnimationFrame(() => setTreeLeft(left + 12));
+  }, [open, side]);
 
   useEffect(() => {
     if (!open) return;
@@ -55,7 +70,9 @@ export function DraggablePanel({
   // Full-width but short on phones (drag mostly to slide it up/down); a roomier window on desktop.
   const panelSize = isMobile
     ? "inset-x-3 top-16 max-h-[42dvh]"
-    : "right-6 top-24 max-h-[82dvh] w-[min(440px,calc(100vw-1.5rem))]";
+    : side === "left"
+      ? "top-[calc(var(--hdr-h,64px)+12px)] max-h-[82dvh] w-[min(440px,calc(100vw-1.5rem))]"
+      : "right-6 top-24 max-h-[82dvh] w-[min(440px,calc(100vw-1.5rem))]";
 
   return createPortal(
     // Full-viewport bounds box for drag constraints; click-through everywhere except the panel.
@@ -70,9 +87,14 @@ export function DraggablePanel({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        style={!isMobile && side === "left" ? { left: treeLeft ?? 16 } : undefined}
         className={`pointer-events-auto absolute flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-[0_28px_80px_-24px_rgba(15,23,42,0.5)] ${panelSize}`}
       >
-        {/* header = drag handle */}
+        {/* header = drag handle. ponytail: framer-motion moves this with a transform in the page's
+            own pixels while the pointer is measured in the viewport's, so under the desktop zoom
+            (globals.css) the panel trails the cursor by 10% and stops just short of the bounds.
+            Nuisance, not a break — compensate by hand-writing `transformTemplate` (and the scale
+            animation with it) only if anyone complains. */}
         <div
           onPointerDown={(e) => controls.start(e)}
           className="shrink-0 flex items-center justify-between gap-3 pl-4 pr-2.5 py-2.5 border-b border-slate-200/70 bg-slate-50/70 cursor-grab active:cursor-grabbing touch-none select-none"

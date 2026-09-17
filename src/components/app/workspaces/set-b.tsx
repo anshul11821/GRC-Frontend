@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CriterionMark } from "@/components/app/criterion-mark";
 import { Icon } from "@/components/ui/icon";
 import {
   type WorkspaceProps, useLift, seed, SectionLabel, WTextArea, WTextInput,
@@ -35,8 +36,8 @@ function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & 
   return (
     <div className="space-y-4">
       <GivenNote>Score each item from 1–{task.scaleMax} on every criterion. The aggregate ({task.aggregate}) and rank compute automatically — any tie needs a documented tiebreaker before you can submit.</GivenNote>
-      <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
-      <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
+      <SectionLabel hint={task.standard}>{task.title} <CriterionMark guide="table" className="ml-1.5" /></SectionLabel>
+      <div data-guide="table" className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/60 text-[10px] font-semibold tracking-[0.06em] uppercase text-slate-500">
@@ -53,8 +54,9 @@ function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & 
               return (
                 <tr key={it.id} className={`border-t border-slate-100 align-top ${bad ? "bg-rose-50/60" : tied ? "bg-amber-50/40" : ""}`}>
                   <td className="px-3 py-2 text-[12px] font-medium text-slate-900">{it.label}
+                    {tied && <CriterionMark guide="tiebreak" className="ml-1.5" />}
                     {tied && (
-                      <input value={tiebreak[it.id] ?? ""} onChange={(e) => setTiebreak((t) => ({ ...t, [it.id]: e.target.value }))} placeholder="Tiebreaker rationale (required)…"
+                      <input data-guide="tiebreak" value={tiebreak[it.id] ?? ""} onChange={(e) => setTiebreak((t) => ({ ...t, [it.id]: e.target.value }))} placeholder="Tiebreaker rationale (required)…"
                         className="mt-1.5 w-full h-8 px-2 rounded-md bg-white ring-1 ring-amber-300 focus:ring-2 focus:ring-amber-400/50 outline-none text-[11.5px]" />
                     )}
                   </td>
@@ -74,7 +76,7 @@ function ScriptedPrioritiseFlow({ task, value, onChange }: { task: PrioTask } & 
       </div>
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400">{objectiveMet ? "Ranked and ties resolved — ready to submit." : tiedIds.length > 0 && allScored ? `${tiedIds.length} tied items need a tiebreaker.` : "Score every item on all criteria."}</p>
-        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check ranking</button>
+        <button data-guide="check" onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check ranking</button>
       </div>
       {objectiveMet && (
         <div className="rounded-2xl bg-emerald-50 ring-1 ring-emerald-200 p-4">
@@ -179,19 +181,19 @@ export function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<Wo
       <GivenNote>Complete every {task.itemLabel} below. Submission unlocks once each has its required fields filled in.</GivenNote>
       <SectionLabel hint={task.standard}>{task.title}</SectionLabel>
       <div className="space-y-3">
-        {task.items.map((it) => {
+        {task.items.map((it, idx) => {
           const bad = checked && !itemOk(it.id);
           const outlier = outlierSet.has(it.id);
           return (
-            <div key={it.id} className={`rounded-2xl ring-1 p-4 ${bad ? "ring-rose-300 bg-rose-50/40" : outlier ? "ring-amber-300 bg-amber-50/30" : "ring-slate-200/70 bg-white"}`}>
-              <div className="text-[12.5px] font-medium text-slate-900 mb-2.5 flex items-start gap-2"><span className="text-[11px] font-mono text-slate-400 mt-0.5">{it.id}.</span><span>{it.label}</span>{outlier && <span className="ml-auto text-[10px] font-semibold text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">OUTLIER</span>}{task.kind === "score" && it.weight ? <span className="ml-auto text-[10px] text-slate-400">weight ×{it.weight}</span> : null}</div>
+            <div key={it.id} data-guide="item" className={`rounded-2xl ring-1 p-4 ${bad ? "ring-rose-300 bg-rose-50/40" : outlier ? "ring-amber-300 bg-amber-50/30" : "ring-slate-200/70 bg-white focus-within:ring-[1.5px] focus-within:ring-slate-900"}`}>
+              <div className="text-[12.5px] font-medium text-slate-900 mb-2.5 flex items-start gap-2"><span className="text-[11px] font-mono text-slate-400 mt-0.5">{it.id}.</span><span>{it.label}</span><CriterionMark rs={[1]} done={itemOk(it.id)} part={`${idx + 1} of ${task.items.length}`} className="shrink-0 mt-px" />{outlier && <span className="ml-auto text-[10px] font-semibold text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">OUTLIER</span>}{task.kind === "score" && it.weight ? <span className="ml-auto text-[10px] text-slate-400">weight ×{it.weight}</span> : null}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {fields.map((f) => {
                   if (f.condOn && val(it.id, f.condOn.key) !== f.condOn.equals) return null;
                   if (f.condOutlier && !outlier) return null;
                   const wide = f.type === "textarea";
                   return (
-                    <div key={f.key} className={wide ? "sm:col-span-2" : ""}>
+                    <div key={f.key} data-guide={`f:${f.key}`} className={wide ? "sm:col-span-2" : ""}>
                       <div className="text-[10.5px] font-medium tracking-[0.06em] uppercase text-slate-500 mb-1">{f.label}{f.required ? <span className="text-rose-500"> *</span> : null}</div>
                       {f.type === "textarea" ? (
                         <textarea value={val(it.id, f.key)} onChange={(e) => set(it.id, f.key, e.target.value)} rows={2} placeholder={f.placeholder}
@@ -224,7 +226,7 @@ export function FormFlow({ task, value, onChange }: { task: FormTask } & Pick<Wo
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-slate-400">{objectiveMet ? "All complete — ready to submit." : `${incomplete.length} ${task.itemLabel}${incomplete.length === 1 ? "" : "s"} still need attention.`}</p>
-        <button onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check completeness</button>
+        <button data-guide="check" onClick={() => setChecked(true)} className="h-8 px-3 rounded-lg text-[12px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"><Icon name="check" size={13} />Check completeness</button>
       </div>
 
       {objectiveMet && (
@@ -384,17 +386,17 @@ function ScriptedCalcFlow({ task, value, onChange }: { task: CalcTask } & Pick<W
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-3 items-start">
-        <div>
-          <SectionLabel hint={cite && !citeOk ? "must match the formula ID" : undefined}>Cite the formula ID <span className="text-rose-500">*</span></SectionLabel>
+        <div data-guide="cite">
+          <SectionLabel hint={cite && !citeOk ? "must match the formula ID" : undefined}>Cite the formula ID <span className="text-rose-500">*</span> <CriterionMark guide="cite" className="ml-1.5" /></SectionLabel>
           <WTextInput value={cite} onChange={setCite} placeholder={task.formulaId} />
         </div>
         <div className="text-[11.5px] text-slate-500 sm:pt-7">{task.metric}{task.unit ? ` · result in ${task.unit}` : ""}</div>
       </div>
 
-      <div>
+      <div data-guide="table">
         <SectionLabel hint={`${task.rows.filter(matchOf).length} / ${task.rows.length} correct`} action={
           <button onClick={check} className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-indigo-700 hover:bg-indigo-50 flex items-center gap-1"><Icon name="check" size={12} />Check results</button>
-        }>{task.title}</SectionLabel>
+        }>{task.title} <CriterionMark guide="table" className="ml-1.5" /></SectionLabel>
         <div className="rounded-xl ring-1 ring-slate-200/80 bg-white overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

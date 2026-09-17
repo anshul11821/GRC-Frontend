@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { appZoom } from "@/lib/zoom";
 import { Icon, type IconName } from "@/components/ui/icon";
 
 /**
@@ -20,6 +21,9 @@ export function FloatWindow({
   icon,
   width = 420,
   height,
+  /** Where it sits before anyone drags it — raise it past whatever chrome opened it. Takes a
+   *  string too, so a caller can hand it a `calc()` against the header's measured height. */
+  top = 96,
   onClose,
   /** Two ways to make a window go away is one too many when reopening it is a single click. */
   foldable = true,
@@ -30,6 +34,7 @@ export function FloatWindow({
   icon?: IconName;
   width?: number;
   height?: number;
+  top?: number | string;
   onClose: () => void;
   foldable?: boolean;
   children: React.ReactNode;
@@ -48,20 +53,23 @@ export function FloatWindow({
 
   useEffect(() => {
     const move = (e: PointerEvent) => {
+      // Pointer coordinates and the viewport are measured unzoomed; the window is drawn in the
+      // page's zoomed pixels. Divide both, or it travels further than the cursor that drags it.
+      const z = appZoom();
       if (grow.current) {
         const g = grow.current;
         setSize({
           // A floor, so the window cannot be shrunk past the point where its own header fits and
           // there is no grip left to drag it back out by.
-          w: Math.max(300, Math.min(window.innerWidth - 24, g.w + (e.clientX - g.x))),
-          h: Math.max(180, Math.min(window.innerHeight - 24, g.h + (e.clientY - g.y))),
+          w: Math.max(300, Math.min(window.innerWidth / z - 24, g.w + (e.clientX - g.x) / z)),
+          h: Math.max(180, Math.min(window.innerHeight / z - 24, g.h + (e.clientY - g.y) / z)),
         });
         return;
       }
       if (!drag.current) return;
       setPos({
-        x: Math.max(8, Math.min(window.innerWidth - 200, e.clientX - drag.current.dx)),
-        y: Math.max(56, Math.min(window.innerHeight - 60, e.clientY - drag.current.dy)),
+        x: Math.max(8, Math.min(window.innerWidth / z - 200, e.clientX / z - drag.current.dx)),
+        y: Math.max(56, Math.min(window.innerHeight / z - 60, e.clientY / z - drag.current.dy)),
       });
     };
     const up = () => {
@@ -94,13 +102,13 @@ export function FloatWindow({
       style={{
         // Dragged: wherever they put it. Otherwise pinned to the right edge, and it stays there
         // through a resize without anything having to listen for one.
-        ...(pos ? { left: pos.x, top: pos.y } : { right: 24, top: 96 }),
+        ...(pos ? { left: pos.x, top: pos.y } : { right: 24, top }),
         width: size?.w ?? width,
         maxWidth: "calc(100vw - 24px)",
         height: folded ? "auto" : (size?.h ?? height),
         // Only while it is the props' size. Once the reviewer has set one, that is the size they
         // asked for and a cap would quietly overrule them.
-        maxHeight: size ? undefined : "calc(100vh - 120px)",
+        maxHeight: size ? undefined : `calc(100vh - (${typeof top === "number" ? `${top}px` : top}) - 24px)`,
       }}
     >
       <div
@@ -109,7 +117,8 @@ export function FloatWindow({
           // is where CSS put it.
           const box = shell.current?.getBoundingClientRect();
           if (!box) return;
-          drag.current = { dx: e.clientX - box.left, dy: e.clientY - box.top };
+          const z = appZoom();
+          drag.current = { dx: (e.clientX - box.left) / z, dy: (e.clientY - box.top) / z };
           document.body.style.userSelect = "none";
         }}
         className="shrink-0 flex items-center gap-2 border-b border-[#e6eaf0] bg-slate-50 px-3.5 py-2.5 cursor-grab active:cursor-grabbing"
@@ -146,10 +155,13 @@ export function FloatWindow({
           onPointerDown={(e) => {
             const box = shell.current?.getBoundingClientRect();
             if (!box) return;
+            // A rect is unzoomed, the style it becomes is not — see the drag handler above.
+            const z = appZoom();
             // Pin the position first. While the window is anchored by `right`, widening it would
             // grow it leftwards — away from the corner being dragged.
-            if (!pos) setPos({ x: box.left, y: box.top });
-            grow.current = { x: e.clientX, y: e.clientY, w: box.width, h: box.height };
+            if (!pos) setPos({ x: box.left / z, y: box.top / z });
+            // The pointer origin stays unzoomed: `move` divides the delta it takes from it.
+            grow.current = { x: e.clientX, y: e.clientY, w: box.width / z, h: box.height / z };
             document.body.style.userSelect = "none";
             e.preventDefault();
           }}

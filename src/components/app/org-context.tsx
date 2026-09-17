@@ -2,9 +2,7 @@
 
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Register } from "@/components/app/register";
-import { OrgLogo } from "@/components/app/org-logo";
-import { Gloss, TermsUsed } from "@/components/app/glossary";
-import { LRN_CHIP } from "@/lib/tones";
+import { Gloss } from "@/components/app/glossary";
 import type { LearningOrg } from "@/lib/learnings";
 
 /**
@@ -27,7 +25,10 @@ function Panel({ title, icon, aside, span, tour, children }: {
   // They were white content cards, which read as the programme telling you things rather than as
   // a filing cabinet you look things up in.
   return (
-    <div data-tour={tour} className={`flex flex-col ${span === 3 ? "md:col-span-2 lg:col-span-3" : "lg:col-span-2"}`}>
+    // Container queries, not viewport ones: the same panels render on the org page (≈920px) and
+    // inside the draggable org window (≈620px), and `lg:` would give the window six columns of
+    // 90px because it measures the screen rather than the box the panel is actually in.
+    <div data-tour={tour} className={`@container flex flex-col ${span === 3 ? "@md:col-span-2 @3xl:col-span-3" : "@3xl:col-span-2"}`}>
       <Register tab={title} meta={aside} className="flex-1 !mt-[21px]">
         <Icon name={icon} size={13} className="absolute right-3 top-3 text-[#c99a5e]" />
         {children}
@@ -66,108 +67,52 @@ const REQ_PARTIES = [
   ["Partner", "partner"],
 ] as const;
 
-/**
- * The organisation's full context — the Working Desk's landing page, and the source material every
- * task is answered from. One continuous overview (no tabs): identity and engagement counters, then
- * a single grid of fact panels ordered who they are → what they run → who has a stake → what they
- * must comply with. Every panel is conditional; a thin profile simply renders fewer.
- */
-export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.ReactNode }) {
+/** Everything both the page header and the fact panels read off the profile, derived once. */
+function facts(org: LearningOrg) {
   const p = org.profile;
-  const headOffice = p?.officeLocations?.headOffice || p?.headOffice || "";
-  const regional = p?.officeLocations?.regionalOffices ?? [];
-  const onPrem = p?.informationAssets?.onPremises ?? [];
-  const cloud = p?.informationAssets?.cloud ?? [];
-  const internal = p?.interestedParties?.internal ?? [];
-  const external = p?.interestedParties?.external ?? [];
   const kr = p?.keyRequirements;
-  const reqRows = REQ_PARTIES.flatMap(([label, key]) => (kr?.[key] ?? []).map((need) => ({ party: label, need })));
-  const description = p?.organisationalContext || org.context;
+  return {
+    p,
+    headOffice: p?.officeLocations?.headOffice || p?.headOffice || "",
+    regional: p?.officeLocations?.regionalOffices ?? [],
+    onPrem: p?.informationAssets?.onPremises ?? [],
+    cloud: p?.informationAssets?.cloud ?? [],
+    internal: p?.interestedParties?.internal ?? [],
+    external: p?.interestedParties?.external ?? [],
+    reqRows: REQ_PARTIES.flatMap(([label, key]) => (kr?.[key] ?? []).map((need) => ({ party: label, need }))),
+    description: p?.organisationalContext || org.context,
+  };
+}
 
-  // Engagement counters — the header's right column. Real progress from the tree, not a score.
-  const tasks = org.projects.flatMap((pr) => pr.tasks);
-  const acts = tasks.reduce((n, t) => n + t.total, 0);
-  const actsDone = tasks.reduce((n, t) => n + t.done, 0);
-  const tasksDone = tasks.filter((t) => t.total > 0 && t.done === t.total).length;
-  const pct = acts ? Math.round((actsDone / acts) * 100) : 0;
+/**
+ * The five sections the fact panels group into — the same five, in the same order and under the
+ * same labels, that the mentor's org window shows. The two consoles are reading one briefing, so
+ * a mentee and their reviewer look for a fact in the same tab.
+ */
+export const ORG_TABS = [
+  { id: "context", label: "Overview" },
+  { id: "data", label: "Data & processes" },
+  { id: "std", label: "Standards & regulators" },
+  { id: "people", label: "Stakeholders" },
+  { id: "infra", label: "Infrastructure" },
+] as const;
+
+export type OrgTab = (typeof ORG_TABS)[number]["id"];
+
+/**
+ * Every fact panel, in one grid — rows align because the panels are siblings, not nested columns.
+ *
+ * `tab` null renders all of them, in the order who they are → what they run → who has a stake →
+ * what they must comply with; `OrgBrief` shows them one tab at a time.
+ */
+export function OrgPanels({ org, tab = null }: { org: LearningOrg; tab?: OrgTab | null }) {
+  const { p, headOffice, regional, onPrem, cloud, internal, external, reqRows, description } = facts(org);
+  const on = (t: OrgTab) => tab === null || tab === t;
 
   return (
-    <div className="space-y-4">
-      {/* Identity — description on the left at a readable measure, engagement counters on the right. */}
-      <header data-tour="org-identity" className="rounded-2xl ring-1 ring-slate-200/70 bg-gradient-to-br from-indigo-50/70 via-white to-white p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5 min-w-0">
-            <OrgLogo org={org} className="w-12 h-12 rounded-xl text-[15px] shrink-0" iconSize={23} />
-            <div className="min-w-0">
-              <span className="inline-flex items-center h-[20px] px-2 rounded-full bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 font-mono text-[9.5px] font-medium uppercase tracking-[0.1em]">
-                Organisation context
-              </span>
-              <h1 className="text-[24px] font-semibold tracking-[-0.025em] text-slate-900 leading-tight mt-1.5">{org.name}</h1>
-              <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                <span className={`inline-flex items-center gap-1.5 h-[22px] px-2 rounded-md text-[11px] font-medium tracking-tight ring-1 ${LRN_CHIP[org.tone] ?? LRN_CHIP.indigo}`}>
-                  <Icon name="briefcase" size={11} /> {org.industry}
-                </span>
-                {p?.subIndustry && (
-                  <span className="inline-flex items-center h-[22px] px-2 rounded-md text-[11px] font-medium tracking-tight ring-1 bg-slate-100 text-slate-600 ring-slate-200/70">{p.subIndustry}</span>
-                )}
-                {headOffice && (
-                  <span className="inline-flex items-center gap-1.5 h-[22px] px-2 rounded-md text-[11px] font-medium tracking-tight ring-1 bg-slate-100 text-slate-600 ring-slate-200/70">
-                    <Icon name="mapPin" size={11} /> {headOffice}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          {action}
-        </div>
-
-        <div className="flex flex-col lg:flex-row lg:items-end gap-4 mt-4">
-          <div className="flex-1 min-w-0 space-y-3">
-            {description && (
-              <>
-                <p className="text-[13px] text-slate-600 leading-[1.65] tracking-tight max-w-[68ch]" style={{ textWrap: "pretty" }}><Gloss>{description}</Gloss></p>
-                {/* Scans the whole profile, not just the paragraph above — the standards chips and
-                    asset lists are where most of the jargon actually is. */}
-                <TermsUsed className="max-w-[68ch]" texts={[
-                  description, p?.hqRegulatoryRationale ?? "", p?.primaryRegulator ?? "",
-                  ...(p?.regulatoryRequirements ?? []), ...(p?.mandatoryStandards ?? []), ...(p?.optionalStandards ?? []),
-                  ...(p?.servicesAndProducts ?? []), ...(p?.clientDataHandled ?? []), ...(p?.customerFacingProcesses ?? []),
-                  ...onPrem, ...cloud, ...reqRows.map((r) => r.need),
-                ]} />
-              </>
-            )}
-            {p?.primaryRegulator && (
-              <p className="flex items-start gap-2 text-[12.5px] text-indigo-900 bg-indigo-50/70 ring-1 ring-indigo-100 rounded-xl px-3 py-2 max-w-[68ch]">
-                <Icon name="shield" size={14} className="text-indigo-500 shrink-0 mt-[2px]" />
-                <span style={{ textWrap: "pretty" }}><span className="font-semibold">Primary regulator — </span><Gloss>{p.primaryRegulator}</Gloss></span>
-              </p>
-            )}
-          </div>
-
-          {acts > 0 && (
-            <div className="lg:w-[248px] shrink-0 rounded-xl bg-white/70 ring-1 ring-slate-200/70 p-3.5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-slate-500">Tasks</div>
-                  <div className="text-[19px] font-semibold tracking-tight text-slate-900 tabular-nums mt-0.5">{tasksDone}<span className="text-slate-500 font-normal">/{tasks.length}</span></div>
-                </div>
-                <div>
-                  <div className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-slate-500">Activities</div>
-                  <div className="text-[19px] font-semibold tracking-tight text-slate-900 tabular-nums mt-0.5">{actsDone}<span className="text-slate-500 font-normal">/{acts}</span></div>
-                </div>
-              </div>
-              <div className="h-1 rounded-full bg-slate-100 overflow-hidden mt-3">
-                <div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width: `${pct}%` }} />
-              </div>
-              <div className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-slate-500 mt-1.5 tabular-nums">{pct}% of this engagement complete</div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* One grid for every fact panel — rows align because they're siblings, not nested columns. */}
-      <div data-tour="org-grid" className="grid grid-flow-row-dense grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        {(headOffice || regional.length > 0) && (
+    <div className="@container">
+      <div data-tour="org-grid" className="grid grid-flow-row-dense grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-6 gap-4">
+        {on("context") && (headOffice || regional.length > 0) && (
           <Panel title="Office locations" icon="globe" span={2} aside={`${(headOffice ? 1 : 0) + regional.length} sites`}>
             <div className="space-y-1.5">
               {headOffice && (
@@ -192,7 +137,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         )}
 
-        {p?.clientDataHandled?.length ? (
+        {on("data") && p?.clientDataHandled?.length ? (
           <Panel title="Data inventory" icon="lock" span={2} aside={`${p.clientDataHandled.length} types`}>
             <div className="flex flex-wrap gap-1.5">
               {p.clientDataHandled.map((d, i) => <Chip key={i}>{d}</Chip>)}
@@ -200,7 +145,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         ) : null}
 
-        {(p?.mandatoryStandards?.length || p?.optionalStandards?.length) ? (
+        {on("std") && (p?.mandatoryStandards?.length || p?.optionalStandards?.length) ? (
           <Panel title="Standards" icon="shield" span={2} tour="org-obligations" aside={p?.mandatoryStandards?.length ? `${p.mandatoryStandards.length} mandatory` : undefined}>
             <div className="space-y-1.5">
               {(p?.mandatoryStandards ?? []).map((s, i) => (
@@ -221,9 +166,9 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         ) : null}
 
-        {p?.servicesAndProducts?.length ? (
+        {on("context") && p?.servicesAndProducts?.length ? (
           <Panel title="Service ecosystem" icon="cube" span={3} aside="What they sell">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 @xs:grid-cols-2 gap-2">
               {p.servicesAndProducts.map((s, i) => (
                 <div key={i} className="flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
                   <Icon name="bolt" size={14} className="text-indigo-500 shrink-0 mt-[2px]" />
@@ -234,9 +179,9 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         ) : null}
 
-        {(internal.length > 0 || external.length > 0) && (
+        {on("people") && (internal.length > 0 || external.length > 0) && (
           <Panel title="Stakeholders" icon="users" span={3} aside={`${internal.length + external.length} parties`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            <div className="grid grid-cols-1 @xs:grid-cols-2 gap-x-4 gap-y-3">
               {internal.length > 0 && (
                 <div>
                   <SubHead>Internal governance</SubHead>
@@ -261,13 +206,13 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         )}
 
-        {onPrem.length > 0 && (
+        {on("infra") && onPrem.length > 0 && (
           <Panel title="On-premises" icon="grid" span={2} aside="Self-hosted"><RuledList items={onPrem} /></Panel>
         )}
-        {cloud.length > 0 && (
+        {on("infra") && cloud.length > 0 && (
           <Panel title="Cloud infrastructure" icon="globe" span={2} aside="Hosted"><RuledList items={cloud} /></Panel>
         )}
-        {p?.customerFacingProcesses?.length ? (
+        {on("data") && p?.customerFacingProcesses?.length ? (
           <Panel title="Customer-facing processes" icon="refresh" span={2}>
             <ul className="space-y-2">
               {p.customerFacingProcesses.map((s, i) => (
@@ -280,7 +225,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         ) : null}
 
-        {reqRows.length > 0 && (
+        {on("people") && reqRows.length > 0 && (
           <Panel title="Requirements matrix" icon="checkSquare" span={3} aside={`${reqRows.length} needs`}>
             <table className="w-full text-left border-collapse">
               <thead>
@@ -301,7 +246,7 @@ export function OrgDetail({ org, action }: { org: LearningOrg; action?: React.Re
           </Panel>
         )}
 
-        {p?.regulatoryRequirements?.length ? (
+        {on("std") && p?.regulatoryRequirements?.length ? (
           <Panel title="Regulatory requirements" icon="flag" span={3} aside={`${p.regulatoryRequirements.length} obligations`}>
             <ol className="relative pl-5 border-l-2 border-slate-200 space-y-3">
               {p.regulatoryRequirements.map((s, i) => (

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { DESK_TREE_EVENT, DeskLearningsProvider, useDeskLearnings } from "@/components/app/desk-context";
+import { DESK_TREE_EVENT, DeskLearningsProvider, useDeskLearnings, useDeskRoute } from "@/components/app/desk-context";
+import { OrgDock } from "@/components/app/org-dock";
 import { DeskSidebar } from "@/components/app/desk-sidebar";
 import { DeskTour } from "@/components/app/desk-tour";
 import { StartDateGate } from "@/components/app/start-date-gate";
@@ -15,8 +16,11 @@ import { Icon } from "@/components/ui/icon";
  *  — not filler). */
 function DeskFooter() {
   const { learnings } = useDeskLearnings();
+  const { orgId } = useDeskRoute();
   const orgs = learnings?.orgs ?? [];
-  const activeOrg = orgs.find((o) => o.status === "active") ?? orgs[0];
+  // The placement on screen, not the current one — they differ the moment a learner opens a
+  // finished engagement, and the footer saying otherwise is the footer lying.
+  const activeOrg = orgs.find((o) => o.id === orgId) ?? orgs[0];
   return (
     <footer className="shrink-0 border-t border-slate-200/60 bg-white/40 backdrop-blur-sm">
       <div className="max-w-[920px] 2xl:max-w-[1280px] 3xl:max-w-[1440px] mx-auto px-6 h-12 flex items-center justify-between gap-4">
@@ -67,7 +71,7 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
   // Gate AFTER all hooks so hook order stays stable across the locked/unlocked switch.
   if (user && !user.startDate) {
     return (
-      <div className="h-[calc(100dvh-68px)] overflow-y-auto">
+      <div className="h-desk overflow-y-auto">
         <StartDateGate />
       </div>
     );
@@ -75,11 +79,16 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <DeskLearningsProvider>
+      {/* Which organisation the desk is showing — the dock is drawn into the app header through a
+          portal, so this renders nothing here. The tree below is a tree *of* whichever one it
+          names. */}
+      <OrgDock />
       {/* Definite height so the tree rail and the workspace column each own their scroll, instead
           of a fragile h-full % collapsing to auto and letting the whole desk scroll as one in
-          AppShell's <main>. 68px = AppShell's DashTopBar height. ponytail: hardcoded topbar height,
-          turn into a CSS var if the topbar ever becomes dynamic. */}
-      <div className="flex h-[calc(100dvh-68px)] min-h-0">
+          AppShell's <main>. `h-desk` (globals.css) is the viewport less the app header, which
+          publishes its measured height as `--hdr-h`. Step-screen's floating checklist reads the
+          same variable. */}
+      <div className="flex h-desk min-h-0">
         {/* Drawer backdrop (mobile only). */}
         {treeOpen && (
           <div
@@ -128,7 +137,7 @@ export default function DeskLayout({ children }: { children: React.ReactNode }) 
           </div>
           {/* min-h-full makes the content column at least viewport-tall so the footer anchors the
               bottom on short tasks (no bare whitespace); it grows + scrolls for long tasks. */}
-          <div className="flex-1 min-w-0 overflow-y-auto">
+          <div className="@container flex-1 min-w-0 overflow-y-auto">
             <div className="min-h-full flex flex-col">
               <div className="flex-1 min-w-0">{children}</div>
               <DeskFooter />

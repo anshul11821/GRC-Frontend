@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
-import { BrandMark } from "@/components/ui/primitives";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DASH_NAV, initialsOf } from "./nav";
 import { WelcomeTour, startWelcomeTour } from "./welcome-tour";
@@ -13,6 +11,9 @@ import { markTourSeen } from "./guided-tour";
 import { UpNext } from "./up-next";
 import { FeedbackWidget } from "./feedback-widget";
 import { DropdownPanel } from "@/components/ui/motion";
+import { BrandMark } from "@/components/ui/primitives";
+import { learningsApi } from "@/lib/learnings";
+import { useCachedQuery } from "@/lib/use-query";
 
 function DashSidebar({
   collapsed,
@@ -44,7 +45,7 @@ function DashSidebar({
         collapsed ? "md:w-[68px]" : "md:w-[244px] 2xl:w-[276px]",
       ].join(" ")}
     >
-      <div className="h-[68px] flex items-center px-4 gap-3 border-b border-slate-200/60">
+      <div className="h-16 shrink-0 flex items-center px-4 gap-3 border-b border-[#e7e7f0]">
         {/* Desktop: collapse toggle. */}
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -198,80 +199,241 @@ function UserMenu() {
   );
 }
 
-/** The top bar's empty middle, lent to whatever the mentee is working on. */
-export const TOPBAR_SLOT_ID = "app-topbar-now";
+/**
+ * The bar's organisation slot, filled by the Working Desk with its dock of organisation logos
+ * (`OrgDock`). Empty everywhere else, and then it takes no width at all.
+ */
+export const TOPBAR_NAV_ID = "app-topbar-nav";
 
 /**
- * Repeats what you are working on in the top bar, once `watch` has scrolled out of view.
- *
- * A learner deep in a long step could not see which step it was without scrolling back up, and the
- * bar had nothing in the middle but air. Rendered through a portal rather than by AppShell holding
- * page state: the page already knows its own title, and nothing needs to be lifted or kept in sync.
- * Returns nothing where no slot exists (the mentor console's shell has none).
+ * The header's height, published as `--hdr-h` for anything that has to sit below it — the desk's
+ * scroll height, the step screen's floating checklist, the briefing window's drop point. The bar
+ * is one fixed row now, but it is measured rather than assumed so a change to it cannot quietly
+ * leave those three a few pixels wrong; and written to the document element so a
+ * `position: fixed` element in any subtree can read it.
  */
-export function TopBarNow({ eyebrow, code, title, watch }: {
-  eyebrow?: string;
-  code?: string;
-  title: string;
-  /** The page's own heading. While it is on screen the bar stays empty — one title is enough. */
-  watch: React.RefObject<HTMLElement | null>;
-}) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-  const [scrolledPast, setScrolledPast] = useState(false);
+function useHeaderHeight(ref: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() =>
+      document.documentElement.style.setProperty("--hdr-h", `${el.offsetHeight}px`),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+}
 
-  useEffect(() => setSlot(document.getElementById(TOPBAR_SLOT_ID)), []);
+/** The certificate's own mark: a rosette. */
+const CertIcon = ({ size, className }: { size: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <circle cx="12" cy="9" r="5.5" />
+    <path d="m8.6 13.4-1.6 7.6 5-2.6 5 2.6-1.6-7.6" />
+  </svg>
+);
+
+/**
+ * A progress gauge: a ring notched at 25, 50 and 75%. 2πr with r=14 is 87.96, so the dash is the
+ * fraction of that. The ring starts at twelve o'clock, so the notches sit at three, six and nine.
+ */
+function Gauge({ pct, size, stroke, children }: { pct: number; size: number; stroke: number; children: React.ReactNode }) {
+  const id = useId();
+  return (
+    <span className="relative grid shrink-0 place-items-center">
+      <svg width={size} height={size} viewBox="0 0 36 36" aria-hidden>
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#8b7cf8" />
+            <stop offset="1" stopColor="#5b4fe9" />
+          </linearGradient>
+        </defs>
+        <circle cx="18" cy="18" r="14" fill="none" stroke="#e5e1ff" strokeWidth={stroke} />
+        <circle
+          cx="18" cy="18" r="14" fill="none" stroke={`url(#${id})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${((pct / 100) * 87.96).toFixed(2)} 87.96`} transform="rotate(-90 18 18)"
+          className="transition-[stroke-dasharray] duration-[600ms] ease-[cubic-bezier(.2,.7,.2,1)]"
+        />
+        <g stroke="#fff" strokeWidth="1.6">
+          <path d="M32.5 18h-4.7" />
+          <path d="M18 32.5v-4.7" />
+          <path d="M3.5 18h4.7" />
+        </g>
+      </svg>
+      <span className="absolute grid place-items-center">{children}</span>
+    </span>
+  );
+}
+
+/**
+ * How far through the programme they are — one control, not two.
+ *
+ * Activities done and certificate progress are the same journey, so they share one capsule: the
+ * gauge carries the certificate percentage (the thing the work is for, issued at 100%), the text
+ * under it the activity count that percentage is made of. Click it for the milestone track and
+ * what is left to go. Below `lg`, only the gauge.
+ *
+ * Derived from the engagement tree, not a second endpoint: `learnings:grc101` is already fetched
+ * by the Dashboard and the desk, and `useCachedQuery` dedupes the key across the whole app.
+ */
+function ProgramProgress() {
+  const { data } = useCachedQuery("learnings:grc101", () => learningsApi.get("grc101"));
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = watch.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([entry]) => setScrolledPast(!entry.isIntersecting));
-    io.observe(el);
-    return () => io.disconnect();
-  }, [watch, title]);
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
-  if (!slot || !scrolledPast) return null;
-  return createPortal(
-    <div className="flex min-w-0 items-center gap-2.5">
-      {code && (
-        <span className="inline-flex items-center justify-center px-1.5 h-[22px] rounded bg-slate-900 text-white text-[11px] font-mono font-semibold shrink-0">
-          {code}
+  const tasks = (data?.orgs ?? []).flatMap((o) => o.projects.flatMap((p) => p.tasks));
+  if (tasks.length === 0) return null;
+
+  const acts = tasks.reduce((n, t) => n + t.total, 0);
+  const done = tasks.reduce((n, t) => n + t.done, 0);
+  const pct = acts ? Math.round((done / acts) * 100) : 0;
+  // The next quarter mark still ahead, and how many activities reach it.
+  const next = [25, 50, 75, 100].find((q) => q > pct);
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Certificate ${pct}% complete, ${done} of ${acts} activities done. Show progress details`}
+        className={`flex h-11 items-center gap-2.5 rounded-full border px-1 transition-[background,border-color,box-shadow] lg:pl-1 lg:pr-3 ${
+          open
+            ? "border-[#d2ccff] bg-white shadow-[0_4px_14px_-8px_rgba(91,79,233,.35)]"
+            : "border-[#e7e7f0] bg-[#f3f3f9] hover:border-[#d2ccff] hover:bg-white hover:shadow-[0_4px_14px_-8px_rgba(91,79,233,.35)]"
+        }`}
+      >
+        <Gauge pct={pct} size={34} stroke={3.2}>
+          <CertIcon size={14} className="text-[#5b4fe9]" />
+        </Gauge>
+        <span className="hidden flex-col gap-1 whitespace-nowrap text-left lg:flex">
+          <span className="text-[12.5px] leading-none text-[#4b4c63]">
+            <b className="mr-0.5 text-[15px] font-semibold tracking-[-0.01em] text-[#191a2c]">{pct}%</b> to certificate
+          </span>
+          <span className="text-[11.5px] leading-none text-[#8a8ba3]">
+            <b className="font-semibold tabular-nums text-[#4b4c63]">{done}</b> of {acts} activities
+          </span>
         </span>
-      )}
-      <span className="min-w-0">
-        {eyebrow && <span className="block text-[10px] text-slate-500 tracking-tight truncate">{eyebrow}</span>}
-        <span className="block text-[13px] font-semibold tracking-tight text-slate-900 truncate">{title}</span>
-      </span>
-    </div>,
-    slot,
+        <Icon name="chevronDown" size={14} className={`hidden text-[#8a8ba3] transition-transform duration-200 lg:block ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <DropdownPanel open={open} className="absolute right-0 mt-2.5 w-[330px] p-4">
+        <div className="flex items-center gap-3.5">
+          <Gauge pct={pct} size={72} stroke={3}>
+            <span className="whitespace-nowrap text-[19px] font-semibold tracking-[-0.02em] text-[#191a2c]">
+              {pct}<small className="text-[11px] font-medium text-[#8a8ba3]">%</small>
+            </span>
+          </Gauge>
+          <span>
+            <b className="block text-[15px] font-semibold text-[#191a2c]">Certificate progress</b>
+            <small className="mt-0.5 block text-[12.5px] text-[#8a8ba3]">Issued automatically at 100%</small>
+          </span>
+        </div>
+
+        <div className="mx-1 mb-1 mt-[18px]" aria-label="Milestones">
+          <div className="relative h-1.5 rounded-full bg-[#e5e1ff]">
+            <i className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#8b7cf8] to-[#5b4fe9]" style={{ width: `${pct}%` }} />
+            {[25, 50, 75].map((q) => (
+              <span
+                key={q}
+                className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${
+                  pct >= q ? "border-white bg-[#5b4fe9] shadow-[0_0_0_1.5px_#5b4fe9]" : "border-[#cfc8ff] bg-white"
+                }`}
+                style={{ left: `${q}%` }}
+              />
+            ))}
+            <span
+              className={`absolute left-full top-1/2 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 ${
+                pct >= 100 ? "border-white bg-[#5b4fe9] text-white" : "border-[#d2ccff] bg-white text-[#5b4fe9]"
+              }`}
+            >
+              <CertIcon size={10} />
+            </span>
+          </div>
+          <div className="relative mt-2.5 h-3.5 text-[11px] text-[#8a8ba3]">
+            <span className="absolute left-0">0</span>
+            <span className="absolute left-1/4 -translate-x-1/2">25%</span>
+            <span className="absolute left-1/2 -translate-x-1/2">50%</span>
+            <span className="absolute left-3/4 -translate-x-1/2">75%</span>
+            <span className="absolute right-0">100%</span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-[#f3f3f9] px-3 py-2.5">
+            <small className="block text-[11.5px] text-[#8a8ba3]">Activities done</small>
+            <b className="my-[3px] block text-[20px] font-semibold tracking-[-0.02em] tabular-nums text-[#191a2c]">{done}</b>
+            <span className="whitespace-nowrap text-[11.5px] text-[#8a8ba3]">of {acts}</span>
+          </div>
+          <div className="rounded-xl bg-[#f3f3f9] px-3 py-2.5">
+            <small className="block text-[11.5px] text-[#8a8ba3]">Left to go</small>
+            <b className="my-[3px] block text-[20px] font-semibold tracking-[-0.02em] tabular-nums text-[#191a2c]">{acts - done}</b>
+            <span className="whitespace-nowrap text-[11.5px] text-[#8a8ba3]">
+              {next ? `${next}% at ${Math.ceil((acts * next) / 100)}` : "Certificate ready"}
+            </span>
+          </div>
+        </div>
+
+      </DropdownPanel>
+    </div>
   );
 }
 
 function DashTopBar({ openMobile }: { openMobile: () => void }) {
+  const header = useRef<HTMLElement>(null);
+  useHeaderHeight(header);
+
+  // One row, 64px, that never changes shape: nothing in it expands, collapses or jumps.
   return (
-    <div className="relative z-30 h-[68px] shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-slate-200/70 bg-white/40 backdrop-blur-xl print:hidden">
-      <div className="flex items-center gap-3">
+    <header
+      ref={header}
+      className="relative z-30 h-16 shrink-0 border-b border-[#e7e7f0] bg-white/95 backdrop-blur-[10px] backdrop-saturate-[1.4] print:hidden"
+    >
+      <div className="flex h-full items-center gap-1.5 px-2.5 md:gap-3.5 md:px-4">
         {/* Mobile: open the navigation drawer. */}
         <button
           onClick={openMobile}
-          className="focus-ring md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-[11px] text-[#4b4c63] transition-colors hover:bg-[#efedff] hover:text-[#5b4fe9] md:hidden"
           aria-label="Open menu"
         >
-          <Icon name="menu" size={18} />
+          <Icon name="menu" size={20} />
         </button>
-        <BrandMark size={36} />
-        <div>
-          <div className="text-[13.5px] font-semibold tracking-tight text-slate-900">GRC 101</div>
-          <div className="text-[11px] text-slate-500">Foundations</div>
+
+        <Link href="/app" aria-label="GRC 101 Foundations, home" className="hidden shrink-0 items-center gap-2.5 no-underline md:flex">
+          <BrandMark size={36} />
+          <span className="hidden leading-tight min-[1140px]:block">
+            <b className="block text-[14.5px] font-semibold tracking-[-0.005em] text-[#191a2c]">GRC 101</b>
+            <small className="block text-[12px] text-[#8a8ba3]">Foundations</small>
+          </span>
+        </Link>
+
+        {/* The desk's organisation dock, behind a rule. Off the desk the slot is empty, and the rule
+            goes with it — a hairline fencing off nothing. */}
+        <span aria-hidden className="hidden h-7 w-px shrink-0 bg-[#e7e7f0] md:block [&:has(+div:empty)]:hidden" />
+        <div id={TOPBAR_NAV_ID} className="flex min-w-0 empty:hidden max-md:flex-1" />
+
+        <div className="min-w-2 flex-1 max-md:hidden" />
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <ProgramProgress />
+          <span data-tour="bell"><UpNext /></span>
+          <span data-tour="account"><UserMenu /></span>
         </div>
       </div>
-      {/* Filled by the page when its own heading scrolls out of view — see TopBarNow. Empty
-          otherwise, and never a second navigation: it says where you are, nothing more. */}
-      <div id={TOPBAR_SLOT_ID} className="hidden md:flex min-w-0 flex-1 items-center pl-8 pr-4" />
-      <div className="flex items-center gap-2">
-        <span data-tour="bell"><UpNext /></span>
-        <span data-tour="account"><UserMenu /></span>
-      </div>
-    </div>
+    </header>
   );
 }
 
@@ -331,7 +493,7 @@ function CollapseMenuHint({ collapsed }: { collapsed: boolean }) {
 
   if (!show) return null;
   // Geometry of the real toggle in DashSidebar's header: px-4 (16px) inset, w-9/h-9 (36px), inside
-  // a h-[68px] row → top (68-36)/2 = 16px. ponytail: hardcoded; measure the node if the header
+  // a h-16 (64px) row → top (64-36)/2 = 14px. ponytail: hardcoded; measure the node if the header
   // ever stops being a fixed height.
   return (
     <div className="hidden md:block print:hidden">
@@ -340,7 +502,7 @@ function CollapseMenuHint({ collapsed }: { collapsed: boolean }) {
           (and the rest of the app) stays clickable; this coaches, it doesn't trap. */}
       <div
         aria-hidden="true"
-        className="fixed top-4 left-4 w-9 h-9 z-40 rounded-lg pointer-events-none outline outline-2 outline-offset-[3px] outline-white/70 shadow-[0_0_0_9999px_rgba(2,6,23,0.62)] motion-safe:animate-[spotlight_2s_ease-out_infinite]"
+        className="fixed top-3.5 left-4 w-9 h-9 z-40 rounded-lg pointer-events-none outline outline-2 outline-offset-[3px] outline-white/70 shadow-[0_0_0_9999px_rgba(2,6,23,0.62)] motion-safe:animate-[spotlight_2s_ease-out_infinite]"
       />
 
       {/* Cursor tapping the toggle. Anchored off the toggle's bottom-right corner; the keyframes
@@ -348,7 +510,7 @@ function CollapseMenuHint({ collapsed }: { collapsed: boolean }) {
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="fixed top-6 left-6 z-40 w-7 h-7 pointer-events-none drop-shadow-[0_3px_8px_rgba(0,0,0,0.55)] motion-safe:animate-[cursorTap_2s_ease-in-out_infinite]"
+        className="fixed top-[22px] left-6 z-40 w-7 h-7 pointer-events-none drop-shadow-[0_3px_8px_rgba(0,0,0,0.55)] motion-safe:animate-[cursorTap_2s_ease-in-out_infinite]"
       >
         {/* Lucide mouse-pointer-click — the arrow-plus-click-rays icon these tours converge on.
             Its tip sits at ~9,9 in the viewBox (≈11px at 28px), so top/left 24 lands the tip on the
@@ -372,7 +534,7 @@ function CollapseMenuHint({ collapsed }: { collapsed: boolean }) {
 
       <div
         role="status"
-        className="fixed top-[78px] left-4 z-40 w-[268px] rounded-xl bg-white ring-1 ring-slate-200/70 shadow-2xl shadow-black/40 motion-safe:animate-[popIn_.35s_ease-out]"
+        className="fixed top-[74px] left-4 z-40 w-[268px] rounded-xl bg-white ring-1 ring-slate-200/70 shadow-2xl shadow-black/40 motion-safe:animate-[popIn_.35s_ease-out]"
       >
         {/* Caret aimed up at the toggle, centred on it. */}
         <span className="absolute left-[26px] -top-[5px] w-2.5 h-2.5 rotate-45 bg-white ring-1 ring-slate-200/70 [clip-path:polygon(0_0,100%_0,0_100%)]" />

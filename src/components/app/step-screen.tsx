@@ -20,14 +20,17 @@ import { ApiError } from "@/lib/api";
 import { VerbWorkspace } from "@/components/app/workspaces";
 import { CONTROL_KEYS, isFilled } from "@/lib/checklist";
 import { acceptanceStates, acceptanceTexts } from "@/lib/acceptance";
+import { criteriaAt } from "@/lib/criterion-map";
+import { CriterionProvider } from "@/components/app/criterion-mark";
 import { useDeskBase, useDeskLearnings } from "@/components/app/desk-context";
 import { dueChip, fmtDue } from "@/lib/schedule";
 import { useTaskBundle, activityBrief } from "@/lib/task-bundle";
 import { WORKSPACE_REFS } from "@/lib/workspace-refs";
 import { GuidedTour, type TourStep } from "@/components/app/guided-tour";
+import { fieldGuide } from "@/lib/guide-fields";
 import { MentorDecision } from "@/components/app/mentor-decision";
 import { LockedNotice } from "@/components/app/locked-notice";
-import { TopBarNow } from "@/components/app/app-shell";
+import { StepBar } from "@/components/app/step-bar";
 import { fitsWorkspace } from "@/lib/workspace-readback";
 import { MachineNote, MachineTag } from "@/components/app/machine-note";
 import { ModelAnswer } from "@/components/app/model-answer";
@@ -199,14 +202,9 @@ function SubmittedFields({ payload, verbId, taskCode, rua }: {
   );
 }
 
-/** Live acceptance-criteria checklist (always expanded). Heuristic before submit; authoritative after.
- *  Pass `onClose` to show a dismiss (✕) button (used by the floating HUD). */
-function AcceptanceChecklist({ verbId, values, layer1, onClose }: {
-  verbId: string;
-  values: Record<string, unknown>;
-  layer1?: Layer1Result | null;
-  onClose?: () => void;
-}) {
+/** What the checklist shows, row by row. One function for the strip and for the R-marks on the
+ *  working sheet, so a mark can never report a different state from the row it points at. */
+function checklistStates(verbId: string, values: Record<string, unknown>, layer1?: Layer1Result | null) {
   // The criteria and their met-tests come from the same place — lib/acceptance.ts — so a criterion
   // on screen is one this step's workspace can actually evidence.
   const criteria = acceptanceTexts(verbId);
@@ -214,6 +212,20 @@ function AcceptanceChecklist({ verbId, values, layer1, onClose }: {
   const graded = !!layer1 && layer1.checks.length === criteria.length;
   const live = acceptanceStates(verbId, values);
   const states = criteria.map((c, i) => (graded ? layer1!.checks[i].passed : live[i]));
+  return { criteria, graded, states };
+}
+
+/** Live acceptance-criteria checklist (always expanded). Heuristic before submit; authoritative after.
+ *  Pass `onClose` to show a dismiss (✕) button (used by the floating HUD). `paired` names the rows
+ *  (1-based) whose part of the deliverable has focus. */
+function AcceptanceChecklist({ verbId, values, layer1, onClose, paired = [] }: {
+  verbId: string;
+  values: Record<string, unknown>;
+  layer1?: Layer1Result | null;
+  onClose?: () => void;
+  paired?: number[];
+}) {
+  const { criteria, graded, states } = checklistStates(verbId, values, layer1);
   const met = states.filter(Boolean).length;
   const allMet = met === criteria.length;
 
@@ -249,13 +261,16 @@ function AcceptanceChecklist({ verbId, values, layer1, onClose }: {
           // Only a graded run can say "not met" — before submission an unticked row is merely
           // open, and colouring it as a failure would be a lie about work in progress.
           const failed = graded && !ok;
+          // The row whose part of the deliverable has focus: counter and text lift and a steel rule
+          // marks the margin. No fill — the strip carries its meaning in its rules, not a ground.
+          const on = paired.includes(i + 1);
           return (
             <li
               key={i}
-              className="grid grid-cols-[26px_1fr_52px] gap-2 items-baseline py-[7px] border-b border-dashed border-slate-200/70 last:border-b-0"
+              className={`grid grid-cols-[26px_1fr_52px] gap-2 items-baseline py-[7px] -mx-2 px-2 border-b border-dashed border-slate-200/70 last:border-b-0 transition-shadow motion-reduce:transition-none ${on ? "shadow-[inset_2px_0_0_#0369a1]" : ""}`}
             >
-              <span className="font-mono text-[10.5px] tabular-nums text-slate-400">R{i + 1}</span>
-              <span className="text-[13px] leading-snug tracking-tight text-slate-700">
+              <span className={`font-mono text-[10.5px] tabular-nums ${on ? "text-sky-700 font-semibold" : "text-slate-400"}`}>R{i + 1}</span>
+              <span className={`text-[13px] leading-snug tracking-tight ${on ? "text-slate-900" : "text-slate-700"}`}>
                 <Gloss>{c}</Gloss>
               </span>
               <i
@@ -347,10 +362,12 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   const [readbackIsDraft, setReadbackIsDraft] = useState(false);
   const [attemptKey, setAttemptKey] = useState(0); // bumped to remount the workspace blank
   const deliverableRef = useRef<HTMLDivElement>(null);
-  // Watched by TopBarNow: while this heading is on screen the top bar stays empty.
+  // Watched by StepBar: while this heading is on screen the condensed title stays away.
   const headingRef = useRef<HTMLDivElement>(null);
   // Guided walkthrough: objective → what to do → checklist → deliverable. -1 = closed.
   const [tourStep, setTourStep] = useState(-1);
+  // Checklist rows (1-based) whose part of the deliverable has focus — see the workspace fieldset.
+  const [paired, setPaired] = useState<number[]>([]);
   const objectiveRef = useRef<HTMLDivElement>(null);
   const whatToDoRef = useRef<HTMLDivElement>(null);
   const referenceBtnRef = useRef<HTMLButtonElement>(null);
@@ -368,6 +385,7 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   useEffect(() => {
     let cancelled = false;
     setTourStep(-1); // close the tour during navigation so it never shows a stale step
+    setPaired([]);
     // A hover on the step's link in the tree may already have these in flight — see
     // `prefetchStep`. Learner's own desk only: a mentor's `source` reads a different learner.
     const warm = source ? null : takeWarmStep(activityId);
@@ -423,10 +441,10 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => setAtDeliverable(entry.isIntersecting),
-      // Thin band right under the sticky header: fires once the "Your deliverable"
+      // Thin band right under the header and the step bar (64 + 52): fires once the "Your deliverable"
       // heading scrolls up to the top of the screen, and stays open while the (tall)
       // card still overlaps the band — i.e. for the rest of the activity.
-      { rootMargin: "-84px 0px -90% 0px" },
+      { rootMargin: "-116px 0px -90% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -669,9 +687,19 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
   // workspace has no way to read (a demo/API row, or work submitted against an older workspace).
   const workspaceFits = fitsWorkspace(activity.verb.id, values);
   const locked = noAttemptsLeft || (readback && !isGateVerb(activity.verb.id));
+  // The Guide walks the deliverable field by field, so it is withheld while the workspace is
+  // frozen — there is nothing there to type into. Resubmit is the thing that un-freezes it, so
+  // that is what the button says, and once the attempts are gone there is no way back and it
+  // closes for good. Note this is the Guide only: the objective, the brief and the reference
+  // material stay open on the page itself.
+  const guideBlocked = locked;
+  // Derived from the same two facts as the greying, and never empty while the button is grey — a
+  // disabled control that cannot say why is the thing we were trying to avoid.
+  const guideNote = noAttemptsLeft ? "Guide closed — no attempts left" : "Click Resubmit for the Guide";
   const hasFeedback = !!(layer1 || review || activity.mentorReview);
   const hasBrief = !!(content?.objective || (content?.whatToDo && content.whatToDo.length > 0));
   const hasChecklist = acceptanceTexts(activity.verb.id).length > 0;
+  const checklist = checklistStates(activity.verb.id, values, layer1);
   // Documents with their own Open button (floating windows) leave the drawer: the Reference-material
   // panel keeps only the verb workspace's scripted artefacts (Scope Statement, Asset Register, …)
   // opened via the in-workspace "Open" buttons.
@@ -736,11 +764,42 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
     getEl: () => (window.matchMedia("(min-width: 1280px)").matches ? checklistHudRef.current : checklistInlineRef.current),
     onEnter: () => { setAtDeliverable(true); setCriteriaHidden(false); }, // force it visible for the tour; the observer re-syncs on scroll
   });
+  // A field walk needs a workspace the mentee can actually type into, and there are two ways this
+  // is not one. The step may be read-only (`locked`: passed and frozen, or attempts spent — the
+  // whole workspace sits in a disabled fieldset, so pointing at a field and saying "name the role
+  // here" is worse than saying nothing). Or the field may not belong to the stage on screen —
+  // Request's compose fields are gone the moment the request is sent, submitted or not.
+  //
+  // So the walk is withheld rather than offered and skipped. An `optional` step that finds no
+  // target waits 600ms for it before moving on, which is right for a section that renders late and
+  // wrong for one that will never exist: five in a row parked the Guide on a dimmed page for three
+  // seconds and then closed it. The four steps that still apply on a finished step — objective,
+  // what to do, reference material, checklist — are exactly what a mentee re-reads before a
+  // revision, so the Guide itself stays available the whole way through.
+  const fields = locked
+    ? []
+    : fieldGuide(activity.verb.id).filter((f) => typeof document !== "undefined" && !!document.querySelector(`[data-guide="${f.key}"]`));
   tourSteps.push({
-    title: "Fill in your deliverable",
-    body: "Do your work here, then Submit for review. The AI mentor grades it and tells you what to improve. You can save a draft any time.",
+    title: locked ? "The work you submitted" : "Fill in your deliverable",
+    body: fields.length
+      ? "This is where you do the work. The next few steps walk the fields one at a time — what each is for, and what makes a good one. You can type as you go: the field the Guide is pointing at stays live."
+      : locked
+      ? "This is the work you sent for review, held exactly as it was graded. Resubmit blanks it for a fresh attempt — if you have one left."
+      : "Do your work here, then Submit for review. The AI mentor grades it and tells you what to improve. You can save a draft any time.",
     icon: "send",
     getEl: () => deliverableRef.current,
+  });
+  // …and then its fields, one at a time. A single "do your work here" is orientation for someone
+  // who has been here before and no help at all to someone facing an empty workspace, so each verb
+  // that has a walk authored (lib/guide-fields.ts) carries on into it. Optional throughout: a
+  // workspace stage that isn't on screen — Request's compose fields, once the request has been
+  // sent — drops out of the walk rather than parking the card on nothing.
+  for (const f of fields) tourSteps.push({
+    title: f.title,
+    body: f.body,
+    icon: f.icon,
+    optional: true,
+    getEl: () => document.querySelector<HTMLElement>(`[data-guide="${f.key}"]`),
   });
 
   return (
@@ -755,6 +814,15 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           what-to-do steps are built from, so a tour opened before it lands is a 2-step tour on the
           checklist that renumbers itself under the mentee a second later. Guards both ways in —
           the auto-run on the first step and the Guide button. */}
+      <StepBar
+        code={activity.code}
+        eyebrow={activity.taskTitle}
+        title={activity.title}
+        watch={headingRef}
+        done={passed}
+        score={review ? (passed ? `${review.overallScore.toFixed(1)}/5` : "revise") : undefined}
+        onScore={hasFeedback ? () => setFeedbackOpen(true) : undefined}
+      />
       <GuidedTour steps={tourSteps} step={bundleLoading ? -1 : tourStep} onStep={setTourStep} onClose={closeTour} />
       <FloatingDocs docs={fw.docs} onClose={fw.close} onFocus={fw.focus} />
 
@@ -767,14 +835,20 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           >
             <Icon name="chevronLeft" size={14} /> {activity.taskTitle}
           </Link>
-          <TopBarNow eyebrow={activity.taskTitle} code={activity.code} title={activity.title} watch={headingRef} />
-          <div ref={headingRef} className="flex items-start gap-3">
-            <span className="inline-flex items-center justify-center px-2 h-7 rounded-md bg-slate-900 text-white text-[12px] font-mono font-semibold shrink-0 mt-0.5">{activity.code}</span>
+          <div ref={headingRef} className="flex items-start gap-3.5">
+            <span className="grid place-items-center min-w-8 h-8 max-md:min-w-7 max-md:h-7 px-1 rounded-[9px] bg-[#191a2c] text-white text-[13px] font-mono font-semibold shrink-0 mt-[3px] max-md:mt-0">{activity.code}</span>
             <div className="min-w-0 flex-1">
-              <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-slate-900 leading-snug">{activity.title}</h1>
-              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+              <h1 className="text-[24px] max-md:text-[20px] font-semibold tracking-[-0.012em] text-[#191a2c] leading-[1.25]" style={{ textWrap: "balance" }}>{activity.title}</h1>
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                {/* One "Done", not two: the schedule chip says the same once its day is done, so
+                    this pill covers that case and the chip is left to dates only. */}
+                {(passed || due?.status === "done") && (
+                  <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] border border-[#bfe9cf] bg-[#e8f8ee] text-[12px] font-semibold text-[#15a04a]">
+                    <Icon name="check" size={11} strokeWidth={3} /> Done
+                  </span>
+                )}
                 {verb && <DVerb verbId={verb.id} />}
-                {due && (() => { const c = dueChip(due); return (
+                {due && due.status !== "done" && (() => { const c = dueChip(due); return (
                   <span className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] font-medium ring-1 ${c.cls}`} title={fmtDue(due.date)}>
                     <Icon name="calendar" size={12} /> {c.text}
                   </span>
@@ -784,15 +858,26 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           </div>
         </div>
 
-        <div className="shrink-0 flex items-center gap-2">
-          {/* guide trigger — always available; blinks thrice on open to hint the walkthrough exists */}
-          <button
-            key={activityId}
-            onClick={() => setTourStep(0)}
-            className="guide-blink focus-ring inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 hover:bg-indigo-100 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
-          >
-            <Icon name="help" size={14} /> Guide
-          </button>
+        <div className="shrink-0 flex items-center gap-2 flex-wrap justify-end">
+          {/* Guide trigger — blinks thrice on open to hint the walkthrough exists.
+              On a frozen step it is not a disabled button at all but a chip that states the fact,
+              in the same slot and at the same height so the header does not shift. A greyed button
+              only raises the question; there is nothing for a click to do, and the answer does not
+              belong in a floating layer — a popover here has to out-rank the desk's own panels to
+              be seen, and inline help stays inline (form language, law 5). */}
+          {guideBlocked ? (
+            <span className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-50 ring-1 ring-slate-200/70 text-slate-500 text-[12.5px] font-medium tracking-tight">
+              <Icon name="lock" size={14} className="text-slate-400 shrink-0" /> {guideNote}
+            </span>
+          ) : (
+            <button
+              key={activityId}
+              onClick={() => setTourStep(0)}
+              className="guide-blink focus-ring inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-indigo-50 ring-1 ring-indigo-200/70 text-indigo-700 hover:bg-indigo-100 text-[12.5px] font-medium tracking-tight transition-colors cursor-pointer"
+            >
+              <Icon name="help" size={14} /> Guide
+            </button>
+          )}
 
           {/* submission-feedback trigger — only after a graded submission */}
           {/* The learner's own grade and revision history. A reviewer is forming the decision that
@@ -885,12 +970,13 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
         {/* This step's materials, each openable as its own draggable window (the RUA gate renders
             its own per-verb-step strips inside the workspace). Sticky, so the source document rides
             down with the mentee instead of scrolling away above a long table — the Card is the
-            containing block, so it pins for exactly the length of the deliverable. Width is capped
+            containing block, so it pins for exactly the length of the deliverable. It pins 60px
+            down, clear of the 52px StepBar, which is always showing by the time it sticks. Width is capped
             on md+ to stay clear of the acceptance-checklist HUD pinned top-right; the shadow only
             appears once we're in the deliverable, so a pinned bar reads as deliberate. */}
         {!isGateVerb(activity.verb.id) && stripRefs.length > 0 && (
           <DocOpenStrip docs={stripRefs} onOpen={fw.open}
-            className={`mb-5 sticky top-2 z-10 md:max-w-[520px] transition-shadow duration-200 motion-reduce:transition-none ${atDeliverable ? "shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)]" : ""}`} />
+            className={`mb-5 sticky top-[60px] z-10 md:max-w-[520px] transition-shadow duration-200 motion-reduce:transition-none ${atDeliverable ? "shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)]" : ""}`} />
         )}
 
         {/* Work this workspace cannot read back is shown as a record instead of as an empty
@@ -910,10 +996,22 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
             <SubmittedFields payload={{ fields: values, notes: "", attachments: [] }} verbId={activity.verb.id} taskCode={activity.taskCode} rua={bundle?.rua} />
           </div>
         ) : (
-          /* A native disabled fieldset switches off every control inside in one go. */
-          <fieldset disabled={locked} className={`min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}>
-            <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
-          </fieldset>
+          /* A native disabled fieldset switches off every control inside in one go.
+             The workspace wears the checklist's R-marks (criterion-mark.tsx) from this provider,
+             and whichever part has focus lights its row in the strip. Moving between two fields
+             fires blur then focus, so the pair follows without a gap. `ws-rows` scopes the
+             focused-row rule in globals.css to the workspace; the judgment call below sits
+             outside it on purpose. */
+          <CriterionProvider value={{ verbId: activity.verb.id, texts: checklist.criteria, states: checklist.states, graded: checklist.graded }}>
+            <fieldset
+              disabled={locked}
+              className={`ws-rows min-w-0 border-0 p-0 m-0 ${locked ? "opacity-75" : ""}`}
+              onFocusCapture={(e) => setPaired(criteriaAt(activity.verb.id, e.target as Element, e.currentTarget))}
+              onBlurCapture={() => setPaired([])}
+            >
+              <VerbWorkspace key={attemptKey} verbId={activity.verb.id} taskCode={activity.taskCode} activityCode={activity.code} value={values} onChange={setValues} openRef={openRef} />
+            </fieldset>
+          </CriterionProvider>
         )}
 
         {/* The judgment call sits AFTER the deliverable, not before it: the dilemmas are written
@@ -1011,7 +1109,7 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           second and third time, one of them floating over the work. */}
       {hasChecklist && (
         <div ref={checklistInlineRef} className="md:hidden mt-5">
-          <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} />
+          <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} paired={paired} />
         </div>
       )}
 
@@ -1021,15 +1119,15 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
           bring it back. Both stay mounted so the swaps fade rather than pop. */}
       {hasChecklist && (
         <>
-          <div ref={checklistHudRef} className={`hidden md:block fixed top-[84px] right-4 z-20 w-[300px] max-h-[calc(100vh-104px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
-            <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} onClose={() => setCriteriaHidden(true)} />
+          <div ref={checklistHudRef} className={`hidden md:block fixed top-[calc(var(--hdr-h,64px)+64px)] right-4 z-20 w-[300px] max-h-[calc(100vh/var(--app-zoom)_-_var(--hdr-h,64px)_-_84px)] overflow-y-auto transition-all duration-200 ease-out motion-reduce:transition-none ${atDeliverable && !criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
+            <AcceptanceChecklist verbId={activity.verb.id} values={values} layer1={layer1} paired={paired} onClose={() => setCriteriaHidden(true)} />
           </div>
           <button
             onClick={() => setCriteriaHidden(false)}
             aria-hidden={!(atDeliverable && criteriaHidden)}
             // The handle that brings the strip back, in the strip's own language: square, steel,
             // mono. Not a rule strip itself — it carries no criteria — so it takes no double rule.
-            className={`focus-ring hidden md:inline-flex fixed top-[84px] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 bg-white/95 backdrop-blur-xl backdrop-saturate-150 ring-1 ring-slate-200 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.3)] text-sky-800 hover:bg-white font-mono text-[10.5px] uppercase tracking-[0.09em] transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${atDeliverable && criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+            className={`focus-ring hidden md:inline-flex fixed top-[calc(var(--hdr-h,64px)+64px)] right-4 z-20 items-center gap-1.5 h-9 pl-2.5 pr-3.5 bg-white/95 backdrop-blur-xl backdrop-saturate-150 ring-1 ring-slate-200 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.3)] text-sky-800 hover:bg-white font-mono text-[10.5px] uppercase tracking-[0.09em] transition-all duration-200 ease-out motion-reduce:transition-none cursor-pointer ${atDeliverable && criteriaHidden ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
           >
             <Icon name="checkSquare" size={14} className="text-sky-700" /> Criteria
           </button>
@@ -1037,7 +1135,9 @@ export function StepScreen({ source }: { source?: StepScreenSource } = {}) {
       )}
 
       {/* ===== Reference material — draggable, non-modal panel (context · documents) ===== */}
-      <DraggablePanel open={briefOpen} onClose={() => setBriefOpen(false)} title="Reference material" eyebrow={verb?.label}>
+      {/* Opens on the left, over the tree: the work being written is on the right, and the tree is
+          the one thing on screen you do not need while reading a source. */}
+      <DraggablePanel open={briefOpen} onClose={() => setBriefOpen(false)} title="Reference material" eyebrow={verb?.label} side="left">
         <div className="space-y-6">
           {verb?.when && (
             <section>

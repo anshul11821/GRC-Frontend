@@ -8,7 +8,7 @@ import { Gloss } from "@/components/app/glossary";
 import { RefBody } from "@/components/app/reference-material";
 import { ControlReferences } from "@/components/app/control-references";
 import { CONTROLS_BY_TASK } from "@/lib/controls";
-import { FloatWindow } from "@/components/mentor/float-window";
+import { FloatWindow } from "@/components/ui/float-window";
 import { useMenteeGates } from "@/components/mentor/mentee-gates";
 import { useDeskFilter, useMenteeTree } from "@/components/mentor/desk-context";
 import {

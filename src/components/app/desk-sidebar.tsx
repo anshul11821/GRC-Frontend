@@ -2,15 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { DVerb } from "@/components/ui/dverb";
 import { VERB_TONES } from "@/lib/tones";
-import { OrgLogo } from "@/components/app/org-logo";
 import { TASK_META } from "@/lib/taskmeta";
 import { isGateVerb } from "@/lib/verbs";
 import type { LearningOrg, LearningTask } from "@/lib/learnings";
-import { useDeskBase, useDeskLearnings, useDeskStepFilter } from "./desk-context";
+import { useDeskBase, useDeskLearnings, useDeskRoute, useDeskStepFilter } from "./desk-context";
 import { dueChip } from "@/lib/schedule";
 import { prefetchStep } from "@/lib/desk";
 import { prefetchTaskBundle } from "@/lib/task-bundle";
@@ -32,8 +30,6 @@ function taskState(t: LearningTask): TaskState {
   if (states.some((s) => s === "current")) return "current";
   return "locked";
 }
-
-const taskComplete = (t: LearningTask) => taskState(t) === "complete";
 
 const dotCls = (s: StepState) => (s === "complete" ? "bg-emerald-500" : s === "current" ? "bg-amber-500" : "bg-slate-300");
 
@@ -172,23 +168,19 @@ function orgDisplayState(org: LearningOrg): OrgState {
   return "active";
 }
 
-/** A whole placement (organisation): a rich header + its category→task→step tree. Locked placements
- *  are disabled until the previous one is complete; completed ones collapse but stay open-able.
- *  Clicking the header (non-locked) opens the org-context page; the chevron toggles the tree. */
-function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lockedHint }: {
+/**
+ * One placement's tasks: its method categories, and nothing above them.
+ *
+ * The organisation level used to live here as a node per placement. It is a band across the top of
+ * the desk now (`DeskOrgStrip`) — eight placement headers stacked above the tree spent the rail's
+ * height on rows that are not work, and pushed the tasks of the one being worked below the fold.
+ */
+function OrgTree({ org, activeId, activeTaskCode }: {
   org: LearningOrg;
-  defaultOpen: boolean;
   activeId?: string;
   activeTaskCode?: string;
-  contextActive: boolean;
-  lockedHint: string;
 }) {
-  const base = useDeskBase();
   const stepFilter = useDeskStepFilter();
-  const state = orgDisplayState(org);
-  const locked = state === "locked";
-  const [open, setOpen] = useState(defaultOpen);
-  useEffect(() => { if (defaultOpen) setOpen(true); }, [defaultOpen]);
 
   // Flatten this placement's tasks + derive per-task state and method-category grouping.
   // On a mentor's desk a task with no reviewable step is noise, so it is dropped here rather than
@@ -199,7 +191,6 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   const tasks = stepFilter ? all.filter((t) => t.steps.some((s) => stepFilter.has(s.id))) : all;
   const taskStates = new Map<string, TaskState>();
   tasks.forEach((t) => taskStates.set(t.code, taskState(t)));
-  const doneTasks = all.filter(taskComplete).length;
 
   const byCat = new Map<string, LearningTask[]>();
   tasks.forEach((t) => {
@@ -215,65 +206,19 @@ function OrgNode({ org, defaultOpen, activeId, activeTaskCode, contextActive, lo
   // actually start. Map preserves insertion order, and `tasks` is already in unlock order.
   const cats = [...byCat.keys()];
 
-  // Against every task, not the filtered subset: this is the learner's progress through their
-  // engagement, and it would be a different number on the mentor's desk otherwise.
-  const pct = all.length ? (doneTasks / all.length) * 100 : 0;
-  const expandable = !locked && tasks.length > 0;
-
-  const header = (
-    <>
-      <OrgLogo org={org} className="w-8 h-8 rounded-lg text-[11px]" iconSize={16} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[12.5px] font-semibold tracking-tight truncate ${locked ? "text-slate-400" : contextActive ? "text-indigo-700" : "text-slate-900"}`}>{org.name}</span>
-          {state === "complete" && <Icon name="check" size={12} className="text-emerald-500 shrink-0" strokeWidth={3} />}
-          {locked && <Icon name="lock" size={11} className="text-slate-300 shrink-0" />}
-        </div>
-        <div className={`text-[10.5px] tracking-tight truncate ${locked ? "text-slate-400" : "text-slate-500"}`}>{org.industry}</div>
-      </div>
-    </>
-  );
+  if (tasks.length === 0) {
+    return <div className="px-2 py-6 text-center text-[12px] text-slate-500">No tasks in this placement yet.</div>;
+  }
 
   return (
-    <div data-tour={state === "active" ? "desk-org" : undefined} className={`rounded-xl ${contextActive ? "ring-1 ring-indigo-200 bg-indigo-50/60" : state === "active" ? "ring-1 ring-indigo-100 bg-indigo-50/30" : ""}`}>
-      {/* Both branches need `min-w-0`: without it a flex child cannot shrink past its content,
-          `truncate` on the org name never engages, and a long name widens the whole tree into a
-          horizontal scrollbar. The locked branch only started rendering once UNLOCK_ALL_TASKS
-          was turned off, which is why it went unnoticed. */}
-      <div className="flex items-center gap-1 pr-1.5">
-        {locked ? (
-          <div title={lockedHint} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-not-allowed">{header}</div>
-        ) : (
-          <Link href={`${base}/org/${org.id}`} className="flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl no-underline hover:bg-slate-100/50 transition-colors">{header}</Link>
-        )}
-        {expandable && (
-          <button
-            onClick={() => setOpen((o) => !o)}
-            aria-label="Toggle tasks"
-            className="shrink-0 w-6 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100/50"
-          >
-            <Icon name="chevronDown" size={13} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
-          </button>
-        )}
-      </div>
-
-      {!locked && tasks.length > 0 && (
-        <div className="px-2.5 pb-2 flex items-center gap-2">
-          <div className="h-1 flex-1 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full rounded-full transition-all ${state === "complete" ? "bg-emerald-500" : "bg-indigo-500"}`} style={{ width: `${pct}%` }} /></div>
-          <span className="text-[9.5px] text-slate-400 tabular-nums shrink-0">{doneTasks}/{tasks.length}</span>
-        </div>
-      )}
-
-      {open && expandable && (
-        <div className="px-1 pb-1.5 space-y-0.5">
-          {cats.map((c) => <CategoryNode key={c} category={c} tasks={byCat.get(c)!} taskStates={taskStates} activeId={activeId} activeTaskCode={activeTaskCode} />)}
-        </div>
-      )}
-
-      {locked && <p className="px-2.5 pb-2.5 text-[10.5px] text-slate-400 tracking-tight">{lockedHint}</p>}
+    <div className="space-y-0.5">
+      {cats.map((c) => (
+        <CategoryNode key={c} category={c} tasks={byCat.get(c)!} taskStates={taskStates} activeId={activeId} activeTaskCode={activeTaskCode} />
+      ))}
     </div>
   );
 }
+
 
 function SidebarShell({ children, footer, scrollRef }: { children: React.ReactNode; footer?: React.ReactNode; scrollRef?: React.Ref<HTMLDivElement> }) {
   return (
@@ -286,19 +231,9 @@ function SidebarShell({ children, footer, scrollRef }: { children: React.ReactNo
 
 export function DeskSidebar() {
   const { learnings, loading } = useDeskLearnings();
-  const pathname = usePathname();
-  // Matched against the desk's own base, not the literal "/app/desk": on a mentor's Review Desk
-  // these live under /mentor/desk/<menteeId>, and hardcoding the learner prefix meant nothing was
-  // ever marked active there — no highlighted step, and the org and category holding the current
-  // task stayed collapsed, so the tree opened blank every time.
-  // Split on the base rather than matching a pattern built from it: the base is interpolated from
-  // a route param, and a regex built out of one is a regex you have to remember to escape.
-  const base = useDeskBase();
-  const rest = pathname.startsWith(`${base}/`) ? pathname.slice(base.length + 1).split("/") : [];
-  const activeTaskCode = rest[0] === "task" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
-  const activeOrgPageId = rest[0] === "org" && rest[1] ? decodeURIComponent(rest[1]) : undefined;
-  const activeId =
-    rest[0] && rest[0] !== "task" && rest[0] !== "org" ? decodeURIComponent(rest[0]) : undefined;
+  // Route-derived, and shared with the organisation band above the desk so the two can never
+  // disagree about which placement is on screen.
+  const { activeTaskCode, activeId, orgId } = useDeskRoute();
 
   // Opening a step or task by link (Up next, calendar, a mentor's worklist) has to *show* it: the
   // tree is ~350 rows tall, so the highlighted row is usually below the fold on arrival. The nodes
@@ -324,16 +259,7 @@ export function DeskSidebar() {
   }
 
   const orgs = learnings?.orgs ?? [];
-  // The current placement: the first one that's accessible (not complete, not locked).
-  // The placement to open: the one holding the linked task/step if there is one — a link into a
-  // completed placement used to leave its org collapsed, so the step it pointed at was not in the
-  // tree at all — otherwise the current placement.
-  const linkedOrgId = (activeTaskCode || activeId)
-    ? orgs.find((o) => o.projects.some((p) => p.tasks.some(
-        (t) => t.code === activeTaskCode || t.steps.some((s) => s.id === activeId))))?.id
-    : undefined;
-  const activeOrgId = linkedOrgId
-    ?? (orgs.find((o) => o.status === "active") ?? orgs.find((o) => orgDisplayState(o) === "active"))?.id;
+  const org = orgs.find((o) => o.id === orgId);
 
   // Overall program progress — pinned to the rail's footer so the lower area always reads as
   // intentional chrome rather than blank space, regardless of how short the tree is.
@@ -354,20 +280,16 @@ export function DeskSidebar() {
 
   return (
     <SidebarShell footer={progressFooter} scrollRef={railRef}>
-      {orgs.length === 0 ? (
+      {!org ? (
         <div className="px-2 py-6 text-center text-[12px] text-slate-500">No placements yet.</div>
+      ) : orgDisplayState(org) === "locked" ? (
+        // Reachable by typing the URL of a placement that has not opened yet. The band above still
+        // shows every one of them, so this says why the tree is empty rather than leaving it blank.
+        <div className="px-3 py-6 text-center text-[12px] text-slate-500">
+          {org.name} has not started yet. Finish the placement before it to open these tasks.
+        </div>
       ) : (
-        orgs.map((org, i) => (
-          <OrgNode
-            key={org.id}
-            org={org}
-            defaultOpen={org.id === activeOrgId}
-            activeId={activeId}
-            activeTaskCode={activeTaskCode}
-            contextActive={org.id === activeOrgPageId}
-            lockedHint={i > 0 ? `Complete ${orgs[i - 1].name} to unlock` : "Locked"}
-          />
-        ))
+        <OrgTree org={org} activeId={activeId} activeTaskCode={activeTaskCode} />
       )}
     </SidebarShell>
   );

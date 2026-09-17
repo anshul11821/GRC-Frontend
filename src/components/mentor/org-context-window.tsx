@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FloatWindow } from "@/components/mentor/float-window";
+import { FloatWindow } from "@/components/ui/float-window";
 import { loadOrg, peekOrg } from "@/components/mentor/desk-context";
 import {
   PANES,

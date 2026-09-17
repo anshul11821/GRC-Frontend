@@ -1,108 +1,80 @@
-import type { ReactNode } from "react";
-import { LRN_AVATAR } from "@/lib/tones";
-
 /**
- * Bespoke per-org logomarks. White line-art glyphs (same aesthetic as ui/icon.tsx) sized to a
- * 0 0 24 24 viewBox, chosen to read as each fictional company's brand mark. Keyed by org id;
- * unknown ids fall back to the initials avatar.
+ * Organisation logos: a monogram on a round, sector-coloured badge.
+ *
+ * Replaces the per-org line-art glyphs, which were keyed by ids (`cloudtech`, `atlas`) from a
+ * catalogue that no longer exists — every one of the seventeen real organisations was falling
+ * through to a plain initials square. Keyed now by the id `/me/learnings` actually returns
+ * (`org-<ref>`), with the monogram a person would read off a letterhead rather than the seed's
+ * three-letter reference.
+ *
+ * Colours are grouped by sector, so a glance at the dock says what kind of client each is: blues
+ * and cyans for cloud and telecom, amber and bronze for legal, greens for finance and payroll,
+ * violets for education, pinks and reds for media and customer operations.
  */
-const MARKS: Record<string, ReactNode> = {
-  // CloudTech — Technology & IT Services: cloud + circuit node.
-  cloudtech: (
-    <>
-      <path d="M7.5 17.5a3.6 3.6 0 0 1-.4-7.18A4.8 4.8 0 0 1 16.6 9.4a3.3 3.3 0 0 1-.1 8.1H7.5z" />
-      <circle cx="11.8" cy="13" r="1.2" fill="currentColor" stroke="none" />
-      <path d="M11.8 13l2.4-1.4M11.8 13l-2.3-1" />
-    </>
-  ),
-  // LearnTech — Education: mortarboard.
-  learntech: (
-    <>
-      <path d="M12 5l9 3.8-9 3.8-9-3.8 9-3.8z" />
-      <path d="M6.5 10.6V15c0 1.3 2.5 2.3 5.5 2.3s5.5-1 5.5-2.3v-4.4" />
-      <path d="M21 8.8v4.2" />
-    </>
-  ),
-  // GlobalConnect — BPO / customer ops: globe + connection nodes.
-  globalconnect: (
-    <>
-      <circle cx="11.5" cy="12.5" r="6.2" />
-      <path d="M5.3 12.5h12.4" />
-      <path d="M11.5 6.3c2.6 2.7 2.6 9.7 0 12.4M11.5 6.3c-2.6 2.7-2.6 9.7 0 12.4" />
-      <circle cx="19.5" cy="5.5" r="1.4" fill="currentColor" stroke="none" />
-    </>
-  ),
-  // Strategic Advisory — consulting: compass.
-  strategic: (
-    <>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M15.2 8.8l-2.2 5.4L8.8 16l2.2-5.4 4.2-1.8z" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="0.6" fill="#fff" stroke="none" />
-    </>
-  ),
-  // Meridian Bank — finance: portico / columns.
-  meridian: (
-    <>
-      <path d="M4 9.5l8-4.5 8 4.5" />
-      <path d="M5.5 9.5v7.5M9.8 9.5v7.5M14.2 9.5v7.5M18.5 9.5v7.5" />
-      <path d="M3.5 19.5h17" />
-    </>
-  ),
-  // Caregrid Health — healthcare: rounded cross.
-  caregrid: (
-    <>
-      <rect x="4" y="4" width="16" height="16" rx="4.5" />
-      <path d="M12 8.5v7M8.5 12h7" />
-    </>
-  ),
-  // NorthPeak Cloud — SaaS: twin mountain peaks.
-  northpeak: (
-    <>
-      <path d="M2.5 19h19L14.5 7l-3 4.8L9 9 2.5 19z" />
-      <path d="M11.5 11.8l1.6 2.6" />
-    </>
-  ),
-  // Atlas Industrial — manufacturing: gear.
-  atlas: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <circle cx="12" cy="12" r="7" />
-      <path d="M12 2.5v2.5M12 19v2.5M21.5 12H19M5 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1L5.3 5.3" />
-    </>
-  ),
+const BRAND: Record<string, { ini: string; from: string; to: string }> = {
+  "org-ct": { ini: "CT", from: "#38bdf8", to: "#0369a1" },
+  "org-ax": { ini: "AS", from: "#818cf8", to: "#3730a3" },
+  "org-mru": { ini: "MR", from: "#a78bfa", to: "#5b21b6" },
+  "org-lt": { ini: "LT", from: "#c084fc", to: "#7e22ce" },
+  "org-amn": { ini: "AM", from: "#fb7185", to: "#be123c" },
+  "org-gc": { ini: "GC", from: "#f472b6", to: "#9d174d" },
+  "org-ess": { ini: "ES", from: "#94a3b8", to: "#334155" },
+  "org-sac": { ini: "SA", from: "#6b8afd", to: "#1e3a8a" },
+  "org-aci": { ini: "ACI", from: "#22d3ee", to: "#0e7490" },
+  "org-dvc": { ini: "DV", from: "#2dd4bf", to: "#0f766e" },
+  "org-jwl": { ini: "JW", from: "#fbbf24", to: "#c2410c" },
+  "org-npp": { ini: "NP", from: "#34d399", to: "#047857" },
+  "org-nnc": { ini: "NN", from: "#60a5fa", to: "#1d4ed8" },
+  "org-pap": { ini: "PA", from: "#86c940", to: "#3f6212" },
+  "org-sal": { ini: "S&A", from: "#d4a15a", to: "#7c4a14" },
+  "org-tms": { ini: "TF", from: "#e879f9", to: "#a21caf" },
+  "org-uts": { ini: "UT", from: "#f87171", to: "#b91c1c" },
 };
+
+/** An organisation we have no brand for still gets a badge, in the programme's own indigo. */
+const FALLBACK = { from: "#8b7cf8", to: "#5b4fe9" };
 
 export interface OrgLogoProps {
   org: { id: string; initials: string; tone: string; status?: string };
-  /** Box classes — size + rounding (e.g. "w-11 h-11 rounded-xl"). */
+  /** Box classes — size, and type size if wanted. The badge is always round; rounding classes
+   *  passed here are ignored so every caller draws the same mark. */
   className?: string;
-  /** Glyph size in px. */
+  /** Monogram size in px. */
   iconSize?: number;
 }
 
-export function OrgLogo({ org, className = "w-11 h-11 rounded-xl", iconSize = 22 }: OrgLogoProps) {
-  const locked = org.status === "locked";
-  const mark = MARKS[org.id];
+export function OrgLogo({ org, className = "w-11 h-11", iconSize = 22 }: OrgLogoProps) {
+  const brand = BRAND[org.id];
+  const ini = brand?.ini ?? org.initials;
+  const { from, to } = brand ?? FALLBACK;
+  const locked = org.status === "locked" || org.status === "upcoming";
+  const long = ini.length > 2;
+
   return (
     <div
-      className={`bg-gradient-to-br ${LRN_AVATAR[org.tone] ?? LRN_AVATAR.indigo} flex items-center justify-center text-white font-semibold shrink-0 ${locked ? "opacity-50 grayscale" : ""} ${className}`}
+      aria-hidden
+      className={`grid shrink-0 place-items-center ${className.replace(/\brounded(-\S+)?/g, "")} rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,.18),inset_0_-3px_5px_rgba(0,0,0,.12)] ${locked ? "opacity-50 grayscale" : ""}`}
+      style={{ background: `linear-gradient(150deg, ${from}, ${to})` }}
     >
-      {mark ? (
-        <svg
-          width={iconSize}
-          height={iconSize}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.85}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {mark}
-        </svg>
-      ) : (
-        org.initials
-      )}
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24">
+        {ini === "S&A" ? (
+          <text x="12" y="15.4" textAnchor="middle" fontSize="9.4" fontWeight="700" fill="#fff" letterSpacing="-.3">
+            S<tspan fontSize="7" fontWeight="600" fillOpacity=".8" dy="-.4">&amp;</tspan><tspan dy=".4">A</tspan>
+          </text>
+        ) : (
+          <text
+            x="12"
+            y={long ? 15.2 : 15.8}
+            textAnchor="middle"
+            fontSize={long ? 8.6 : 10.6}
+            fontWeight="700"
+            fill="#fff"
+            letterSpacing={long ? -0.4 : -0.5}
+          >
+            {ini}
+          </text>
+        )}
+      </svg>
     </div>
   );
 }

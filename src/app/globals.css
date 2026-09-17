@@ -33,6 +33,63 @@
   --color-slate-200: #dae1eb; /* was #e2e8f0 — 35% of the way to slate-300 */
 }
 
+/* ============================================================================
+   Desktop density (2026-09-17). The app is drawn a notch smaller on a desktop
+   screen — the reading it has at 90% browser zoom, which is where the desk
+   stops feeling cramped and where these surfaces were judged.
+
+   `zoom` is the only lever that moves all three things the density is made of:
+   the ~1,000 `text-[13px]`-style utilities the app is typed in, Tailwind's rem
+   spacing, and the px `size` on every icon. A root font-size would move the
+   spacing and leave the type and the icons where they are — that reads as
+   broken, not as smaller.
+
+   Media queries still see the true viewport, so no breakpoint moves. Below
+   `lg` nothing is scaled: 10% off a phone's body text buys no layout and costs
+   legibility. Print is excluded, so the CV and the certificate still come out
+   at full size.
+   ========================================================================== */
+:root {
+  --app-zoom: 1;
+}
+@media screen and (min-width: 64rem) {
+  :root {
+    --app-zoom: 0.9;
+    zoom: 0.9;
+  }
+}
+
+/* Viewport units are the one thing `zoom` leaves alone: `100vh` stays the real viewport and is
+   then painted 10% smaller, so anything sized *to* the viewport lands short — a dead strip down
+   the right of the app shell and along the bottom of the desk. Divide the factor back out.
+   Unlayered, so these beat Tailwind's own utilities without `!important`; at `--app-zoom: 1` they
+   are exactly what Tailwind emits. Only full-viewport *sizing* is corrected — a `max-h-[82dvh]`
+   cap on a floating panel is a proportion, and a proportion of a zoomed page is still right. */
+.h-screen {
+  height: calc(100vh / var(--app-zoom));
+}
+.min-h-screen {
+  min-height: calc(100vh / var(--app-zoom));
+}
+.w-screen {
+  width: calc(100vw / var(--app-zoom));
+}
+.h-dvh {
+  height: calc(100dvh / var(--app-zoom));
+}
+.min-h-dvh {
+  min-height: calc(100dvh / var(--app-zoom));
+}
+
+/* The desk's two columns: the viewport, less the app header. AppShell measures the header and
+   publishes `--hdr-h` (see `useHeaderHeight`); 64px, the bar's height, is the fallback for the
+   frame before that lands. The
+   viewport half has to be un-zoomed and the header half must not be, since a measured offsetHeight
+   is already in the zoomed layout's own pixels — so it cannot be written as one arbitrary value. */
+@utility h-desk {
+  height: calc(100dvh / var(--app-zoom) - var(--hdr-h, 64px));
+}
+
 /* Signature brand gradient — hero / CTA / dashboard banner. */
 @utility bg-brand-gradient {
   background-image: linear-gradient(135deg, #4f46e5 0%, #5b53e8 45%, #7c3aed 100%);
@@ -138,6 +195,15 @@ body {
   .guide-blink {
     animation: none;
   }
+}
+
+/* The row being worked in a deliverable table. "Live now" is the form language's solid weighted
+   edge (docs/FORM_LANGUAGE.md, the border axis), set as a rule in the row's margin rather than a
+   fill: these rows already carry their own verdict colours (rose wrong, amber tied, emerald right)
+   and a focus ground would paint over them. Scoped to the workspace fieldset (`ws-rows`,
+   step-screen.tsx) and to the tables the Guide anchors, so no other table is touched. */
+.ws-rows :is([data-guide="table"], [data-guide="register"]) tr:focus-within > td:first-child {
+  box-shadow: inset 2px 0 0 #0f172a;
 }
 
 /* Print / "Download as PDF" — strip app chrome and toolbars, let the document flow across pages. */

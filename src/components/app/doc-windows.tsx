@@ -8,6 +8,7 @@
 
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { appZoom } from "@/lib/zoom";
 import { Icon } from "@/components/ui/icon";
 import { RefBody } from "./reference-material";
 import type { TaskReference } from "@/lib/taskmeta";
@@ -42,7 +43,9 @@ function DocWindow({ doc, index, z, onClose, onFocus }: {
   doc: TaskReference; index: number; z: number; onClose: () => void; onFocus: () => void;
 }) {
   // cascade new windows down-right so they don't stack exactly on top of each other
-  const [pos, setPos] = useState(() => ({ x: Math.min(140 + index * 32, window.innerWidth - 480), y: 90 + (index % 6) * 28 }));
+  // The viewport is measured unzoomed and this is written as a zoomed pixel — divide, here and in
+  // every handler below, or the window drifts away from the cursor that is dragging it.
+  const [pos, setPos] = useState(() => ({ x: Math.min(140 + index * 32, window.innerWidth / appZoom() - 480), y: 90 + (index % 6) * 28 }));
   // height stays auto (capped) until the user resizes for the first time
   const [size, setSize] = useState<{ w: number; h: number | null }>({ w: 460, h: null });
   const winRef = useRef<HTMLDivElement>(null);
@@ -59,23 +62,26 @@ function DocWindow({ doc, index, z, onClose, onFocus }: {
 
   const startDrag = (e: React.PointerEvent) => {
     onFocus();
-    const sx = e.clientX - pos.x;
-    const sy = e.clientY - pos.y;
+    const z = appZoom();
+    const sx = e.clientX / z - pos.x;
+    const sy = e.clientY / z - pos.y;
     track((ev) => setPos({
-      x: Math.min(Math.max(ev.clientX - sx, 16 - 400), window.innerWidth - 60),
-      y: Math.min(Math.max(ev.clientY - sy, 8), window.innerHeight - 48),
+      x: Math.min(Math.max(ev.clientX / z - sx, 16 - 400), window.innerWidth / z - 60),
+      y: Math.min(Math.max(ev.clientY / z - sy, 8), window.innerHeight / z - 48),
     }));
   };
 
   const startResize = (e: React.PointerEvent) => {
     e.stopPropagation();
     onFocus();
+    const z = appZoom();
+    // `offsetHeight` is already a page pixel; the pointer is not.
     const startH = size.h ?? winRef.current?.offsetHeight ?? 420;
-    const dw = size.w - e.clientX;
-    const dh = startH - e.clientY;
+    const dw = size.w - e.clientX / z;
+    const dh = startH - e.clientY / z;
     track((ev) => setSize({
-      w: Math.min(Math.max(ev.clientX + dw, 320), window.innerWidth * 0.92),
-      h: Math.min(Math.max(ev.clientY + dh, 200), window.innerHeight * 0.88),
+      w: Math.min(Math.max(ev.clientX / z + dw, 320), (window.innerWidth / z) * 0.92),
+      h: Math.min(Math.max(ev.clientY / z + dh, 200), (window.innerHeight / z) * 0.88),
     }));
   };
 

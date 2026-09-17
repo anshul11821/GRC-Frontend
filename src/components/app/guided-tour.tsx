@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { appZoom } from "@/lib/zoom";
 
 export type TourStep = {
   title: string;
@@ -41,13 +42,17 @@ const TIP_W = 320;
 const OFFSCREEN: Box = { top: -9999, left: -9999, width: 0, height: 0 }; // sentinel: no target → plain full-screen dim, no hole
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+/** Eat a click on the dimmed part of the page — never let it reach what's underneath, and never
+ *  treat it as a skip. The hole in the blocker is the one place clicks still land. */
+const swallow = (e: React.MouseEvent) => e.stopPropagation();
 
 /** driver.js-style placement: prefer the side with room (bottom→top→right→left); for oversized
  *  targets, float the card at the bottom-centre (no arrow), and with no target at all, dead-centre.
  *  Returns the arrow's cross-axis offset. */
-function place(r: DOMRect | null, th: number): Pos {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+function place(r: Box | null, th: number, zoom: number): Pos {
+  // `r` and `th` are already in the page's own (zoomed) pixels; the viewport is not, so divide.
+  const vw = window.innerWidth / zoom;
+  const vh = window.innerHeight / zoom;
   const cx = (vw - TIP_W) / 2;
   // No target (the welcome card) — nothing to keep in view, so centre it. An oversized target still
   // floats at the bottom, where it covers least of what the step is pointing at.
@@ -55,7 +60,7 @@ function place(r: DOMRect | null, th: number): Pos {
   const float: Pos = { side: "float", top: vh - th - 24, left: cx, arrow: 0 };
   if (r.height > vh * 0.7 || r.width > vw * 0.85) return float;
 
-  const space = { top: r.top, bottom: vh - r.bottom, left: r.left, right: vw - r.right };
+  const space = { top: r.top, bottom: vh - (r.top + r.height), left: r.left, right: vw - (r.left + r.width) };
   const fits: Record<Exclude<Side, "float">, boolean> = {
     bottom: space.bottom >= th + GAP + MARGIN,
     top: space.top >= th + GAP + MARGIN,
@@ -68,15 +73,83 @@ function place(r: DOMRect | null, th: number): Pos {
 
   if (side === "bottom" || side === "top") {
     const left = clamp(r.left + r.width / 2 - TIP_W / 2, MARGIN, vw - TIP_W - MARGIN);
-    const top = side === "bottom" ? r.bottom + GAP : r.top - GAP - th;
+    const top = side === "bottom" ? r.top + r.height + GAP : r.top - GAP - th;
     return { side, top, left, arrow: clamp(r.left + r.width / 2 - left, 18, TIP_W - 18) };
   }
   const top = clamp(r.top + r.height / 2 - th / 2, MARGIN, vh - th - MARGIN);
-  const left = side === "right" ? r.right + GAP : r.left - GAP - TIP_W;
+  const left = side === "right" ? r.left + r.width + GAP : r.left - GAP - TIP_W;
   return { side, top, left, arrow: clamp(r.top + r.height / 2 - top, 18, th - 18) };
 }
 
 const inView = (r: DOMRect) => r.top >= 64 && r.bottom <= window.innerHeight - 16 && r.height < window.innerHeight;
+
+/**
+ * Freeze the page under the tour, and hand back the undo.
+ *
+ * Not `html { overflow: hidden }`: the app shell is `h-screen overflow-hidden` around a
+ * `<main className="overflow-y-auto">`, and the desk nests another scroller inside that — so the
+ * document does not scroll here and locking it would be a no-op that looked like a fix. Walk up
+ * from the spotlit element instead and freeze whichever ancestors actually scroll.
+ *
+ * `overflow-y: hidden` rather than an event-blocker because it is the browser's own lock: it stops
+ * the wheel, the trackpad, the scrollbar drag, the keyboard and middle-click autoscroll in one
+ * property — while leaving programmatic scrolling alone, which is what the tour itself uses to
+ * bring an off-screen target into view. Only the Y axis: a spotlit table that scrolls sideways
+ * still does.
+ *
+ * Hiding a scrollbar widens the content by its width, so each frozen element takes that back as
+ * padding — otherwise every step of the tour would shunt the page sideways and back.
+ */
+function freezeScroll(el: HTMLElement | null): () => void {
+  const undo: (() => void)[] = [];
+  const seen = new Set<Element>();
+  const nodes: HTMLElement[] = [];
+  for (let n = el; n; n = n.parentElement) {
+    const o = getComputedStyle(n).overflowY;
+    if ((o === "auto" || o === "scroll" || o === "overlay") && n.scrollHeight > n.clientHeight) nodes.push(n);
+  }
+  if (document.scrollingElement instanceof HTMLElement) nodes.push(document.scrollingElement);
+
+  for (const n of nodes) {
+    if (seen.has(n)) continue;
+    seen.add(n);
+    const gap = n.offsetWidth - n.clientWidth; // 0 under overlay scrollbars — nothing to compensate
+    const prevOverflow = n.style.overflowY;
+    const prevPad = n.style.paddingRight;
+    n.style.overflowY = "hidden";
+    if (gap > 0) n.style.paddingRight = `${parseFloat(getComputedStyle(n).paddingRight || "0") + gap}px`;
+    undo.push(() => { n.style.overflowY = prevOverflow; n.style.paddingRight = prevPad; });
+  }
+  return () => undo.forEach((f) => f());
+}
+
+/**
+ * Raise the spotlit element over the page's own floating chrome, and hand back the undo.
+ *
+ * The hole in the dim is not a picture of the target — it is an unpainted region, showing whatever
+ * happens to be topmost underneath it. So anything the page floats above the target shows through
+ * the spotlight in its place. The case that bit: the reference-material windows
+ * (`doc-windows.tsx`, portalled at z 55+) are dragged around freely and the step after "open the
+ * reference material" spotlights the acceptance checklist, a z-20 HUD pinned top-right — exactly
+ * where a reader is likely to have parked the window they just opened. The tour then dimmed the
+ * page and lit up a sticky note.
+ *
+ * Lifting the target fixes the class, not the instance: whatever the step points at is on top for
+ * as long as it is being pointed at. `position: relative` only where the element is static, since
+ * z-index does nothing on an unpositioned box — and both properties are put back on the way out.
+ */
+// Over the reference windows and under the tour's own overlay. Those stack from 55, one per open
+// window, so this leaves room for a dozen of them; the overlay itself is 70.
+const LIFT_Z = 68;
+
+function liftTarget(el: HTMLElement | null): () => void {
+  if (!el) return () => {};
+  const prevZ = el.style.zIndex;
+  const prevPosition = el.style.position;
+  if (getComputedStyle(el).position === "static") el.style.position = "relative";
+  el.style.zIndex = String(LIFT_Z);
+  return () => { el.style.zIndex = prevZ; el.style.position = prevPosition; };
+}
 
 /**
  * Queue a walkthrough to run the moment its surface next mounts.
@@ -172,15 +245,19 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
   const reposition = useCallback(() => {
     const s = stepRef.current;
     if (!s) return;
-    const r = s.getEl()?.getBoundingClientRect() ?? null;
+    const raw = s.getEl()?.getBoundingClientRect() ?? null;
     const last = lastRef.current;
+    // A rect is measured in viewport pixels, the hole and the card are drawn in the page's zoomed
+    // ones. Convert here, once, so everything downstream is already in the units it is written in.
+    const z = appZoom();
+    const r = raw ? { top: raw.top / z, left: raw.left / z, width: raw.width / z, height: raw.height / z } : null;
 
     const b = r ? { top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 } : OFFSCREEN;
     if (!last.box || last.box.top !== b.top || last.box.left !== b.left || last.box.width !== b.width || last.box.height !== b.height) {
       last.box = b;
       setBox(b);
     }
-    const p = place(r, tipRef.current?.offsetHeight ?? 170);
+    const p = place(r, tipRef.current?.offsetHeight ?? 170, z);
     if (!last.pos || last.pos.side !== p.side || last.pos.top !== p.top || last.pos.left !== p.left || last.pos.arrow !== p.arrow) {
       last.pos = p;
       setPos(p);
@@ -195,6 +272,17 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
     setShown(false);
     lastRef.current = { box: null, pos: null };
     s.onEnter?.();
+
+    // Scroll is locked for every step of the tour. The mentee is reading a card about one specific
+    // thing, and scrolling it off screen leaves them reading instructions for something they can no
+    // longer see — on a step pointing at a field they are meant to type in, that is the step lost.
+    // Taken here, before the scroll below: freezing a container mid-animation is asking for a
+    // half-finished scroll, whereas a container frozen first still scrolls programmatically.
+    // Re-taken each step because the walk crosses panes, and released by the cleanup — which also
+    // runs on unmount, so navigating away mid-tour cannot leave the page frozen.
+    // Both key off the target, so both are re-taken below if it only turns up later.
+    let thaw = freezeScroll(s.getEl());
+    let drop = liftTarget(s.getEl());
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const scrollTo = (n: HTMLElement) => {
@@ -238,6 +326,8 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
         const late = stepRef.current?.getEl();
         if (late) {
           clearInterval(poll);
+          thaw(); thaw = freezeScroll(late); // the real scroller was unknowable until now
+          drop(); drop = liftTarget(late);
           scrollTo(late);
           setShown(true);
           track(650);
@@ -250,7 +340,7 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
       }, 120);
     }
 
-    return () => { cancelAnimationFrame(raf); clearInterval(poll); clearTimeout(showId); };
+    return () => { thaw(); drop(); cancelAnimationFrame(raf); clearInterval(poll); clearTimeout(showId); };
   }, [step, active, reposition, steps.length, onStep, onClose]);
 
   // Reset when the tour closes so the next open appears cleanly (no stale hole).
@@ -283,8 +373,14 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowRight") onStep(Math.min(steps.length - 1, step + 1));
+      if (e.key === "Escape") { onClose(); return; }
+      // Arrows only navigate the tour when the mentee isn't typing. The spotlight is now a hole
+      // they can work through, so a cursor key inside a field it is pointing at means "move the
+      // caret" — jumping to the next step there would throw away what they were mid-way through
+      // writing the guidance for.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.key === "ArrowRight") onStep(Math.min(steps.length - 1, step + 1));
       else if (e.key === "ArrowLeft") onStep(Math.max(0, step - 1));
     };
     window.addEventListener("keydown", onKey);
@@ -313,7 +409,7 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
       : {};
 
   return createPortal(
-    <div className="fixed inset-0 z-[70]">
+    <div className="fixed inset-0 z-[70] pointer-events-none">
       {/* Targetless step (the welcome card) — nothing to cut a hole around, so dim the page flat.
           The cutout below can't do this: its shadow spreads from the off-screen sentinel box and
           never reaches the viewport. */}
@@ -331,8 +427,21 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
           }}
         />
       )}
-      {/* invisible blocker — stops interaction with the page; clicks do nothing (no accidental skips) */}
-      <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
+      {/* Invisible blocker, with a hole in it. Everything outside the spotlight swallows clicks, so
+          the page can't be nudged by accident and a stray click never skips the step — but the lit
+          element itself stays live: a walkthrough that says "name the role you're asking" has to
+          let them type it there and then, or it is a slideshow. Four rects around the box rather
+          than a clip-path: the arithmetic is the box we have already measured. */}
+      {box === OFFSCREEN ? (
+        <div className="absolute inset-0 pointer-events-auto" onClick={swallow} />
+      ) : (
+        <>
+          <div className="absolute left-0 right-0 top-0 pointer-events-auto" style={{ height: Math.max(0, box.top) }} onClick={swallow} />
+          <div className="absolute left-0 right-0 bottom-0 pointer-events-auto" style={{ top: box.top + box.height }} onClick={swallow} />
+          <div className="absolute left-0 pointer-events-auto" style={{ top: box.top, height: box.height, width: Math.max(0, box.left) }} onClick={swallow} />
+          <div className="absolute right-0 pointer-events-auto" style={{ top: box.top, height: box.height, left: box.left + box.width }} onClick={swallow} />
+        </>
+      )}
       {/* card */}
       <div
         ref={tipRef}
@@ -344,7 +453,7 @@ export function GuidedTour({ steps, step, onStep, onClose }: {
           opacity: shown ? 1 : 0,
           transform: shown ? "translate(0) scale(1)" : `${ENTER_OFFSET[side]} scale(0.98)`,
         }}
-        className="absolute rounded-2xl bg-white ring-1 ring-slate-200/70 shadow-[0_24px_60px_-15px_rgba(15,23,42,0.45)] p-4 transition-[opacity,transform] duration-200 ease-out"
+        className="absolute pointer-events-auto rounded-2xl bg-white ring-1 ring-slate-200/70 shadow-[0_24px_60px_-15px_rgba(15,23,42,0.45)] p-4 transition-[opacity,transform] duration-200 ease-out"
         role="dialog"
         aria-modal="true"
         aria-label={`Guide: ${current.title}`}
